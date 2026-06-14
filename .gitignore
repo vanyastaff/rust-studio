@@ -1,0 +1,7 @@
+# Build / generation helpers (not part of the published plugin)
+.build/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp

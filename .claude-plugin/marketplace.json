@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "vanya",
+  "owner": {
+    "name": "vanya"
+  },
+  "description": "vanya's Claude Code plugins.",
+  "version": "0.1.0",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "rust-studio",
+      "source": "./plugins/rust-studio",
+      "displayName": "Rust Code Studio",
+      "description": "A tiered Rust engineering studio: architect -> leads -> specialists, path-scoped standards, quality gates, and cargo-aware hooks for libraries, async/web services, CLIs, and systems/embedded code.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": ["rust", "cargo", "code-review", "agents", "studio"],
+      "author": {
+        "name": "vanya"
+      },
+      "license": "MIT"
+    }
+  ]
+}

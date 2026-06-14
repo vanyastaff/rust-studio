@@ -1,0 +1,26 @@
+{
+  "//": "Rust Code Studio — starter .claude/settings.json for a large multi-crate workspace. Copy to your repo root (and/or per-crate dir), trim to taste. See docs/large-workspace.md. Comments (keys starting with //) are not valid settings — delete them before use.",
+
+  "//permissions": "Block opening checked-in generated/vendored code. (.gitignore already keeps target/ out of search; these stop Claude OPENING such files.)",
+  "permissions": {
+    "deny": [
+      "Read(./**/target/**)",
+      "Read(./**/*.generated.rs)",
+      "Read(./**/vendor/**)",
+      "Read(./**/*.rs.html)"
+    ],
+    "//additionalDirectories": "Only when you start Claude from a single crate and need sibling crates. Relative to the start dir. Remove if you start from the workspace root.",
+    "additionalDirectories": []
+  },
+
+  "//worktree": "Sparse-checkout only the crates a task/subagent needs; symlink target/ so worktrees don't duplicate it. Paths are repo-root-relative. Include .claude.",
+  "worktree": {
+    "sparsePaths": [
+      ".claude",
+      "crates/core"
+    ],
+    "symlinkDirectories": [
+      "target"
+    ]
+  }
+}
