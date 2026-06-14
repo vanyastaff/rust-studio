@@ -12,6 +12,12 @@ Converge on green by classifying each failure and applying the smallest fix, the
 re-running. **Bounded to 3 iterations** — no infinite loops, no masking. Evidence over
 assertion (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
 
+**Maintainer bar applies.** Each fix is held to
+`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: smallest CORRECT, idiomatic,
+allocation-aware, borrow-first change — restructure ownership/borrows before reaching for
+clone, fix at the owning crate, check the API against current docs. Smallest is textual scope,
+not a license for a junior shape.
+
 ## The loop (max 3 passes)
 
 1. **Run** (scope from `$ARGUMENTS` — package, feature set, or test filter):
@@ -27,7 +33,9 @@ assertion (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
      `rust-build-resolver`). Pass the full `cargo check` error output.
    - **fmt failure** → spawn **`rust-builder`** to run `cargo fmt --all` on the affected
      files. No approval needed — formatting is mechanical.
-   - **Clippy lint** → spawn **`rust-builder`** to apply the minimal idiomatic fix. For
+   - **Clippy lint** → spawn **`rust-builder`** to apply the minimal idiomatic fix —
+     allocation-aware and borrow-first (restructure ownership/borrows before reaching for
+     clone/collect/box), at the crate that owns the concept, per the maintainer bar. For
      CONTEXTUAL lints (intentional patterns), add a scoped `#[allow(clippy::...)]` with a
      one-line justification comment.
    - **Failing test** → spawn **`rust-builder`** (with **`test-engineer`**) to fix the

@@ -43,6 +43,10 @@ quality bar. You decide what "tested" means and hold the QA-GATE.
    flaky tests with a tracking issue.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; the quality bar
+  cannot be cut. Tests, error-path coverage, and correctness are invariants, not optional scope, and
+  the test plan should clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**)
+  before writing begins.
 - `${CLAUDE_PLUGIN_ROOT}/rules/testing.md` — behavior-focused, isolated, non-flaky tests.
 
 ## Reviewer stance

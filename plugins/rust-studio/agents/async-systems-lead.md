@@ -59,6 +59,10 @@ delegation from `chief-architect`.
    (`find_symbol`, `find_referencing_symbols`) and `rg`/`cargo clippy` — not Bash grep.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source
+  edit, clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**). Reach for
+  ownership transfer, channels, or scoped tasks before `Arc<Mutex<_>>`; verify the runtime topology
+  fits, don't clone/box to appease the borrow checker.
 - `${CLAUDE_PLUGIN_ROOT}/rules/async.md` — cancellation safety, `Send`/`'static`,
   backpressure, blocking hygiene, structured concurrency.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — error handling, resource cleanup, no panics in

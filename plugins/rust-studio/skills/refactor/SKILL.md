@@ -14,6 +14,11 @@ not write code yourself — you delegate all writes to `rust-builder`.** Gate wi
 `AskUserQuestion` only at phase boundaries (scope confirmation, plan approval, BLOCKED
 recovery) — decide tactical calls yourself, state choice + one-line rationale.
 
+**Maintainer bar applies.** This skill is where weak structure is brought up to
+`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: behavior-preserving reshaping of
+weak structure (extract, move-to-owning-crate, borrow-instead-of-clone, replace stringly/bool
+with domain types) IS the job here, not a while-I'm-here cleanup to suppress.
+
 ## Input
 `$ARGUMENTS` is the target scope (a crate, module path, file, or free-text description). If
 empty, ask: "What should we refactor, and what's the scope boundary?" Refuse to proceed
@@ -23,6 +28,12 @@ without an explicit scope — an unbounded refactor is drift by another name.
 **No functional change.** All observable behavior — public API, error messages, exit codes,
 emitted events, and test assertions — must remain identical after the refactor. If a proposed
 change would alter behavior, it is out of scope and must be split into a separate `/dev-task`.
+
+"No functional change" is not "no structural change": behavior-preserving reshaping of weak
+structure toward the maintainer bar — extract, move a misplaced helper/type to the crate that
+owns the concept, replace clone-to-appease-borrowck with borrowing/ownership, swap a
+stringly/bool API for domain types/newtypes/enums — IS the work here, not a contradiction to it.
+The line is observable behavior, not the shape of the code.
 
 ---
 

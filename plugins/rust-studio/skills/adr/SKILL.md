@@ -12,6 +12,11 @@ approval**, honoring the collaboration protocol
 (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You are the orchestrator:
 **you do not write files directly — delegate the final write to `rust-builder`.**
 
+**Maintainer bar applies.** Options are weighed against the maintainer-grade standard
+(`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`): reuse over reinvent, structural
+invariants over caller discipline, and a forward view. The Pre-code Maintainer Gate (Phase 2.5)
+runs before the decision is taken.
+
 Default is **autonomy: decide and proceed.** Escalate to the user only at genuine
 forks (option selection) and before the irreversible write.
 
@@ -43,21 +48,39 @@ need to record?" If the decision is entangled with a larger design, suggest runn
    - concrete pros and cons (not platitudes),
    - trade-offs for this codebase (performance, `unsafe`, API surface, async
      topology, MSRV, edition 2024 compatibility, etc.),
+   - **(a) Invariants & encoding** — the invariants the option upholds and HOW they are
+     structurally encoded (newtype / enum / typestate / sealed trait / RAII), not by caller
+     discipline,
+   - **(b) Failure modes / abuse cases** — how it fails and is misused; **mandatory** when the
+     decision touches untrusted input or a cross-crate trust boundary,
+   - **(c) Forward view** — the 2-year / 3-extension picture: after three likely extensions,
+     does responsibility still sit in the right crate? Not just a one-line trade-off,
    - any gate triggered (`SAFETY-GATE`, `API-GATE`, …).
-   - For external prior-art or crates.io adoption data, use exa MCP
-     (`web_search_exa` / `get_code_context_exa`).
-5. **`AskUserQuestion`**: present the options table and ask which to proceed with.
+   - **Freshness (cite-or-declare-version):** when the decision depends on ecosystem behavior
+     (a crate's API shape, adoption pattern, RUSTSEC posture), cite the docs.rs / release-notes /
+     source you checked via exa MCP (`web_search_exa` / `get_code_context_exa`) and cratesio /
+     context7 / rust-docs, OR state the last-verified version. Silence is a gap, not a pass.
+   - For a boundary-moving / cross-crate / new-primitive decision, spawn **`harsh-critic`** by
+     DEFAULT to attack the recommended option (premise, failure modes, radically different
+     decomposition) and fold real findings into the options before the gate.
+5. **Pre-code Maintainer Gate:** `chief-architect` emits a **Maintainer-grade pre-code verdict**
+   per `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — `ACCEPTABLE` /
+   `RESHAPE NEEDED` / `BLOCKED`: what crate owns the concept; which sibling primitives already
+   exist (reuse vs. reinvent); what a strict maintainer would reject; which breaking changes
+   active dev permits. `RESHAPE NEEDED` reworks the options before the user is asked; `BLOCKED`
+   surfaces the missing prerequisite. Record the verdict in the ADR's Context.
+6. **`AskUserQuestion`**: present the options table and ask which to proceed with.
    If the user is undecided, ask `chief-architect` for a recommendation with
    rationale — but **the user makes the final call**.
 
 ## Phase 3 — Decision
 
-6. Record the chosen option and the deciding rationale. Note what was explicitly
+7. Record the chosen option and the deciding rationale. Note what was explicitly
    rejected and why, so future readers understand the road not taken.
 
 ## Phase 4 — Draft
 
-7. Fill in the ADR template (`${CLAUDE_PLUGIN_ROOT}/docs/templates/adr.md`) with:
+8. Fill in the ADR template (`${CLAUDE_PLUGIN_ROOT}/docs/templates/adr.md`) with:
    - **Status** — `Proposed`.
    - **Context** — forces and constraints that made this decision necessary.
    - **Decision** — the chosen option, stated plainly.
@@ -67,19 +90,19 @@ need to record?" If the decision is entangled with a larger design, suggest runn
 
 ## Phase 5 — Approve and write
 
-8. Terminal "here's the plan — file it?" gate: present the complete ADR draft for the
+9. Terminal "here's the plan — file it?" gate: present the complete ADR draft for the
    user to approve using native plan mode (on approval the user transitions into an edit
    mode and the write proceeds). Keep `AskUserQuestion` for the earlier option fork (the
    Phase 2 option selection), not for this final approval. Loop back to Phase 4 for any
    requested changes.
-9. On approval, resolve the output path:
-   - Sequence number = highest existing `docs/adr/NNNN-*.md` + 1, zero-padded to
-     four digits.
-   - Slug = title lowercased, spaces → hyphens, punctuation stripped.
-   - Final path: `docs/adr/<NNNN>-<slug>.md` (relative to project root).
-10. Delegate the write to **`rust-builder`** with the approved content and resolved
+10. On approval, resolve the output path:
+    - Sequence number = highest existing `docs/adr/NNNN-*.md` + 1, zero-padded to
+      four digits.
+    - Slug = title lowercased, spaces → hyphens, punctuation stripped.
+    - Final path: `docs/adr/<NNNN>-<slug>.md` (relative to project root).
+11. Delegate the write to **`rust-builder`** with the approved content and resolved
     path. Do not call Write/Edit yourself.
-11. Update **Status** to `Accepted` if the decision is final (if ambiguous from the
+12. Update **Status** to `Accepted` if the decision is final (if ambiguous from the
     approval, ask once; otherwise default to `Accepted` when the user approved).
 
 ## Output

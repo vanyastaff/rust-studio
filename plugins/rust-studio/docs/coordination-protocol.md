@@ -6,6 +6,30 @@ consults sideways, and never ships without your sign-off.
 
 ---
 
+## 0. First-pass quality is the contract
+
+First-pass quality is the contract; everything downstream — gates, reviews, verdicts — is a
+safety net, **not** where quality is created. Before the first source edit on anything that adds
+or moves logic, the planning AND the writing agent run the **maintainer-grade pre-code gate**:
+crate ownership; a sibling-crate reuse survey (serena) before inventing; verify crate
+version/current docs (cratesio/context7/rust-docs) before coding from memory; the
+borrow/allocation/lifetime posture; the latest-edition construct when it encodes the contract
+better; and the Maintainer Rejection Test. The gate is the universal **DEFAULT**, not opt-in —
+every per-domain gate in §4 runs **on top of** it, and a genuinely trivial change records a
+one-line note rather than bypassing the bar. The standard is
+`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — read it first.
+
+We are solo active-dev with no released API, so restructuring is courage, not creep: existing
+code is context, not authority — reshape weak/duplicated/non-idiomatic/wrong-crate shapes you
+must TOUCH, within the task's blast radius. A workaround/shim/adapter/alias/migrate-later TODO is
+a defect, not a deferral. Compiles + clippy-clean + tests-green + correct is the **FLOOR**, not
+the finish line. Reviewers do not anchor to already-written code as a contract: the verdict set
+includes `REDO-TO-BAR` (§5). Every dispatched agent is framed as a senior Rust maintainer on the
+current edition who would reject mediocre code. None of this lowers fmt/clippy/test/miri/evidence
+rigor (§7) — it adds a higher bar on top.
+
+---
+
 ## 1. Collaborative Protocol (a quality loop, not a permission loop)
 
 The shape is **Question → Options → Decision → Draft → Approval** — but run it as a
@@ -75,7 +99,10 @@ Agents follow a structured delegation model:
 1. **Vertical delegation** — directors delegate to leads, leads delegate to
    specialists. Never skip tiers for complex decisions.
 2. **Horizontal consultation** — same-tier agents may consult each other but must
-   not make binding decisions outside their own domain.
+   not make binding decisions outside their own domain. This consultation may happen
+   **at build time**: the builder may pull a same-tier specialist for a design pass
+   *during* writing so domain expertise lands in the first draft, not only as a later
+   review lens.
 3. **Conflict resolution** — disagreements escalate to the shared parent:
    - Technical/architecture conflicts → `chief-architect`.
    - Scope/priority conflicts → `product-steward`.
@@ -130,8 +157,17 @@ verdict so you always know where things stand:
 
 - **COMPLETE** — work done, gates passed, evidence shown (test output, bench numbers).
 - **NEEDS WORK** — specific, listed issues block completion; each has an owner.
+- **REDO-TO-BAR** — the change compiles + clippy-clean + tests-green + correct, but a strict
+  maintainer would reject its SHAPE: wrong crate, a reinvented sibling primitive, a
+  clone-to-appease-borrowck, a stringly/bool API where a domain type belongs, a stale idiom, or
+  an active-dev shim. The fix is to **reshape the TOUCHED area**, not apply line patches. It is
+  merge-blocking but **blast-radius-bounded** — only code the task touched is reshaped; untouched
+  code is never force-reshaped, and this verdict is **not** for speculative abstraction or
+  future-proofing.
 - **BLOCKED** — a hard dependency is missing (e.g. an ADR, an upstream decision);
-  the blocker is named with a suggested next step. Completed work is never discarded.
+  the blocker is named with a suggested next step. Completed work is never discarded for NEEDS
+  WORK; `REDO-TO-BAR` explicitly authorizes replacing the wrong shape within the task's blast
+  radius — the learning is kept, the junior patch is not.
 
 ---
 
@@ -208,7 +244,8 @@ then delete the team.
 - **One team at a time**, no nested teams; teammates inherit the lead's permission mode.
 
 **Verdicts and gates are unchanged.** Every teammate still ends in **COMPLETE / NEEDS WORK /
-BLOCKED** with evidence (§5); the owning lead still runs its gate (§4); a `BLOCKED` task halts
+REDO-TO-BAR / BLOCKED** with evidence (§5); the owning lead still runs its gate (§4); a
+`REDO-TO-BAR` reshapes the touched area before the work is accepted, and a `BLOCKED` task halts
 its dependents until the blocker clears.
 
 **Lifecycle hooks (cross-reference, not added here).** The `TaskCreated` / `TaskCompleted` /
