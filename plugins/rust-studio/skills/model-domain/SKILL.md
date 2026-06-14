@@ -70,8 +70,11 @@ examples. For concepts that span multiple crates or public APIs, suggest running
    - Note any `unsafe` the design would require and flag it immediately.
    - Reference the module location identified by `rust-scout` (or propose one).
 
-7. `AskUserQuestion` (gate before irreversible write): show the type sketch and ask for
-   approval or revision. Loop back to Phase 2 if the user wants a different approach.
+7. Terminal "here's the plan — build it?" gate: present the type sketch for the user to
+   approve using native plan mode (on approval the user transitions into an edit mode and
+   the build begins). Keep `AskUserQuestion` for the earlier option fork (the Phase 2
+   direction choice), not for this final go-ahead. Loop back to Phase 2 if the user wants a
+   different approach.
 
 ## Phase 4 — Implement
 

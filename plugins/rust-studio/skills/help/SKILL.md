@@ -9,7 +9,10 @@ user-invocable: true
 Print a grouped catalog. If `$ARGUMENTS` names a topic (e.g. "async", "release",
 "unsafe", "memory"), show only the relevant subset and the agents/skills for it.
 
-## Skills
+## Skills — by purpose
+
+This is the curated map (which family to reach for); the exhaustive, always-current
+list of every installed skill is generated below it.
 
 **Onboarding:** `/start` · `/help` · `/detect-stack` · `/adopt`
 **Design & architecture:** `/brainstorm` · `/design-api` · `/architecture` · `/adr` · `/model-domain`
@@ -24,6 +27,12 @@ Print a grouped catalog. If `$ARGUMENTS` names a topic (e.g. "async", "release",
 **Release:** `/publish` · `/changelog` · `/msrv-check`
 **Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback)
 **Teams (multi-agent presets):** `/team-api` · `/team-async` · `/team-perf` · `/team-release`
+
+### Every installed skill (generated, can't drift)
+
+```!
+bun "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/list-skills.ts"
+```
 
 ## Agents
 

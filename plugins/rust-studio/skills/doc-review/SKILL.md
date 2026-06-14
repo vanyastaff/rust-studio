@@ -11,6 +11,19 @@ Stress-test a document's *decisions*, not its prose. Surface contradictions, uns
 assumptions, infeasible steps, scope creep, and threat-model gaps before they become code.
 Proposals, not commands (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` — findings are
 input to the author's judgment; never echo-chamber-validate the existing structure).
+Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8 (team execution).
+
+## Orchestration
+When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the panel as a
+real team: `TeamCreate`, then create one `TaskCreate` task per persona (the personas are
+independent and read-only — no `addBlockedBy` between them) and spawn each as a teammate so
+they run concurrently, reporting via `SendMessage`; the lead merges and de-duplicates. The
+lighter alternative for these read-only personas is to spawn each as a **background subagent**
+(`background: true`) without forming a team. Otherwise fall back to single-orchestrator
+delegation: spawn the personas sequentially and inline the document text into each spawn
+prompt. Teammates don't inherit this context (pass the doc in the spawn prompt) and don't get
+bundled MCP (they rely on the user's ambient serena/exa). Drive `TeamDelete` cleanup at the
+end (shut teammates down with `SendMessage {type:"shutdown_request"}` first).
 
 ## When NOT this skill
 - Reviewing a code diff → `/review`.
@@ -20,8 +33,9 @@ Use `/doc-review` for specs, plans, ADRs, RFCs, and design docs.
 ## How to run
 1. Read the doc named in `$ARGUMENTS` (default: the most recently changed file under
    `.rust-studio/specs/`, `docs/adr/`, or `docs/`). State what you're reviewing.
-2. Fan out the relevant lenses **in parallel** (skip the ones the doc doesn't touch), each
-   returning severity-tagged findings — not a grade:
+2. Fan out the relevant lenses **in parallel** (one task per persona, or background subagents
+   — see Orchestration; skip the ones the doc doesn't touch), each returning severity-tagged
+   findings — not a grade:
    - **`harsh-critic`** — attack the premise: is the problem real, is this the right
      decomposition, what radically different approach was dismissed without reason?
    - **`chief-architect`** — internal coherence + boundary/dependency-direction fit with the

@@ -3,6 +3,7 @@ name: publish
 description: "crates.io publish release prepare — run RELEASE-GATE checklist, dry-run, and hand the exact publish command to you. Never publishes automatically."
 argument-hint: "[crate]"
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # /publish — prepare a crates.io release

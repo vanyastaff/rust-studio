@@ -68,7 +68,7 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
 
 ## Phase 5 — Approve (gate)
 
-9. `AskUserQuestion`: show the draft plan — criterion count, test count by type, edge-case categories, property laws. Get explicit approval before any file is written. If the user wants edits, loop back to Phase 2 or 3 and re-draft.
+9. Terminal "here's the plan — build it?" gate: present the draft plan — criterion count, test count by type, edge-case categories, property laws — for the user to approve using native plan mode (on approval the user transitions into an edit mode and the file is written). Reserve `AskUserQuestion` for genuine option forks (e.g. a real proptest-vs-no-proptest trade-off in Phase 2), not for this final approval. If the user wants edits, loop back to Phase 2 or 3 and re-draft.
 10. On approval, `test-engineer` writes the plan to a feature-specific path (e.g. `docs/test-plans/<feature>.md`), or to a path the user names.
 
 ## Phase 6 — Hand off

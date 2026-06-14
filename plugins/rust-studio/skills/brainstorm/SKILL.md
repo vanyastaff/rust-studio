@@ -71,7 +71,10 @@ cross-crate concern) before proceeding.
    - Constraints it must respect.
    - Open risks and assumptions.
    - Suggested next skill to invoke.
-10. `AskUserQuestion`: "Does this capture the idea correctly, or should anything change?"
+10. Present the finished concept note as the terminal approval gate — "here's the idea —
+    capture it?" — for the user to approve using native plan mode (on approval the user
+    transitions into an edit mode). Keep `AskUserQuestion` only for the earlier option
+    forks (Phase 1 clarify, Phase 3 direction choice), not for this final go-ahead.
 11. On approval, **delegate saving the concept note** to `product-steward` — do not write
     files directly. Instruct `product-steward` to store it at the path it deems appropriate
     per the template `${CLAUDE_PLUGIN_ROOT}/docs/templates/concept-note.md` (if that

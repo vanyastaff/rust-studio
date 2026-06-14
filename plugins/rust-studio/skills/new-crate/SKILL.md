@@ -3,6 +3,7 @@ name: new-crate
 description: "new crate workspace member scaffold — create a crate with studio conventions: Cargo.toml metadata, lints, deny.toml, rust-toolchain, CI stub, lib.rs/main.rs."
 argument-hint: "[name] [lib|bin]"
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # /new-crate — scaffold a workspace member

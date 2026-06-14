@@ -3,6 +3,8 @@ name: commit
 description: "commit, stage, Conventional Commit — write a clean commit for the current Rust changes, groups one logical unit, derives type/scope from diff, runs fmt/clippy first. Never bypasses git hooks."
 argument-hint: "[optional: scope hint or message]"
 user-invocable: true
+disable-model-invocation: true
+allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
 ---
 
 # /commit — Conventional Commit for Rust changes
@@ -18,7 +20,7 @@ the message before running `git commit`
    splitting into separate commits.
 3. Pre-commit hygiene: run `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings`
    on touched crates. If either fails, surface the output and offer to fix via `/lint` or
-   `/lint` before proceeding.
+   `/fix-build` before proceeding.
 4. Compose a **Conventional Commit**, deriving:
    - **type**: `feat` / `fix` / `refactor` / `perf` / `docs` / `test` / `build` / `chore`.
    - **scope**: the crate or module (e.g. `feat(parser):`).

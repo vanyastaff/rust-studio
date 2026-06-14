@@ -14,7 +14,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
@@ -46,12 +46,23 @@
         ]
       },
       {
-        "matcher": "Bash|Read",
+        "matcher": "Bash|PowerShell|Read",
         "hooks": [
           {
             "type": "command",
             "command": "bun \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/secret-guard.ts\"",
             "timeout": 15
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/user-prompt-submit.ts\"",
+            "timeout": 10
           }
         ]
       }
@@ -63,6 +74,39 @@
             "type": "command",
             "command": "bun \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/fmt-check.ts\"",
             "timeout": 20
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/subagent-stop.ts\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/pre-compact.ts\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-end.ts\"",
+            "timeout": 15
           }
         ]
       }

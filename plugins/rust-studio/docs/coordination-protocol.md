@@ -86,6 +86,11 @@ Agents follow a structured delegation model:
 5. **Domain boundaries** — agents do not modify files outside their domain without
    explicit delegation. A specialist proposes; the owning lead approves.
 
+When agent teams are enabled (§8), this same model runs over a shared task list and a
+mailbox instead of sequential prose spawns: the lead encodes phases as tasks with
+dependencies and teammates report via `SendMessage`. The tiers, gates, and verdicts are
+unchanged — only the coordination surface differs.
+
 ---
 
 ## 4. Quality gates
@@ -133,7 +138,9 @@ verdict so you always know where things stand:
 ## 6. File-write protocol
 
 - Orchestrator skills (`team-*`, `dev-task`) **delegate all writes to sub-agents**;
-  they do not call Write/Edit directly.
+  they do not call Write/Edit directly. This holds whether the orchestrator is a
+  single-session lead or a team lead running over the shared task list (§8) — `rust-builder`
+  still owns every write.
 - Before writing, show a draft or a diff and get approval (per §1).
 - `rust-builder` writes code and tests; `rust-scout` and `rust-reviewer` never write.
 - Never bypass these for "speed" — the protocol is the product.
@@ -149,3 +156,62 @@ Claims about correctness or performance must be backed by command output:
 - "no UB" → `cargo +nightly miri test` output (where feasible).
 
 If something was skipped, say so. Never substitute "probably" for checking.
+
+---
+
+## 8. Team execution (agent teams)
+
+The multi-agent skills (`team-*`, `dev-task`, `review`, `doc-review`, `eval-agents`,
+`spec-tasks`) run their phases as a real **agent team** when that capability is available,
+and fall back to single-orchestrator prose delegation otherwise. The team model is the
+documented default path; the fallback is one short paragraph in each skill.
+
+**Capability gate.** Agent teams are gated by `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (OFF
+by default; needs Claude Code v2.1.32+). A published plugin must not assume teams exist, so
+every orchestrator skill carries a one-line guard: if the gate is set, run as a team;
+otherwise spawn sub-agents sequentially and inline each phase's context into the spawn
+prompt. The structured task tools (`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet`) are
+a separate, more reliable gate (`CLAUDE_CODE_ENABLE_TASKS`, default ON as of v2.1.142) — but
+still version-gate them.
+
+**Roles.** One session is the **team lead** (the orchestrator skill). The lead calls
+`TeamCreate` (creates the team and its single shared task list), spawns **teammates** via the
+`Agent` tool with `team_name` + `name` (+ `subagent_type` = a studio agent such as
+`rust-builder`), assigns work, synthesizes results, and drives cleanup. Teammates do the
+focused work and report back.
+
+**Shared task list.** The lead encodes each skill's **phases / work-items as tasks**:
+`TaskCreate` (subject, description, optional `activeForm`/`metadata`; tasks start pending with
+no owner) one per phase or lens; express phase ordering with `addBlockedBy` so a task can't be
+claimed until its blockers complete; assign with `TaskUpdate owner`; move tasks
+pending → in_progress → completed. Use `TaskList` / `TaskGet` to track. For read-only fan-out
+panels (`/review --full` lenses, `/doc-review` personas, `/eval-agents` fixtures) create one
+independent task per lens/persona/fixture so they run concurrently; the lighter alternative is
+to spawn each as a **background subagent** (`background: true`) since they only read.
+
+**Mailbox.** Teammates communicate **only** via `SendMessage` — plain text in a turn is
+invisible to other agents. Messages auto-deliver as turns; there is no polling.
+
+**Cleanup.** The lead drives teardown with `TeamDelete`, which fails while members are still
+active — so shut teammates down first by sending each a `SendMessage` `{type:"shutdown_request"}`,
+then delete the team.
+
+**Gotchas (load-bearing).**
+- **No plan inheritance** — teammates do *not* inherit the lead's conversation or plan; *all*
+  task context must go in the spawn prompt.
+- **No bundled MCP** — teammates do *not* receive a subagent definition's bundled
+  `skills`/`mcpServers`; they load skills and MCP from the user's own project + user settings.
+  The studio's serena/exa reliance works only because the **user** has them configured ambient
+  — state that assumption when scouting depends on them.
+- **Status can lag** — remind teammates to mark their task `completed`; don't infer completion
+  from silence.
+- **One team at a time**, no nested teams; teammates inherit the lead's permission mode.
+
+**Verdicts and gates are unchanged.** Every teammate still ends in **COMPLETE / NEEDS WORK /
+BLOCKED** with evidence (§5); the owning lead still runs its gate (§4); a `BLOCKED` task halts
+its dependents until the blocker clears.
+
+**Lifecycle hooks (cross-reference, not added here).** The `TaskCreated` / `TaskCompleted` /
+`TeammateIdle` lifecycle hooks exist (a hook may exit 2 to block with feedback), so gate
+enforcement can hang off them in principle. Those hooks are owned by the hooks work — this
+protocol only notes the seam; none are wired in this pass.

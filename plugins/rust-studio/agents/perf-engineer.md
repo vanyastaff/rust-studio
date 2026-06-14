@@ -69,4 +69,4 @@ For external evidence (prior art, crate adoption, RUSTSEC): use exa MCP
 ## Output
 - A benchmark report and profiler findings. End with verdict **COMPLETE / NEEDS WORK /
   BLOCKED** plus the criterion before/after summary and the reproduction command.
-  Hand off to `systems-perf-lead` (PERF-GATE), `/perf`, or `/perf`.
+  Hand off to `systems-perf-lead` (PERF-GATE), `/perf`, or `/team-perf`.

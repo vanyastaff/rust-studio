@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 // Rust Code Studio — secret guard.
 //
-// - PreToolUse(Bash): ASK before a command likely to expose secrets to the
-//   transcript (reading .env/.pem/id_rsa, `printenv`, bare `env`, `echo $TOKEN`)
-//   or one that embeds a secret literal.
-// - PostToolUse(Bash|Read): scan the tool output for secret patterns; if found,
-//   inject a non-blocking warning so the model won't echo, log, or commit them.
+// - PreToolUse(Bash|PowerShell): ASK before a command likely to expose secrets to
+//   the transcript — bash forms (reading .env/.pem/id_rsa, `printenv`, bare `env`,
+//   `echo $TOKEN`) and their PowerShell equivalents (`Get-Content .env`,
+//   `Get-ChildItem Env:`, `echo $env:*TOKEN*`) — or one that embeds a secret literal.
+// - PostToolUse(Bash|PowerShell|Read): scan the tool output for secret patterns;
+//   if found, inject a non-blocking warning so the model won't echo, log, or commit them.
 //
 // A PostToolUse hook can't rewrite already-produced output, so this detects and
 // warns rather than redacting. Never crashes the session.
@@ -43,6 +44,14 @@ function exposes(cmd: string): string | null {
     return "bare `env` dumps all environment variables (may include secrets)";
   if (/\becho\b[^|;&]*\$\{?[A-Za-z_]*(?:TOKEN|SECRET|KEY|PASSWORD|PASSWD|CREDENTIAL|PRIVATE)/i.test(cmd))
     return "this echoes a secret-looking environment variable";
+  // --- PowerShell equivalents ---
+  const psReaders = /\b(?:Get-Content|gc|cat|type|Select-String|sls)\b/i;
+  if (psReaders.test(cmd) && sensitive.test(cmd))
+    return "this reads a secret-bearing file into the transcript";
+  if (/\bGet-ChildItem\b[^|;&]*\bEnv:|\bgci\b[^|;&]*\bEnv:|\bls\b[^|;&]*\bEnv:|\bdir\b[^|;&]*\bEnv:/i.test(cmd))
+    return "this dumps environment variables (may include secrets)";
+  if (/(?:\becho\b|\bWrite-(?:Host|Output)\b|\$\()[^|;&]*\$env:[A-Za-z_]*(?:TOKEN|SECRET|KEY|PASSWORD|PASSWD|CREDENTIAL|PRIVATE)/i.test(cmd))
+    return "this echoes a secret-looking environment variable";
   if (scan(cmd).length) return "this command line contains what looks like a secret literal";
   return null;
 }
@@ -60,7 +69,7 @@ disarm();
 const event = data.hook_event_name || "";
 const tool = data.tool_name || "";
 
-if (event === "PreToolUse" && tool === "Bash") {
+if (event === "PreToolUse" && (tool === "Bash" || tool === "PowerShell")) {
   const cmd = data.tool_input?.command || "";
   const reason = exposes(cmd);
   if (reason) {

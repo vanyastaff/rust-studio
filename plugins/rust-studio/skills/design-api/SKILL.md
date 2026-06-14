@@ -80,9 +80,11 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
 
 ## Phase 5 — Approval (gate)
 
-11. `AskUserQuestion`: show the complete draft and the semver impact statement.
-    Get explicit sign-off before any implementation work begins. If the user requests
-    changes, loop back to Phase 4 (or Phase 2 if the shape itself needs to change).
+11. Present the complete draft and the semver impact statement as the terminal "here's the
+    plan — build it?" gate for the user to approve using native plan mode (on approval the
+    user transitions into an edit mode and implementation begins). Keep `AskUserQuestion`
+    for the earlier option fork (the Phase 3 decision gate), not for this final sign-off. If
+    the user requests changes, loop back to Phase 4 (or Phase 2 if the shape itself needs to change).
 12. Once approved, confirm the **API-GATE** checklist from
     `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` is satisfied:
     - Public items have doc-comment stubs.

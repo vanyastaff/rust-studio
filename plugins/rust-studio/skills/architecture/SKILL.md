@@ -62,8 +62,11 @@ the key use-cases before proceeding.
 ## Phase 5 — Record decisions and docs (gate)
 10. For each decision marked for an ADR in Phase 3, spawn `/adr` with the decision context,
     options, and chosen outcome. Do not write ADRs inline — delegate to the `/adr` skill.
-11. `AskUserQuestion`: confirm the draft before writing. If approved, delegate to **`rust-builder`**
-    to write `docs/templates/architecture.md` (`${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`)
+11. Present the finished architecture draft as the terminal "here's the plan — build it?" gate
+    for the user to approve using native plan mode (on approval the user transitions into an edit
+    mode). Keep `AskUserQuestion` for the earlier option forks (the Phase 3 decision gate), not
+    for this final go-ahead. If approved, delegate to **`rust-builder`** to write
+    `docs/templates/architecture.md` (`${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`)
     from the approved draft. The builder must not add content beyond what was approved in Phase 4.
 12. Show the committed doc path and a diff summary.
 

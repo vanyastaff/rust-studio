@@ -7,6 +7,24 @@ context-frugal than `grep`/`find`/`cat` in Bash. **Reach for the right tool; use
 things, not to search them.** All of these are *prefer-if-available* — fall back cleanly when a
 tool isn't installed.
 
+## Prerequisites — serena + exa (required companions, not bundled)
+
+The studio assumes two MCP servers are configured in your own Claude Code settings:
+
+- **serena** — code navigation / language-server intelligence (symbol defs, refs, impls).
+- **exa** — external evidence (real code examples, crates.io adoption, advisory/issue audits).
+
+The plugin **intentionally does not bundle** these (no `mcpServers` in `plugin.json`): MCP
+servers are loaded from the *user's* project/user settings, not from a plugin — and agent-team
+**teammates** in particular only see the MCP you have configured ambiently, never a plugin's
+bundled servers. So configure them once for yourself and every agent in the studio inherits them.
+
+Install both via Claude Code's MCP setup (e.g. `claude mcp add …`) or by adding them to your
+`~/.claude.json` / project `.mcp.json`; see each project's README — serena
+(`github.com/oraios/serena`) and exa (`github.com/exa-labs/exa-mcp-server`). Without them the
+studio still runs: every workflow falls back cleanly to `rg`/Glob for navigation and `gh`/web
+for evidence, just less precisely.
+
 ## Code navigation — semantic first
 Prefer the **serena** MCP (a language server under the hood — the "code intelligence" the
 official large-codebase guide recommends) for anything about symbols:
