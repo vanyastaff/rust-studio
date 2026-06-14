@@ -60,6 +60,9 @@ permission loop.
    tactical choices already within the agreed scope.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source
+  edit, clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**) and encode
+  invariants structurally (newtype/enum/typestate/sealed) rather than relying on caller discipline.
 - `${CLAUDE_PLUGIN_ROOT}/rules/api.md` — public surface design, naming, ergonomics.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — Rust idioms and type discipline.
 - `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` — feature flags, re-exports, crate metadata.

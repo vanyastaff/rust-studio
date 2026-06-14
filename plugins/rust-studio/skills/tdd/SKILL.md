@@ -11,6 +11,12 @@ Drive one behavior at a time test-first. The discipline is the point — don't w
 implementation before a failing test exists. Protocol:
 `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`; standards: `rules/testing.md`, `rules/core.md`.
 
+**Maintainer bar applies.** The GREEN code is held to
+`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: the first draft is idiomatic,
+allocation-aware, and borrow-correct — passing the test is the floor, not the bar. The GREEN
+spawn carries the pre-code verdict (`ACCEPTABLE` / `RESHAPE NEEDED` / `BLOCKED`); if the only
+way to pass is a wrong-crate or clone-to-appease shape, that is `RESHAPE NEEDED`, not later cleanup.
+
 ## Per behavior, loop these three phases
 
 ### 🔴 RED — a failing test
@@ -23,8 +29,11 @@ implementation before a failing test exists. Protocol:
    until the failure is the expected assertion.
 
 ### 🟢 GREEN — minimal code to pass
-4. Spawn `rust-builder` to write the **least** code that makes the test pass. No extra
-   features, no speculative generality. If it won't compile, `rust-build-resolver` / `/fix-build`.
+4. Spawn `rust-builder` to write the **least CORRECT, idiomatic, allocation-aware,
+   borrow-correct** code that makes the test pass — minimality is textual scope, NOT a license
+   for non-idiomatic or clone-to-appease shapes. No speculative generality, but the first draft
+   meets the maintainer bar; do NOT defer idiom/perf/borrow quality to the REFACTOR step. If it
+   won't compile, `rust-build-resolver` / `/fix-build`.
 5. Run the test until green; run `cargo nextest run` (or `cargo test`) to confirm no regressions.
 
 ### 🔧 REFACTOR — clean with tests green

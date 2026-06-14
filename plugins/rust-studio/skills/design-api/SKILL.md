@@ -13,6 +13,12 @@ Decision → Draft → Approval** loop before any code is written. You are the
 orchestrator: **you do not write code or files yourself — you delegate writes to
 `rust-builder` and specialists.**
 
+**Maintainer bar applies.** The surface is held to the maintainer-grade standard
+(`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`): survey sibling crates before
+inventing a new type/trait/error, encode invariants structurally (newtype / enum / typestate /
+sealed / `#[non_exhaustive]`) over caller discipline, and carry a forward view. The Pre-code
+Maintainer Gate (Phase 2.5) runs ON TOP OF `API-GATE`.
+
 ## Input
 
 `$ARGUMENTS` is the type or feature to design. If empty, ask: "What API surface are
@@ -42,32 +48,62 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
 
 ## Phase 2 — Options (present alternatives)
 
-5. Spawn **`api-designer`** to draft 2–4 distinct API shapes covering the
+5. **Sibling-crate reuse survey (mandatory, BEFORE drafting any new type/trait/error).** Have
+   `rust-scout` (or `api-designer`) enumerate via **serena** (`find_symbol` /
+   `find_implementations` across crates) the types, traits, error types, and conversions sibling
+   crates already own that this surface could reuse. Every new item the design introduces must be
+   justified reuse-vs-new against this inventory; reinventing a sibling primitive (or duplicating
+   an error taxonomy) fails the Maintainer Rejection Test.
+6. Spawn **`api-designer`** to draft 2–4 distinct API shapes covering the
    ergonomics-vs-flexibility-vs-semver spectrum. For each option include:
    - The type/trait/fn signatures (condensed; full signatures in the doc).
    - Ergonomics: how easy is the common call-site?
    - Flexibility: can callers extend or adapt it?
    - Semver risk: BREAKING / MINOR / PATCH relative to the current surface?
+   - **(a) Invariants & encoding** — the invariants the shape upholds and HOW they are
+     structurally encoded (newtype / enum / typestate / sealed trait / smart constructor / RAII /
+     `#[non_exhaustive]`), so correctness is done-by-construction, not by caller discipline.
+   - **(b) Failure modes / abuse cases** — how the surface is misused or fails; **mandatory** when
+     the API consumes untrusted input or sits on a cross-crate trust boundary (parse-don't-validate;
+     can a caller construct an invalid state?).
+   - **(c) Forward view** — the 2-year / 3-extension picture: after three likely extensions, does
+     the type still belong in this crate, and does the shape extend without a breaking churn?
    - Key trade-off in one sentence.
-   Use **exa MCP** (`get_code_context_exa` / `web_search_exa`) to check real
-   crates.io adoption patterns and RUSTSEC advisories that bear on the shape choices.
-6. Spawn **`error-architect`** in parallel to draft the error type for each option
+   **Freshness (cite-or-declare-version, REQUIRED when the shape depends on ecosystem behavior):**
+   cite the crates.io adoption pattern / RUSTSEC advisory / docs.rs API shape you checked via
+   **exa MCP** (`get_code_context_exa` / `web_search_exa`) and **cratesio** / **context7** /
+   **rust-docs**, OR state the last-verified version. Silence is a gap, not a pass.
+   **Spawn `harsh-critic` by DEFAULT** for any new-trait, cross-crate, or boundary-moving surface:
+   it attacks the recommended shape (premise, failure modes, radically different decomposition);
+   fold real findings into the options before the gate.
+7. Spawn **`error-architect`** in parallel to draft the error type for each option
    (or a single shared error design if the options converge there). Include:
    - The error enum variants or wrapper type.
    - `Display` / `Error` / `From` impl notes.
    - Whether `#[non_exhaustive]` is recommended.
-7. Merge both agents' output and present it clearly. Offer a recommended default and
+8. Merge both agents' output and present it clearly. Offer a recommended default and
    explain why — the user makes the final call in Phase 3.
+
+## Phase 2.5 — Pre-code Maintainer Gate
+
+9. Before the decision gate, `api-design-lead` (or `api-designer`) emits a **Maintainer-grade
+   pre-code verdict** per `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` —
+   `ACCEPTABLE` / `RESHAPE NEEDED` / `BLOCKED`: what crate owns the type/error; which sibling
+   primitives the survey surfaced (reused vs. reinvented); whether the shape encodes invariants
+   structurally or leans on caller discipline (stringly/bool/`Box<dyn Error>` where a domain type
+   belongs is a reject); which breaking changes active dev permits. `RESHAPE NEEDED` reworks the
+   shape before the user is asked; `BLOCKED` surfaces the missing prerequisite. Record the verdict
+   in the design doc.
 
 ## Phase 3 — Decision (gate)
 
-8. `AskUserQuestion`: present the options with their trade-offs and ask the user to
-   choose one (or a hybrid). Do not proceed past this gate without an explicit choice.
+10. `AskUserQuestion`: present the options with their trade-offs and ask the user to
+    choose one (or a hybrid). Do not proceed past this gate without an explicit choice.
 
 ## Phase 4 — Draft (API design doc)
 
-9. Spawn **`api-designer`** (and **`error-architect`** for any remaining error-type
-   details) to produce a full draft of the chosen surface. The draft must cover:
+11. Spawn **`api-designer`** (and **`error-architect`** for any remaining error-type
+    details) to produce a full draft of the chosen surface. The draft must cover:
    - All public types, traits, and function signatures with doc-comment stubs.
    - The error type with all variants and `From` conversions.
    - Semver impact statement: **BREAKING** / **MINOR** / **PATCH**, and which items
@@ -75,17 +111,17 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
    - Usage example (doc-test skeleton showing the primary call site).
    - Any items gated behind `#[cfg(feature = "...")]` and why.
    - Open questions or follow-up ADR items, if any.
-10. Delegate writing the draft to **`rust-builder`** using the template at
+12. Delegate writing the draft to **`rust-builder`** using the template at
     `${CLAUDE_PLUGIN_ROOT}/docs/templates/api-design-doc.md`.
 
 ## Phase 5 — Approval (gate)
 
-11. Present the complete draft and the semver impact statement as the terminal "here's the
+13. Present the complete draft and the semver impact statement as the terminal "here's the
     plan — build it?" gate for the user to approve using native plan mode (on approval the
     user transitions into an edit mode and implementation begins). Keep `AskUserQuestion`
     for the earlier option fork (the Phase 3 decision gate), not for this final sign-off. If
     the user requests changes, loop back to Phase 4 (or Phase 2 if the shape itself needs to change).
-12. Once approved, confirm the **API-GATE** checklist from
+14. Once approved, confirm the **API-GATE** checklist from
     `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` is satisfied:
     - Public items have doc-comment stubs.
     - Semver impact is understood and recorded.
@@ -94,12 +130,12 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
 
 ## Phase 6 — Handoffs
 
-13. Delegate implementation to **`rust-builder`** via `/dev-task`, passing the
+15. Delegate implementation to **`rust-builder`** via `/dev-task`, passing the
     approved API design doc as the task input. The builder works test-driven against
     the agreed signatures; no improvised surface changes during build.
-14. Once implementation is complete, hand the diff to `/api-review` for a focused
+16. Once implementation is complete, hand the diff to `/api-review` for a focused
     API-GATE audit before the change is considered mergeable.
-15. If the design reveals a meaningful architecture decision (crate boundary, new
+17. If the design reveals a meaningful architecture decision (crate boundary, new
     abstraction, MSRV implication), surface it as an ADR candidate via `/adr`.
 
 ## Error recovery

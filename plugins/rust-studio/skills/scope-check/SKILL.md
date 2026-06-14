@@ -13,6 +13,13 @@ diffs and surface findings; **you do not write files yourself — delegate any r
 `rust-builder` via `/dev-task`.** Honor the collaboration protocol
 (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
 
+**Symmetric scope clause (maintainer bar).** Per
+`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`, when the workspace is
+unpublished / active-dev, a structural improvement to weak / duplicated / wrong-crate code that
+the story actually TOUCHED is IN-SCOPE (keep — reshape), NOT scope creep. Only restructuring of
+UNTOUCHED code is creep. Apply this symmetrically: do not flag a reshape of touched-and-weak code
+as over-scope, and do not let a junior shim survive just because it was "minimal."
+
 ## Input
 
 `$ARGUMENTS` is the story, plan text, or a path to a story/plan file. If empty, or if a git
@@ -32,7 +39,11 @@ ref is also needed, batch both into a single `AskUserQuestion` before proceeding
 
 3. Spawn **`product-steward`** with the criteria and the diff. Instruct it to:
    - identify every change that was **not** requested by any acceptance criterion (scope
-     creep — additions, refactors, renames, dependency bumps not tied to the story),
+     creep — additions, refactors, renames, dependency bumps not tied to the story), **but apply
+     the symmetric clause above**: a reshape of weak / duplicated / wrong-crate code the story
+     genuinely TOUCHED (move-to-owning-crate, borrow-instead-of-clone, stringly/bool → domain
+     type, shim removal) is IN-SCOPE under active dev, not an ADDED creep item — classify it as
+     in-scope reshaping. Only restructuring of UNTOUCHED code is ADDED creep,
    - identify every criterion that has **no** corresponding change in the diff (missing
      coverage),
    - note any change that conflicts with or partially contradicts a criterion (mis-alignment).

@@ -37,6 +37,9 @@ Follow `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1: **decide and e
 7. Delegate spec-to-code work to `cli-specialist`; review the diff before CLI-GATE sign-off.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source
+  edit, clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**) and model
+  commands/flags with domain types and enums rather than stringly-typed or `bool`-flag protocols.
 - `${CLAUDE_PLUGIN_ROOT}/rules/cli.md` — command structure, flag conventions, output discipline, exit codes, error UX.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — general Rust code quality applied to CLI entry points.
 

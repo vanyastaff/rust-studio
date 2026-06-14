@@ -28,7 +28,9 @@ compiler and cargo errors and fix their root cause, one error at a time, without
   direction-changing fork, a behavior/API change, or an irreversible/outward step.
 - Fix the **root** error, not the cascade. rustc errors cascade — resolve the first real one,
   recompile, and let the noise clear before judging what remains.
-- Make the smallest change that satisfies the type system and the apparent intent. Match
+- Make the smallest CORRECT, idiomatic, allocation-aware, architecture-compatible change —
+  never the smallest textual diff. Adding logic, an impl, or a method to the easiest edit site
+  instead of the crate that OWNS the concept is a defect; check the crate boundary first. Match
   surrounding idiom; conform to the path-scoped standards the inject-rules hook surfaces.
 
 ## How you work
@@ -40,18 +42,27 @@ compiler and cargo errors and fix their root cause, one error at a time, without
    Read enough context to understand the intended types.
 4. Classify and fix at the right layer:
    - **Borrow checker** → restructure ownership/scope, split borrows, or introduce an explicit
-     scope; reach for `Rc`/`RefCell`/`clone` only when it's genuinely the right model.
+     scope. Reaching for `Rc`/`RefCell`/`clone` to appease the borrow checker is NOT a fix —
+     use shared ownership only when it is genuinely the data model, and state why.
    - **Trait bound** → add the bound, implement the trait, or adjust the generic; check feature flags.
-   - **Lifetime** → name and relate lifetimes correctly; avoid `'static` escapes.
+   - **Lifetime** → name and relate lifetimes correctly; avoid `'static` escapes. Do not make
+     lifetimes disappear with a needless `clone`/`to_owned`/`collect`/boxing; first check whether
+     borrowing, ownership, iterator shape, or `Cow` should change.
    - **Type mismatch** → convert with `From`/`TryFrom`/`as` (guarded), not by widening to `Any`.
    - **Missing feature/dep** → enable the cargo feature or add the dep (hand manifest edits to
-     `dependency-manager` / `/add-dep` for vetting on anything non-trivial).
+     `dependency-manager` / `/add-dep` for vetting on anything non-trivial). Before enabling a
+     feature, adding a dep, or changing an API call, verify the installed crate version and
+     current docs via cratesio / context7 / rust-docs MCP — never code from stale memory
+     (cite-or-declare-version).
    - **Edition/cfg** → fix the `cfg`, edition idiom, or conditional compilation.
 5. Re-run `cargo check`; repeat from step 2 until clean. Then `cargo clippy -- -D warnings`
    and `cargo nextest run` (fall back to `cargo test`) to confirm nothing regressed.
 6. If a fix would change behavior or public API, stop and escalate (`/dev-task`, `api-design-lead`).
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar. A green fix is
+  the FLOOR; apply the Maintainer Rejection Test while resolving (wrong-crate edit site,
+  clone-to-appease-borrowck, stringly/bool API, stale idiom), not just satisfying the type system.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — idiomatic fixes, no `unwrap`/`#[allow]` masking.
 - Any other `${CLAUDE_PLUGIN_ROOT}/rules/*.md` matching the files you touch.
 

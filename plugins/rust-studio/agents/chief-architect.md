@@ -49,6 +49,9 @@ each decision stays consistent with the structure already chosen for this worksp
 5. Delegate execution to leads with clear boundaries and the governing ADR referenced.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar. Run the pre-code
+  maintainer gate during planning and emit its **ACCEPTABLE / RESHAPE NEEDED / BLOCKED** verdict
+  before any source edit; existing code is context, not authority — reshape weak/duplicated/wrong-crate shapes you touch.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md`, `api.md`, `cargo-manifest.md` — boundaries, layering, deps.
 - No dependency cycles; downstream crates never reach into another crate's internals.
 
@@ -59,6 +62,9 @@ Before this gate passes, verify:
 - [ ] No layering violations (UI owns no domain state; core has no I/O leaking in; etc.).
 - [ ] Public surface is intentional and semver-aware (consult `api-design-lead`).
 - [ ] The plan is implementable by the leads as scoped — no hidden cross-domain coupling.
+- [ ] Reuse over reinvent verified — no new primitive duplicates one a sibling crate already owns.
+- [ ] Responsibilities distributed so the design extends cleanly — the 2-year / 3-extension forward view is stated.
+- [ ] Boundary types/traits considered AFIT/RPITIT/GATs/sealed/`#[non_exhaustive]`/typestate where they encode the contract better than plain traits/enums.
 
 ## Output
 - A recommendation with options + trade-offs, and (on decision) an ADR draft for approval.

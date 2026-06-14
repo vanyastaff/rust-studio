@@ -55,6 +55,10 @@ Use `mcp__exa__web_search_exa` for RUSTSEC advisory lookups, crates.io adoption
 data, or upstream issue audits before making a semver or MSRV judgment call.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source
+  or manifest edit, clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**).
+  Workspace-level deps, lints, metadata, and `Cargo.lock` are managed at the workspace root when they
+  affect more than one member; cite-or-declare-version for any MSRV/dep/advisory call.
 - `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` — manifest metadata,
   `rust-version`, publish settings, workspace layout.
 - `${CLAUDE_PLUGIN_ROOT}/rules/api.md` — semver compatibility obligations and

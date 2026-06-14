@@ -46,6 +46,10 @@ Follow the **Question → Options → Decision → Draft → Approval** quality 
    **exa** MCP (`web_search_exa`, `get_code_context_exa`) or `gh` CLI.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source,
+  `build.rs`, or config edit, clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED /
+  BLOCKED**). Workspace-level deps, lints, and metadata live at the workspace root when they affect
+  more than one member; cite-or-declare-version for any tooling/dep/advisory call.
 - `${CLAUDE_PLUGIN_ROOT}/rules/build-scripts.md` — `build.rs` determinism, offline builds, `rerun-if-*` hygiene.
 - `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` — workspace layout, feature discipline, MSRV declarations.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — zero-warning policy, deny lints, edition hygiene.

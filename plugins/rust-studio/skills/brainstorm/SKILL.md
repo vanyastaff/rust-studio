@@ -14,6 +14,12 @@ no code, no files written. You are the facilitator per the collaboration protoco
 Draft → Approval.** Delegate concept-note capture to `product-steward`; never write files
 yourself.
 
+**Maintainer bar applies.** Even at the idea stage, approaches are weighed against the
+maintainer-grade standard (`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`): does a
+sibling crate already own this; which invariants must hold; does responsibility still sit right
+after a few extensions. Brainstorm writes no plan, so it emits no pre-code verdict — but the chosen
+direction carries these answers forward into the `/design-api` or `/architecture` Pre-code Gate.
+
 ## Input
 
 `$ARGUMENTS` is the raw idea or problem. If empty, ask: "What are you thinking about
@@ -55,10 +61,22 @@ cross-crate concern) before proceeding.
    - **Pros** — what it does well in the Rust context (ergonomics, performance, safety,
      compile-time cost, ecosystem fit).
    - **Cons** — real trade-offs, not invented ones.
+   - **Invariants** — at the concept level, what must always hold, and roughly how the type
+     system would carry it (newtype / enum / typestate / RAII) — direction, not signatures.
+   - **Abuse / failure modes** — how it could be misused or fail; **call these out** when the
+     idea touches untrusted input or a cross-crate trust boundary.
+   - **Forward view** — after ~3 likely extensions, does responsibility still sit in the right
+     crate, or does this idea push it to the wrong place?
    - **Key unknowns** — what you still need to know to fully evaluate it.
    - **Rough gate exposure** — which quality gates (`ARCH-GATE`, `API-GATE`, `SAFETY-GATE`,
      etc.) would this approach likely need? Reference
      `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md §4`.
+   For any new-crate / cross-crate / boundary-moving idea, run a **harsh-critic** pass by
+   DEFAULT — attack the leading approach and offer a radically different decomposition before
+   recommending — so the idea is not echo-chamber-validated.
+   **Freshness (cite-or-declare-version):** when an approach leans on ecosystem behavior, cite the
+   crates.io / RUSTSEC / docs source you checked via exa (already pulled in Phase 2) OR state the
+   last-verified version; silence is a gap, not a pass.
 7. State a **default recommendation** and the reason; make clear it is a starting point,
    not a decision.
 8. `AskUserQuestion`: "Which direction do you want to explore, or should we mix elements?"

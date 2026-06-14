@@ -65,11 +65,13 @@
 
 *List the load-bearing public types and traits. A reader should be able to build a mental model without opening source files.*
 
-| Item | Kind | Crate | Purpose |
+*For each boundary item, consider whether a modern Rust feature encodes the contract better than a plain trait/enum: AFIT/RPITIT, GATs, sealed traits, `#[non_exhaustive]`, typestate, or a newtype/smart-constructor that makes illegal states unrepresentable. Note the chosen encoding in the Purpose column where it is load-bearing (per `docs/maintainer-grade-development.md` — structural guarantees over caller discipline).*
+
+| Item | Kind | Crate | Purpose (note structural encoding where load-bearing) |
 |------|------|-------|---------|
-| `<TypeName>` | `struct` | `<crate>` | *What it represents; lifetime params if any* |
-| `<TraitName>` | `trait` | `<crate>` | *Contract it enforces; key methods* |
-| `<EnumName>` | `enum` | `<crate>` | *Variant semantics* |
+| `<TypeName>` | `struct` | `<crate>` | *What it represents; lifetime params; newtype/typestate invariant if any* |
+| `<TraitName>` | `trait` | `<crate>` | *Contract it enforces; key methods; sealed / RPITIT / GAT if used* |
+| `<EnumName>` | `enum` | `<crate>` | *Variant semantics; `#[non_exhaustive]` if extensible* |
 | `<TypeAlias>` | `type` | `<crate>` | *What complexity it hides* |
 
 *Trait implementation matrix (only notable impls):*
@@ -125,6 +127,18 @@
 - **Panics policy:** <!-- e.g. only on programmer error (index OOB); document with `# Panics` -->
 - **Logging / tracing:** <!-- e.g. `tracing` spans on every public async fn -->
 - **Retry / recovery:** <!-- e.g. callers own retry; library surfaces transient vs. fatal variants -->
+
+---
+
+## Forward vision
+
+*The 2-year / 3-extension view (per `docs/maintainer-grade-development.md` — responsibilities distributed so the design extends cleanly). Name the most likely next extensions and check the structure survives them.*
+
+- **Likely extension 1:** <!-- e.g. a second backend / transport / format --> — *does responsibility still sit in the owning crate, or does this force an upward dependency / a god-crate?*
+- **Likely extension 2:** <!-- e.g. async variant, new tenant dimension --> — *what new boundary or ownership shift would it need?*
+- **Likely extension 3:** <!-- e.g. external consumers / public surface --> — *does the type/trait shape (sealed / `#[non_exhaustive]` / typestate) absorb it without a breaking churn?*
+
+*After these three extensions, does responsibility still sit in the right crate? If "no" for any, reshape the boundary now — a wrong-crate concept compounds. If "yes", say why the boundaries hold.*
 
 ---
 

@@ -45,6 +45,11 @@ sequence, and cross-domain coordination.
 5. Track status; record done / in-progress / blocked with owners; re-sequence on new information.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; scope can be cut,
+  the quality bar cannot. Cut optional behavior, never invariants, ownership, tests, or correctness.
+- When the workspace is unpublished/active-dev, a structural improvement to weak/duplicated/wrong-crate
+  code TOUCHED by the story is IN-SCOPE (keep — reshape), NOT scope creep. Only restructuring of
+  UNTOUCHED code is creep.
 - Stories have acceptance criteria before work starts; no story is "done" without them.
 - Scope changes are explicit decisions, not drift; use `/scope-check` to adjudicate.
 - No quick wins: a partial ripple (updating one crate and deferring the others) is not done.
