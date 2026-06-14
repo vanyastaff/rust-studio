@@ -1,0 +1,8 @@
+[
+  {
+    "name": "pr-ci-status",
+    "description": "Stream this PR's CI check status while /resolve-pr is shepherding it, so failing checks surface as notifications without polling. No-op when gh is unavailable.",
+    "when": "on-skill-invoke:resolve-pr",
+    "command": "command -v gh >/dev/null 2>&1 && gh pr checks --watch || echo 'pr-ci-status: gh CLI not found — install GitHub CLI to stream PR checks'"
+  }
+]

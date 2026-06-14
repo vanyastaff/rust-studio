@@ -9,7 +9,19 @@ user-invocable: true
 
 Orchestrate the release team through structured phases. **Delegate all file writes to
 sub-agents; the orchestrator never writes.** Gate at phase boundaries (quality gates, not
-per-step permission asks) per `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`.
+per-step permission asks) per `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` (§8 team
+execution).
+
+## Orchestration
+When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run this as a real
+team: `TeamCreate`, then spawn the named agents as teammates and coordinate via the shared
+task list (`TaskCreate` one task per phase / audit track, order with `addBlockedBy`, assign
+with `TaskUpdate owner`) + `SendMessage`. Otherwise fall back to single-orchestrator
+delegation: spawn sub-agents sequentially and inline each phase's context into the spawn
+prompt. Teammates don't inherit this plan (pass the target version + acceptance context in the
+spawn prompt) and don't get bundled MCP (they rely on the user's ambient serena/exa); status
+can lag, so have teammates mark tasks `completed`. Drive `TeamDelete` cleanup at the end (shut
+teammates down with `SendMessage {type:"shutdown_request"}` first).
 
 ## Team composition
 `release-lead` (owns RELEASE-GATE) · `security-auditor` · `dependency-manager` ·
@@ -22,10 +34,16 @@ from the API review.)"
 
 ---
 
+Create one task per phase via `TaskCreate`; chain them with `addBlockedBy` (1 → 2 → 3 → 4 →
+5) and assign each to its owning agent with `TaskUpdate owner`. Phases 2 and 3 each fan out
+into independent tracks — create them as sibling tasks (same blocker, no dependency between
+them) so they run concurrently as teammates; the lead synthesizes when all report via
+`SendMessage`.
+
 ## Phase 1 — Semver bump determination
 
-- Spawn `release-lead` + `rust-reviewer` to run `/api-review` against the current branch
-  (vs. the last published tag). Review the output for breaking changes, additions, and
+- Task owned by `release-lead` (with `rust-reviewer`) to run `/api-review` against the current
+  branch (vs. the last published tag). Review the output for breaking changes, additions, and
   fixes.
 - Derive the correct semver bump: **patch / minor / major** with a one-sentence rationale.
 - If `$ARGUMENTS` was supplied, confirm it matches the derived bump; flag any mismatch.
@@ -35,19 +53,20 @@ from the API review.)"
 
 ---
 
-## Phase 2 — Parallel audits
+## Phase 2 — Parallel audits (blocked by 1)
 
-Run all three audit tracks in parallel once the version is confirmed.
+Run all three audit tracks in parallel once the version is confirmed — create one sibling
+task per track (2a/2b/2c) so they run concurrently as teammates.
 
 ### 2a — Security audit
-- Spawn `security-auditor` to run `/security-audit` on the crate surface being released.
-  Focus on: input validation, deserialization, `unsafe` blocks, dependency advisories.
-  Rules: `${CLAUDE_PLUGIN_ROOT}/rules/security.md`.
+- Task owned by `security-auditor` to run `/security-audit` on the crate surface being
+  released. Focus on: input validation, deserialization, `unsafe` blocks, dependency
+  advisories. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/security.md`.
 - Output: a findings list (`CLEAN` / severity-ranked issues). Any **HIGH** or **CRITICAL**
   finding blocks Phase 4 until resolved.
 
 ### 2b — Dependency audit
-- Spawn `dependency-manager` to run `/deps-check`:
+- Task owned by `dependency-manager` to run `/deps-check`:
   - `cargo tree` + `cargo audit` for advisories and duplicate major versions.
   - Confirm all `[dependencies]` have explicit version constraints (no bare `*`).
   - Flag any dependency that would pin consumers below the declared MSRV.
@@ -63,13 +82,14 @@ Run all three audit tracks in parallel once the version is confirmed.
 
 ---
 
-## Phase 3 — Documentation
+## Phase 3 — Documentation (blocked by 2)
 
-Run both tracks in parallel after audit acceptance.
+Run both tracks in parallel after audit acceptance — create one sibling task per track
+(3a/3b) so they run concurrently as teammates.
 
 ### 3a — Changelog
-- Spawn `docs-engineer` to run `/changelog` and produce a draft changelog entry for the
-  target version: `Added` / `Changed` / `Deprecated` / `Removed` / `Fixed` / `Security`
+- Task owned by `docs-engineer` to run `/changelog` and produce a draft changelog entry for
+  the target version: `Added` / `Changed` / `Deprecated` / `Removed` / `Fixed` / `Security`
   per Keep-a-Changelog convention.
 - Use the template at `${CLAUDE_PLUGIN_ROOT}/docs/templates/changelog-entry.md`.
 - `rust-builder` writes the entry to `CHANGELOG.md` only after the user approves the draft.
@@ -86,7 +106,7 @@ Run both tracks in parallel after audit acceptance.
 
 ---
 
-## Phase 4 — RELEASE-GATE checklist + dry-run
+## Phase 4 — RELEASE-GATE checklist + dry-run (blocked by 3)
 
 `release-lead` runs the full **RELEASE-GATE** checklist:
 
@@ -113,7 +133,7 @@ Run both tracks in parallel after audit acceptance.
 
 ---
 
-## Phase 5 — Go / No-Go
+## Phase 5 — Go / No-Go (blocked by 4)
 
 `release-lead` delivers the final verdict.
 
@@ -130,8 +150,11 @@ git push origin v<version>
 ```
 
 - Summarize: version, semver bump justification, audit outcomes, changelog entry, doc
-  coverage, checklist status, and any accepted exceptions with their rationale.
+  coverage, checklist status, and any accepted exceptions with their rationale. Every
+  teammate's contribution ends in **COMPLETE / NEEDS WORK / BLOCKED** with evidence.
 - End with verdict **COMPLETE / NEEDS WORK / BLOCKED** and the manual publish command(s).
+- If running as a team, drive cleanup: `SendMessage {type:"shutdown_request"}` to each
+  teammate, then `TeamDelete`.
 
 **If NO-GO:** list every blocking issue (owner, severity, suggested fix). Completed
 work (changelog draft, doc updates) is preserved. State which phase to re-enter after

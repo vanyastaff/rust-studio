@@ -10,6 +10,20 @@ user-invocable: true
 Run the studio's review agents against the planted-defect fixtures in
 `${CLAUDE_PLUGIN_ROOT}/benchmarks/` and score recall against ground truth. This tests the
 *studio itself* — quality assurance for the plugin, not the user's code.
+Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8 (team execution).
+
+## Orchestration
+When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the fixtures as a
+real team: `TeamCreate`, then create one `TaskCreate` task per fixture (the fixtures are
+independent and read-only — no `addBlockedBy` between them) and spawn each mapped agent as a
+teammate so they run concurrently, reporting findings via `SendMessage`; the lead scores. The
+lighter alternative for these read-only evaluations is to spawn each as a **background
+subagent** (`background: true`) without forming a team. Otherwise fall back to
+single-orchestrator delegation: spawn the agents sequentially, one per fixture. Teammates
+don't inherit this context (pass the fixture's `input.rs` in the spawn prompt — never the
+ground truth) and don't get bundled MCP (they rely on the user's ambient serena/exa). Drive
+`TeamDelete` cleanup at the end (shut teammates down with `SendMessage
+{type:"shutdown_request"}` first).
 
 ## Fixture layout
 Each fixture lives at `benchmarks/fixtures/<agent>/<case>/` with:
@@ -30,8 +44,9 @@ Agent folder → agent mapping:
 1. Resolve fixtures: use **Glob** (`benchmarks/fixtures/**/{input.rs,ground-truth.md}`) to
    enumerate cases. Filter by `$ARGUMENTS` if a case name or agent folder was given; otherwise
    run all. List what you'll evaluate before proceeding.
-2. For each fixture, spawn the mapped agent on **only** `input.rs` — do not give it the ground
-   truth. Collect its findings.
+2. For each fixture, spawn the mapped agent (one task per fixture, or a background subagent —
+   see Orchestration) on **only** `input.rs` — do not give it the ground truth. Collect its
+   findings via `SendMessage` when run as a team.
 3. Compare findings to `ground-truth.md`. For each planted defect mark **caught / missed**;
    note **false positives** (findings with no ground-truth entry — judge if they're real or
    noise). Match on defect type + line vicinity, not exact wording.

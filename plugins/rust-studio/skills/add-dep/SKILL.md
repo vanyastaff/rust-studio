@@ -3,6 +3,7 @@ name: add-dep
 description: "Add a Rust dependency / add-dep / vet a crate — run the full vetting pipeline (RUSTSEC, license, MSRV, features) before touching Cargo.toml."
 argument-hint: "[crate name]"
 user-invocable: true
+disable-model-invocation: true
 ---
 
 # /add-dep — vet and add a Rust dependency

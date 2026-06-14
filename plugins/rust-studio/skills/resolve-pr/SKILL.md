@@ -13,8 +13,9 @@ isn't, leave a clear reply on each. Verification before claims
 compiling and tested. Don't perform agreement on wrong feedback; reason it through
 (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md`).
 
-`gh` has no push stream — "listening" means a real blocking watch on CI
-(`gh pr checks --watch`) plus polling for new comments. Be explicit about that.
+`gh` has no push stream — "listening" means streaming CI and new comments through a `Monitor`
+(a background poll loop whose stdout lines arrive as events) rather than blocking the session.
+Be explicit about that.
 
 ## Mode A — one-shot (default)
 1. Resolve the PR from `$ARGUMENTS` or the current branch:
@@ -35,13 +36,17 @@ min unless `--ci-budget=<minutes>` is given.
 
 1. **Snapshot.** Record current open threads and the latest review/comment ids
    (`updated_at`), plus the check-run set (`gh pr checks <n> --json name,state,bucket,link`).
-2. **Watch CI (real).** Start `gh pr checks <n> --watch --fail-fast` as a **background**
-   process — it blocks until checks settle and notifies on completion. Don't poll CI by hand
-   while it runs.
-3. **Watch comments (poll).** Each wake, diff against the snapshot for NEW entries from
-   `.../pulls/{n}/comments`, `.../issues/{n}/comments`, and `.../reviews`. Capture human
-   reviewers **and bots** — clippy/CI annotations, dependabot, codecov, coderabbit, etc. For
-   any new actionable item, run Mode A's triage/fix/reply flow on just the new threads.
+2. **Watch CI (real).** Arm a `Monitor` whose command emits one line per check as it settles
+   and exits when the run completes — e.g. a poll loop over `gh pr checks <n> --json name,bucket`
+   that emits every non-pending check (cover failures too — `failure`/`cancelled`/`timed_out`,
+   not just success) and breaks once nothing is pending. Each line streams back as an event; you
+   keep working and react on completion. Don't poll CI by hand while the monitor runs.
+3. **Watch comments (stream).** Arm a second `Monitor` that polls `.../pulls/{n}/comments`,
+   `.../issues/{n}/comments`, and `.../reviews` with `?since=<snapshot ts>` and emits one line
+   per NEW entry. Capture human reviewers **and bots** — clippy/CI annotations, dependabot,
+   codecov, coderabbit, etc. For any new actionable item, run Mode A's triage/fix/reply flow on
+   just the new threads. (Use `persistent: true` for a session-length watch; stop it with
+   `TaskStop` on exit.)
 4. **On CI completion.**
    - **Failed:** pull the failing job (`gh run view <run-id> --log-failed`). Route the cause:
      compile/borrow error → `/fix-build`; runtime/logic failure → `/debug`; flaky → `/flaky-hunt`.
@@ -62,11 +67,12 @@ min unless `--ci-budget=<minutes>` is given.
    - `fail-fast: false` only where you need full signal; otherwise let it short-circuit.
    Output a prioritized list with the estimated saving and the exact workflow edit; offer to
    apply via `/dev-task`.
-6. **Pace & exit.** Between polls, self-pace with `ScheduleWakeup` — ~120–270s while CI is
-   actively running (stay in the prompt-cache window), longer when idle waiting on a human.
-   (Or the user wraps this skill with `/loop`.) **Exit when** checks are green AND zero open
-   threads AND `reviewDecision` is not `CHANGES_REQUESTED` → announce **MERGE-READY** and offer
-   `/pr` to merge. Stop on user interrupt.
+6. **Pace & exit.** Don't hand-poll between checks — let the `Monitor`s above stream events
+   (use a 30s+ poll interval inside each monitor command to respect API rate limits). React as
+   events land; otherwise stay idle waiting on a human. (Or the user wraps this skill with
+   `/loop`.) Stop the monitors with `TaskStop` before exiting. **Exit when** checks are green AND
+   zero open threads AND `reviewDecision` is not `CHANGES_REQUESTED` → announce **MERGE-READY**
+   and offer `/pr` to merge. Stop on user interrupt.
 
 ## Output
 One row per thread, plus a CI line:
@@ -77,5 +83,5 @@ One row per thread, plus a CI line:
 CI: <green | red: failing job → routed to /fix-build|/debug | slow: Nm over budget → speedups proposed>
 ```
 End with the clippy/test summary and **COMPLETE** / **NEEDS WORK** (numbered) / **WATCHING**
-(next wake in Ns, what it's waiting on). Don't push, merge, or resolve GitHub threads without
+(monitors armed, what they're waiting on). Don't push, merge, or resolve GitHub threads without
 explicit go-ahead.

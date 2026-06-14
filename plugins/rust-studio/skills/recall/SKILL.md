@@ -11,12 +11,12 @@ Pull relevant past learnings into context so work compounds instead of repeating
 (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). Companion to `/remember`.
 
 Notes live in one Obsidian vault under a per-project folder, read through the **obsidian** MCP.
-The vault root is `C:\Users\vanya\memory`; the project folder is the basename of the session cwd
-(for a project at `…/nebula`, that is `nebula`), so the index is
-`C:\Users\vanya\memory\<project>\MEMORY.md`.
+The vault root is `$OBSIDIAN_VAULT_PATH` (default `~/memory`); the project folder is the basename
+of the session cwd (for a project at `…/nebula`, that is `nebula`), so the index is
+`<vault>/<project>/MEMORY.md`.
 
 ## Steps
-1. If `$ARGUMENTS` is empty, read the project index `C:\Users\vanya\memory\<project>\MEMORY.md`
+1. If `$ARGUMENTS` is empty, read the project index `<vault>/<project>/MEMORY.md`
    with `note_read` and summarize what's there.
 2. Otherwise rank-search the vault for the topic, scoped to the project folder:
    - `search_text` for the area/crate/keywords across titles and bodies,

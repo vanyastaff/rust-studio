@@ -3,6 +3,7 @@ name: verify-loop
 description: "Run the Rust checks and auto-fix in a bounded loop until green — cargo fmt/clippy/nextest, then fix the cause of each failure (build errors, lints, failing tests) and re-run, up to 3 iterations. Use to drive a change to a clean, passing state without babysitting."
 argument-hint: "[optional: test filter, package, or feature set]"
 user-invocable: true
+allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(cargo test*) Bash(cargo nextest*)"
 ---
 
 # /verify-loop — check → fix → re-run (bounded)

@@ -8,7 +8,18 @@ user-invocable: true
 # /spec-tasks — break a spec into tasks
 
 Turn `.rust-studio/specs/<slug>/spec.md` into an ordered task list and shepherd it to done.
-Orchestrate; delegate writes. Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`.
+Orchestrate; delegate writes. Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`
+(§8 team execution).
+
+## Orchestration
+The durable `.rust-studio/specs/<slug>/tasks.md` file is the human-readable record and source
+of truth. When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), **mirror**
+those task rows into the shared task list — `TeamCreate`, then one `TaskCreate` per row (id ↔
+`#`, owner lead ↔ `owner`, "Blocked by" ↔ `addBlockedBy`) — and use it as the live
+coordination surface while keeping `tasks.md` in sync as each task lands. Otherwise drive the
+file alone, running each task sequentially. Each task still executes through `/dev-task`
+(which itself runs as a team when the gate is set). Drive `TeamDelete` cleanup at the end
+(shut teammates down with `SendMessage {type:"shutdown_request"}` first).
 
 ## Input
 `$ARGUMENTS` is a spec slug or path. If empty, list available specs under
@@ -24,17 +35,22 @@ Orchestrate; delegate writes. Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination
    and a rough size. Identify the critical path and cross-crate ripples; flag any task that
    will need `chief-architect` or `api-design-lead` sign-off.
 3. Write `.rust-studio/specs/<slug>/tasks.md` from
-   `${CLAUDE_PLUGIN_ROOT}/docs/templates/tasks.md` (delegate the write).
+   `${CLAUDE_PLUGIN_ROOT}/docs/templates/tasks.md` (delegate the write). The template's
+   columns (`#`, owner lead, "Blocked by", status) mirror the shared task-list shape, so the
+   rows map cleanly to `TaskCreate` items.
    **Gate (phase boundary):** present the task list and get approval before executing any
    task. If the user wants changes, loop back to step 2.
 
 ## Phase 3 — Execute
-4. Run each ready task through **`/dev-task`** (scout → plan → approve → build → review
-   with the owning lead's gate). Update `tasks.md` status as each task lands.
-   Decide execution order and parallelism yourself based on the dependency graph —
-   state your sequencing rationale, don't ask for it.
-5. When a task returns **BLOCKED**, surface it, mark it in `tasks.md`, and continue with
-   unblocked tasks where the dependency graph permits. See error recovery below.
+4. Once approved, mirror the rows into the shared task list with `TaskCreate` (when teams are
+   active — see Orchestration). Run each ready task through **`/dev-task`** (scout → plan →
+   approve → build → review with the owning lead's gate). Update both `tasks.md` and the
+   mirrored `TaskUpdate` status as each task lands — `tasks.md` is the durable record, the
+   task list is the live surface. Decide execution order and parallelism yourself based on the
+   dependency graph (`addBlockedBy` enforces it for teammates) — state your sequencing
+   rationale, don't ask for it.
+5. When a task returns **BLOCKED**, surface it, mark it in `tasks.md` (and `TaskUpdate`), and
+   continue with unblocked tasks where the dependency graph permits. See error recovery below.
 
 ## Phase 4 — Verdict
 6. Summarize: tasks completed, gates passed, evidence (test/clippy output), and what

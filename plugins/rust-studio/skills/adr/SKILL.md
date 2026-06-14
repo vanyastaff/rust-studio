@@ -67,8 +67,11 @@ need to record?" If the decision is entangled with a larger design, suggest runn
 
 ## Phase 5 — Approve and write
 
-8. **`AskUserQuestion`**: show the complete draft and ask for approval. Loop back
-   to Phase 4 for any requested changes.
+8. Terminal "here's the plan — file it?" gate: present the complete ADR draft for the
+   user to approve using native plan mode (on approval the user transitions into an edit
+   mode and the write proceeds). Keep `AskUserQuestion` for the earlier option fork (the
+   Phase 2 option selection), not for this final approval. Loop back to Phase 4 for any
+   requested changes.
 9. On approval, resolve the output path:
    - Sequence number = highest existing `docs/adr/NNNN-*.md` + 1, zero-padded to
      four digits.

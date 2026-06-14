@@ -32,7 +32,10 @@ at each gate. Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`.
    `${CLAUDE_PLUGIN_ROOT}/docs/templates/spec.md`: problem, goals/non-goals, chosen approach +
    alternatives, public-surface & semver impact, **acceptance criteria** (a checklist — this
    is what `/spec-verify` checks), risks, and links (ADR, recalled memory).
-6. **Gate:** show the draft; get approval before the write (delegate the write to a sub-agent).
+6. **Terminal gate ("here's the plan — build it?"):** present the spec draft for the user to
+   approve using native plan mode (on approval the user transitions into an edit mode and the
+   write proceeds — delegate the write to a sub-agent). Keep `AskUserQuestion` for the earlier
+   option fork (the Phase 2 approach pick), not for this final go-ahead.
 
 ## Output
 Confirm the spec path and summarize the approach + acceptance criteria. Verdict

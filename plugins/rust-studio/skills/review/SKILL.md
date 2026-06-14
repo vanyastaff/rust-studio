@@ -8,9 +8,22 @@ user-invocable: true
 # /review — audit a Rust change
 
 Review the change for real problems and produce a prioritized, severity-tagged findings
-list with a merge verdict. Evidence over opinion (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+list with a merge verdict. Evidence over opinion (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §8 team execution).
 Flag only correctness, soundness, security, and requirement gaps — not style or
 over-engineering (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` §"don't over-report").
+
+## Orchestration
+When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) and you run a
+`--full` multi-lens pass, run it as a real team: `TeamCreate`, then create one `TaskCreate`
+task per lens (these are independent and read-only — no `addBlockedBy` between them) and spawn
+each lens as a teammate so they run concurrently, reporting via `SendMessage`; the lead merges
+and de-duplicates. The lighter alternative for these read-only lenses is to spawn each as a
+**background subagent** (`background: true`) without forming a team. Otherwise (no teams, or a
+single-reviewer pass) fall back to single-orchestrator delegation: spawn the lenses
+sequentially and inline the diff + scope into each spawn prompt. Teammates don't inherit this
+context (pass the diff/scope in the spawn prompt) and don't get bundled MCP (they rely on the
+user's ambient serena/exa). Drive `TeamDelete` cleanup at the end (shut teammates down with
+`SendMessage {type:"shutdown_request"}` first).
 
 ## Scope
 `$ARGUMENTS` may be a path or a git ref. Default to the working-tree diff
@@ -23,8 +36,9 @@ and proceed — ask only if the diff is genuinely ambiguous about its goal.
    change's goal is truly opaque.
 2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit.
 3. **Full review** (`--full`, or for breaking / public-API / large diffs): fan out the
-   relevant lenses **in parallel**, then merge and de-duplicate findings. This is the
-   multi-lens pass — it replaces the former `/team-review`:
+   relevant lenses **in parallel** (one task per lens, or background subagents — see
+   Orchestration), then merge and de-duplicate findings. This is the multi-lens pass — it
+   replaces the former `/team-review`:
    - `unsafe-auditor` if the diff touches `unsafe` (SAFETY-GATE).
    - `security-auditor` if it touches input parsing, auth, deserialization, or FFI.
    - `perf-engineer` if it touches hot paths or benches (PERF-GATE).
