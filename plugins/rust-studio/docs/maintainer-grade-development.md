@@ -192,7 +192,11 @@ The pre-code standard is reinforced by focused `${CLAUDE_PLUGIN_ROOT}/rules/` fi
 
 ## Eval Fixtures To Keep This Standard Honest
 
-The plugin should contain scenarios that fail if agents regress to junior behavior:
+These scenarios ship under `${CLAUDE_PLUGIN_ROOT}/benchmarks/fixtures/` (each an
+`input.rs` + `ground-truth.md` pair) and run via `/eval-agents` in **first-pass bar** mode:
+the mapped agent passes only if it returns the expected `RESHAPE NEEDED` / `REDO-TO-BAR`
+verdict on `input.rs` — a "looks fine, it compiles" response is a fail. They fail if agents
+regress to junior behavior:
 
 - `architecture/wrong-crate-helper`: helper/type must move to the owning crate.
 - `active-dev/no-shim`: compatibility shim must be rejected when the workspace is unpublished.

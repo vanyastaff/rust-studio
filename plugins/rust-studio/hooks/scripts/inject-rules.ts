@@ -1,12 +1,16 @@
 #!/usr/bin/env bun
-// Rust Code Studio — path-scoped rule injection (PostToolUse: Write|Edit).
+// Rust Code Studio — path-scoped rule injection (PreToolUse: Read|Write|Edit).
 //
-// After a file is written/edited, find any rules/*.md whose `paths:` frontmatter
-// glob matches the edited path and inject that rule's body as additionalContext,
-// so the relevant Rust standard is in front of the agent. Never fails the session.
+// BEFORE a source file is read or edited, find any rules/*.md whose `paths:`
+// frontmatter glob matches the path and inject that rule's body as
+// additionalContext, so the relevant Rust standard is in front of the agent
+// BEFORE it shapes the first draft (firing on Read is what gets the rules in
+// ahead of the first edit, not after it). Each matching path injects once per
+// session (a tmp marker dedupes repeat reads/edits). Never fails the session.
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { tmpdir } from "node:os";
 import { readInput, emit, done, watchdog, pluginRoot } from "./_lib.ts";
 
 const disarm = watchdog();
@@ -73,12 +77,15 @@ function pathMatches(globs: string, path: string): boolean {
 }
 
 interface Input {
+  hook_event_name?: string;
+  session_id?: string;
   tool_input?: { file_path?: string; path?: string };
 }
 
 const data = await readInput<Input>();
 disarm();
 
+const event = data.hook_event_name || "PreToolUse";
 const filePath = data.tool_input?.file_path || data.tool_input?.path || "";
 if (!filePath) done();
 const norm = String(filePath).replace(/\\/g, "/");
@@ -108,6 +115,20 @@ for (const f of entries!) {
 
 if (!chunks.length) done();
 
+// Inject a given path's rules at most once per session — a Read followed by
+// several Edits to the same file shouldn't re-inject the same standard each time.
+// Fail-open: any fs error just means we inject (never wedge the session).
+try {
+  const dir = join(tmpdir(), "rust-studio-rules");
+  const sid = (data.session_id || "nosession").replace(/[^A-Za-z0-9]/g, "_");
+  const marker = join(dir, `${sid}__${norm.replace(/[^A-Za-z0-9]/g, "_")}`);
+  if (existsSync(marker)) done();
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(marker, "1");
+} catch {
+  /* inject anyway */
+}
+
 const header =
   `Path-scoped Rust standards apply to \`${basename(norm)}\` ` +
   "(Rust Code Studio). Conform the edit to these:\n\n";
@@ -116,7 +137,7 @@ if (context.length > 8000) context = context.slice(0, 8000) + "\n\n…(truncated
 
 emit({
   hookSpecificOutput: {
-    hookEventName: "PostToolUse",
+    hookEventName: event,
     additionalContext: context,
   },
 });
