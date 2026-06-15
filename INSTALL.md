@@ -121,10 +121,12 @@ for other platforms.
 
 ## Configuration
 
-On enable, Claude Code prompts for the studio's options (preferred test runner, default gate
-intensity, house MSRV fallback). Change them later via `/plugin` → **Rust Code Studio** →
-configure. The plugin also ships an opt-in `Rust review (terse)` output style — select it under
-`/config` → Output style. Details: [`plugins/rust-studio/README.md`](plugins/rust-studio/README.md#configuration).
+On enable, Claude Code prompts for the studio's options: behavioral defaults (preferred test
+runner, gate intensity, house MSRV fallback) and toggles for ambient behaviors (`memory_recall`,
+`routing_nudge`, `fmt_nudge` — all on by default — plus an Obsidian `vault_path`). Change them
+later via `/plugin` → **Rust Code Studio** → configure. The plugin also ships an opt-in
+`Rust review (terse)` output style — select it under `/config` → Output style. Full table:
+[`plugins/rust-studio/README.md`](plugins/rust-studio/README.md#configuration).
 
 ## Updating
 

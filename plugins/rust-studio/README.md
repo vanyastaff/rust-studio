@@ -117,14 +117,30 @@ hard timeout with a watchdog, so it can never freeze the session (even mid-subag
 ## Configuration
 
 The plugin prompts for these when you enable it (and you can change them anytime via `/plugin`
-→ **Rust Code Studio** → configure). All three surface in the SessionStart briefing so the team
-honors them; `default_msrv` also fills the MSRV line when a `Cargo.toml` doesn't declare one.
+→ **Rust Code Studio** → configure).
+
+**Behavior** — surfaced in the SessionStart briefing so the team honors them; `default_msrv`
+also fills the MSRV line when a `Cargo.toml` doesn't declare one:
 
 | Option | Default | Effect |
 |--------|---------|--------|
 | **Default test runner** (`test_runner`) | `nextest` | Test runner the studio prefers — set to `cargo` to skip cargo-nextest. |
 | **Default gate intensity** (`gate_intensity`) | `full` | Default rigor for reviews & quality gates — `full` / `lean` / `solo`. |
 | **House MSRV fallback** (`default_msrv`) | — | MSRV to assume when a crate doesn't pin `rust-version` (e.g. `1.82`). |
+
+**Toggles** — turn off ambient behaviors that run automatically. Each is honored by its hook
+(off = the hook no-ops); core behavior (stack briefing, path-scoped rule injection, sub-agent
+verdict check) is always on, and the whole plugin disables with `/plugin disable rust-studio@vanya`:
+
+| Option | Default | Effect when off |
+|--------|---------|-----------------|
+| **Session-start memory recall** (`memory_recall`) | on | SessionStart skips the Obsidian-vault scan; `/remember`, `/recall`, `/session-wrap` still work. |
+| **Obsidian vault path** (`vault_path`) | — | Sets the vault used for recall; overrides `OBSIDIAN_VAULT_PATH` (default `~/memory`). |
+| **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
+| **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
+
+> LSP and any bundled MCP servers can't be toggled with a flag (they're declared statically) —
+> remove `rust-analyzer` from PATH or disable the whole plugin to turn off the LSP.
 
 **Terse review output style** — the plugin ships a `Rust review (terse)` output style
 (one finding per line, severity-tagged, evidence over prose, verdict last). It is **opt-in**:

@@ -42,6 +42,29 @@
       "type": "string",
       "title": "House MSRV fallback",
       "description": "Minimum supported Rust version to assume when a Cargo.toml does not declare rust-version (e.g. 1.82). Leave empty to keep showing \"(unset)\"."
+    },
+    "memory_recall": {
+      "type": "boolean",
+      "title": "Session-start memory recall",
+      "description": "Scan the Obsidian vault at session start and inject a ranked index of relevant project notes. Turn off to skip the vault scan; the /remember, /recall, and /session-wrap skills still work.",
+      "default": true
+    },
+    "vault_path": {
+      "type": "directory",
+      "title": "Obsidian vault path",
+      "description": "Path to the Obsidian vault used for cross-session memory. Overrides the OBSIDIAN_VAULT_PATH env var. Leave empty to use OBSIDIAN_VAULT_PATH, or ~/memory by default."
+    },
+    "routing_nudge": {
+      "type": "boolean",
+      "title": "Routing nudge",
+      "description": "Once per session, remind you to prefer a studio skill and to /recall an area before working. Turn off to silence the UserPromptSubmit nudge.",
+      "default": true
+    },
+    "fmt_nudge": {
+      "type": "boolean",
+      "title": "Formatting nudge",
+      "description": "After a turn that changed .rs files, nudge to run /lint when they are not rustfmt-clean. Turn off to silence the Stop-hook fmt check.",
+      "default": true
     }
   }
 }

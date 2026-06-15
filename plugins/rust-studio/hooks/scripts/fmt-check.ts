@@ -11,7 +11,7 @@
 // froze the turn for up to a minute and a half. That is the bug this fixes.
 
 import { join } from "node:path";
-import { readInput, emit, done, watchdog, run, which } from "./_lib.ts";
+import { readInput, emit, done, watchdog, run, which, optionBool } from "./_lib.ts";
 
 const disarm = watchdog(12_000);
 
@@ -21,6 +21,9 @@ interface Input {
 
 const data = await readInput<Input>();
 disarm();
+
+// Opt-out: studio config `fmt_nudge` (default on).
+if (!optionBool("fmt_nudge", true)) done();
 
 const cwd = data.cwd || process.cwd();
 

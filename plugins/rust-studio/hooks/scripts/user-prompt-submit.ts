@@ -11,7 +11,7 @@
 // session grows (measured by tools/context-cost.ts). Never blocks (no
 // decision:block) and never fails the session.
 
-import { readInput, watchdog } from "./_lib.ts";
+import { readInput, watchdog, optionBool } from "./_lib.ts";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -20,6 +20,9 @@ const disarm = watchdog(6_000);
 
 const data = await readInput<{ session_id?: string }>();
 disarm();
+
+// Opt-out: studio config `routing_nudge` (default on).
+if (!optionBool("routing_nudge", true)) process.exit(0);
 
 // Dedupe to once per session; fail-open (emit if the fs check errors).
 try {
