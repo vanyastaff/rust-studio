@@ -58,16 +58,20 @@ Agent folder → agent mapping:
    enumerate cases. Filter by `$ARGUMENTS` if a case name or agent folder was given; otherwise
    run all. List what you'll evaluate before proceeding.
 2. For each fixture, spawn the mapped agent (one task per fixture, or a background subagent —
-   see Orchestration) on **only** `input.rs` — do not give it the ground truth. For
-   **first-pass bar** fixtures, ask the agent for its pre-code maintainer verdict
-   (`ACCEPTABLE` / `RESHAPE NEEDED` / `BLOCKED`) or, for `rust-reviewer`, its maintainer-shape
-   audit verdict (including `REDO-TO-BAR`) — treating `input.rs` as code it must not wave
-   through. Collect findings via `SendMessage` when run as a team.
+   see Orchestration) on **only** `input.rs` — do not give it the ground truth. Ask it for
+   ITS native output, not a custom format (so its own verification ritual fires). For
+   **first-pass bar** fixtures, ask for the reject verdict in the agent's own vocabulary:
+   **RESHAPE NEEDED** for a pre-code lead/specialist (`chief-architect`, `api-design-lead`,
+   `perf-engineer`), **REDO-TO-BAR** for `rust-reviewer` — both mean "rejected the shape";
+   `ACCEPTABLE` is a fail. Treat `input.rs` as code the agent must not wave through. Collect
+   findings via `SendMessage` when run as a team.
 3. Compare findings to `ground-truth.md`. For each planted defect mark **caught / missed**;
    note **false positives** (findings with no ground-truth entry — judge if they're real or
    noise). Match on defect type + line vicinity, not exact wording. For first-pass-bar
-   fixtures, ALSO record whether the agent returned the expected reshape/redo verdict — a
-   missing verdict is a fail even if some rows were noted.
+   fixtures, ALSO record whether the agent returned a reject verdict (RESHAPE NEEDED /
+   REDO-TO-BAR) — a missing verdict (or `ACCEPTABLE`) is a fail even if some rows were noted.
+   For `perf-engineer` / `unsafe-auditor`, also confirm the verification step was named
+   (the criterion bench / `miri` run-or-skip-reason) — its absence is a prompt gap to flag.
 4. Score per fixture: `recall = caught / planted`. Aggregate per agent.
 5. Report a table and verdict. When recall < 100%, propose the one-line prompt change to the
    agent that would have caught the missed defect — do not apply it here, surface it for the user.
