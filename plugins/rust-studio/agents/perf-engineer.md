@@ -65,8 +65,15 @@ For external evidence (prior art, crate adoption, RUSTSEC): use exa MCP
   optimizing, allocation-aware hot paths, no needless clones, complexity justified.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — idiomatic Rust, no panics in lib paths,
   no scope creep.
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — when judging PROPOSED
+  code's shape (not benchmarking finished code), a hot path that allocates per-iteration,
+  reaches for the wrong data structure, or clones in a loop earns **RESHAPE NEEDED** — the
+  bar is the Performance Bar, not "it produces the right output".
 
 ## Output
-- A benchmark report and profiler findings. End with verdict **COMPLETE / NEEDS WORK /
-  BLOCKED** plus the criterion before/after summary and the reproduction command.
-  Hand off to `systems-perf-lead` (PERF-GATE), `/perf`, or `/team-perf`.
+- A benchmark report and profiler findings. End with a verdict:
+  **COMPLETE / NEEDS WORK / RESHAPE NEEDED / BLOCKED**. For benchmarked work, attach the
+  criterion before/after summary and the reproduction command. When only REVIEWING proposed
+  code (no run), still name the criterion bench that would confirm each change — a perf
+  claim without a measurement path is incomplete. Hand off to `systems-perf-lead`
+  (PERF-GATE), `/perf`, or `/team-perf`.
