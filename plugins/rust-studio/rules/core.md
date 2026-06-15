@@ -23,14 +23,41 @@ Applies to every `.rs` file.
 - Make illegal states unrepresentable: prefer enums/newtypes over bool flags and
   stringly-typed data. Parse, don't validate.
 - Derive `Debug` on public types. Derive `Clone`/`Copy`/`PartialEq` only when the
-  semantics are right, not reflexively.
+  semantics are right, not reflexively. Order derives common -> specific:
+  `#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]`.
 - Avoid `as` casts that can truncate; use `TryFrom`/`try_into` and handle the error.
+- Integer overflow is **defined**, not UB: debug panics, release wraps (two's complement).
+  On untrusted numbers reach for `checked_`/`saturating_`/`wrapping_`/`overflowing_`
+  (or `Wrapping<T>`/`Saturating<T>`) to state the intended semantics explicitly.
 
 ## Idiom
 - Iterators over manual index loops; `?`-friendly combinators over nested matches.
 - No needless `.clone()` to satisfy the borrow checker — restructure or borrow.
-- `#[must_use]` on functions whose result must be used (builders, `must_use` returns).
+- `#[must_use]` on builders, `Result`-like returns, and guard types — anywhere a silently
+  discarded value is a bug.
 - Modules small and cohesive; `pub(crate)` by default, `pub` only when intended.
+- `mem::take`/`mem::replace` to move a value out behind `&mut` for enum-variant transitions;
+  prefer `Option::take()` over `mem::take(opt)`, and `mem::replace(field, placeholder)` when
+  the type is not `Default`.
+- Iterate an `Option` via `.iter()`/`.chain()`/`.extend()`/`filter_map` — never `for x in opt`
+  (use `if let Some(x) = opt` for the single value).
+- Cut nesting with `let-else` and let-chains. Prefer the `cfg_select!` macro over the
+  `cfg-if` crate for compile-time branching in new code.
+- `if let` guards in `match` arms do **not** count toward exhaustiveness — always pair a
+  guarded arm with a non-guarded or wildcard arm covering the same case.
+
+## Drop & raw pointers
+- Variables drop in **reverse** declaration order within a scope; struct/tuple/variant fields
+  drop in **declaration** order; array/slice elements drop first-to-last. When a `Drop` impl or
+  an `Rc`/`Arc` cycle depends on teardown sequence, order the fields to match.
+- RAII guards: bind to `_g`/`_guard`, never bare `_` (bare `_` drops at statement end, not scope
+  end). Never wrap a guard in `Rc`/`Arc` — its lifetime would escape the scope it protects.
+- `Drop` is **best-effort, not guaranteed**: it is skipped on `mem::forget`, `Rc`/`Arc` reference
+  cycles, `process::exit`/`abort`, and the second of a double-panic. Do not rely on it for critical
+  finalization (WAL flush, releasing external locks) — provide an explicit `close()` and document
+  `Drop` as best-effort.
+- Take a raw pointer with `&raw const x` / `&raw mut x`, never `&x as *const _` (that forms a
+  reference first — UB on unaligned, uninitialized, or `#[repr(packed)]` places).
 
 ## Hygiene
 - Zero `cargo clippy --all-targets --all-features -- -D warnings`.
@@ -41,8 +68,9 @@ Applies to every `.rs` file.
   invariant a future change enforces, not the plan id that schedules it.
 
 ## Modern idioms & recurring misses
-- Verify idioms against the **current** toolchain (edition 2024, Rust ≥1.94) — prefer native
-  async-fn-in-trait / RPITIT over `async-trait`, `OnceLock`/`LazyLock`, `let-else`/`let-chains`.
+- Verify idioms against the **current** toolchain (edition 2024; check official Rust
+  release notes/std docs for the current stable version) — prefer native async-fn-in-trait /
+  RPITIT over `async-trait`, `OnceLock`/`LazyLock`, `let-else`/`let-chains`.
   Don't default to `Arc<Mutex<_>>` / `Rc<RefCell<_>>`. Prefer making the wrong path
   *syntactically absent* (visibility, scoped borrows, newtypes) over a "remember to call me" helper.
 - `map.entry(k).or_default()` — one lookup, not `get(&k)` then `entry()` on miss.
