@@ -1,6 +1,6 @@
 ---
 name: remember
-description: "remember save capture learning — persist a project learning so the studio recalls it across sessions: an architecture decision, a gotcha, a convention, or a non-trivial fix. Writes an Obsidian-idiomatic note to a single shared vault (via the obsidian MCP) and links it from the project index."
+description: "remember save capture learning — persist a project learning (architecture decision, gotcha, convention, or non-trivial fix) so the studio recalls it across sessions. Writes an Obsidian-idiomatic note to the shared vault (obsidian MCP) and links it from the project index."
 argument-hint: "[what to remember]"
 user-invocable: true
 ---

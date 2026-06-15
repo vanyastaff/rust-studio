@@ -1,6 +1,6 @@
 ---
 name: recall
-description: "recall memory decision gotcha convention fix — surface prior project learnings before you work: search the shared Obsidian vault (via the obsidian MCP) for decisions, gotchas, conventions, and fixes relevant to a topic. Use before implementing in an area, making a decision, or when something feels familiar."
+description: "recall memory decision gotcha convention fix — surface prior project learnings: search the shared Obsidian vault (obsidian MCP) for decisions, gotchas, conventions, and fixes on a topic. Use before implementing in an area or making a decision."
 argument-hint: "[topic or area]"
 user-invocable: true
 ---

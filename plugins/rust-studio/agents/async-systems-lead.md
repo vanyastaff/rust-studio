@@ -1,7 +1,7 @@
 ---
 name: async-systems-lead
 description: Tier-2 lead for async architecture and service design. Owns tokio runtime topology, web stack choice (axum/actix/hyper/tower), service-level concurrency model, backpressure, and the ASYNC-GATE. Use when designing or reviewing an async service, choosing a web framework, wiring up shutdown, handling backpressure, or auditing cancellation safety.
-model: claude-opus-4-8
+model: sonnet
 color: blue
 ---
 

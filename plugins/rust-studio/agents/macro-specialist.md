@@ -1,7 +1,7 @@
 ---
 name: macro-specialist
 description: "Proc-macro, derive macro, macro_rules! specialist. Use when writing or reviewing a proc-macro, designing a derive, debugging macro expansion output, adding trybuild tests for error messages, or deciding whether a macro is the right tool at all."
-model: claude-opus-4-8
+model: sonnet
 color: yellow
 ---
 

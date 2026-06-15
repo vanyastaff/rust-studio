@@ -1,7 +1,7 @@
 ---
 name: docs-engineer
-description: "Write, audit, or review Rust documentation — rustdoc, doc-tests, intra-doc links, crate-level //! docs, mdBook, examples/, and README. Use when adding or reviewing public-facing docs, writing doc-tests, enforcing #![warn(missing_docs)], auditing # Errors / # Panics / # Safety / # Examples sections, or syncing the README with crate docs. Signs off on API-GATE (all pub items documented) and RELEASE-GATE (README and crate docs in sync)."
-model: claude-opus-4-8
+description: "Write/audit/review Rust documentation: rustdoc, doc-tests, intra-doc links, crate-level //! docs, mdBook, examples/, README. Use to add public-facing docs, write doc-tests, enforce #![warn(missing_docs)], audit # Errors/# Panics/# Safety/# Examples sections, or sync README with crate docs. Signs off API-GATE (pub items documented) and RELEASE-GATE (README/docs in sync)."
+model: sonnet
 color: green
 ---
 

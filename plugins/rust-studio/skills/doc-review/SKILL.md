@@ -1,6 +1,6 @@
 ---
 name: doc-review
-description: "doc review, review spec, review plan, review ADR, review design — audit a requirements/spec/plan/ADR/design document (not code) with a parallel persona panel: coherence, feasibility, scope, security-at-plan-level, and an adversarial critic. Use before committing to a non-trivial design or after a spec/plan is drafted."
+description: "doc review, review spec, review plan, review ADR, review design — audit a requirements/spec/plan/ADR/design document (not code) with a parallel persona panel (coherence, feasibility, scope, security, adversarial critic). Use before committing to a non-trivial design or after a spec/plan is drafted."
 argument-hint: "[path to the doc, or the spec/ADR id]"
 user-invocable: true
 ---

@@ -1,7 +1,7 @@
 ---
 name: cli-ux-lead
 description: "CLI/TUI design, terminal UX, clap argument structure, output streams, exit codes, shell completions, CLI-GATE sign-off. Use when designing a new CLI, reviewing clap argument structure, deciding how errors should surface, auditing stdout/stderr discipline, planning shell completions, or gating CLI work before merge."
-model: claude-opus-4-8
+model: sonnet
 color: green
 ---
 

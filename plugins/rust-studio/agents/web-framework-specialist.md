@@ -1,7 +1,7 @@
 ---
 name: web-framework-specialist
-description: "axum/actix web framework specialist. Owns extractors, middleware, tower layers, routing, shared app state, IntoResponse error mapping, and HTTP status codes. Use when adding or reviewing axum/actix handlers, middleware stacks, tower service composition, extractor validation, or error-to-response mapping. Trigger phrases: \"add a route\", \"extractor\", \"middleware\", \"tower layer\", \"app state\", \"status code\", \"body limit\", \"request timeout\", \"IntoResponse\"."
-model: claude-opus-4-8
+description: "axum/actix web-framework specialist: extractors, middleware, tower layers, routing, shared app state, IntoResponse error mapping, HTTP status codes. Use to add/review handlers, middleware stacks, tower composition, or extractor validation. Trigger phrases: \"add a route\", \"extractor\", \"middleware\", \"tower layer\", \"app state\", \"status code\", \"body limit\", \"request timeout\", \"IntoResponse\"."
+model: sonnet
 color: blue
 ---
 

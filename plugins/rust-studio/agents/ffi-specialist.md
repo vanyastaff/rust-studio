@@ -1,7 +1,7 @@
 ---
 name: ffi-specialist
-description: "Tier-3 specialist for FFI and C interop. Owns bindgen/cbindgen configuration, C ABI correctness, extern \"C\" boundaries, repr(C) layouts, ownership/lifetime contracts across the boundary, panic=abort enforcement, and no_std FFI. Use when adding or auditing a C binding, generating or reviewing a cbindgen header, writing build.rs probes for a native library, crossing the FFI boundary with heap-allocated types, or diagnosing ABI mismatches and undefined behavior at the language boundary."
-model: claude-opus-4-8
+description: "FFI and C-interop specialist: bindgen/cbindgen, C ABI correctness, extern \"C\" boundaries, repr(C) layouts, cross-boundary ownership/lifetime contracts, panic=abort, no_std FFI. Use to add/audit a C binding, review a cbindgen header, write build.rs probes for a native library, or diagnose ABI mismatches and undefined behavior at the language boundary."
+model: sonnet
 color: orange
 ---
 

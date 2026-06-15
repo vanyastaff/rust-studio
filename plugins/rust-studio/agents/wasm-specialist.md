@@ -1,7 +1,7 @@
 ---
 name: wasm-specialist
 description: "wasm32 target, wasm-bindgen, JS interop, binary size — use when adding a wasm32 target, designing a JS boundary, auditing wasm binary size, fixing getrandom/thread/fs assumptions, or enforcing panic=abort for wasm builds."
-model: claude-opus-4-8
+model: sonnet
 color: yellow
 ---
 
