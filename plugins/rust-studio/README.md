@@ -9,8 +9,8 @@ for libraries, async/web services, CLIs, and systems/embedded code.
 > rebuilt from the ground up for Rust and packaged as a Claude Code plugin.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **45 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, cross-session memory, and a self-check harness
-- **10 path-scoped rule sets** — the right Rust standard injected when you edit a matching file
+- **48 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, cross-session memory, and a self-check harness
+- **17 path-scoped rule sets** — the right Rust standard injected the moment you open or edit a matching file
 - **7 hooks** — stack detection **+ memory recall** at session start, path-scoped rule injection, a lint nudge, and session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders)
 
 ---
@@ -79,17 +79,23 @@ When you edit a file, the matching standard is injected as context automatically
 | `benches/**` | performance standards |
 | `main.rs` / `bin/**` | CLI standards |
 | `tests/**` | testing standards |
-| `Cargo.toml` | manifest & dependency hygiene |
+| `Cargo.toml` | manifest, dependency & workspace-lints hygiene |
 | `build.rs` | build-script hygiene |
+| domain/model/`error*.rs` | type-system, variance & error-taxonomy standards |
+| `ffi*.rs` / `*-sys` crate | FFI / C-interop layout, ABI & unwind safety |
+| macro crate (`*-macros`, `proc-macro*`) | `macro_rules!`/proc-macro hygiene & choice |
 | handler/route/parser/auth file | security standards (untrusted-input boundary) |
-| anything with `unsafe` | unsafe-code standards (+ a SAFETY reminder) |
+| anything with `unsafe` | unsafe-code standards — UB catalog, `repr`, `&raw`, `MaybeUninit` |
 
 ## Hooks
 
 - **SessionStart** — detects the crate/workspace, edition, MSRV, and domain; briefs the team, and
   recalls the most relevant notes from the project's Obsidian-vault memory (ranked against the git
   branch / changed crates / last commit).
-- **PostToolUse (Write/Edit)** — injects the path-scoped Rust standard for the file you edited.
+- **PreToolUse (Read/Write/Edit)** — injects the path-scoped Rust standard *before* you read or
+  edit a matching file, so the standard is in front of the agent ahead of the first draft. An edit
+  that introduces `unsafe` also pulls in the unsafe-code standard. `core` leads every injection;
+  if more rules match than fit the budget, the extras are named (never silently dropped).
 - **UserPromptSubmit** — a light nudge to `/recall` before working in a known area and to prefer a
   studio skill when one fits.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
@@ -112,16 +118,66 @@ hard timeout with a watchdog, so it can never freeze the session (even mid-subag
 /team-api <api>   # design & ship a public API with the API team
 ```
 
-## Requirements
+## Requirements & tooling
 
-- Claude Code (plugin support).
-- `cargo` (the agents run `cargo check/clippy/test/fmt`, criterion, miri, etc.).
-- `bun` on PATH for hooks (optional but recommended).
-- For large multi-crate workspaces, pair with `rust-analyzer-lsp@claude-plugins-official` so
+> **Installing the plugin itself** (local marketplace, no GitHub remote needed) →
+> [`../../INSTALL.md`](../../INSTALL.md).
+
+### Required
+
+- **Claude Code** with plugin support.
+- **Rust toolchain** via [rustup](https://rustup.rs) — `cargo` + `rustc`, plus the `rustfmt`
+  and `clippy` components (default with rustup; otherwise `rustup component add rustfmt clippy`).
+  Agents run `cargo check / clippy / test / fmt` on almost every task.
+
+### Recommended baseline
+
+The core quality loop reaches for these constantly — install once:
+
+```sh
+cargo install cargo-nextest cargo-deny cargo-audit
+```
+
+- **`cargo-nextest`** — fast, isolated test runner (`/review`, `/test-*`, `/verify-loop`).
+- **`cargo-deny`** — license / advisory / source policy (`/deps-check`, RELEASE-GATE).
+- **`cargo-audit`** — RUSTSEC advisory scan (`/security-audit`).
+- **`bun`** on PATH — runs the hooks (auto rule-injection, memory recall, lint nudge). Absent →
+  hooks no-op safely and the studio still works. Install: see [`../../INSTALL.md`](../../INSTALL.md).
+
+### On-demand (the skill that needs a tool names it and suggests the install)
+
+| When you run… | Tools | Install |
+|---|---|---|
+| `/audit-unsafe`, any `unsafe` | `miri` (nightly), `cargo-careful` | `rustup +nightly component add miri` · `cargo install cargo-careful` |
+| `/perf`, benchmarks | `cargo-flamegraph`, `samply`, `hyperfine`; `perf`/`valgrind` (Linux) | `cargo install flamegraph samply hyperfine` |
+| `/api-review`, `/publish` | `cargo-public-api`, `cargo-semver-checks` | `cargo install cargo-public-api cargo-semver-checks` |
+| `/msrv-check` | `cargo-msrv` | `cargo install cargo-msrv` |
+| `/coverage` | `cargo-llvm-cov` (or `cargo-tarpaulin`) | `cargo install cargo-llvm-cov` |
+| `/deps-check` | `cargo-hack`, `cargo-machete`, `cargo-hakari` (20+ crates) | `cargo install cargo-hack cargo-machete cargo-hakari` |
+| macro crates | `cargo-expand` | `cargo install cargo-expand` |
+| snapshot tests | `cargo-insta` | `cargo install cargo-insta` |
+| mutation testing | `cargo-mutants` | `cargo install cargo-mutants` |
+| FFI bindings | `bindgen` / `cbindgen` (+ system `libclang`) | `cargo install bindgen-cli cbindgen` |
+| faster code navigation | `ripgrep` (`rg`), `fd`, `ast-grep` (`sg`) | `cargo install ripgrep fd-find ast-grep` |
+
+**Not installed — these are crate `[dev-dependencies]`, written into your `Cargo.toml`, not your
+`$PATH`:** `criterion` (benches), `loom` (lock-free model checking), `trybuild` (macro /
+compile-fail tests), `insta` (snapshots).
+
+**Platform notes:** `miri` needs a **nightly** toolchain; `perf` and `valgrind`/cachegrind are
+Linux-only (macOS/Windows fall back to `samply`). Nothing here is hard-required — a missing tool
+just makes the relevant skill report it's unavailable and point you at the install.
+
+### Optional integrations
+
+- **`rust-analyzer-lsp@claude-plugins-official`** — for large multi-crate workspaces, so
   `rust-scout` resolves symbols via the language server instead of scanning files. See
   [`docs/large-workspace.md`](docs/large-workspace.md) for the full focus-scoping setup
-  (per-crate CLAUDE.md, `target/` read-denies, sparse worktrees) — Anthropic's official
-  large-codebase guidance, mapped to Rust.
+  (per-crate CLAUDE.md, `target/` read-denies, sparse worktrees) — Anthropic's large-codebase
+  guidance, mapped to Rust.
+- **MCP servers**, used when present: a symbol-navigation server (serena) for `rust-scout` /
+  `rust-builder`, a web-search server (exa) for advisory / freshness lookups, and the `obsidian`
+  server for cross-session memory (`/remember`, `/recall`).
 
 ## License
 

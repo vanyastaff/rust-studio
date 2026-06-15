@@ -82,7 +82,8 @@ If a machine lacks `bun` on PATH:
 - Windows: `powershell -c "irm bun.sh/install.ps1 | iex"` (or `winget install Oven-sh.Bun`),
   then ensure `bun.exe` is on PATH.
 - If Bun is absent, the hooks **no-op safely** — the studio still works, you just lose
-  automatic rule injection, the unsafe warning, the destructive-command guard, and the fmt nudge.
+  automatic path-scoped rule injection (including the unsafe-code standard), session-start stack
+  detection + memory recall, and the fmt nudge.
 
 Each hook reads stdin behind a hard timeout and arms a watchdog that force-exits if anything
 stalls, so a hook can never freeze the session — even mid-subagent.
