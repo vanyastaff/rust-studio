@@ -79,7 +79,14 @@ function pathMatches(globs: string, path: string): boolean {
 interface Input {
   hook_event_name?: string;
   session_id?: string;
-  tool_input?: { file_path?: string; path?: string };
+  tool_input?: {
+    file_path?: string;
+    path?: string;
+    content?: string;
+    old_string?: string;
+    new_string?: string;
+    edits?: Array<{ old_string?: string; new_string?: string }>;
+  };
 }
 
 const data = await readInput<Input>();
@@ -99,7 +106,14 @@ try {
   done();
 }
 
-const chunks: string[] = [];
+// Collect rules whose path glob matches. Rules with an empty `paths:` are
+// content-triggered (e.g. unsafe.md) and handled below, not by path.
+interface Rule {
+  name: string;
+  body: string;
+}
+const matched: Rule[] = [];
+const contentTriggered: Rule[] = [];
 for (const f of entries!) {
   let text: string;
   try {
@@ -108,12 +122,40 @@ for (const f of entries!) {
     continue;
   }
   const [fm, body] = parseFrontmatter(text);
+  const name = fm.name || basename(f, ".md");
   const globs = fm.paths || "";
-  if (!globs) continue; // e.g. unsafe.md (content-triggered elsewhere)
-  if (pathMatches(globs, norm)) chunks.push(body.trim());
+  if (!globs) {
+    contentTriggered.push({ name, body: body.trim() });
+    continue;
+  }
+  if (pathMatches(globs, norm)) matched.push({ name, body: body.trim() });
 }
 
-if (!chunks.length) done();
+// Content trigger: an edit that introduces or touches `unsafe` pulls in the
+// unsafe standard (which carries no path glob) — restoring what the removed
+// unsafe-guard hook used to do, now folded into this one injector.
+const payload = [
+  data.tool_input?.content,
+  data.tool_input?.new_string,
+  data.tool_input?.old_string,
+  ...(data.tool_input?.edits || []).flatMap((e) => [e?.new_string, e?.old_string]),
+]
+  .filter(Boolean)
+  .join("\n");
+const touchesUnsafe = /\bunsafe\b/.test(payload);
+if (touchesUnsafe) {
+  for (const r of contentTriggered) {
+    if (!matched.some((m) => m.name === r.name)) matched.push(r);
+  }
+}
+
+if (!matched.length) done();
+
+// core.md is the universal baseline — sort it first so a length cap never drops
+// it; everything else stays alphabetical for stable, predictable output.
+matched.sort((a, b) =>
+  a.name === "core" ? -1 : b.name === "core" ? 1 : a.name.localeCompare(b.name),
+);
 
 // Inject a given path's rules at most once per session — a Read followed by
 // several Edits to the same file shouldn't re-inject the same standard each time.
@@ -121,7 +163,13 @@ if (!chunks.length) done();
 try {
   const dir = join(tmpdir(), "rust-studio-rules");
   const sid = (data.session_id || "nosession").replace(/[^A-Za-z0-9]/g, "_");
-  const marker = join(dir, `${sid}__${norm.replace(/[^A-Za-z0-9]/g, "_")}`);
+  // Key the marker by whether `unsafe` is present so the first edit that
+  // introduces unsafe still surfaces unsafe.md even if the path was seen before.
+  const suffix = touchesUnsafe ? "__unsafe" : "";
+  const marker = join(
+    dir,
+    `${sid}__${norm.replace(/[^A-Za-z0-9]/g, "_")}${suffix}`,
+  );
   if (existsSync(marker)) done();
   mkdirSync(dir, { recursive: true });
   writeFileSync(marker, "1");
@@ -132,8 +180,30 @@ try {
 const header =
   `Path-scoped Rust standards apply to \`${basename(norm)}\` ` +
   "(Rust Code Studio). Conform the edit to these:\n\n";
-let context = header + chunks.join("\n\n---\n\n");
-if (context.length > 8000) context = context.slice(0, 8000) + "\n\n…(truncated)";
+
+// Budget the injection: keep whole rules in priority order until the cap, then
+// NAME any that didn't fit (instead of silently slicing mid-rule) so the agent
+// can read them directly. core.md is first in `matched`, so it always lands.
+const BUDGET = 18000;
+const sep = "\n\n---\n\n";
+const kept: string[] = [];
+const elided: string[] = [];
+let used = header.length;
+for (const r of matched) {
+  const cost = (kept.length ? sep.length : 0) + r.body.length;
+  if (kept.length && used + cost > BUDGET) {
+    elided.push(r.name);
+    continue;
+  }
+  kept.push(r.body);
+  used += cost;
+}
+let context = header + kept.join(sep);
+if (elided.length) {
+  context +=
+    `${sep}…${elided.length} more standard(s) apply but were elided for length: ` +
+    `${elided.join(", ")} — read \`\${CLAUDE_PLUGIN_ROOT}/rules/<name>.md\` directly.`;
+}
 
 emit({
   hookSpecificOutput: {
