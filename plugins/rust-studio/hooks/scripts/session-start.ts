@@ -10,10 +10,29 @@
 // retrieval is `/recall`. Never fails the session: on any error it injects what it can and exits 0.
 
 import { readFileSync, statSync, readdirSync } from "node:fs";
-import { join, basename } from "node:path";
+import { join, basename, dirname, resolve } from "node:path";
 import { homedir } from "node:os";
 import { execSync } from "node:child_process";
 import { readInput, emit, watchdog } from "./_lib.ts";
+
+/** Canonical main-worktree root for cwd, so a git WORKTREE recalls the real
+ *  project's vault memory (the main repo), not the worktree dir name. Falls back to cwd. */
+function gitMainRoot(cwd: string): string {
+  try {
+    const common = execSync("git rev-parse --git-common-dir", {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (common) {
+      const abs = resolve(cwd, common); // relative ".git" in main checkout, absolute in a worktree
+      return basename(abs) === ".git" ? dirname(abs) : abs;
+    }
+  } catch {
+    /* not a git repo / git missing */
+  }
+  return cwd;
+}
 
 const disarm = watchdog();
 
@@ -102,7 +121,7 @@ const GROUP_ORDER = ["Decisions (ADRs)", "Plans & specs", "Working memory"];
 function buildRecall(cwd: string): string {
   try {
     const vault = process.env.OBSIDIAN_VAULT_PATH || join(homedir(), "memory");
-    const project = basename(cwd);
+    const project = basename(gitMainRoot(cwd)); // worktree -> main repo name
     const dir = join(vault, "projects", project);
     try {
       if (!statSync(dir).isDirectory()) return "";
