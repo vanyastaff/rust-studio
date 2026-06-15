@@ -1,6 +1,10 @@
 # Build / generation helpers (not part of the published plugin)
 .build/
 
+# Local caches / safety backups (not part of the published plugin)
+.fastembed_cache/
+plugins/.rust-studio.backup-pre-memory-unify/
+
 # OS / editor junk
 .DS_Store
 Thumbs.db

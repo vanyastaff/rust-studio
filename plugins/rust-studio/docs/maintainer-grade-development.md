@@ -120,6 +120,30 @@ For every touched API, prefer structural guarantees over caller discipline:
   consumers. In solo active-dev workspaces, breaking the enum can be better than carrying a
   compatibility layer.
 
+### Language-Correctness Floor
+
+The design bar is about quality; beneath it sits a separate, non-negotiable floor of hard
+language-correctness rules. A change can read as well-shaped and still be wrong if it violates
+the floor. These rules are not a matter of taste or active-dev latitude — they govern undefined
+behavior, layout, dispatch, and teardown, and they hold regardless of how the design scores. They
+are codified in focused `${CLAUDE_PLUGIN_ROOT}/rules/` files; every touched line must satisfy them:
+
+- `unsafe.md`: the UB catalog (no data races, dangling/misaligned derefs, aliasing violations,
+  invalid values in any field — uninit reads, out-of-range `bool`/`char`, bad discriminants);
+  `#[repr(C)]`/`transparent`/`packed` layout discipline; `&raw const/mut` instead of building a
+  reference to take a pointer; `MaybeUninit` write-before-`assume_init` for uninitialized data.
+- `types.md`: variance and the `PhantomData` rule for generics absent from fields; dyn-compatibility
+  (no `Self: Sized` supertrait, generic methods gated `where Self: Sized`, explicit auto traits on
+  `dyn`); coherence and the orphan rule (newtype-wrap foreign types rather than impl across crates).
+- `async.md`: `Drop` cannot `.await` — provide an explicit async `close()` and treat `Drop` as
+  best-effort teardown; bind RAII guards in a `let` so their scope is obvious, never across a bare
+  `match` scrutinee or behind a `_` binding that drops them early.
+- `ffi.md`: ABI correctness, no unwinding across an `extern` boundary that forbids it, and sound
+  string handling across the FFI edge (length/encoding/nul-termination, no borrowed-pointer escapes).
+
+These are distinct from the design-quality bar above: passing the maintainer rejection test does
+not exempt a change from the floor, and a floor violation is a defect even when the shape is good.
+
 ## Architecture Bar
 
 Multi-crate Rust workspaces need explicit ownership boundaries:
@@ -209,3 +233,14 @@ regress to junior behavior:
   pattern.
 - `prior-art/use-existing-crate`: agent must find and reuse a mature workspace/ecosystem
   solution instead of hand-rolling.
+- `unsafe/repr-and-uninit`: agent must catch the layout/UB hazard — wrong or missing `repr`,
+  an aliasing or unaligned-reference fault, and `MaybeUninit` read before it is written.
+- `reviewer/drop-and-dyn`: agent must flag `Drop` relied on for critical finalization (it is
+  best-effort only), an RAII guard bound to a bare `_` that drops early, `Box<dyn Error>` leaking
+  out of a library API instead of a typed error, and a change that breaks `dyn` compatibility.
+- `modern-rust/hand-cas-and-cfgif`: agent must replace stale idioms — a hand-rolled
+  compare-and-swap loop with atomic `update`/`try_update`, `cfg-if` with `cfg_select!`, `addr_of!`
+  with `&raw const/mut`, and `lazy_static`/`static mut` with `LazyLock`/`OnceLock`.
+- `api/non-exhaustive-and-fundamental`: agent must identify the semver hazards — a growable public
+  enum/struct missing `#[non_exhaustive]`, a blanket impl on a fundamental type (`&T`, `Box<T>`,
+  `Pin<P>`), and a `Result`-like return or guard type missing `#[must_use]`.

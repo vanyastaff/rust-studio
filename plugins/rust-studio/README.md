@@ -11,7 +11,7 @@ for libraries, async/web services, CLIs, and systems/embedded code.
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
 - **45 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, cross-session memory, and a self-check harness
 - **10 path-scoped rule sets** — the right Rust standard injected when you edit a matching file
-- **6 hooks** — stack detection, rule injection, an unsafe guard, a destructive-command guard, a secret-exposure guard, and a lint nudge
+- **7 hooks** — stack detection **+ memory recall** at session start, path-scoped rule injection, a lint nudge, and session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders)
 
 ---
 
@@ -86,15 +86,20 @@ When you edit a file, the matching standard is injected as context automatically
 
 ## Hooks
 
-- **SessionStart** — detects the crate/workspace, edition, MSRV, and domain; briefs the team.
-- **PostToolUse (Write/Edit)** — injects the path-scoped rule, and warns on new `unsafe`.
-- **PostToolUse (Bash/Read)** — scans output for secrets (keys, tokens, private keys) and warns.
-- **PreToolUse (Bash)** — denies destructive commands (`rm -rf`, force-push, real `cargo publish`);
-  asks before `git reset --hard` / `git clean -fd`, `--no-verify`, and secret-exposing commands.
+- **SessionStart** — detects the crate/workspace, edition, MSRV, and domain; briefs the team, and
+  recalls the most relevant notes from the project's Obsidian-vault memory (ranked against the git
+  branch / changed crates / last commit).
+- **PostToolUse (Write/Edit)** — injects the path-scoped Rust standard for the file you edited.
+- **UserPromptSubmit** — a light nudge to `/recall` before working in a known area and to prefer a
+  studio skill when one fits.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
+- **SubagentStop** — reminds the orchestrator to confirm a sub-agent returned an explicit verdict
+  (COMPLETE / NEEDS WORK / BLOCKED) with evidence before advancing past it.
+- **PreCompact / SessionEnd** — remind you to persist an in-flight plan to a durable file and to
+  run `/session-wrap` so learnings are captured to memory.
 
 Hooks are TypeScript, run via [`bun`](https://bun.sh). If `bun` isn't on PATH they no-op — the
-studio still works, you just lose auto-injection and the guards. Each hook reads stdin behind a
+studio still works, you just lose auto-injection and recall. Each hook reads stdin behind a
 hard timeout with a watchdog, so it can never freeze the session (even mid-subagent). See
 [`../../INSTALL.md`](../../INSTALL.md).
 

@@ -5,6 +5,11 @@ several large solo Rust workspaces. The **engineering principles** are universal
 bars. The **operating mode** section encodes defaults you can tune. Every agent and skill
 should honor this; `coordination-protocol.md` references it.
 
+For non-trivial implementation work, this document is paired with the mandatory
+`maintainer-grade-development.md` pre-code standard. That standard makes architecture,
+crate ownership, Rust API idiom, performance posture, current-doc freshness, and strict
+maintainer rejection checks happen **before** code is written rather than as a cleanup pass.
+
 ---
 
 ## Operating mode (the defaults — tune to taste)
@@ -66,7 +71,8 @@ changes what "done" means:
 ## Engineering principles (universal Rust quality bar)
 
 ### Modern idiom currency
-Verify idioms against the **current** toolchain (edition 2024, Rust ≥1.94), not pre-2025 habit.
+Verify idioms against the **current** toolchain (edition 2024; check official Rust release
+notes/std docs for the current stable version), not pre-2025 habit.
 Prefer the modern form and justify if you don't:
 - Native **async-fn-in-trait / RPITIT** over the `async-trait` crate (keep `async-trait` only
   where `dyn` dispatch genuinely needs it).
@@ -165,7 +171,8 @@ debt that only surfaces in prod (the "70% problem" / happy-path bias).
 
 ### Dispatch & verification
 - **Frame every dispatched subagent as a Senior Rust expert** on the current toolchain (edition
-  2024, ≥1.94), with book-grade depth (Programming Rust, Rust for Rustaceans, Atomics and Locks,
+  2024; verify the current stable version from official Rust docs/release notes), with
+  book-grade depth (Programming Rust, Rust for Rustaceans, Atomics and Locks,
   the Performance Book, the Nomicon for unsafe). An unframed agent defaults to generic-LLM
   mediocrity and earns a re-review. Quote idioms by name (newtype, typestate, RAII guards).
 - **The orchestrator catches sloppy work before the human sees it.** If a sub-agent returns weak
