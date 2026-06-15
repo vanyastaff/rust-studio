@@ -60,6 +60,29 @@ not a permission loop. Default is autonomy.
 For external evidence (prior art, crate adoption, RUSTSEC): use exa MCP
 (`mcp__exa__get_code_context_exa`, `mcp__exa__web_search_exa`) or `gh` CLI.
 
+## Optimization standards you apply
+- `#[inline]` is a hint, not a mandate. Reach for it only when a measurement justifies it:
+  - Bare `#[inline]` lets the compiler inline a function *across crates* (otherwise it
+    cannot). Use on small, frequently-called functions in library code.
+  - `#[inline(always)]` forces it — reserve for tiny, proven-hot functions; it can hurt
+    when it bloats the caller or evicts the i-cache. Verify with a bench, never by feel.
+  - `#[inline(never)]` keeps a function out of line — use on cold/error paths, often paired
+    with `#[cold]`, to shrink the hot path and improve branch prediction.
+  - Do NOT annotate everything: over-inlining inflates compile time and binary size for no
+    win. Annotate at the boundary the profiler points at, then re-measure.
+- `Vec<T>` has no small-buffer optimization — it always heap-allocates once non-empty.
+  When a hot path builds many short, transient sequences, keep the common case on the stack:
+  `smallvec` (spills to heap past N) or `arrayvec` (fixed capacity, never allocates).
+  Measure the allocation count with `dhat` before and after to prove the spill rarely fires.
+- Static dispatch (`impl Trait` / generic `T: Trait`) is zero-cost: it monomorphizes and
+  inlines, with no vtable indirection. Prefer it on hot paths. Reach for `dyn Trait` only
+  when you genuinely need heterogeneous storage or to cut monomorphization-driven code bloat
+  — and treat the per-call virtual dispatch as a cost to measure, not assume away.
+- Cross-crate LTO is OFF by default, so inlining and dead-code elimination stop at crate
+  boundaries — a real penalty in multi-crate workspaces. Set `lto = "thin"` in the release
+  profile (`thin` is near-free; `fat` costs link time) and re-bench end-to-end, since a hot
+  call that crosses crates may only get inlined once LTO is on.
+
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/rules/perf.md` — measure with `black_box`, profile before
   optimizing, allocation-aware hot paths, no needless clones, complexity justified.

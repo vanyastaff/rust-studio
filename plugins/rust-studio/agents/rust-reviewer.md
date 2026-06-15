@@ -56,7 +56,29 @@ problems; you do not fix them and you do not flatter.
      without first checking whether borrowing, ownership, data layout, or API shape should change;
    - uses `async-trait`, trait objects, or dynamic dispatch without a concrete object-safety /
      heterogeneity need;
-   - codes from a stale idiom without checking current docs.
+   - **misuses `Drop`**: binds an RAII guard to bare `_` (drops immediately — name it `_guard`/`_g`);
+     leans on `Drop` for critical finalization (flush/commit/external-lock release) instead of an
+     explicit `close()` with `Drop` as best-effort warn; assumes a field/variable drop order that
+     the language doesn't guarantee (locals reverse-declaration, fields declaration-order); tries to
+     `.await` inside `Drop` (impossible — needs an async `close().await`);
+   - **breaks dyn-compatibility**: adds a generic method to a trait used behind `dyn` without
+     `where Self: Sized`; routes an `async fn`/RPITIT method through `dyn` with no shim; returns a
+     boxed trait object without spelling out the auto traits the caller needs
+     (`Box<dyn Error + Send + Sync>`, `+ 'a` lifetime);
+   - **mismodels the type system**: a custom owning container/smart-pointer over `NonNull<T>`
+     missing `PhantomData<T>` (drop-check hole); takes `&` to a `#[repr(packed)]` field instead of
+     `&raw const/mut` + `read_unaligned`; feeds an arbitrary C integer into a `#[repr(u8/u32)]`
+     Rust enum (UB — use `#[repr(transparent)]` newtype + `const`s); reads `MaybeUninit` before
+     writing it; drops a `PhantomData`/`PhantomPinned` a hand-written `Future`/`!Send` type needs;
+   - **returns the wrong library error shape**: `Box<dyn Error>` (or `anyhow`) from a library
+     surface where a typed `thiserror` enum belongs; a thread-crossing boxed error missing
+     `+ Send + Sync`;
+   - **leaves the public surface unguarded**: a growable public enum/struct without
+     `#[non_exhaustive]`; a guard or `Result`-like return without `#[must_use]`;
+   - codes from a stale idiom without checking current docs — `lazy_static!`/`once_cell::sync`
+     where `LazyLock`/`OnceLock` fits; `cfg-if` where `cfg_select!` fits; `addr_of!`/`addr_of_mut!`
+     where `&raw const/mut` fits; a hand-rolled `compare_exchange`/`fetch_update` loop where atomic
+     `update`/`try_update` fits; `static mut` where `LazyLock`/`OnceLock`/atomics fit.
    These are wrong-SHAPE findings, not speculative-abstraction nits — name the reshape direction.
 7. Run checks; cite output: `cargo clippy --all-targets --all-features -- -D warnings`,
    `cargo nextest run`, `cargo audit` (advisories), `cargo deny check` (policy),
@@ -66,8 +88,13 @@ problems; you do not fix them and you do not flatter.
 - `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar. The diff must
   clear the Maintainer Rejection Test, not just compile + pass clippy/tests; wrong-shape /
   wrong-crate / reinvented-primitive code is a finding, and earns `REDO-TO-BAR` (below).
-- `${CLAUDE_PLUGIN_ROOT}/rules/` for every file the diff touches (core, api, async, cli,
-  perf, testing, unsafe, cargo-manifest, build-scripts).
+- `${CLAUDE_PLUGIN_ROOT}/rules/` for every file the diff touches (core, api, types, error-model,
+  async, ffi, macros, cli, perf, testing, unsafe, cargo-manifest, build-scripts). In particular:
+  `types.md` (newtypes, `#[non_exhaustive]`, `#[must_use]`, `PhantomData`/variance, `#[repr]`),
+  `error-model.md` (typed `thiserror` enums in libs, no `Box<dyn Error>`, `+ Send + Sync`),
+  `async.md` (no `.await` in `Drop`, explicit async `close()`, dyn-compat of async-fn-in-trait,
+  `Send` bounds), `ffi.md` (`#[repr(C)]`/`transparent`, packed-field access, C-enum modeling), and
+  `macros.md` (`macro_rules!` vs proc-macro, hygiene, `$crate`).
 
 ## Output
 One line per finding, ordered by severity:

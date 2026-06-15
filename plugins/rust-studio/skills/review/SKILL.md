@@ -41,11 +41,20 @@ and proceed — ask only if the diff is genuinely ambiguous about its goal.
    change's goal is truly opaque.
 2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit — including the
    Maintainer-shape audit (Maintainer Rejection Test on the TOUCHED area:
-   `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`).
+   `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`). That audit also covers:
+   drop order / guard naming (`_guard`, never `_`) / `Drop` treated as best-effort with an
+   explicit `close()`; `dyn`-compatibility breaks (generic methods need `where Self: Sized`,
+   `async fn`/RPITIT aren't dyn-dispatchable); custom-container variance / missing `PhantomData`
+   on owned-`T`; `repr` / FFI layout (`#[repr(C)]`, `transparent`, packed via `&raw`); `Box<dyn
+   Error>` in a library surface (return a typed error); and stale-idiom modernization
+   (`LazyLock`/`OnceLock`, `cfg_select!`, `&raw const/mut`, atomic `update`/`try_update`).
 3. **`harsh-critic` is a DEFAULT lens** — spawn it (not only under `--full`) whenever the
    change embeds a non-trivial design/approach decision, to attack the SHAPE (wrong crate,
    reinvented sibling primitive, stale idiom, clone-to-appease, stringly/`bool` API), not just
-   the lines. Skip it only for genuinely mechanical diffs with no design call.
+   the lines. Stale-idiom and shape coverage matches the rust-reviewer audit above (drop order /
+   guard naming / best-effort `Drop`, `dyn`-compat breaks, custom-container variance/`PhantomData`,
+   `repr`/FFI layout, `Box<dyn Error>` in a lib, and `LazyLock`/`cfg_select!`/`&raw`/atomic-`update`
+   modernization). Skip it only for genuinely mechanical diffs with no design call.
 4. **Full review** (`--full`, or for breaking / public-API / large diffs): fan out the
    remaining relevant lenses **in parallel** (one task per lens, or background subagents — see
    Orchestration), then merge and de-duplicate findings. This is the multi-lens pass — it

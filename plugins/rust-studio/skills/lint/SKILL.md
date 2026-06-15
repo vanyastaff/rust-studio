@@ -25,6 +25,9 @@ This is the static gate (BUILD-GATE-adjacent). Evidence over assertion — cite 
 
 ## Notes
 - Conform to `${CLAUDE_PLUGIN_ROOT}/rules/core.md` (no `#[allow]` without justification).
+- Prefer workspace-level lints (`[workspace.lints]`) over `#![deny(warnings)]` in library code:
+  a new stable lint shouldn't break consumers' builds. Gate strictness via `RUSTFLAGS="-D warnings"`
+  in CI instead. See `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md`.
 - Don't silence a real lint to pass — fix the cause.
 - End with verdict **COMPLETE / NEEDS WORK / BLOCKED** and the clean `clippy`/`fmt` output.
   The `Stop` hook also nudges this if changed `.rs` files aren't formatted.
