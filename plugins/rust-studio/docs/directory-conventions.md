@@ -64,7 +64,7 @@ for each.
 ## Large multi-crate workspaces
 For big workspaces (nebula/surge/flui-scale), scope context to the crate a task touches rather
 than loading everything: per-crate `CLAUDE.md` (owner-maintained, layered on the root one),
-`permissions.deny` on `target/`/generated, `rust-analyzer-lsp` for symbol lookup, and sparse
+`permissions.deny` on `target/`/generated, the bundled rust-analyzer LSP for symbol lookup, and sparse
 worktrees. Per-crate `CLAUDE.md` and the studio's central path-scoped `rules/` complement each
 other (both can apply to one file). Full setup: [`large-workspace.md`](large-workspace.md);
 run `/adopt` to apply it to an existing workspace.

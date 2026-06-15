@@ -72,7 +72,7 @@ ask: "Where is the crate or workspace you want to adopt?" before proceeding.
      that lacks lint/test/publish stages, no `rustfmt.toml`/`clippy.toml`. **If the scout
      reported many workspace members**, also assess context-scoping per
      `${CLAUDE_PLUGIN_ROOT}/docs/large-workspace.md`: per-crate `CLAUDE.md`, `permissions.deny`
-     on `target/`/generated, `rust-analyzer-lsp` for symbol lookup, sparse worktrees.
+     on `target/`/generated, the bundled rust-analyzer LSP for symbol lookup, sparse worktrees.
    - `qa-lead` — test coverage posture: no tests, tests that only cover happy paths,
      missing integration or doc tests, no property-based testing for data-heavy code.
    - `systems-perf-lead` — `unsafe` without `// SAFETY:` comments, missing `no_std`
@@ -156,7 +156,7 @@ ask: "Where is the crate or workspace you want to adopt?" before proceeding.
     - No tests → `/test-setup`
     - Large workspace not scoped for context → apply
       `${CLAUDE_PLUGIN_ROOT}/docs/large-workspace.md` (per-crate `CLAUDE.md`, deny `target/`,
-      `rust-analyzer-lsp`, sparse worktrees) using
+      the bundled rust-analyzer LSP, sparse worktrees) using
       `${CLAUDE_PLUGIN_ROOT}/docs/templates/large-workspace-settings.json`
     - Public API hygiene issues → `/review` in **full** mode
 

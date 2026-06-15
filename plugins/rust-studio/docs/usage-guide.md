@@ -242,4 +242,4 @@ Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially —
 - Memory lives in one Obsidian vault under a per-project folder, accessed through the `obsidian`
   MCP; the harness native auto-memory injects that project's `MEMORY.md` at session start.
 - For big multi-crate workspaces, see `large-workspace.md` (per-crate CLAUDE.md, `target/`
-  read-denies, sparse worktrees, `rust-analyzer-lsp`).
+  read-denies, sparse worktrees, the bundled rust-analyzer LSP).

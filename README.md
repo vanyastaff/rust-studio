@@ -9,23 +9,32 @@ A personal [Claude Code plugin marketplace](https://code.claude.com/docs/en/plug
 ## Install
 
 This repo is both a **marketplace** (`.claude-plugin/marketplace.json`, name `vanya`) and the
-home of the `rust-studio` plugin under [`plugins/`](plugins). Install it locally — no GitHub
-required:
+home of the `rust-studio` plugin under [`plugins/`](plugins).
+
+From GitHub:
 
 ```text
-/plugin marketplace add C:\Users\vanya\rust-studio
+/plugin marketplace add vanyastaff/rust-studio
 /plugin install rust-studio@vanya
 ```
 
+Or from a local clone (no GitHub required) — `/plugin marketplace add C:\Users\vanya\rust-studio`.
 Full step-by-step (and the settings.json alternative) in [INSTALL.md](INSTALL.md).
 
-## Publishing later
+## Publishing
 
-It's already marketplace-shaped. To share it, push this directory to a Git host and others
-add it with `/plugin marketplace add <you>/rust-studio`. Before publishing, set `author`,
-`repository`, and `homepage` in
+The marketplace and plugin manifests validate clean (`claude plugin validate . --strict`), and
+`author` / `repository` / `homepage` are set. To cut a release, bump `version` in
 [`plugins/rust-studio/.claude-plugin/plugin.json`](plugins/rust-studio/.claude-plugin/plugin.json)
-and the marketplace [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+(the single source of truth — the marketplace entry intentionally omits `version`), then tag and
+push:
+
+```powershell
+cd plugins/rust-studio
+claude plugin tag --push      # creates rust-studio--v<version> from the manifest
+```
+
+Full release checklist: [`plugins/rust-studio/docs/releasing.md`](plugins/rust-studio/docs/releasing.md).
 
 ## Layout
 
@@ -36,11 +45,14 @@ rust-studio/                         (this repo = the "vanya" marketplace)
 ├── plugins/
 │   └── rust-studio/                 # the plugin
 │       ├── .claude-plugin/plugin.json
-│       ├── agents/                  # 31 agent definitions
-│       ├── skills/                  # 37 slash commands
-│       ├── hooks/                   # hooks.json + 6 Bun/TypeScript scripts
-│       ├── rules/                   # 9 path-scoped Rust standards
-│       ├── docs/                    # protocol, roster, templates/
+│       ├── .lsp.json                # bundled rust-analyzer LSP
+│       ├── agents/                  # 33 agent definitions
+│       ├── skills/                  # 48 slash commands
+│       ├── hooks/                   # hooks.json + Bun/TypeScript scripts
+│       ├── rules/                   # 17 path-scoped Rust standards
+│       ├── output-styles/           # opt-in terse review style
+│       ├── monitors/                # background monitors (PR CI status)
+│       ├── docs/                    # protocol, roster, releasing, templates/
 │       └── README.md
 ├── INSTALL.md
 └── LICENSE

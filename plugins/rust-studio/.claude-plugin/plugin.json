@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Turn a single Claude Code session into a full Rust engineering studio. Tiered agent team (architect -> leads -> specialists), path-scoped Rust standards, quality gates, and cargo-aware hooks across libraries, async/web services, CLIs, and systems/embedded code.",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "author": {
     "name": "vanya"
   },
@@ -21,5 +21,27 @@
     "unsafe",
     "performance",
     "crates"
-  ]
+  ],
+  "experimental": {
+    "monitors": "./monitors/monitors.json"
+  },
+  "userConfig": {
+    "test_runner": {
+      "type": "string",
+      "title": "Default test runner",
+      "description": "Test runner the studio prefers (cargo-nextest recommended). Surfaced in the session briefing so agents honor it.",
+      "default": "nextest"
+    },
+    "gate_intensity": {
+      "type": "string",
+      "title": "Default gate intensity",
+      "description": "Default rigor for quality gates and reviews: full, lean, or solo. Surfaced in the session briefing.",
+      "default": "full"
+    },
+    "default_msrv": {
+      "type": "string",
+      "title": "House MSRV fallback",
+      "description": "Minimum supported Rust version to assume when a Cargo.toml does not declare rust-version (e.g. 1.82). Leave empty to keep showing \"(unset)\"."
+    }
+  }
 }

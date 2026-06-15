@@ -12,6 +12,8 @@ for libraries, async/web services, CLIs, and systems/embedded code.
 - **48 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, cross-session memory, and a self-check harness
 - **17 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
 - **7 hooks** — stack detection **+ memory recall** at session start, path-scoped rule pointers, a lint nudge, and session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders)
+- **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
+- **Configurable + a terse review style** — set a house MSRV, preferred test runner, and default gate intensity per the `/plugin` config dialog; opt into a one-finding-per-line reviewer output style via `/config`
 
 ---
 
@@ -112,6 +114,23 @@ studio still works, you just lose auto-injection and recall. Each hook reads std
 hard timeout with a watchdog, so it can never freeze the session (even mid-subagent). See
 [`../../INSTALL.md`](../../INSTALL.md).
 
+## Configuration
+
+The plugin prompts for these when you enable it (and you can change them anytime via `/plugin`
+→ **Rust Code Studio** → configure). All three surface in the SessionStart briefing so the team
+honors them; `default_msrv` also fills the MSRV line when a `Cargo.toml` doesn't declare one.
+
+| Option | Default | Effect |
+|--------|---------|--------|
+| **Default test runner** (`test_runner`) | `nextest` | Test runner the studio prefers — set to `cargo` to skip cargo-nextest. |
+| **Default gate intensity** (`gate_intensity`) | `full` | Default rigor for reviews & quality gates — `full` / `lean` / `solo`. |
+| **House MSRV fallback** (`default_msrv`) | — | MSRV to assume when a crate doesn't pin `rust-version` (e.g. `1.82`). |
+
+**Terse review output style** — the plugin ships a `Rust review (terse)` output style
+(one finding per line, severity-tagged, evidence over prose, verdict last). It is **opt-in**:
+select it under `/config` → Output style. It keeps Claude's normal engineering behavior and only
+changes how reviews are *reported*.
+
 ## Quick start
 
 ```text
@@ -144,6 +163,10 @@ cargo install cargo-nextest cargo-deny cargo-audit
 - **`cargo-nextest`** — fast, isolated test runner (`/review`, `/test-*`, `/verify-loop`).
 - **`cargo-deny`** — license / advisory / source policy (`/deps-check`, RELEASE-GATE).
 - **`cargo-audit`** — RUSTSEC advisory scan (`/security-audit`).
+- **`rust-analyzer`** on PATH — powers the **bundled LSP**: diagnostics (via `cargo clippy`) and
+  go-to-definition after each edit. Absent → the LSP reports an error in the `/plugin` Errors tab
+  and the studio falls back to file scanning.
+  [Install](https://rust-analyzer.github.io/manual.html#installation).
 - **`bun`** on PATH — runs the hooks (auto rule-injection, memory recall, lint nudge). Absent →
   hooks no-op safely and the studio still works. Install: see [`../../INSTALL.md`](../../INSTALL.md).
 
@@ -171,13 +194,20 @@ compile-fail tests), `insta` (snapshots).
 Linux-only (macOS/Windows fall back to `samply`). Nothing here is hard-required — a missing tool
 just makes the relevant skill report it's unavailable and point you at the install.
 
+### Code intelligence (bundled)
+
+- **rust-analyzer LSP ships with the plugin** ([`.lsp.json`](.lsp.json)). Install the
+  [`rust-analyzer`](https://rust-analyzer.github.io/manual.html#installation) binary on PATH and
+  it activates automatically — `rust-scout` resolves symbols via the language server instead of
+  scanning files, and diagnostics (run through `cargo clippy`, matching the studio's zero-warning
+  bar) surface after each edit. Missing binary → `Executable not found in $PATH` in the `/plugin`
+  Errors tab and a graceful fall back to file scanning. For large multi-crate workspaces see
+  [`docs/large-workspace.md`](docs/large-workspace.md) for the full focus-scoping setup (per-crate
+  CLAUDE.md, `target/` read-denies, sparse worktrees) — Anthropic's large-codebase guidance,
+  mapped to Rust.
+
 ### Optional integrations
 
-- **`rust-analyzer-lsp@claude-plugins-official`** — for large multi-crate workspaces, so
-  `rust-scout` resolves symbols via the language server instead of scanning files. See
-  [`docs/large-workspace.md`](docs/large-workspace.md) for the full focus-scoping setup
-  (per-crate CLAUDE.md, `target/` read-denies, sparse worktrees) — Anthropic's large-codebase
-  guidance, mapped to Rust.
 - **MCP servers**, used when present: a symbol-navigation server (serena) for `rust-scout` /
   `rust-builder`, a web-search server (exa) for advisory / freshness lookups, and the `obsidian`
   server for cross-session memory (`/remember`, `/recall`).

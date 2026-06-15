@@ -29,12 +29,13 @@ conventions; use the central `rules/` for one-place standards that apply to many
 paths. They layer — both can apply to the same file.
 
 ## 3. Reduce what Claude reads
-- **Code intelligence**: install the Rust language-server plugin so `rust-scout` (and you) jump
-  to definitions / references instead of scanning the tree:
-  ```
-  /plugin install rust-analyzer-lsp@claude-plugins-official
-  ```
-  (Requires `rust-analyzer` on PATH.) `rust-scout` prefers it automatically when present.
+- **Code intelligence**: this plugin **bundles a rust-analyzer LSP** (`../.lsp.json`), so
+  `rust-scout` (and you) jump to definitions / references and get diagnostics after each edit
+  instead of scanning the tree — no extra plugin to install. It activates automatically once
+  `rust-analyzer` is on PATH ([install it](https://rust-analyzer.github.io/manual.html#installation));
+  if the binary is missing you'll see `Executable not found in $PATH` in the `/plugin` Errors
+  tab and the studio falls back to file scanning. Diagnostics run via `cargo clippy`, matching
+  the studio's zero-warning bar.
 - **Block generated / vendored reads** in `.claude/settings.json` `permissions.deny`. Searches
   already respect `.gitignore` (so `target/` is out of search), but deny rules stop Claude
   *opening* checked-in generated code:
