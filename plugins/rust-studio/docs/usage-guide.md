@@ -17,12 +17,14 @@ Five moving parts:
 - **Skills** (45) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
-- **Rules** (10) — path-scoped Rust standards. When you edit a matching file, the relevant
+- **Rules** (17) — path-scoped Rust standards. When you edit a matching file, the relevant
   standard is auto-injected (a hook does this), so the agent always has the right bar in front
-  of it (`core.md` on every `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, …).
-- **Hooks** (6) — deterministic automation: stack briefing at session start, rule injection +
-  unsafe warning + secret scan after edits, a destructive-command guard, and a lint nudge when
-  you stop.
+  of it (`core.md` on every `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears,
+  `ffi.md` on C-ABI boundaries, `macros.md` in proc/declarative macros, …).
+- **Hooks** (7) — deterministic automation: stack briefing **+ memory recall** at session start,
+  path-scoped rule injection after edits, a lint nudge when you stop, and session-lifecycle aids
+  (a `/recall` nudge on each prompt, a sub-agent verdict check, and compaction / session-end
+  reminders).
 - **Gates** — named checkpoints a lead clears before work proceeds: `ARCH / API / ASYNC / CLI /
   PERF / SAFETY / QA / RELEASE / BUILD`. Run at **lean** (one crate), **full** (public API,
   unsafe, releases), or **solo** (prototype) intensity.

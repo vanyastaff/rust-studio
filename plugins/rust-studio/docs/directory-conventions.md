@@ -27,13 +27,20 @@ my-crate/                or   my-workspace/
 | Location | Rule file | Enforces |
 |----------|-----------|----------|
 | `**/*.rs` | `core.md` | Idiomatic Rust, error handling, clippy-clean, ownership |
+| crate roots/domain/service/model/manifests | `active-dev.md` | No shims/aliases/half-migrations in active development |
+| crate roots/domain/protocol/manifests | `architecture.md` | Crate ownership, layering, sibling-crate reuse, workspace boundaries |
+| domain/protocol/parser/error files | `types.md` | Newtypes/enums/typestate, lifetimes before allocation, dispatch shape |
 | `**/src/lib.rs` | `api.md` | Public API: docs on pub items, semver, `#[non_exhaustive]`, sealed traits |
+| `**/src/error*.rs`, `**/src/result*.rs` | `error-model.md` | Typed error taxonomy, boundary context, no string matching |
+| services/workers/jobs/binaries | `observability.md` | Tracing spans, diagnostic fields, invariant visibility |
 | `**/main.rs`, `**/bin/**`, `**/cli.rs` | `cli.md` | Exit codes, stdout=data/stderr=diag, clap, signals |
 | `**/handlers/**`, `**/routes/**`, `**/server/**` | `async.md` | No blocking in async, cancellation, `Send` bounds, backpressure |
 | `**/benches/**` | `perf.md` | Allocation awareness, measure-before/after, criterion |
 | `**/tests/**`, `**/*_test.rs` | `testing.md` | Test layering, proptest, no flakiness, isolation |
 | `**/build.rs` | `build-scripts.md` | Determinism, `rerun-if`, no network, minimal work |
 | `**/Cargo.toml` | `cargo-manifest.md` | Feature hygiene, MSRV, metadata, no wildcard versions |
+| `**/ffi*.rs`, `**/src/ffi/**`, `*-sys` crates | `ffi.md` | `extern` ABI, `#[repr(C)]`, null/ownership at the boundary, `// SAFETY:` |
+| `**/*-macros`, `**/proc-macro*`, `**/macros/**` | `macros.md` | Hygiene, span-correct errors, generated-code soundness, no leaked deps |
 | any `.rs` containing `unsafe` | `unsafe.md` (via hook) | `// SAFETY:` invariants, miri, no UB |
 
 The `inject-rules` hook injects the matching rule as context right after you edit a
