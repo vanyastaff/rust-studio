@@ -54,6 +54,16 @@ function field(body: string, key: string): string | null {
   return m ? m[1] : null;
 }
 
+/** Read a plugin userConfig value, exposed to hook subprocesses as
+ *  CLAUDE_PLUGIN_OPTION_<KEY>. Tries the upper-cased key (documented form) then the
+ *  verbatim key; returns null when unset/blank so callers can fall back. */
+function option(key: string): string | null {
+  const env = process.env;
+  const v = env[`CLAUDE_PLUGIN_OPTION_${key.toUpperCase()}`] ?? env[`CLAUDE_PLUGIN_OPTION_${key}`];
+  const s = (v ?? "").trim();
+  return s ? s : null;
+}
+
 function classify(textLower: string): string[] {
   const hay = textLower;
   const domains: string[] = [];
@@ -273,7 +283,8 @@ if (!manifestExists) {
   const pkg = section(text, "package");
   const name = field(pkg, "name") || "?";
   const edition = field(pkg, "edition") || "?";
-  const msrv = field(pkg, "rust-version") || "(unset)";
+  const msrvDefault = option("default_msrv");
+  const msrv = field(pkg, "rust-version") || (msrvDefault ? `${msrvDefault} (studio default)` : "(unset)");
 
   const isWorkspace = /^\[workspace\]\s*$/m.test(text);
   let members = 0;
@@ -284,6 +295,9 @@ if (!manifestExists) {
   }
 
   const domains = classify(text.toLowerCase());
+
+  const testRunner = option("test_runner") || "nextest";
+  const gates = option("gate_intensity") || "full";
 
   const lines = [
     "## Rust Code Studio active",
@@ -299,6 +313,10 @@ if (!manifestExists) {
       "ripple; observability ships in the same pass. See docs/working-preferences.md.",
     "**Team:** directors (chief-architect, product-steward) → leads → specialists. " +
       "Path-scoped Rust standards are injected automatically when you edit matching files.",
+    `**Studio config:** gates **${gates}** · tests **${testRunner}**` +
+      (msrvDefault ? ` · MSRV-default **${msrvDefault}**` : "") +
+      " (change via `/plugin` → Rust Code Studio → configure). " +
+      "rust-analyzer LSP is bundled — diagnostics surface after each edit when the binary is on PATH.",
     "**Start here:** `/start` for guided onboarding, `/help` for the catalog, " +
       "`/dev-task` to implement one unit of work, `/review` to audit a diff.",
     "**Skills first:** for any non-trivial task, check `/help` for a studio skill that fits " +
@@ -309,8 +327,8 @@ if (!manifestExists) {
     lines.push(
       "",
       `**Large workspace (${members} member globs):** scope context to the crate you ` +
-        "touch — per-crate CLAUDE.md, `permissions.deny` on target/generated, and " +
-        "`rust-analyzer-lsp` for symbol lookup. Run `/adopt` or see docs/large-workspace.md.",
+        "touch — per-crate CLAUDE.md, `permissions.deny` on target/generated, and the " +
+        "bundled rust-analyzer LSP for symbol lookup. Run `/adopt` or see docs/large-workspace.md.",
     );
   }
 

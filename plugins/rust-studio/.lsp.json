@@ -1,0 +1,15 @@
+{
+  "rust-analyzer": {
+    "command": "rust-analyzer",
+    "extensionToLanguage": {
+      ".rs": "rust"
+    },
+    "settings": {
+      "rust-analyzer": {
+        "check": {
+          "command": "clippy"
+        }
+      }
+    }
+  }
+}

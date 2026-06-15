@@ -1,23 +1,38 @@
 # Installing Rust Code Studio
 
-The plugin lives in this repo, which is itself a local Claude Code **marketplace** named
-`vanya`. You can install it globally (applies to all your projects) without any GitHub remote.
+The plugin lives in this repo, which is itself a Claude Code **marketplace** named `vanya`.
+Install it globally (applies to all your projects) either from GitHub or from a local clone.
 
 ## 1. Add the marketplace (one time)
 
-In a Claude Code session:
+### From GitHub (anyone)
 
 ```text
-/plugin marketplace add C:\Users\vanya\rust-studio
+/plugin marketplace add vanyastaff/rust-studio
 ```
 
 or from the CLI:
 
 ```powershell
+claude plugin marketplace add vanyastaff/rust-studio
+```
+
+Claude Code clones the repo, so the relative `./plugins/rust-studio` source resolves correctly.
+Pin to a tag with `@ref`, e.g. `vanyastaff/rust-studio@rust-studio--v0.5.0`.
+
+### From a local clone (no GitHub needed)
+
+```text
+/plugin marketplace add C:\Users\vanya\rust-studio
+```
+
+or:
+
+```powershell
 claude plugin marketplace add C:\Users\vanya\rust-studio
 ```
 
-This registers the directory in `C:\Users\vanya\.claude\plugins\known_marketplaces.json`.
+Either way registers the marketplace in `~/.claude/plugins/known_marketplaces.json`.
 
 ## 2. Install the plugin
 
@@ -87,6 +102,29 @@ If a machine lacks `bun` on PATH:
 
 Each hook reads stdin behind a hard timeout and arms a watchdog that force-exits if anything
 stalls, so a hook can never freeze the session — even mid-subagent.
+
+## Code intelligence needs rust-analyzer
+
+The plugin bundles a rust-analyzer LSP (`plugins/rust-studio/.lsp.json`) — diagnostics (via
+`cargo clippy`) and go-to-definition after each edit. It activates automatically **only if the
+`rust-analyzer` binary is on PATH**:
+
+```powershell
+rustup component add rust-analyzer        # via rustup, or
+winget install rust-lang.rust-analyzer    # standalone
+```
+
+Verify with `rust-analyzer --version`. If the binary is missing you'll see
+`Executable not found in $PATH` in the `/plugin` **Errors** tab — the studio keeps working and
+falls back to file scanning. See [the rust-analyzer manual](https://rust-analyzer.github.io/manual.html#installation)
+for other platforms.
+
+## Configuration
+
+On enable, Claude Code prompts for the studio's options (preferred test runner, default gate
+intensity, house MSRV fallback). Change them later via `/plugin` → **Rust Code Studio** →
+configure. The plugin also ships an opt-in `Rust review (terse)` output style — select it under
+`/config` → Output style. Details: [`plugins/rust-studio/README.md`](plugins/rust-studio/README.md#configuration).
 
 ## Updating
 
