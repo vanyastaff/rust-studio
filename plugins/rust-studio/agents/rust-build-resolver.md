@@ -31,7 +31,8 @@ compiler and cargo errors and fix their root cause, one error at a time, without
 - Make the smallest CORRECT, idiomatic, allocation-aware, architecture-compatible change —
   never the smallest textual diff. Adding logic, an impl, or a method to the easiest edit site
   instead of the crate that OWNS the concept is a defect; check the crate boundary first. Match
-  surrounding idiom; conform to the path-scoped standards the inject-rules hook surfaces.
+  surrounding idiom; conform to the path-scoped standards the inject-rules hook points to —
+  **Read each pointed-to rule** (the hook injects a pointer, not the body) before relying on it.
 
 ## How you work
 1. Capture the full picture: run `cargo check --workspace --all-targets --message-format=short`

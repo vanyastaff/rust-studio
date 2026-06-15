@@ -43,8 +43,10 @@ my-crate/                or   my-workspace/
 | `**/*-macros`, `**/proc-macro*`, `**/macros/**` | `macros.md` | Hygiene, span-correct errors, generated-code soundness, no leaked deps |
 | any `.rs` containing `unsafe` | `unsafe.md` (via hook) | `// SAFETY:` invariants, miri, no UB |
 
-The `inject-rules` hook injects the matching rule as context right after you edit a
-matching file, so the relevant standard is always in front of the agent.
+The `inject-rules` hook injects a *pointer* to each matching rule (name + one-line summary +
+absolute path) before you read or edit a matching file; the agent reads the full standard on
+demand. This keeps the relevant standard in front of the agent without re-dumping rule bodies
+into the window on every file.
 
 ## Domain detection
 

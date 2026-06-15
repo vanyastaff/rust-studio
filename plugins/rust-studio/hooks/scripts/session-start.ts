@@ -88,7 +88,7 @@ function noteMeta(body: string): { title: string; note_type: string; tags: strin
   return { title, note_type, tags, hook };
 }
 
-interface Note { title: string; note_type: string; hook: string; score: number; mtime: number; group: string }
+interface Note { title: string; note_type: string; hook: string; score: number; mtime: number; group: string; path: string }
 
 // map a note's top-level folder under projects/<project>/ to a display group
 function layerGroup(rel: string): string {
@@ -171,14 +171,15 @@ function buildRecall(cwd: string): string {
           /* keep 0 */
         }
         const rel = p.slice(dir.length + 1);
-        notes.push({ title, note_type: meta.note_type, hook: meta.hook, score, mtime, group: layerGroup(rel) });
+        notes.push({ title, note_type: meta.note_type, hook: meta.hook, score, mtime, group: layerGroup(rel), path: p.replace(/\\/g, "/") });
       }
     };
     walk(dir);
     if (notes.length === 0) return "";
 
     const fmtBullet = (n: Note): string =>
-      `- **${n.title}**${n.note_type ? ` (${n.note_type})` : ""}${n.hook ? ` — ${n.hook}` : ""}`;
+      `- **${n.title}**${n.note_type ? ` (${n.note_type})` : ""}${n.hook ? ` — ${n.hook}` : ""}` +
+      `\n    Read: \`${n.path}\``;
 
     const sigList = [...sig].slice(0, 8).join(", ");
     const matched = notes.filter((n) => n.score > 0).sort((a, b) => b.score - a.score || b.mtime - a.mtime);
@@ -201,8 +202,8 @@ function buildRecall(cwd: string): string {
     return (
       out +
       `\n\n_${notes.length} notes scanned in \`projects/${project}/\` (decisions / planning / specs / agent). ` +
-      "Browse the `Dashboard` & `ADR Index` notes or the Projects views; `/recall <topic>` for deep " +
-      "semantic search; `/remember` to capture a learning._"
+      "Read any above directly by its path; `/recall <topic>` for deeper semantic search across all " +
+      "notes; `/remember` to capture a learning._"
     );
   } catch {
     return "";

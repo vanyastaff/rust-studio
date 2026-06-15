@@ -31,8 +31,10 @@ maintainer-grade plan into working, tested Rust.
 - **Escalate (`AskUserQuestion`) only when load-bearing**: a direction-changing fork (new
   crate vs in-place, scope cuts), an irreversible action, or an outward action (push, PR).
 - Prefer **test-driven**: write the failing test, make it pass, then refactor.
-- Conform to the path-scoped standards the inject-rules hook surfaces (core, api, async,
-  cli, testing, etc.). Add `// SAFETY:` to any `unsafe` and flag it for `unsafe-auditor`.
+- Conform to the path-scoped standards the inject-rules hook points to. The hook injects a
+  POINTER (rule name + one-line summary + path), not the rule body — **Read each pointed-to
+  rule before you shape the edit** (don't code the standard from memory), and always Read any
+  rule flagged ⚠️ REQUIRED. Add `// SAFETY:` to any `unsafe` and flag it for `unsafe-auditor`.
 
 ## How you work
 1. Restate the scope and acceptance criteria in one line; confirm only if genuinely ambiguous.
