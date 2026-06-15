@@ -44,8 +44,27 @@ examples. For concepts that span multiple crates or public APIs, suggest running
    - **Newtype wrappers** — opaque single-field structs for validated primitives.
    - **Enumerations** — `enum` with variants for each distinct state or case.
    - **Type-state / phantom types** — zero-cost state tags on a generic struct,
-     encoding valid transitions at compile time.
-   - **Builder / sealed trait pattern** — if multi-step construction is involved.
+     encoding valid transitions at compile time. Partial `impl` blocks expose each
+     method only on the states where it is valid (an operation on the wrong state
+     becomes a compile error). When the state parameter appears in no field, add a
+     `PhantomData` field to record the intended variance and drop-check ownership:
+     `PhantomData<S>` owns `S` (covariant, drop-check sees it), `PhantomData<fn(S) -> S>`
+     forces invariance, `PhantomData<*const S>` opts out of `Send`/`Sync`. Note the
+     monomorphization cost (binary growth) and factor shared logic into non-generic
+     helpers.
+   - **Sealed traits** — gate which types may implement a public trait via a private
+     supertrait only this crate can satisfy (`mod private { pub trait Sealed {} }`;
+     `pub trait Kind: private::Sealed`). Lets you add methods to the trait without a
+     breaking change and rely on an exhaustive, crate-controlled set of impls. Use for
+     state-tag traits and extension traits; document it, since it blocks downstream
+     extension.
+   - **Closed-set evolution** — choose how the set stays closed: `#[non_exhaustive]`
+     on a public enum/struct for cross-crate evolution (outside code must use a `_`
+     arm and cannot record-construct), versus a private marker field (`_priv: ()`) for
+     within-crate discipline. Public structs that may grow: `#[non_exhaustive]` or a builder.
+   - **Builder pattern** — if multi-step construction is involved; combine with
+     type-state so each setter transitions to a new type and `build()` is reachable only
+     once every required field is set.
 
    For each option, `api-designer` must note: what becomes a compile error, what
    remains a runtime check, ergonomics trade-offs, and semver implications (per

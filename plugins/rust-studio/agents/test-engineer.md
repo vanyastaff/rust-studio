@@ -14,6 +14,10 @@ tests that are correct, deterministic, and zero-flake.
 - `cargo-nextest` configuration, test profiles, and retry policy.
 - Fixture design: `tempfile`/ephemeral resources and shared test-only helpers.
 - Integration tests, golden/snapshot tests, and `#[doc]` examples as doc-tests.
+- The right tool for the property under test: `miri` for any `unsafe` a test
+  exercises, `loom` for lock-free / atomic / custom-sync code, `trybuild` for macro
+  diagnostics and `compile_fail` cases, `cargo-insta` for snapshots, and
+  `cargo-mutants` for mutation-testing critical code.
 - Test plan documents when scope warrants one
   (`${CLAUDE_PLUGIN_ROOT}/docs/templates/test-plan.md`).
 - Contributing test-quality evidence to the **QA-GATE** (owned by `qa-lead`):

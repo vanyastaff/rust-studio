@@ -59,7 +59,10 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
    - The type/trait/fn signatures (condensed; full signatures in the doc).
    - Ergonomics: how easy is the common call-site?
    - Flexibility: can callers extend or adapt it?
-   - Semver risk: BREAKING / MINOR / PATCH relative to the current surface?
+   - Semver risk: BREAKING / MINOR / PATCH relative to the current surface? Flag the
+     silent majors explicitly — adding a blanket impl on a fundamental type (`&T`, `&mut T`,
+     `Box<T>`, `Pin<P>`) is a MAJOR break even though it looks additive, as is removing a
+     `#[non_exhaustive]` or a public marker field.
    - **(a) Invariants & encoding** — the invariants the shape upholds and HOW they are
      structurally encoded (newtype / enum / typestate / sealed trait / smart constructor / RAII /
      `#[non_exhaustive]`), so correctness is done-by-construction, not by caller discipline.
@@ -78,9 +81,16 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
    fold real findings into the options before the gate.
 7. Spawn **`error-architect`** in parallel to draft the error type for each option
    (or a single shared error design if the options converge there). Include:
-   - The error enum variants or wrapper type.
-   - `Display` / `Error` / `From` impl notes.
-   - Whether `#[non_exhaustive]` is recommended.
+   - The error enum variants or wrapper type — a `thiserror` typed enum, never a bare
+     `Box<dyn Error>` or a stringly error where a domain variant belongs.
+   - `Display` / `Error` / `From` impl notes (`#[from]` for the conversions worth one).
+   - **Return the consumed argument on error.** When a fallible call takes ownership of a
+     value the caller might want to retry, hand it back in the error (`Err(SendError(value))`,
+     mirroring `String::from_utf8` → `into_bytes`) so the caller retries without cloning.
+     Drop this only when the argument is cheap or genuinely unrecoverable.
+   - Stability marker: `#[non_exhaustive]` for cross-crate error enums that may grow a variant;
+     a private marker field (`_priv: ()`) for within-crate-only discipline. Recommend one
+     explicitly — never leave a public error enum exhaustive-by-default if new variants are likely.
 8. Merge both agents' output and present it clearly. Offer a recommended default and
    explain why — the user makes the final call in Phase 3.
 
@@ -105,9 +115,17 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
 11. Spawn **`api-designer`** (and **`error-architect`** for any remaining error-type
     details) to produce a full draft of the chosen surface. The draft must cover:
    - All public types, traits, and function signatures with doc-comment stubs.
+   - `#[must_use]` on every return whose value the caller must not silently drop — `Result`,
+     RAII guards, builders that return `Self`, and any "you forgot to act on this" value;
+     give it a reason string (`#[must_use = "…"]`) where the consequence isn't obvious.
    - The error type with all variants and `From` conversions.
+   - Stability markers spelled out: `#[non_exhaustive]` on public enums/structs that may grow
+     (cross-crate) vs a private marker field (`_priv: ()`) for within-crate discipline; a
+     sealed trait where downstream impls must be forbidden. State the choice, don't default silently.
    - Semver impact statement: **BREAKING** / **MINOR** / **PATCH**, and which items
-     trigger it (`${CLAUDE_PLUGIN_ROOT}/rules/api.md` for the semver ruleset).
+     trigger it (`${CLAUDE_PLUGIN_ROOT}/rules/api.md` for the semver ruleset). Call out
+     deceptively-additive majors — a blanket impl on a fundamental type (`&T`, `&mut T`,
+     `Box<T>`, `Pin<P>`) is a MAJOR break.
    - Usage example (doc-test skeleton showing the primary call site).
    - Any items gated behind `#[cfg(feature = "...")]` and why.
    - Open questions or follow-up ADR items, if any.
@@ -124,8 +142,11 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
 14. Once approved, confirm the **API-GATE** checklist from
     `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` is satisfied:
     - Public items have doc-comment stubs.
-    - Semver impact is understood and recorded.
-    - `#[non_exhaustive]` / sealed-trait decisions are explicit.
+    - Semver impact is understood and recorded — including deceptively-additive majors
+      (a blanket impl on a fundamental type `&T` / `&mut T` / `Box<T>` / `Pin<P>`).
+    - `#[non_exhaustive]` (cross-crate) vs private-marker-field (within-crate) / sealed-trait
+      decisions are explicit, not defaulted.
+    - `#[must_use]` is on every return the caller must not silently discard.
     - No accidental `pub` items.
 
 ## Phase 6 — Handoffs

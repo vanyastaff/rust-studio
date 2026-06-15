@@ -33,6 +33,8 @@ build?" and, for non-trivial work, suggest running `/architecture` or `/brainsto
 ## Pick the review mode
 Default **lean** (one crate, routine). Use **full** for public APIs, `unsafe`, releases, or
 cross-crate changes. Use **solo** for prototypes. State which mode you're using and why.
+Any non-trivial task must also apply the pre-code maintainer standard in
+`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` before code is written.
 
 ## Phase 1 — Scope & locate
 1. Restate the task and its acceptance criteria in 1–3 bullets. Confirm with the user if fuzzy.
@@ -46,35 +48,47 @@ cross-crate changes. Use **solo** for prototypes. State which mode you're using 
 4. Task owned by the **owning lead** (e.g. `api-design-lead`, `async-systems-lead`) — or
    `chief-architect` if the design is non-trivial — to produce a short plan: files to
    change, the approach, test strategy, risks, and which gate(s) apply.
-5. If the plan reveals a real design decision, present 2–4 options with trade-offs.
+5. Require a **Maintainer-grade pre-code verdict** from
+   `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: `ACCEPTABLE`,
+   `RESHAPE NEEDED`, or `BLOCKED`. The verdict must cover crate ownership, sibling-crate
+   reuse, ecosystem/current-doc checks where relevant, API/type-system shape, performance
+   posture, active-dev breaking-change policy, and likely strict-maintainer rejection reasons.
+6. If the verdict is `RESHAPE NEEDED`, reshape the plan before build. Do not let builder write
+   the junior local patch and rely on review to fix it afterward. If the reshape changes
+   product scope or creates an irreversible/outward action, surface the fork for approval.
+7. If the plan reveals a real design decision, present 2–4 options with trade-offs.
 
 ## Phase 3 — Approve (gate)
-6. `AskUserQuestion`: show the plan and the chosen approach; get explicit approval before
+8. `AskUserQuestion`: show the plan and the chosen approach; get explicit approval before
    any code is written. If the user wants changes, loop back to Phase 2.
 
 ## Phase 4 — Build (blocked by approval)
-7. Task owned by **`rust-builder`** with the approved plan (pass it in the spawn prompt —
+9. Task owned by **`rust-builder`** with the approved plan and the maintainer-grade verdict
+   (pass them in the spawn prompt —
    teammates don't inherit it). Instruct it to:
    - work test-driven where practical (failing test → implement → refactor),
-   - stay strictly in scope (no opportunistic refactors),
+   - implement the smallest correct architecture-compatible change, not the smallest textual
+     diff,
+   - reshape touched code when the approved plan requires it; no compatibility shims or
+     half-migrations in active-dev mode,
    - run `cargo test`/`nextest`, `cargo clippy --all-targets --all-features -- -D warnings`,
      and `cargo fmt`, and fix issues,
    - add `// SAFETY:` notes to any `unsafe` and flag it.
-8. The builder reports a diff summary + command output. Show it to the user.
+10. The builder reports a diff summary + command output. Show it to the user.
 
 ## Phase 5 — Review (gate; blocked by build)
-9. Task owned by **`rust-reviewer`** on the diff. For **full** mode, also run the owning
+11. Task owned by **`rust-reviewer`** on the diff. For **full** mode, also run the owning
    lead's gate checklist as sibling tasks (and `unsafe-auditor` if `unsafe` was touched,
    `security-auditor` for input/auth/deserialization) — these read-only lenses can run
    concurrently as teammates.
-10. If findings are NEEDS WORK, hand them back to `rust-builder` (loop Phase 4) until clean
+12. If findings are NEEDS WORK, hand them back to `rust-builder` (loop Phase 4) until clean
     or the user decides to stop.
 
 ## Phase 6 — Verdict
-11. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything
+13. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything
     left out of scope. Every teammate's contribution ends in **COMPLETE / NEEDS WORK /
     BLOCKED** with evidence. End with **COMPLETE / NEEDS WORK / BLOCKED**.
-12. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
+14. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound. If running as a team,
     drive cleanup: `SendMessage {type:"shutdown_request"}` to each teammate, then `TeamDelete`.
 
