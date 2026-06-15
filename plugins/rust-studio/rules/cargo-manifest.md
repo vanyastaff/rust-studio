@@ -32,3 +32,17 @@ Applies to every `Cargo.toml`.
 ## Workspace
 - Shared deps via `[workspace.dependencies]` and `dep.workspace = true` to keep
   versions unified. Shared lints via `[workspace.lints]`.
+
+## Lints (workspace)
+- Never `#![deny(warnings)]` in library code: a newly-stabilized lint then breaks
+  every consumer's build. Set lint levels in the manifest and gate strictness in CI
+  with `RUSTFLAGS="-D warnings"` (plus `cargo clippy --all-targets -- -D warnings`).
+- `[workspace.lints.rust]`: `unsafe_op_in_unsafe_fn = "deny"`,
+  `missing_docs = "warn"`, `unreachable_pub = "warn"`.
+- `[workspace.lints.clippy]`: enable the broad groups at `warn` with a negative
+  priority so specific overrides win —
+  `pedantic = { level = "warn", priority = -1 }`,
+  `nursery = { level = "warn", priority = -1 }` — then `allow` the noisy lints
+  deliberately (e.g. `module_name_repetitions = "allow"`), each with a reason.
+- Multi-crate workspaces: set `lto = "thin"` in the release profile (no cross-crate
+  LTO by default). At 20+ crates, run `cargo hakari` to unify features and cut rebuilds.

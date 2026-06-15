@@ -34,3 +34,15 @@ Applies to integration tests, test modules, and benches.
 ## Tooling
 - Prefer `cargo nextest` for speed + isolation. Keep tests fast; mark slow ones.
 - Assertions: `assert_eq!` with helpful messages, or `pretty_assertions` for diffs.
+- Run `miri` against **every** `unsafe` path — it catches UB (aliasing, uninit reads,
+  out-of-bounds, invalid layout) that normal tests never see. Non-negotiable for unsafe.
+- `loom` for lock-free / atomic synchronization: it exhaustively explores thread
+  interleavings and memory-ordering, so concurrency bugs surface deterministically.
+- `cargo-mutants` for mutation testing of critical code — proves the suite actually
+  fails when behavior changes, not just that lines were executed.
+- `cargo-insta` for snapshot tests (review/accept diffs); `trybuild` for macro and
+  compile-fail tests that pin down the exact error message users see.
+- Property tests (`proptest`/`quickcheck`) encode algebraic laws for parsers and
+  serializers: round-trip (`decode(encode(x)) == x`), idempotence, and ordering.
+- Wrap doctest setup boilerplate in hidden `# ` helper lines so examples compile
+  and read cleanly without setup noise (the `# ` lines run but don't render).
