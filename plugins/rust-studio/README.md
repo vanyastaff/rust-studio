@@ -10,8 +10,8 @@ for libraries, async/web services, CLIs, and systems/embedded code.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
 - **48 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, cross-session memory, and a self-check harness
-- **17 path-scoped rule sets** — the right Rust standard injected the moment you open or edit a matching file
-- **7 hooks** — stack detection **+ memory recall** at session start, path-scoped rule injection, a lint nudge, and session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders)
+- **17 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
+- **7 hooks** — stack detection **+ memory recall** at session start, path-scoped rule pointers, a lint nudge, and session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders)
 
 ---
 
@@ -68,8 +68,8 @@ intensity to match the work.
 
 ## Path-scoped standards
 
-When you edit a file, the matching standard is injected as context automatically
-([`rules/`](rules)):
+When you edit a file, a pointer to the matching standard (name + one-line summary + path) is
+injected automatically; the agent reads the full rule on demand ([`rules/`](rules)):
 
 | Edit a… | …and you get |
 |---------|--------------|
@@ -90,12 +90,15 @@ When you edit a file, the matching standard is injected as context automatically
 ## Hooks
 
 - **SessionStart** — detects the crate/workspace, edition, MSRV, and domain; briefs the team, and
-  recalls the most relevant notes from the project's Obsidian-vault memory (ranked against the git
-  branch / changed crates / last commit).
-- **PreToolUse (Read/Write/Edit)** — injects the path-scoped Rust standard *before* you read or
-  edit a matching file, so the standard is in front of the agent ahead of the first draft. An edit
-  that introduces `unsafe` also pulls in the unsafe-code standard. `core` leads every injection;
-  if more rules match than fit the budget, the extras are named (never silently dropped).
+  recalls the most relevant notes from the project's Obsidian-vault memory as a compact index —
+  title + one-line hook + a direct path to read each note — ranked against the git branch /
+  changed crates / last commit (`/recall` for deeper semantic search).
+- **PreToolUse (Read/Write/Edit)** — injects a compact *pointer* to each path-scoped Rust
+  standard (name + one-line summary + absolute path) *before* you read or edit a matching file,
+  so the agent knows which standards bind and reads the full rule on demand — instead of dumping
+  every rule body into the window on every file (the dominant context cost, see
+  `tools/context-cost.ts`). An edit that introduces `unsafe` also points to the unsafe-code
+  standard. `core` leads every list; safety/security-critical rules are flagged ⚠️ REQUIRED.
 - **UserPromptSubmit** — a light nudge to `/recall` before working in a known area and to prefer a
   studio skill when one fits.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.

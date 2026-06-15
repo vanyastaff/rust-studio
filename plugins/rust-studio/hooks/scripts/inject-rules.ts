@@ -1,12 +1,17 @@
 #!/usr/bin/env bun
-// Rust Code Studio — path-scoped rule injection (PreToolUse: Read|Write|Edit).
+// Rust Code Studio — path-scoped rule POINTERS (PreToolUse: Read|Write|Edit).
 //
 // BEFORE a source file is read or edited, find any rules/*.md whose `paths:`
-// frontmatter glob matches the path and inject that rule's body as
-// additionalContext, so the relevant Rust standard is in front of the agent
-// BEFORE it shapes the first draft (firing on Read is what gets the rules in
-// ahead of the first edit, not after it). Each matching path injects once per
-// session (a tmp marker dedupes repeat reads/edits). Never fails the session.
+// frontmatter glob matches the path and inject a COMPACT POINTER to each matching
+// rule — its name, one-line description, and absolute path — instead of the full
+// rule body. The agent reads the full standard on demand (Read tool). This keeps
+// the binding standards in front of the agent while costing ~1 line per rule
+// instead of 300–1300 tokens each, so a multi-file session no longer re-injects
+// the same baselines (core.md, etc.) a dozen times over — the dominant source of
+// context bloat measured by tools/context-cost.ts. Safety/security-critical rules
+// are flagged REQUIRED to mitigate the agent skipping the read. Each matching path
+// injects once per session (a tmp marker dedupes repeat reads/edits). Never fails
+// the session.
 
 import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -110,7 +115,7 @@ try {
 // content-triggered (e.g. unsafe.md) and handled below, not by path.
 interface Rule {
   name: string;
-  body: string;
+  desc: string;
 }
 const matched: Rule[] = [];
 const contentTriggered: Rule[] = [];
@@ -121,14 +126,15 @@ for (const f of entries!) {
   } catch {
     continue;
   }
-  const [fm, body] = parseFrontmatter(text);
+  const [fm] = parseFrontmatter(text);
   const name = fm.name || basename(f, ".md");
+  const desc = fm.description || "(see rule)";
   const globs = fm.paths || "";
   if (!globs) {
-    contentTriggered.push({ name, body: body.trim() });
+    contentTriggered.push({ name, desc });
     continue;
   }
-  if (pathMatches(globs, norm)) matched.push({ name, body: body.trim() });
+  if (pathMatches(globs, norm)) matched.push({ name, desc });
 }
 
 // Content trigger: an edit that introduces or touches `unsafe` pulls in the
@@ -142,7 +148,12 @@ const payload = [
 ]
   .filter(Boolean)
   .join("\n");
-const touchesUnsafe = /\bunsafe\b/.test(payload);
+// Only a real unsafe CONSTRUCT in a Rust file pulls in unsafe.md — not the bare
+// word "unsafe" in prose/comments/markdown, not the `unsafe_op_in_unsafe_fn` lint
+// name, and not a doc that merely discusses unsafe. Match `unsafe` immediately
+// followed by a block/fn/impl/trait/extern.
+const touchesUnsafe =
+  norm.endsWith(".rs") && /\bunsafe\s*(?:\{|fn\b|impl\b|trait\b|extern\b)/.test(payload);
 if (touchesUnsafe) {
   for (const r of contentTriggered) {
     if (!matched.some((m) => m.name === r.name)) matched.push(r);
@@ -177,37 +188,28 @@ try {
   /* inject anyway */
 }
 
-const header =
-  `Path-scoped Rust standards apply to \`${basename(norm)}\` ` +
-  "(Rust Code Studio). Conform the edit to these:\n\n";
+// Emit POINTERS, not bodies. Each matching rule contributes one bullet: name +
+// one-line description + the absolute path to Read on demand. core.md is first in
+// `matched` so the universal baseline always heads the list. Safety/security-
+// critical rules are flagged REQUIRED so the agent does not skip the read.
+const root = pluginRoot().replace(/\\/g, "/").replace(/\/+$/, "");
+const CRITICAL = new Set(["unsafe", "ffi", "security"]);
 
-// Budget the injection: keep whole rules in priority order until the cap, then
-// NAME any that didn't fit (instead of silently slicing mid-rule) so the agent
-// can read them directly. core.md is first in `matched`, so it always lands.
-const BUDGET = 18000;
-const sep = "\n\n---\n\n";
-const kept: string[] = [];
-const elided: string[] = [];
-let used = header.length;
-for (const r of matched) {
-  const cost = (kept.length ? sep.length : 0) + r.body.length;
-  if (kept.length && used + cost > BUDGET) {
-    elided.push(r.name);
-    continue;
-  }
-  kept.push(r.body);
-  used += cost;
-}
-let context = header + kept.join(sep);
-if (elided.length) {
-  context +=
-    `${sep}…${elided.length} more standard(s) apply but were elided for length: ` +
-    `${elided.join(", ")} — read \`\${CLAUDE_PLUGIN_ROOT}/rules/<name>.md\` directly.`;
-}
+const header =
+  `Path-scoped Rust standards apply to \`${basename(norm)}\` (Rust Code Studio). ` +
+  "These are BINDING — do not shape the edit from memory. Before you finish this " +
+  "edit, **read (Read tool) each rule below that you have not already read this " +
+  "session**:\n";
+
+const bullets = matched.map((r) => {
+  const ptr = `${root}/rules/${r.name}.md`;
+  const tag = CRITICAL.has(r.name) ? " — ⚠️ **REQUIRED before this edit**" : "";
+  return `- **${r.name}** — ${r.desc}${tag}\n    Read: \`${ptr}\``;
+});
 
 emit({
   hookSpecificOutput: {
     hookEventName: event,
-    additionalContext: context,
+    additionalContext: header + "\n" + bullets.join("\n"),
   },
 });

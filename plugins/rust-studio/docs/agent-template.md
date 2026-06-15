@@ -37,7 +37,8 @@ You are the **<Role>** in the Rust Code Studio — <one-line mandate>.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/rules/<file>.md` — <what>
-  (the inject-rules hook surfaces these automatically on matching edits)
+  (the inject-rules hook injects a POINTER to these on matching edits — Read the rule file
+  before you rely on it; the body is not injected)
 
 ## Gate: <GATE-ID>            # leads/directors only — omit for specialists
 Before this gate passes, verify:
