@@ -13,7 +13,7 @@ import { readFileSync, statSync, readdirSync } from "node:fs";
 import { join, basename, dirname, resolve } from "node:path";
 import { homedir } from "node:os";
 import { execSync } from "node:child_process";
-import { readInput, emit, watchdog } from "./_lib.ts";
+import { readInput, emit, watchdog, option, optionBool } from "./_lib.ts";
 
 /** Canonical main-worktree root for cwd, so a git WORKTREE recalls the real
  *  project's vault memory (the main repo), not the worktree dir name. Falls back to cwd. */
@@ -52,16 +52,6 @@ function section(text: string, name: string): string {
 function field(body: string, key: string): string | null {
   const m = new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']*)["']`, "m").exec(body);
   return m ? m[1] : null;
-}
-
-/** Read a plugin userConfig value, exposed to hook subprocesses as
- *  CLAUDE_PLUGIN_OPTION_<KEY>. Tries the upper-cased key (documented form) then the
- *  verbatim key; returns null when unset/blank so callers can fall back. */
-function option(key: string): string | null {
-  const env = process.env;
-  const v = env[`CLAUDE_PLUGIN_OPTION_${key.toUpperCase()}`] ?? env[`CLAUDE_PLUGIN_OPTION_${key}`];
-  const s = (v ?? "").trim();
-  return s ? s : null;
 }
 
 function classify(textLower: string): string[] {
@@ -130,7 +120,7 @@ const GROUP_ORDER = ["Decisions (ADRs)", "Plans & specs", "Working memory"];
 
 function buildRecall(cwd: string): string {
   try {
-    const vault = process.env.OBSIDIAN_VAULT_PATH || join(homedir(), "memory");
+    const vault = option("vault_path") || process.env.OBSIDIAN_VAULT_PATH || join(homedir(), "memory");
     const project = basename(gitMainRoot(cwd)); // worktree -> main repo name
     const dir = join(vault, "projects", project);
     try {
@@ -335,7 +325,7 @@ if (!manifestExists) {
   briefing = lines.join("\n");
 }
 
-const recall = buildRecall(cwd);
+const recall = optionBool("memory_recall", true) ? buildRecall(cwd) : "";
 
 emit({
   hookSpecificOutput: {
