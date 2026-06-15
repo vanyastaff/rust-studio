@@ -1,7 +1,7 @@
 ---
 name: async-runtime-specialist
 description: "Tokio runtime and async-correctness specialist. Owns cancellation safety, select!, streams, spawning, JoinHandles, Send/'static bounds, async traits, and timeouts. Use when reviewing or writing async code, debugging a hang/race/cancellation bug, auditing spawn sites, reasoning about structured concurrency, or deciding between spawn vs. spawn_blocking."
-model: claude-opus-4-8
+model: sonnet
 color: blue
 ---
 

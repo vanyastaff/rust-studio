@@ -1,7 +1,7 @@
 ---
 name: error-architect
 description: "Tier-3 specialist for error-handling discipline and Result ergonomics. Owns the thiserror/anyhow boundary, error taxonomy, context layering, and source chains. Use when designing custom error types, deciding when to wrap vs propagate, categorizing retryable vs fatal errors, reviewing Result discipline across a crate, or evaluating miette for end-user diagnostics."
-model: claude-opus-4-8
+model: sonnet
 color: orange
 ---
 

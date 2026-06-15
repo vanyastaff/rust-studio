@@ -1,6 +1,6 @@
 ---
 name: resolve-pr
-description: "resolve PR feedback, address review comments, fix review threads, watch a PR, shepherd a pull request, watch CI — one-shot: triage and fix review comments with a reply per thread. With --watch: continuously listen for new reviewer/bot comments and CI results, fix failures, and propose CI speedups when checks are slow. Use when a PR has feedback or needs shepherding to merge-ready."
+description: "resolve PR feedback, address review comments, fix review threads, watch a PR, shepherd a pull request, watch CI — triage and fix review comments (a reply per thread); with --watch, continuously fix new reviewer/bot comments and CI failures and propose CI speedups. Use when a PR has feedback or needs shepherding to merge-ready."
 argument-hint: "[PR number or url] [--watch] [--ci-budget=<minutes>]"
 user-invocable: true
 ---

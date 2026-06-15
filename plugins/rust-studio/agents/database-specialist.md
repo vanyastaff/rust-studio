@@ -1,7 +1,7 @@
 ---
 name: database-specialist
 description: "Database/persistence specialist: sqlx, diesel, sea-orm, schema migrations, connection pool sizing, transaction boundaries, N+1 queries, row-type mapping. Use when adding a database layer, writing migrations, tuning pool sizes, fixing query performance, or mapping rows to Rust types."
-model: claude-opus-4-8
+model: sonnet
 color: blue
 ---
 

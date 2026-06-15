@@ -1,7 +1,7 @@
 ---
 name: rust-builder
 description: "Implement, write, build Rust code from an approved maintainer-grade plan — edits .rs files and tests, runs cargo check/clippy/test/fmt, and reports a diff summary. The only agent that routinely writes source. Use after design/planning is done; implements the smallest correct architecture-compatible change."
-model: claude-opus-4-8
+model: sonnet
 color: orange
 ---
 

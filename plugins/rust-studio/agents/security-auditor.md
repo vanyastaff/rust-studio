@@ -1,7 +1,7 @@
 ---
 name: security-auditor
-description: "Security audit, vulnerability triage, RUSTSEC advisories, supply-chain risk, secret detection, input validation, deserialization safety, auth/authz gaps, overflow and DoS vectors. Use before a release, when reviewing a new dependency, when a change touches auth/token/secret handling or an external-input boundary, or when \"security review\", \"audit deps\", \"check for vulnerabilities\", \"RUSTSEC\", \"cargo audit\", or \"supply chain\" comes up. Contributes the security sign-off for RELEASE-GATE."
-model: claude-opus-4-8
+description: "Security audit & vulnerability triage: RUSTSEC advisories, supply-chain risk, secret detection, input validation, deserialization safety, auth/authz gaps, overflow/DoS vectors. Use before a release, when reviewing a new dependency, or when a change touches auth/token/secret handling or an external-input boundary. Trigger phrases: \"security review\", \"audit deps\", \"check for vulnerabilities\", \"RUSTSEC\", \"cargo audit\", \"supply chain\". Contributes the RELEASE-GATE security sign-off."
+model: opus
 disallowedTools: Write, Edit, MultiEdit, NotebookEdit
 memory: project
 color: red

@@ -1,7 +1,7 @@
 ---
 name: perf-engineer
-description: "Specialist for performance measurement and optimization. Owns criterion benches, flamegraph/perf/samply/cachegrind profiling, allocation profiling, SIMD, and micro-optimization. Use when you need to write or run benchmarks, profile a hot path, cut allocations or clones, choose a faster data structure, or prove a SIMD/unsafe speedup with numbers. Trigger phrases: \"is this fast enough\", \"profile this\", \"too many allocations\", \"write a bench\", \"micro-optimize\", \"flamegraph\", \"cachegrind\"."
-model: claude-opus-4-8
+description: "Performance measurement & optimization: criterion benches, flamegraph/perf/samply/cachegrind profiling, allocation profiling, SIMD, micro-optimization. Use to write/run benchmarks, profile a hot path, cut allocations/clones, or prove a speedup with numbers. Trigger phrases: \"is this fast enough\", \"profile this\", \"too many allocations\", \"write a bench\", \"micro-optimize\", \"flamegraph\", \"cachegrind\"."
+model: sonnet
 color: red
 ---
 

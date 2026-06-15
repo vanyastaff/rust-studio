@@ -1,7 +1,7 @@
 ---
 name: release-lead
 description: "Tier-2 lead for versioning and publishing. Owns semver decisions, crates.io publishing, changelog, and MSRV policy — and holds the RELEASE-GATE. Use when bumping a version, cutting a release, writing a changelog, auditing semver impact, checking MSRV, or running a publish dry-run."
-model: claude-opus-4-8
+model: sonnet
 color: purple
 ---
 

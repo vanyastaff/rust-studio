@@ -15,7 +15,7 @@
       "source": "./plugins/rust-studio",
       "displayName": "Rust Code Studio",
       "description": "A tiered Rust engineering studio: architect -> leads -> specialists, path-scoped standards, quality gates, and cargo-aware hooks for libraries, async/web services, CLIs, and systems/embedded code.",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "category": "development",
       "keywords": ["rust", "cargo", "code-review", "agents", "studio"],
       "author": {

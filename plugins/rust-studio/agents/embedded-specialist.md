@@ -1,7 +1,7 @@
 ---
 name: embedded-specialist
-description: "Tier-3 specialist for embedded and no_std Rust. Owns no_std discipline, embedded-hal, cortex-m, interrupt safety, panic handlers, and static allocation. Use when writing firmware, bare-metal drivers, HAL implementations, or any code that must compile without std — trigger phrases include \"no_std\", \"embedded-hal\", \"cortex-m\", \"#[entry]\", \"#[no_main]\", \"heapless\", \"critical-section\", \"panic=abort\", or \"interrupt handler\"."
-model: claude-opus-4-8
+description: "Embedded and no_std Rust specialist: no_std discipline, embedded-hal, cortex-m, interrupt safety, panic handlers, static allocation. Use for firmware, bare-metal drivers, HAL implementations, or any code that must compile without std. Trigger phrases: \"no_std\", \"embedded-hal\", \"cortex-m\", \"#[entry]\", \"#[no_main]\", \"heapless\", \"critical-section\", \"panic=abort\", \"interrupt handler\"."
+model: sonnet
 color: orange
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: api-design-lead
 description: "Design or review public API, decide breaking vs additive change, audit accidental pub, plan crate boundary split, gate any change touching the public surface. Tier-2 lead for API surface, crate boundaries, and semver discipline. Owns the re-export strategy, #[non_exhaustive] / sealed-trait policy, and API-GATE sign-off."
-model: claude-opus-4-8
+model: sonnet
 color: yellow
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: api-designer
-description: "Trait and type design specialist. Owns trait design, type-state machines, builders, sealed traits, newtypes, and standard trait impls (From/TryFrom/Display/Error/Iterator/Default). Use when designing a public API surface, choosing between trait objects and generics, structuring a builder, encoding invariants in types, or deciding on From/TryFrom conversions. Trigger phrases: \"design this trait\", \"typestate builder\", \"sealed trait\", \"newtype pattern\", \"object safety\", \"illegal states unrepresentable\", \"GAT\", \"From vs TryFrom\"."
-model: claude-opus-4-8
+description: "Trait and type design specialist: trait design, type-state machines, builders, sealed traits, newtypes, GATs, trait-objects-vs-generics, standard impls (From/TryFrom/Display/Error/Iterator/Default). Use to design a public API surface or make illegal states unrepresentable. Trigger phrases: \"design this trait\", \"typestate builder\", \"sealed trait\", \"newtype pattern\", \"object safety\", \"illegal states unrepresentable\", \"GAT\", \"From vs TryFrom\"."
+model: sonnet
 color: yellow
 ---
 

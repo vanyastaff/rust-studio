@@ -1,7 +1,7 @@
 ---
 name: unsafe-auditor
 description: "Read-only unsafe code auditor. Reviews every unsafe block for soundness — SAFETY invariants, UB (aliasing/provenance/init/layout), miri, FFI unwind, repr/alignment. Use when any change touches unsafe code, introduces new unsafe blocks, crosses an FFI boundary, or needs SAFETY-GATE sign-off. Trigger phrases: \"audit unsafe\", \"check soundness\", \"miri\", \"UB\", \"SAFETY:\", \"FFI safety\", \"safety gate\"."
-model: claude-opus-4-8
+model: opus
 disallowedTools: Write, Edit, MultiEdit, NotebookEdit
 memory: project
 color: red

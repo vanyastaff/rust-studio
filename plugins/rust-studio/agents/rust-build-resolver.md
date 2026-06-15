@@ -1,7 +1,7 @@
 ---
 name: rust-build-resolver
 description: "Systematically fixes Rust build and type errors. Reads cargo diagnostics, fixes the root error (borrow checker, trait bounds, lifetimes, type mismatch, missing feature/dep, edition/cfg), and re-checks in a loop until the build is clean. Use when `cargo build`/`cargo check` fails, the borrow checker is stuck, trait bounds won't resolve, or a dependency/feature breaks compilation."
-model: claude-opus-4-8
+model: sonnet
 color: orange
 ---
 

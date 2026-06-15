@@ -1,7 +1,7 @@
 ---
 name: build-engineer
-description: "Tier-3 specialist who IMPLEMENTS build infrastructure — writes build.rs, CI configs, cross-compilation setup, xtask, and cargo-hack feature matrices. Use to set up or fix build scripts, add cross targets, debug CI failures, configure xtask, generate code in OUT_DIR, or verify all feature combinations compile. (tooling-lead decides build policy and owns BUILD-GATE; build-engineer does the implementation.) Trigger phrases: \"build.rs\", \"cross-compile\", \"cargo hack\", \"xtask\", \"OUT_DIR\", \"rerun-if\", \"CI matrix\"."
-model: claude-opus-4-8
+description: "Implements build infrastructure: build.rs, CI configs, cross-compilation, xtask, cargo-hack feature matrices, OUT_DIR codegen. Use to set up/fix build scripts, add cross targets, debug CI, or verify all feature combinations compile. (tooling-lead owns build policy + BUILD-GATE; this agent implements.) Trigger phrases: \"build.rs\", \"cross-compile\", \"cargo hack\", \"xtask\", \"OUT_DIR\", \"rerun-if\", \"CI matrix\"."
+model: sonnet
 color: cyan
 ---
 

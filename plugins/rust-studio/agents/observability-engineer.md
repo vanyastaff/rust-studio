@@ -1,7 +1,7 @@
 ---
 name: observability-engineer
-description: "Tier-3 specialist for tracing, structured logging, metrics, and OpenTelemetry integration. Owns instrumentation strategy, span design, log-level policy, and metric cardinality. Use when adding #[instrument], designing span fields, wiring up OpenTelemetry exporters, enforcing no-PII-in-logs, or auditing metric cardinality. Triggered by phrases like \"add tracing\", \"instrument this\", \"structured logs\", \"metrics\", \"OpenTelemetry\", \"correlation id\", or \"observability\"."
-model: claude-opus-4-8
+description: "Tracing, structured logging, metrics, and OpenTelemetry specialist: instrumentation strategy, span design, log-level policy, metric cardinality, no-PII-in-logs. Use to add #[instrument], design span fields, or wire OpenTelemetry exporters. Trigger phrases: \"add tracing\", \"instrument this\", \"structured logs\", \"metrics\", \"OpenTelemetry\", \"correlation id\", \"observability\"."
+model: sonnet
 color: cyan
 ---
 

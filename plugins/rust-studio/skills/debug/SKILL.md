@@ -1,6 +1,6 @@
 ---
 name: debug
-description: "debug, root-cause, why is this failing, trace, panic, deadlock, hang, wrong output — find the ROOT cause of a Rust bug methodically before changing code: reproduce, isolate, hypothesize, instrument, fix the cause (not the symptom), add a regression test. Use for runtime bugs, logic errors, panics, deadlocks, async hangs, or flaky behavior."
+description: "debug, root-cause, why is this failing, trace, panic, deadlock, hang, wrong output — find the ROOT cause of a Rust bug methodically: reproduce, isolate, hypothesize, instrument, fix the cause not the symptom, add a regression test. Use for runtime bugs, logic errors, panics, deadlocks, async hangs, or flaky behavior."
 argument-hint: "[symptom, error text, or failing test]"
 user-invocable: true
 ---
