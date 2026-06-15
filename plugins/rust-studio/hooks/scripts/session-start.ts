@@ -190,14 +190,22 @@ function buildRecall(cwd: string): string {
       if (items.length) sections.push(`### ${g}\n` + items.map(fmtBullet).join("\n"));
     }
 
+    // Orient the agent: when project memory exists, the durable design record lives in
+    // the vault, not the repo — so consult/extend it instead of re-deriving from code.
+    const orient =
+      `**This project's durable design record lives in the Obsidian vault** ` +
+      `(\`projects/${project}/\`), not the repo — its ADRs/decisions, plans, specs, roadmap, and ` +
+      "tasks. Consult it before designing or re-deriving, and capture new decisions there with `/remember`.";
+
     let out: string;
     if (sections.length) {
       out =
-        `## Recalled project memory — most relevant to this work${sigList ? ` (signal: ${sigList})` : ""}\n` +
+        `## Recalled project memory — most relevant to this work${sigList ? ` (signal: ${sigList})` : ""}\n\n` +
+        `${orient}\n\n` +
         sections.join("\n\n");
     } else {
       const recent = notes.slice().sort((a, b) => b.mtime - a.mtime).slice(0, 4);
-      out = `## Recalled project memory — most recent\n` + recent.map(fmtBullet).join("\n");
+      out = `## Recalled project memory — most recent\n\n${orient}\n\n` + recent.map(fmtBullet).join("\n");
     }
     return (
       out +
