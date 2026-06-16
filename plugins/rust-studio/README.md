@@ -132,16 +132,18 @@ hard timeout with a watchdog, so it can never freeze the session (even mid-subag
 - **Main bar (on by default).** Installed automatically into your `~/.claude/settings.json` on the
   first session (the `statusline` config; it never clobbers an existing `statusLine` and backs the
   file up). A plugin can't ship a top-level `statusLine`, hence the one-time auto-install. A two-line
-  rounded bar:
+  **Tokyo Night Powerline** bar with colored arrow segments and Nerd Font icons:
 
   ```
-  ╭─ 🦀 rust-studio · <project> · <branch ●dirty ↑ahead ↓behind> · <model> · think:<effort> · lsp ✓
-  ╰─ ctx <bar> % · cache % · ▸ <phase> <bar> n/total · ✓ <tasks> · 5h/7d · <dur> · +A −R
+  line 1:  🦀 rust-studio · <project> · <branch ●dirty ↑↓> · <model> · think:<effort> · lsp ✓
+  line 2:  <ctx %> · <cache %> · ▸ <phase> <bar> n/total · ✓ <tasks> · 5h/7d · <dur> · +A −R
   ```
 
-  Truecolor gradient (→256→ASCII), fast cached git, and smart-hiding of empty segments; the
-  `▸ <phase>` / `✓ <tasks>` segments track the active orchestration via `.rust-studio/progress.json`.
-  Env toggles: `RUST_STUDIO_STATUSLINE_ASCII=1`, `RUST_STUDIO_STATUSLINE_POWERLINE=1`, `NO_COLOR`.
+  Truecolor Tokyo Night theme, fast cached git, and smart-hiding of empty segments; the context
+  segment is colored by threshold; `▸ <phase>` / `✓ <tasks>` track the active orchestration via
+  `.rust-studio/progress.json`. Needs a Nerd Font for icons/arrows — fallbacks via env:
+  `RUST_STUDIO_STATUSLINE_NERDFONT=0` (text labels), `RUST_STUDIO_STATUSLINE_POWERLINE=0`
+  (middot separators + rounded caps), `RUST_STUDIO_STATUSLINE_ASCII=1`, `NO_COLOR`.
   Manage with **`/progress-bar`** — refresh after a plugin update, or `/progress-bar off` to remove.
   Set the `statusline` config off to skip the auto-install entirely.
 

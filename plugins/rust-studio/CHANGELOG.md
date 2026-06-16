@@ -5,6 +5,24 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-06-16
+
+### Changed
+
+- **Status line redesign — Tokyo Night + Powerline + Nerd Font icons** (the new default look). A
+  two-line powerline bar with colored arrow caps, a Tokyo Night truecolor palette, and icons
+  (branch, folder, gauge, clock). The context segment is colored by threshold
+  (green → yellow → red); same-background segments are divided by a thin powerline separator. The
+  project name comes from the repo root (`project_dir`), not the current subdirectory. Fallbacks via
+  env: `RUST_STUDIO_STATUSLINE_NERDFONT=0` (text labels, no glyph icons),
+  `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot separators + rounded caps),
+  `RUST_STUDIO_STATUSLINE_ASCII=1`, `NO_COLOR`.
+
+### Fixed
+
+- The context segment no longer renders an illegible block bar on its colored powerline background —
+  it shows just the percentage (the no-powerline fallback keeps the bar).
+
 ## [0.9.1] - 2026-06-16
 
 ### Fixed
