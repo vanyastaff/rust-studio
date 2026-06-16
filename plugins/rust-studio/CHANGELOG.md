@@ -5,6 +5,22 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2026-06-16
+
+### Changed
+
+- **Calmer Tokyo Night palette.** Only two segments carry a colored background now — the 🦀 tag and
+  the context segment (by threshold). Every other segment is colored **text** on a dark background
+  (git, model, phase, …) — less rainbow, more Tokyo Night.
+
+### Fixed
+
+- **Icons render without a full Nerd Font.** Decorative icons default to **emoji** (📁 📊 💾 🕐),
+  which render in normal terminals — previously they used FontAwesome (F0xx) glyphs that showed as
+  tofu unless a Nerd Font was installed (only the powerline branch glyph rendered). The powerline
+  branch glyph + arrows (E0xx) are kept. Opt into sleek FontAwesome icons with
+  `RUST_STUDIO_STATUSLINE_NERDFONT=1` (needs a Nerd Font); `=0` uses text labels.
+
 ## [0.10.0] - 2026-06-16
 
 ### Changed
