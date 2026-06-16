@@ -53,6 +53,23 @@ Batch unavoidable decisions into one ask. Present decisions-made + results, not 
 questions. Autonomy is about **deciding, not skipping process** — keep the gates (§4), the
 SDD/TDD discipline, and verification (§7).
 
+**When you DO ask, options vary by *scope* or *approach* — never by *quality*.** The quality bar
+is not a menu item. Do **not** offer "quick win / cut corners / skip the tests / ship a shim /
+defer the cross-crate ripple / TODO-it-later" as an option — least of all the **Recommended**
+one. That is exactly the quick-win this studio rejects (`integrity-and-evidence.md`), dressed up
+as a user choice; presenting it invites the user to authorize substandard work the standards
+already forbid. A valid option set is one of:
+- **scope** — which slice of the work to do now vs. explicitly defer (a deferral names a
+  *concrete* blocker per `working-preferences.md`, not a comfort excuse), every slice still built
+  to the bar; or
+- **approach** — genuinely different designs with real engineering trade-offs (enum vs
+  trait-object, in-place vs new crate, sync vs async), each one clearing the maintainer bar.
+
+The **Recommended** option (first in the list, marked `(Recommended)`) is always the one that
+meets the bar. If the user is time-pressured, cut optional **scope**, not the **quality** —
+"scope can be cut; the quality bar cannot" (`maintainer-grade-development.md`). "Reject the task"
+or "do less, properly" are fine options; "do it, but badly" never is.
+
 **Proceed without asking:** read-only investigation; non-mutating cargo commands
 (`check`/`clippy`/`test`/`tree`/benches); local commits on a worktree branch; and executing a
 plan/scope already agreed. Note that an `AskUserQuestion` answer does **not** by itself

@@ -5,6 +5,23 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-06-16
+
+### Changed
+
+- **The quality bar is no longer a menu item.** Agents would sometimes ask via `AskUserQuestion`
+  with a "fast / Quick Win (recommended) / full / reject" menu — offering substandard work as a
+  selectable, even *recommended*, option, which directly contradicts the studio's own
+  "no quick wins" standard (`integrity-and-evidence.md`). Coordination Protocol §1 now binds how
+  options are built: **option sets vary by *scope* or *approach*, never by *quality*.** A
+  "quick win / cut corners / skip tests / ship a shim / defer the ripple / TODO-it-later" choice
+  is forbidden — least of all as the Recommended one. The Recommended option always clears the
+  bar; if the user is time-pressured, the cut is to optional *scope*, not quality ("scope can be
+  cut; the quality bar cannot"). Reinforced in `working-preferences.md` under *No quick wins*.
+  Verified by spawning an orchestrator under the rule on a validation task that previously invited
+  a quality menu — it returned a scope/approach option set with the bar-meeting option Recommended
+  and the shortcut excluded.
+
 ## [0.12.0] - 2026-06-16
 
 ### Added
