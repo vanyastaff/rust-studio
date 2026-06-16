@@ -30,7 +30,8 @@
 // general-purpose) that never speaks in studio verdicts. additionalContext is the
 // safe escalation. Never fails the session — on any error it exits 0 silently.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { readInput, emit, done, watchdog } from "./_lib.ts";
 
 /** The studio verdict vocabulary. Word-boundary anchored so it still matches when
@@ -66,45 +67,135 @@ function entryAssistantText(o: any): string | null {
   return null;
 }
 
+/** Parse every JSONL entry as { role, text | null } for turn-boundary detection.
+ *  Returns null for lines that are not valid JSON or not a recognised role shape.
+ *  `text` is null when the entry carries no text content (tool-use, thinking, metadata).
+ *
+ *  Role normalisation:
+ *  - Metadata pseudo-roles (last-prompt, ai-title, mode, attachment,
+ *    file-history-snapshot) → "meta" so they don't act as turn boundaries.
+ *  - User entries whose content is a tool_result list → "tool_result" so they can
+ *    be distinguished from human prompt entries (role "user" with string or text
+ *    content). This lets verdictPresent skip past tool-call round-trips while still
+ *    stopping at a genuine new human prompt. */
+function parseEntry(line: string): { role: string; text: string | null } | null {
+  const s = line.trim();
+  if (!s) return null;
+  let o: unknown;
+  try {
+    o = JSON.parse(s);
+  } catch {
+    return null;
+  }
+  const msg = (o as any)?.message ?? (o as any);
+  const role: string = msg?.role ?? (o as any)?.type ?? "";
+
+  // Normalise metadata pseudo-roles.
+  if (/^(last-prompt|ai-title|mode|attachment|file-history-snapshot)$/.test(role)) {
+    return { role: "meta", text: null };
+  }
+
+  // Distinguish tool_result user entries from human prompt user entries.
+  if (role === "user") {
+    const content = msg?.content;
+    const isToolResult =
+      Array.isArray(content) &&
+      content.length > 0 &&
+      content[0]?.type === "tool_result";
+    return { role: isToolResult ? "tool_result" : "user", text: null };
+  }
+
+  const text = entryAssistantText(o);
+  return { role, text: text?.trim() || null };
+}
+
 /** Every non-empty assistant message text in a JSONL transcript, in order. Lines
  *  that aren't valid JSON are skipped (the caller treats an empty result as
  *  "couldn't parse" and falls back to a raw scan). */
 export function assistantTexts(raw: string): string[] {
   const out: string[] = [];
   for (const line of raw.split("\n")) {
-    const s = line.trim();
-    if (!s) continue;
-    let o: unknown;
-    try {
-      o = JSON.parse(s);
-    } catch {
-      continue; // not a JSONL line we understand — skip
-    }
-    const t = entryAssistantText(o);
-    if (t && t.trim()) out.push(t);
+    const entry = parseEntry(line);
+    if (entry?.role === "assistant" && entry.text) out.push(entry.text);
   }
   return out;
 }
 
+/** Walk backwards through `entries` from index `from`, collecting assistant text
+ *  blocks. Stops (and returns the stopping index) at the first entry whose role
+ *  matches `stopAt`. Skips meta pseudo-entries and tool-use-only assistant entries.
+ *  Returns texts in chronological order and the index of the stop entry (or -1). */
+function collectUntil(
+  entries: Array<{ role: string; text: string | null }>,
+  from: number,
+  stopAt: ReadonlySet<string>,
+): { texts: string[]; stopIndex: number } {
+  const collected: string[] = [];
+  let i = from;
+  for (; i >= 0; i--) {
+    const { role, text } = entries[i];
+    if (stopAt.has(role)) break;
+    if (role === "assistant" && text) collected.push(text);
+    // meta, tool_result, and tool-only assistant entries: skip (fall through)
+  }
+  return { texts: collected.reverse(), stopIndex: i };
+}
+
+/** Stop-at set for verdictPresent: only genuine human-prompt entries stop the walk.
+ *  tool_result entries (internal tool-call round-trips) are transparent / skipped. */
+const HUMAN_PROMPT_BOUNDARY = new Set(["user"]);
+
+/** All text blocks from the final assistant turn — bounded by any user-or-tool entry.
+ *  Used by tests; production verdict checking uses verdictPresent directly. */
+export function lastTurnTexts(raw: string): string[] {
+  const entries = raw
+    .split("\n")
+    .map(parseEntry)
+    .filter((e): e is NonNullable<typeof e> => e !== null);
+  // For lastTurnTexts (narrow single-turn view) stop at ANY user entry.
+  return collectUntil(entries, entries.length - 1, new Set(["user", "tool_result"])).texts;
+}
+
 /** How many trailing chars to scan when we cannot parse the transcript as JSONL. */
 const TAIL_BYTES = 60_000;
-/** How many of the sub-agent's most recent assistant messages to inspect. The
- *  verdict is, by convention, the closing statement; a small window keeps a
- *  verdict-shaped word buried far earlier in the conversation from counting. */
-const RECENT_MESSAGES = 3;
 
-/** True if the sub-agent closed with an explicit verdict. Prefers the actual final
- *  assistant message(s) — length-independent, so a verdict at the top of a long ADR
- *  is found. Falls back to a bounded tail scan only when no assistant message could
- *  be parsed, so an unrecognised transcript shape never regresses to silence. */
+/** True if the sub-agent closed with an explicit verdict.
+ *
+ *  Strategy: collect all assistant text blocks between the transcript tail and the
+ *  last **human-prompt** user entry (ignoring tool_result boundaries, which are
+ *  internal tool-call round-trips). Test that combined text for a verdict token.
+ *
+ *  Rationale: Claude Code streams responses into the transcript in real time and
+ *  sometimes begins writing the next response before SubagentStop fires. Each tool
+ *  call round-trip also inserts a tool_result user entry. Using tool_result entries
+ *  as hard turn boundaries therefore produces many spurious splits and may land the
+ *  search in a no-verdict fragment. By treating only human-prompt user entries as
+ *  hard stops, we collect the entire "work block" since the last human message —
+ *  which contains all text produced by the agent during that task, including the
+ *  verdict in its closing statement — in a single pass.
+ *
+ *  Falls back to a bounded tail scan only when no assistant message could be parsed,
+ *  so an unrecognised transcript format never silently regresses to "no verdict". */
 export function verdictPresent(raw: string): boolean {
-  const texts = assistantTexts(raw);
-  if (texts.length > 0) {
-    // Join with a newline so a token can never be forged across a message boundary.
-    return hasVerdict(texts.slice(-RECENT_MESSAGES).join("\n"));
+  const entries = raw
+    .split("\n")
+    .map(parseEntry)
+    .filter((e): e is NonNullable<typeof e> => e !== null);
+
+  if (entries.length === 0) {
+    // Non-JSONL transcript — fall back to raw tail scan.
+    const tail = raw.length > TAIL_BYTES ? raw.slice(-TAIL_BYTES) : raw;
+    return hasVerdict(tail);
   }
-  const tail = raw.length > TAIL_BYTES ? raw.slice(-TAIL_BYTES) : raw;
-  return hasVerdict(tail);
+
+  // Collect all assistant text since the last human-prompt boundary.
+  // tool_result entries (internal tool-call round-trips) are transparent — only
+  // genuine human-prompt entries (role "user") act as the hard cutoff.
+  const { texts } = collectUntil(entries, entries.length - 1, HUMAN_PROMPT_BOUNDARY);
+  if (texts.length > 0) return hasVerdict(texts.join("\n"));
+
+  // No assistant text found after the last human prompt — nothing to verify.
+  return false;
 }
 
 interface Input {
@@ -119,6 +210,29 @@ if (import.meta.main) {
 
   const who = data.agent_type ? `\`${data.agent_type}\`` : "the sub-agent";
 
+  // Resolve the sub-agent's own transcript. The `transcript_path` Claude Code passes
+  // to SubagentStop is the PARENT session's JSONL (e.g. `<session>.jsonl`), not the
+  // sub-agent's own transcript. The sub-agent's transcript lives at:
+  //   `<session_dir>/subagents/<agent-id>.jsonl`
+  // We find the most recently modified `.jsonl` in that `subagents/` directory.
+  function resolveSubagentTranscript(parentPath: string): string | null {
+    try {
+      // Parent path: /path/to/<session-id>.jsonl
+      // Sub-agent dir: /path/to/<session-id>/subagents/
+      const subagentsDir = join(parentPath.replace(/\.jsonl$/, ""), "subagents");
+      const files = readdirSync(subagentsDir)
+        .filter((f) => f.endsWith(".jsonl"))
+        .map((f) => {
+          const full = join(subagentsDir, f);
+          return { path: full, mtime: statSync(full).mtimeMs };
+        })
+        .sort((a, b) => b.mtime - a.mtime); // newest first
+      return files[0]?.path ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   // Read the transcript and look for an explicit verdict in the sub-agent's final
   // message. If we find one we assume the agent closed properly and stay quiet. If
   // we can read the transcript and there is clearly NO verdict, escalate. If we
@@ -127,7 +241,12 @@ if (import.meta.main) {
   let couldRead = false;
   try {
     if (data.transcript_path) {
-      const raw = readFileSync(data.transcript_path, "utf8");
+      // The `transcript_path` Claude Code passes to SubagentStop is the PARENT
+      // session's JSONL, not the sub-agent's own transcript. Resolve the sub-agent's
+      // own transcript from the `subagents/` sibling directory first.
+      const subagentPath = resolveSubagentTranscript(data.transcript_path);
+      const pathToRead = subagentPath ?? data.transcript_path;
+      const raw = readFileSync(pathToRead, "utf8");
       couldRead = true;
       verdictSeen = verdictPresent(raw);
     }
@@ -135,7 +254,17 @@ if (import.meta.main) {
     /* couldRead stays false -> plain reminder */
   }
 
-  if (verdictSeen) done(); // proper verdict present — nothing to nag about
+  if (verdictSeen) {
+    // Emit an explicit empty additionalContext so Claude Code replaces any stale
+    // nag that was injected by a prior invocation when the verdict wasn't yet in
+    // the transcript. Silently exiting (done()) leaves the prior context in place.
+    emit({
+      hookSpecificOutput: {
+        hookEventName: "SubagentStop",
+        additionalContext: "",
+      },
+    });
+  }
 
   const lead = couldRead
     ? `⚠️ Sub-agent finished (${who}) with NO explicit studio verdict detected in its output. `
