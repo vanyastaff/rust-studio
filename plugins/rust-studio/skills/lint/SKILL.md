@@ -31,3 +31,4 @@ This is the static gate (BUILD-GATE-adjacent). Evidence over assertion — cite 
 - Don't silence a real lint to pass — fix the cause.
 - End with verdict **COMPLETE / NEEDS WORK / BLOCKED** and the clean `clippy`/`fmt` output.
   The `Stop` hook also nudges this if changed `.rs` files aren't formatted.
+- Next: `/commit` to commit the clean tree, or `/review` for a deeper correctness audit.

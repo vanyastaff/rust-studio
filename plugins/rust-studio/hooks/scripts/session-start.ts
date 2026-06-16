@@ -74,6 +74,23 @@ function classify(textLower: string): string[] {
   return seen.length ? seen : ["(undetermined — run /detect-stack)"];
 }
 
+/** Map the detected domain(s) to the right ENTRY skill, so the always-on briefing
+ *  routes to the fitting command instead of the same generic list every session.
+ *  Universal fallbacks (/dev-task, /review, /help) are surfaced separately. */
+export function routeByDomain(domains: string[]): string {
+  const picks: string[] = [];
+  if (domains.includes("async/web"))
+    picks.push("`/team-async` for an async/web feature, `/design-api` for the surface");
+  if (domains.includes("systems/embedded"))
+    picks.push("`/team-perf` for perf/safety, `/audit-unsafe` to review unsafe");
+  if (domains.includes("cli")) picks.push("`/dev-task` (cli focus) for a subcommand");
+  if (domains.includes("library/crate"))
+    picks.push("`/design-api` or `/team-api` for the public surface");
+  if (!picks.length)
+    return "run `/detect-stack` to classify the stack, then `/start` for guided onboarding.";
+  return picks.join("; ") + ".";
+}
+
 // --- memory recall (reads the shared Obsidian vault directly; no MCP in a command hook) ---
 const STOP = new Set([
   "the", "and", "for", "with", "this", "that", "from", "into", "your", "you", "are", "was",
@@ -307,8 +324,10 @@ if (!manifestExists) {
       (msrvDefault ? ` · MSRV-default **${msrvDefault}**` : "") +
       " (change via `/plugin` → Rust Code Studio → configure). " +
       "rust-analyzer LSP is bundled — diagnostics surface after each edit when the binary is on PATH.",
-    "**Start here:** `/start` for guided onboarding, `/help` for the catalog, " +
-      "`/dev-task` to implement one unit of work, `/review` to audit a diff.",
+    `**Start here${domains.some((d) => d.startsWith("(undetermined")) ? "" : ` (${domains.join(", ")})`}:** ` +
+      routeByDomain(domains),
+    "**Always available:** `/dev-task` to implement one unit of work, `/review` to audit a diff, " +
+      "`/help` for the full catalog, `/start` for guided onboarding.",
     "**Skills first:** for any non-trivial task, check `/help` for a studio skill that fits " +
       "before improvising — prefer the skill's discipline (gates, agents, evidence) over ad-hoc steps.",
   ];

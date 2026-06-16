@@ -94,8 +94,15 @@ Any non-trivial task must also apply the pre-code maintainer standard in
     evidence; if any disciplined step (pre-code verdict, red test, review) was skipped, say which
     and why — an unaccounted skip is `NEEDS WORK`, not `COMPLETE`. Honesty bar:
     `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
-14. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
-    `/changelog` if user-facing, `/publish` if it's release-bound. If running as a team,
+14. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
+    and durable** this task produced — a design decision + rationale, a gotcha that cost
+    time, a convention discovered, or a non-trivial fix. For each, run `/remember` directly
+    (it writes the note to the Obsidian vault); report the resulting note path. Skip what
+    the code, git history, or `Cargo.toml` already makes obvious. If nothing is durable, say
+    so and move on.
+15. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
+    `/changelog` if user-facing, `/publish` if it's release-bound, `/session-wrap` to close
+    out the session. If running as a team,
     drive cleanup: `SendMessage {type:"shutdown_request"}` to each teammate, then `TeamDelete`.
 
 ## Error recovery
