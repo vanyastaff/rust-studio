@@ -146,7 +146,8 @@ hard timeout with a watchdog, so it can never freeze the session (even mid-subag
   `RUST_STUDIO_STATUSLINE_NERDFONT=1` (sleek FontAwesome icons, needs a Nerd Font) or `=0` (text
   labels) · `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot + rounded caps) ·
   `RUST_STUDIO_STATUSLINE_ASCII=1` · `NO_COLOR`.
-  Manage with **`/progress-bar`** — refresh after a plugin update, or `/progress-bar off` to remove.
+  Manage with **`/progress-bar`**: `nerd` (sleek FontAwesome icons — needs a Nerd Font) · `emoji`
+  (default) · `text` (no icons) · `off` (remove) · or no arg to refresh after a plugin update.
   Set the `statusline` config off to skip the auto-install entirely.
 
 ## Configuration

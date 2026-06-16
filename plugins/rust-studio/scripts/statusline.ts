@@ -16,20 +16,34 @@ import { readFileSync, writeFileSync, statSync, existsSync } from "node:fs";
 
 // ---------------- capabilities (env) ----------------
 const noColor = () => !!process.env.NO_COLOR;
-const ASCII = process.env.RUST_STUDIO_STATUSLINE_ASCII === "1";
-// Powerline-range glyphs (arrows E0B0/E0B1, branch E0A0) ship in powerline-patched fonts — far
-// more common than a full Nerd Font. Decorative icons default to EMOJI (render without any special
-// font), with opt-in Nerd Font (FontAwesome F0xx) via RUST_STUDIO_STATUSLINE_NERDFONT=1, or text
-// labels via =0.
+// CLI args let /progress-bar bake the look into the statusLine command (no env juggling on Windows):
+//   --icons nerd|emoji|text · --no-powerline · --ascii    (args override env).
+// Decorative icons default to EMOJI (render without any special font); `nerd` = sleek FontAwesome
+// (F0xx, needs a Nerd Font); `text` = labels. Powerline glyphs (arrows E0B0/E0B1, branch E0A0) ship
+// in powerline-patched fonts and are kept independently of the icon mode.
+const ARGV = process.argv.slice(2);
+const argVal = (name: string) => {
+  const i = ARGV.indexOf(name);
+  return i >= 0 && i + 1 < ARGV.length ? ARGV[i + 1] : undefined;
+};
+const ASCII = process.env.RUST_STUDIO_STATUSLINE_ASCII === "1" || ARGV.includes("--ascii");
 const PLGLYPH = !ASCII;
-const ICON_MODE: "emoji" | "nerd" | "off" = ASCII
-  ? "off"
-  : process.env.RUST_STUDIO_STATUSLINE_NERDFONT === "0"
+const argIcons = argVal("--icons");
+const envIcons: "emoji" | "nerd" | "off" =
+  process.env.RUST_STUDIO_STATUSLINE_NERDFONT === "0"
     ? "off"
     : process.env.RUST_STUDIO_STATUSLINE_NERDFONT === "1"
       ? "nerd"
       : "emoji";
-const POWERLINE = () => PLGLYPH && !noColor() && process.env.RUST_STUDIO_STATUSLINE_POWERLINE !== "0";
+const ICON_MODE: "emoji" | "nerd" | "off" = ASCII
+  ? "off"
+  : argIcons === "nerd" || argIcons === "emoji"
+    ? argIcons
+    : argIcons === "text" || argIcons === "off"
+      ? "off"
+      : envIcons;
+const POWERLINE = () =>
+  PLGLYPH && !noColor() && process.env.RUST_STUDIO_STATUSLINE_POWERLINE !== "0" && !ARGV.includes("--no-powerline");
 
 // ---------------- Tokyo Night palette (truecolor) ----------------
 type RGB = [number, number, number];
