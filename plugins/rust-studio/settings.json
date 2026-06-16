@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "bun \"${CLAUDE_PLUGIN_ROOT}/scripts/subagent-statusline.ts\""
+  }
+}
