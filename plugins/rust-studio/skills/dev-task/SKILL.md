@@ -26,6 +26,20 @@ the user's ambient serena/exa); status can lag, so have teammates mark tasks `co
 Drive `TeamDelete` cleanup at the end (shut teammates down with `SendMessage
 {type:"shutdown_request"}` first).
 
+## Progress visibility
+The user follows the **task list** to know where things stand — keep it live, do not go silent
+until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on), in
+**both** team and single-orchestrator mode:
+1. At the start, `TaskCreate` one task per phase — scout → plan → build → review — so the whole
+   plan is visible up front (team mode also wires `addBlockedBy`; solo mode just creates them).
+2. Before spawning a phase, `TaskUpdate` its task to `in_progress`.
+3. The moment that phase's sub-agent returns, surface its result in one line (scout's edit-site
+   map, the plan's verdict, the build's diff summary, the review's findings) and `TaskUpdate` the
+   task to `completed` — **before** starting the next phase. The user sees intermediate results,
+   not one final dump.
+4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
+When off, run the phases without the task-list narration.
+
 ## Input
 `$ARGUMENTS` is the task. If it's a path, read that file. If empty, ask: "What should we
 build?" and, for non-trivial work, suggest running `/architecture` or `/brainstorm` first.

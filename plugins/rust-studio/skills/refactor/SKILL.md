@@ -19,6 +19,18 @@ recovery) — decide tactical calls yourself, state choice + one-line rationale.
 weak structure (extract, move-to-owning-crate, borrow-instead-of-clone, replace stringly/bool
 with domain types) IS the job here, not a while-I'm-here cleanup to suppress.
 
+## Progress visibility
+The user follows the **task list** to know where things stand — keep it live, do not go silent
+until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on):
+1. At the start, `TaskCreate` one task per phase (scope → clippy signals → plan → refactor →
+   verify → review) so the whole plan is visible up front.
+2. `TaskUpdate` each task to `in_progress` before you start its phase.
+3. The moment a phase produces its result, surface it in one line and `TaskUpdate` the task to
+   `completed` — **before** starting the next phase. The user sees intermediate results, not a
+   final dump.
+4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
+When off, run the phases without the task-list narration.
+
 ## Input
 `$ARGUMENTS` is the target scope (a crate, module path, file, or free-text description). If
 empty, ask: "What should we refactor, and what's the scope boundary?" Refuse to proceed

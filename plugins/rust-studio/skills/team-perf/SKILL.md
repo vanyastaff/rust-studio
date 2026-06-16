@@ -23,6 +23,18 @@ and don't get bundled MCP (they rely on the user's ambient serena/exa); status c
 have teammates mark tasks `completed`. Drive `TeamDelete` cleanup at the end (shut teammates
 down with `SendMessage {type:"shutdown_request"}` first).
 
+## Progress visibility
+The user follows the **task list** to know where things stand — keep it live, do not go silent
+until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on), in
+**both** team and single-orchestrator mode:
+1. At the start, `TaskCreate` one task per phase so the whole plan is visible up front.
+2. `TaskUpdate` each task to `in_progress` before you start its phase.
+3. The moment a phase produces its result, surface it in one line and `TaskUpdate` the task to
+   `completed` — **before** starting the next phase. The user sees intermediate results, not a
+   final dump.
+4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
+When off, run the phases without the task-list narration.
+
 **No change lands without numbers.** Every claim of "faster" or "safer" must be backed by
 criterion before/after output or `cargo miri` evidence (see §7 of the coordination protocol).
 
