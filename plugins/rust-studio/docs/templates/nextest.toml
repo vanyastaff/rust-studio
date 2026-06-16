@@ -1,0 +1,28 @@
+# .config/nextest.toml — turn a deadlock / huge Duration / orphaned subprocess into a FAST,
+# attributable FAILURE instead of a CI job that hangs for hours. Verified: a `sleep(from_secs(3600))`
+# test is TERMINATED at ~2s and the run fails (exit 100), while fast tests pass.
+#
+# Stock `cargo test`/libtest has NO per-test timeout — nextest is the only mainstream way to bound
+# a single hanging test. Do NOT raise these to make a slow/hanging test "pass" — find the deadlock /
+# lock-order inversion / unbounded sleep. Removing terminate-after is gate-disabling.
+
+[profile.default]
+slow-timeout = { period = "30s", terminate-after = 2 }   # warn at 30s, kill+fail at 60s
+fail-fast = false                                        # see all failures, not just the first
+
+[profile.ci]
+# kill+fail at 120s (4 × 30s). grace-period gives a SIGTERM'd test time to clean up before SIGKILL.
+slow-timeout = { period = "30s", terminate-after = 4, grace-period = "10s" }
+global-timeout = "30m"                                   # whole-run ceiling beneath the CI job timeout
+# Orphaned child processes that keep stdout/stderr open are a classic CI hang — fail on a leak.
+leak-timeout = { period = "500ms", result = "fail" }
+# Retry genuine flakes but keep them VISIBLE (reported FLAKY, not silently green) so the root cause
+# gets fixed. Pair with the clippy clock/sleep ban so flakiness is rare to begin with.
+retries = { backoff = "exponential", count = 2, delay = "1s", jitter = true, max-delay = "10s" }
+fail-fast = false
+final-status-level = "slow"                              # surface slow tests in the summary
+
+# Per-test override for a legitimately long e2e test (raise the budget for ONE test, not globally):
+# [[profile.ci.overrides]]
+# filter = 'test(test_full_sync)'
+# slow-timeout = { period = "120s", terminate-after = 3 }

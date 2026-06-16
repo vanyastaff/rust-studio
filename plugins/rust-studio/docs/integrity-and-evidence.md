@@ -33,7 +33,7 @@ Three corollaries, each a hard rule:
 | **Vacuous test** | A "test" that cannot fail: asserts existence not value (`is_ok()` with no value check), a tautology (`assert_eq!(x, x)`), happy-path-only, or no assertion at all. It executes lines without proving behavior. |
 | **Self-authored as proof** | Presented a test you wrote to match your own code as the *correctness* proof. A self-written test is a **regression guard**; correctness is proven against the spec's acceptance criteria, an independent/upstream oracle, or a property law. |
 | **Denominator gaming** | Reported "N% pass" / "X% coverage" with skipped, ignored, timed-out, or out-of-scope cases silently removed from the denominator. |
-| **Gate disabling** | `#[allow(...)]` with no one-line justification; a crate-level `[lints]` table that redefines a lint and thereby **replaces** (not merges) the inherited `[workspace.lints]` — silently re-opening a workspace `forbid`/`deny` across the whole crate. |
+| **Gate disabling** | `#[allow(...)]` with no one-line justification; a crate-level `[lints]` table that redefines a lint and thereby **replaces** (not merges) the inherited `[workspace.lints]` — silently re-opening a workspace `forbid`/`deny`; or editing the gate config itself (`clippy.toml`, `.config/nextest.toml`, CI, `lefthook.yml`) to drop a ban or raise a timeout so failing code passes — fixing the gate instead of the code. |
 | **Skipped discipline** | Wrote the implementation with no failing test first for a behavior change; shipped a non-trivial change with no pre-code shape verdict and no pre-merge review; claimed success without running the check. |
 
 ## The Evidence Rules (how results are reported)

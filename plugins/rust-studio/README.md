@@ -9,7 +9,7 @@ for libraries, async/web services, CLIs, and systems/embedded code.
 > rebuilt from the ground up for Rust and packaged as a Claude Code plugin.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **48 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, cross-session memory, and a self-check harness
+- **49 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
 - **17 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
 - **8 hooks** — stack detection **+ memory recall** at session start, path-scoped rule pointers, a lint nudge, session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders), and an opt-in **stop-guard** that blocks an undisciplined turn ending (ownership-dodging, permission-seeking, test avoidance, "done" without evidence)
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
@@ -59,7 +59,7 @@ intensity to match the work.
 
 - **Onboarding** — `/start` · `/help` · `/detect-stack` · `/adopt`
 - **Design** — `/brainstorm` · `/design-api` · `/architecture` · `/adr` · `/model-domain`
-- **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build`
+- **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 - **Spec-driven** — `/spec` · `/spec-tasks` · `/spec-verify` (persisted in `.rust-studio/specs/`)
 - **TDD & verify** — `/tdd` · `/verify-loop`
 - **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`

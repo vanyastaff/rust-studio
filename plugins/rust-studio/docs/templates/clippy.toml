@@ -1,0 +1,19 @@
+# clippy.toml — studio anti-hang / anti-nondeterminism bans.
+# These turn "reached CI and hangs/flakes" into a clippy ERROR (verified: cargo clippy
+# fails with exit 101 on each). The lint LEVELS live in Cargo.toml [workspace.lints]
+# (see workspace-lints.toml) — set `disallowed_methods = "deny"` there for these to bite.
+#
+# Tune per project, but do NOT remove an entry to make code pass — fix the call site
+# (inject a clock, bound the duration, use async sleep). Removing a ban is gate-disabling
+# (docs/integrity-and-evidence.md) and check-gate.sh fails on it.
+
+disallowed-methods = [
+  { path = "std::time::SystemTime::now", reason = "non-deterministic; inject the time as an argument so logic is testable and not wall-clock-dependent" },
+  { path = "std::time::Instant::now", reason = "non-deterministic in library logic; inject a clock/now provider" },
+  { path = "std::thread::sleep", reason = "blocks the OS thread (hangs runtimes/CI); in async use tokio::time::sleep, and always bound the duration" },
+]
+
+# Example: ban a footgun type with disallowed-types (level set in Cargo.toml).
+# disallowed-types = [
+#   { path = "std::sync::Mutex", reason = "prefer parking_lot::Mutex or an async mutex on hot paths" },
+# ]

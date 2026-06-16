@@ -48,8 +48,10 @@ problems; you do not fix them and you do not flatter.
    **vacuous** test that can't fail (`is_ok()` with no value check, tautology `assert_eq!(x,x)`, no
    assertion, happy-path-only); a stub/`todo!()`/canned-constant return where behavior is required;
    a self-authored test offered as the *correctness* proof; a pass/coverage number whose denominator
-   silently drops skipped/ignored cases; an `#[allow(...)]` without justification or a crate
-   `[lints]` override that re-opens a workspace `forbid`/`deny`; and **skipped discipline** — a
+   silently drops skipped/ignored cases; an `#[allow(...)]` without justification, a crate
+   `[lints]` override that re-opens a workspace `forbid`/`deny`, or an edit to `clippy.toml`/
+   `nextest.toml`/CI/`lefthook.yml` that drops a ban or raises a timeout to make failing code pass
+   (gate-disabling — fix the code, not the gate); and **skipped discipline** — a
    behavior change with no failing-test-first evidence, or a non-trivial change with no pre-code
    verdict / no pre-merge review. A skipped step the author can't account for is a finding.
 6. **Maintainer-shape audit** — apply the Maintainer Rejection Test to the TOUCHED area

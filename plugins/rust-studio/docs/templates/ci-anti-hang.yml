@@ -1,0 +1,106 @@
+# .github/workflows/ci.yml — modern Rust CI gate (2025-2026 blessed practice).
+# Drop in and tune. The richest reference to expand from is jonhoo/rust-ci-conf
+# (check/test/safety/nostd/scheduled). This template encodes the must-tier baseline +
+# the anti-hang gate. Local lefthook can be bypassed (--no-verify); CI cannot.
+#
+# Action pinning: SHA-pin THIRD-PARTY actions (Swatinem/rust-cache, EmbarkStudios/cargo-deny-action)
+# after the 2025 tj-actions tag-mutation attack — `uses: org/x@<40-char-sha> # vX`. GitHub-owned
+# actions/* (checkout — currently v6) are lower-risk so a major tag is the common readable choice
+# (SHA-pin too for defense-in-depth). Conventionally leave dtolnay/rust-toolchain@stable and
+# taiki-e/install-action@<tool> on their moving refs (the maintainers discourage SHA-pinning those).
+# Enable Dependabot (github-actions) to bump the pins — see dependabot.yml.
+
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+
+# Cancel superseded runs on a PR; let main finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege: a compromised step can't push code or publish.
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0          # CI builds are from-scratch; incremental just bloats the cache
+  RUSTFLAGS: "-D warnings"      # warnings are errors in CI (not #![deny(warnings)] in source)
+  RUSTDOCFLAGS: "-D warnings"   # RUSTFLAGS does NOT cover rustdoc — set this too
+
+jobs:
+  gate-intact:                  # the gate can't be silently weakened
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash scripts/check-gate.sh
+
+  fmt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: rustfmt }
+      - run: cargo fmt --all --check
+
+  clippy:
+    needs: fmt                  # cheap fmt gates the expensive jobs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy }
+      - uses: Swatinem/rust-cache@v2
+      # clippy.toml's disallowed_methods + no-silent-allow only BITE because of -D warnings here:
+      - run: cargo clippy --all-targets --all-features --locked -- -D warnings
+
+  test:
+    needs: fmt
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25         # backstop beneath nextest's terminate-after
+    strategy:
+      fail-fast: false          # see every failing cell, not just the first
+      matrix:
+        os: [ubuntu-latest]
+        rust: [stable]
+        include:
+          - { os: ubuntu-latest, rust: "1.82.0" }   # MSRV = your Cargo.toml rust-version
+          # expand as needed: macos-latest / windows-latest, beta, nightly
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with: { toolchain: ${{ matrix.rust }} }
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@nextest   # prebuilt (binstall-style); no source compile
+      # --profile ci applies terminate-after: a deadlock/huge-sleep test fails fast, never hangs.
+      - run: cargo nextest run --profile ci --all-features --locked
+      # nextest does NOT run doctests — this separate step is mandatory or you stop testing examples.
+      - run: cargo test --doc --all-features --locked
+
+  doc:
+    needs: fmt
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --no-deps --all-features --document-private-items
+
+  # Supply-chain gate. Lives here or in a separate security.yml; advisories split off as
+  # continue-on-error so a fresh CVE doesn't redden unrelated PRs. Needs a checked-in deny.toml.
+  cargo-deny:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix: { checks: [advisories, bans licenses sources] }
+    continue-on-error: ${{ matrix.checks == 'advisories' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: EmbarkStudios/cargo-deny-action@v2   # SHA-pin in real use
+        with: { command: check ${{ matrix.checks }} }

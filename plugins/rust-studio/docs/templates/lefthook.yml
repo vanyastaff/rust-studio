@@ -1,0 +1,41 @@
+# lefthook.yml — quiet local gate (install: `lefthook install`). Catches the
+# "reached git, then CI hangs/fails" class BEFORE the push leaves your machine.
+# Quiet: only failures and the summary print (no big success logs).
+
+output:
+  - summary
+  - failure
+
+pre-push:
+  parallel: true
+  commands:
+    fmt:
+      glob: "*.rs"
+      run: cargo fmt --all --check
+    clippy:
+      # Picks up clippy.toml's disallowed_methods + the no-silent-allow lint. -D warnings = hard fail.
+      run: cargo clippy --all-targets --all-features -- -D warnings
+    test:
+      # The ci profile's terminate-after kills a deadlock/huge-sleep test (fails fast, never hangs).
+      run: cargo nextest run --profile ci
+    gate-intact:
+      # Fails if the gate itself was weakened (clippy ban removed, no-silent-allow dropped, timeout gone).
+      run: bash scripts/check-gate.sh
+    no-hang-smells:
+      # Value-based smells clippy can't see: a long sleep with a large literal in non-test code.
+      # Tune the threshold; add `# gate-ok: <reason>` discipline via review, not by deleting this.
+      glob: "*.rs"
+      run: |
+        if rg -n --glob '!**/tests/**' --glob '!**/*_test.rs' --glob '!**/benches/**' \
+              -e 'sleep\(\s*(Duration::)?from_secs\(\s*[0-9]{3,}' \
+              -e 'Duration::from_secs\(\s*[0-9]{5,}' \
+              . ; then
+          echo "no-hang-smells: a long sleep / very large Duration in non-test code — bound it or justify in review" >&2
+          exit 1
+        fi
+
+# Pre-commit can run the fast subset (fmt + clippy) for tighter feedback:
+# pre-commit:
+#   parallel: true
+#   commands:
+#     fmt: { glob: "*.rs", run: cargo fmt --all --check }

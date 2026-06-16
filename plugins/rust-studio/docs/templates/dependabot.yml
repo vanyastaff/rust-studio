@@ -1,0 +1,15 @@
+# .github/dependabot.yml — keep crate deps AND pinned GitHub Actions fresh, zero infra.
+# For github-actions, Dependabot understands the "SHA pin + # vX.Y.Z comment" convention and bumps
+# both together — which is what makes SHA-pinning maintainable. (Renovate is the more configurable
+# alternative with grouping/auto-merge/pinDigests; Dependabot is the lower-friction default.)
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule: { interval: weekly }
+    groups:
+      cargo-minor-patch:
+        update-types: ["minor", "patch"]   # batch low-risk bumps into one PR
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: weekly }
