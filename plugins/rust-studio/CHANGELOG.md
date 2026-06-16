@@ -5,6 +5,17 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-06-16
+
+### Added
+
+- **Switchable icon style** — `/progress-bar nerd | emoji | text | ascii` (backed by
+  `statusline.ts --icons nerd|emoji|text` / `--ascii` / `--no-powerline` args, so the look is baked
+  into the command with no env juggling). `nerd` = sleek FontAwesome icons (needs a Nerd Font
+  installed in the terminal, e.g. "JetBrainsMono Nerd Font"); `emoji` (default) renders without any
+  special font; `text` drops decorative icons. The 🦀 tag and the powerline branch glyph/arrows are
+  kept in every mode.
+
 ## [0.10.1] - 2026-06-16
 
 ### Changed

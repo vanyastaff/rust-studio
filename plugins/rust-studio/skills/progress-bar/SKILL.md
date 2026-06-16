@@ -1,7 +1,7 @@
 ---
 name: progress-bar
-description: "progress bar statusline live visibility — manage the studio status line (the rich bottom bar: plugin · project · git · model · context · phase progress). It is auto-installed by default on first session; use this to refresh it after a plugin update, remove it (off), or re-install if you turned auto-install off."
-argument-hint: "[off — to remove it]"
+description: "progress bar statusline live visibility icons theme — manage the studio status line (the rich Tokyo Night powerline bar). Auto-installed by default; use this to switch icon style (nerd / emoji / text), refresh after a plugin update, or remove it (off)."
+argument-hint: "[nerd | emoji | text | ascii | off]"
 user-invocable: true
 ---
 
@@ -30,8 +30,18 @@ script to a stable path and points `settings.json` there. After you update the p
 
 ## Steps
 
-1. **Off switch.** If `$ARGUMENTS` is `off`: remove the `statusLine` key from `~/.claude/settings.json`
-   (leave everything else and the plugin's `subagentStatusLine` untouched), confirm, and stop.
+1. **Argument routing.** Inspect `$ARGUMENTS`:
+   - `off` → remove the `statusLine` key from `~/.claude/settings.json` (leave everything else and
+     the plugin's `subagentStatusLine` untouched), confirm, and stop.
+   - `nerd` | `emoji` | `text` | `ascii` → this is an **icon-style switch**. Resolve the stable
+     script path (step 2), then set `statusLine.command` to include the matching argument:
+     `bun "<stable>/statusline.ts" --icons nerd` (or `emoji` / `text`), or
+     `bun "<stable>/statusline.ts" --ascii` for `ascii`. **`nerd`** uses sleek FontAwesome icons and
+     **requires a Nerd Font installed in your terminal** (e.g. set the terminal font to
+     "JetBrainsMono Nerd Font"); **`emoji`** (default) needs no special font; **`text`** drops
+     decorative icons. Back up settings, write only `statusLine` (do steps 4 + 6 confirm), report,
+     and stop. (Copy the script first so the path exists.)
+   - empty / anything else → (re)install / refresh, per the steps below.
 
 2. **Resolve paths.** Home dir = `$HOME` (or `%USERPROFILE%` on Windows). Stable dir =
    `<home>/.claude/rust-studio/`. Plugin script = `${CLAUDE_PLUGIN_ROOT}/scripts/statusline.ts`.
