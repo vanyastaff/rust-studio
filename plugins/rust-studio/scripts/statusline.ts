@@ -35,9 +35,9 @@ const envIcons: "emoji" | "nerd" | "off" =
     : process.env.RUST_STUDIO_STATUSLINE_NERDFONT === "1"
       ? "nerd"
       : "emoji";
-const ICON_MODE: "emoji" | "nerd" | "off" = ASCII
+const ICON_MODE: "emoji" | "nerd" | "symbols" | "off" = ASCII
   ? "off"
-  : argIcons === "nerd" || argIcons === "emoji"
+  : argIcons === "nerd" || argIcons === "emoji" || argIcons === "symbols"
     ? argIcons
     : argIcons === "text" || argIcons === "off"
       ? "off"
@@ -85,8 +85,11 @@ const G = {
 };
 const EMOJI = { folder: "📁 ", ctx: "📊 ", cache: "💾 ", clock: "🕐 " };
 const NF = { folder: "\u{F07B} ", ctx: "\u{F0E4} ", cache: "\u{F1C0} ", clock: "\u{F017} " };
+// Plain-Unicode set (renders in a normal monospace font — no Nerd Font needed):
+// ⌂ house, ◔ gauge/pie, ↻ refresh (cache reuse), ⏱ stopwatch (U+23F1).
+const SYM = { folder: "⌂ ", ctx: "◔ ", cache: "↻ ", clock: "⏱ " };
 const pick = (k: "folder" | "ctx" | "cache" | "clock", textLabel: string) =>
-  ICON_MODE === "emoji" ? EMOJI[k] : ICON_MODE === "nerd" ? NF[k] : textLabel;
+  ICON_MODE === "emoji" ? EMOJI[k] : ICON_MODE === "nerd" ? NF[k] : ICON_MODE === "symbols" ? SYM[k] : textLabel;
 const I = {
   folder: pick("folder", ""),
   branch: PLGLYPH ? "\u{E0A0} " : "", // powerline branch glyph (renders wherever the arrows do)
