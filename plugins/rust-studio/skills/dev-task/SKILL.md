@@ -38,6 +38,10 @@ until the end. When `progress_tracking` is on (`${user_config.progress_tracking}
    task to `completed` — **before** starting the next phase. The user sees intermediate results,
    not one final dump.
 4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
+5. (Optional status bar) If the user ran `/progress-bar`, also mirror the phase to the studio
+   status line: `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" set "<phase>" "<n/total>"` at each
+   boundary, and `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" clear` at the end. It is a
+   harmless no-op if they never enabled the status line.
 When off, run the phases without the task-list narration.
 
 ## Input
@@ -93,28 +97,35 @@ Any non-trivial task must also apply the pre-code maintainer standard in
 10. The builder reports a diff summary + command output. Show it to the user.
 
 ## Phase 5 — Review (gate; blocked by build)
-11. Task owned by **`rust-reviewer`** on the diff. For **full** mode, also run the owning
-   lead's gate checklist as sibling tasks (and `unsafe-auditor` if `unsafe` was touched,
-   `security-auditor` for input/auth/deserialization) — these read-only lenses can run
-   concurrently as teammates.
-12. If findings are NEEDS WORK, hand them back to `rust-builder` (loop Phase 4) until clean
-    or the user decides to stop.
+Two stages — **spec compliance first, then code quality** (the superpowers subagent-driven-dev
+pattern); a finding in EITHER stage loops back to `rust-builder` and re-runs that stage before
+advancing.
+11. **Stage 5a — spec compliance.** Check the diff against the Phase-1 acceptance criteria and the
+    approved plan: does it do exactly what was specified — nothing missing, nothing extra (scope
+    creep)? Use `rust-reviewer` with a spec-compliance lens (or `product-steward` for scope). On a
+    gap, hand back to `rust-builder` and re-run 5a. **Do not start 5b until 5a is ✅.**
+12. **Stage 5b — code quality.** Task owned by **`rust-reviewer`** on the diff for correctness,
+    soundness, standards, and tests. For **full** mode, also run the owning lead's gate checklist as
+    sibling tasks (and `unsafe-auditor` if `unsafe` was touched, `security-auditor` for
+    input/auth/deserialization) — these read-only lenses run concurrently as teammates.
+13. If either stage returns NEEDS WORK, hand findings back to `rust-builder` (loop Phase 4) and
+    re-run the failing stage until clean or the user decides to stop.
 
 ## Phase 6 — Verdict
-13. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything
+14. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything
     left out of scope. Every teammate's contribution ends in **COMPLETE / NEEDS WORK /
     BLOCKED** with evidence. End with **COMPLETE / NEEDS WORK / BLOCKED**.
-    A `COMPLETE` verdict **requires** the Phase 5 review verdict and the failing-test-first
-    evidence; if any disciplined step (pre-code verdict, red test, review) was skipped, say which
-    and why — an unaccounted skip is `NEEDS WORK`, not `COMPLETE`. Honesty bar:
-    `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
-14. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
+    A `COMPLETE` verdict **requires both Phase 5 stages (spec compliance + code quality)** and the
+    failing-test-first evidence; if any disciplined step (pre-code verdict, red test, either review
+    stage) was skipped, say which and why — an unaccounted skip is `NEEDS WORK`, not `COMPLETE`.
+    Honesty bar: `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
+15. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
     and durable** this task produced — a design decision + rationale, a gotcha that cost
     time, a convention discovered, or a non-trivial fix. For each, run `/remember` directly
     (it writes the note to the Obsidian vault); report the resulting note path. Skip what
     the code, git history, or `Cargo.toml` already makes obvious. If nothing is durable, say
     so and move on.
-15. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
+16. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound, `/session-wrap` to close
     out the session. If running as a team,
     drive cleanup: `SendMessage {type:"shutdown_request"}` to each teammate, then `TeamDelete`.

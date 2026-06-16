@@ -5,6 +5,31 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-06-15
+
+### Added
+
+- **Live sub-agent status rows (zero-config).** The plugin ships a `subagentStatusLine` (in its
+  `settings.json`) that renders each sub-agent row in the agent panel as
+  `● <type>: <description>  ·  <elapsed> · <tokens>` (✓ when done, ✗ on error) — so a running
+  fan-out reads as live progress instead of a bare name + token count. Renders in the Desktop app
+  too. No setup required.
+- **`/progress-bar` skill (opt-in main status bar).** Wires an optional `statusLine` into your
+  `~/.claude/settings.json`: `🦀 rust-studio · <project> · ▸ <phase> · <model> · ctx %`. The
+  `▸ <phase>` segment tracks the live orchestration phase via `.rust-studio/progress.json`.
+  `/progress-bar off` removes it. (A plugin cannot ship a top-level `statusLine`, so this edits
+  user settings; re-run after a plugin update.)
+- New scripts (with tests): `scripts/subagent-statusline.ts`, `scripts/statusline.ts`,
+  `scripts/progress.ts`.
+
+### Changed
+
+- **Two-stage review in `/dev-task`** (adopted from the superpowers subagent-driven-development
+  pattern): Phase 5 now runs **spec-compliance first, then code-quality**, each looping back to
+  `rust-builder` on findings; a `COMPLETE` verdict requires both stages to pass.
+- Orchestrating skills mirror the current phase to the status bar via `scripts/progress.ts` when
+  `progress_tracking` is on.
+
 ## [0.7.1] - 2026-06-15
 
 ### Changed

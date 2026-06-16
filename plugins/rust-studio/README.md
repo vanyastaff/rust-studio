@@ -124,6 +124,17 @@ studio still works, you just lose auto-injection and recall. Each hook reads std
 hard timeout with a watchdog, so it can never freeze the session (even mid-subagent). See
 [`../../INSTALL.md`](../../INSTALL.md).
 
+## Status line (live progress)
+
+- **Per-sub-agent rows (automatic).** The plugin ships a `subagentStatusLine`, so each sub-agent
+  in the agent panel below the prompt shows `● <type>: <description> · <elapsed> · <tokens>`
+  (✓ done, ✗ error) instead of a bare name + token count. Renders in the Desktop app too. No setup.
+- **Main bar (opt-in).** Run **`/progress-bar`** to wire a `statusLine` into your
+  `~/.claude/settings.json`: `🦀 rust-studio · <project> · ▸ <phase> · <model> · ctx %`. The
+  `▸ <phase>` segment tracks the live orchestration phase (`/dev-task`, `team-*`, …). A plugin
+  can't ship a top-level `statusLine`, so this edits your settings — re-run after a plugin update;
+  `/progress-bar off` removes it.
+
 ## Configuration
 
 The plugin prompts for these when you enable it (and you can change them anytime via `/plugin`

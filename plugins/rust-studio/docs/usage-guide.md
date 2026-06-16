@@ -188,6 +188,12 @@ Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially —
 - **`/team-perf`** — performance + safety hardening with the systems team.
 - **`/team-release`** — the full release pipeline (audit + deps + MSRV + changelog + dry-run).
 
+### Following progress (visibility)
+- Per-sub-agent rows in the agent panel are customized automatically (the plugin's
+  `subagentStatusLine`): `● <type>: <description> · <elapsed> · <tokens>`.
+- **`/progress-bar`** — opt-in: wire the main status bar to show the live orchestration phase
+  (`🦀 rust-studio · ▸ build 2/4 · <model> · ctx %`); `/progress-bar off` removes it.
+
 ### Studio self-check
 - **`/eval-agents`** — run the review agents against planted-defect fixtures and score recall
   (quality-assures the plugin itself).
