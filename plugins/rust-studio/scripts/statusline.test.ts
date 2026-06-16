@@ -121,10 +121,9 @@ describe("render (two-line rounded layout)", () => {
     expect(lines[0]).toContain("Opus 4.8"); // stripped model
     expect(lines[0]).toContain("think:xhigh"); // effort
     expect(lines[1]).toContain("╰─");
-    expect(lines[1]).toContain("ctx");
-    expect(lines[1]).toContain("41%");
-    expect(lines[1]).toContain("cache 72%"); // prompt-cache hit
-    expect(lines[1]).toContain("▸ build");
+    expect(lines[1]).toContain("41%"); // context (icon replaces the "ctx" label by default)
+    expect(lines[1]).toContain("72%"); // prompt-cache hit
+    expect(lines[1]).toContain("build"); // phase
     expect(lines[1]).toContain("5/8"); // tasks
     expect(lines[1]).toContain("12m"); // duration
     expect(lines[1]).toContain("+318"); // lines added
@@ -135,5 +134,16 @@ describe("render (two-line rounded layout)", () => {
     expect(out.split("\n").length).toBe(1);
     expect(out).toContain("╭─");
     expect(out).toContain("🦀"); // studio tag always present, even outside a Rust project
+  });
+});
+
+describe("powerline rendering (Tokyo Night)", () => {
+  test("with color + nerd + powerline on, emits arrow caps and truecolor backgrounds", () => {
+    delete process.env.NO_COLOR; // enable color → powerline path
+    const out = render({ model: { display_name: "Opus" }, context_window: { used_percentage: 30 } }, null, { git: { branch: "main" } });
+    process.env.NO_COLOR = "1"; // restore for the rest of the suite
+    expect(out).toContain(""); // powerline right cap
+    expect(out).toContain("\x1b[48;2;"); // truecolor background (theme segment)
+    expect(out).toContain("rust-studio");
   });
 });

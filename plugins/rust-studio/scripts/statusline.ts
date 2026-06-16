@@ -1,74 +1,91 @@
 #!/usr/bin/env bun
 // Rust Code Studio — main status line (rich, opt-in via /progress-bar).
 //
-// Two-line rounded layout:
-//   ╭─ 🦀 rust-studio · <project> · <branch ●dirty ↑ahead ↓behind> · <model> · lsp ✓
-//   ╰─ ctx <bar> <pct>% · ▸ <phase> <bar> <step> · ✓ <tasks> · 5h <bar>% · 7d <bar>% · <dur> · +A −R
+// Default look: Tokyo Night theme · Powerline segments (colored arrow caps) · Nerd Font icons.
+// Two-line layout. Fallbacks (auto / env): no color or NO_COLOR -> plain colored/no-color middot
+// line with rounded caps; RUST_STUDIO_STATUSLINE_NERDFONT=0 -> text labels, no glyph icons;
+// RUST_STUDIO_STATUSLINE_POWERLINE=0 -> middot separators (keep color+icons);
+// RUST_STUDIO_STATUSLINE_ASCII=1 -> pure ASCII. Phase/tasks come from
+// <project>/.rust-studio/progress.json. git is cached ~5s. Smart-hides empty segments. Never throws.
 //
-// Colors: truecolor gradient (COLORTERM=truecolor|24bit) → 256-color threshold → 16-color → none
-// (NO_COLOR honored). ASCII bars via RUST_STUDIO_STATUSLINE_ASCII=1. Powerline arrow separators via
-// RUST_STUDIO_STATUSLINE_POWERLINE=1 (needs a Nerd Font). git is cached ~5s in tmpdir so the bar
-// stays <50ms. Phase/tasks come from <project>/.rust-studio/progress.json. Smart-hiding: empty /
-// zero segments are dropped. Never throws: on any error it prints what it can (or nothing).
+// All special glyphs use \u escapes so the source stays editable and free of mojibake.
 
 import { join } from "node:path";
-import { tmpdir, homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { readFileSync, writeFileSync, statSync, existsSync } from "node:fs";
 
 // ---------------- capabilities (env) ----------------
-const noColor = () => !!process.env.NO_COLOR; // call-time so tests can toggle it
+const noColor = () => !!process.env.NO_COLOR;
 const ASCII = process.env.RUST_STUDIO_STATUSLINE_ASCII === "1";
-const TRUECOLOR = /truecolor|24bit/i.test(process.env.COLORTERM || "");
-const POWERLINE = process.env.RUST_STUDIO_STATUSLINE_POWERLINE === "1";
+const NERD = !ASCII && process.env.RUST_STUDIO_STATUSLINE_NERDFONT !== "0";
+const POWERLINE = () => NERD && !noColor() && process.env.RUST_STUDIO_STATUSLINE_POWERLINE !== "0";
 
-// ---------------- glyphs ----------------
-const G = {
-  crab: "🦀",
-  barFull: ASCII ? "#" : "█",
-  barEmpty: ASCII ? "." : "░",
-  phFull: ASCII ? "#" : "▰",
-  phEmpty: ASCII ? "-" : "▱",
-  dirty: ASCII ? "*" : "●",
-  ahead: ASCII ? "^" : "↑",
-  behind: ASCII ? "v" : "↓",
-  phase: ASCII ? ">" : "▸",
-  ok: ASCII ? "+" : "✓",
-  no: ASCII ? "x" : "✗",
-  add: "+",
-  del: ASCII ? "-" : "−",
-  topL: ASCII ? "+-" : "╭─",
-  botL: ASCII ? "+-" : "╰─",
+// ---------------- Tokyo Night palette (truecolor) ----------------
+type RGB = [number, number, number];
+const TN = {
+  bg: [26, 27, 38] as RGB,
+  bg2: [41, 46, 66] as RGB,
+  fg: [192, 202, 245] as RGB,
+  blue: [122, 162, 247] as RGB,
+  cyan: [125, 207, 255] as RGB,
+  green: [158, 206, 106] as RGB,
+  yellow: [224, 175, 104] as RGB,
+  orange: [255, 158, 100] as RGB,
+  red: [247, 118, 142] as RGB,
+  magenta: [187, 154, 247] as RGB,
+  dim: [86, 95, 137] as RGB,
 };
-const SEP = POWERLINE ? "  " : " · ";
+function pctRgb(p: number): RGB {
+  return p < 50 ? TN.green : p < 80 ? TN.yellow : TN.red;
+}
+const sameRGB = (a: RGB, b: RGB) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+
+// ---------------- glyphs / icons ----------------
+const G = {
+  barFull: ASCII ? "#" : "█", // █
+  barEmpty: ASCII ? "." : "░", // ░
+  phFull: ASCII ? "#" : "▰", // ▰
+  phEmpty: ASCII ? "-" : "▱", // ▱
+  dirty: ASCII ? "*" : "●", // ●
+  ahead: ASCII ? "^" : "↑", // ↑
+  behind: ASCII ? "v" : "↓", // ↓
+  phase: ASCII ? ">" : "▸", // ▸
+  ok: ASCII ? "+" : "✓", // ✓
+  no: ASCII ? "x" : "✗", // ✗
+  del: ASCII ? "-" : "−", // −
+  arrow: "\u{E0B0}", // powerline right cap (between different backgrounds)
+  arrowThin: "\u{E0B1}", // powerline thin separator (between same-background segments)
+  topL: ASCII ? "+-" : "╭─", // ╭─
+  botL: ASCII ? "+-" : "╰─", // ╰─
+};
+const I = {
+  folder: NERD ? "\u{F07B} " : "",
+  branch: NERD ? "\u{E0A0} " : "",
+  ctx: NERD ? "\u{F0E4} " : "ctx ",
+  clock: NERD ? "\u{F017} " : "",
+  cache: NERD ? "\u{F1C0} " : "cache ",
+};
+const SEP_PLAIN = ASCII ? " | " : " · "; // ·
 
 // ---------------- color ----------------
-function wrap(code: string, s: string): string {
-  return noColor() || !s ? s : `\x1b[${code}m${s}\x1b[0m`;
+const fgCode = (c: RGB) => `\x1b[38;2;${c[0]};${c[1]};${c[2]}m`;
+const bgCode = (c: RGB) => `\x1b[48;2;${c[0]};${c[1]};${c[2]}m`;
+const RESET = "\x1b[0m";
+function paintFg(rgb: RGB | undefined, s: string): string {
+  return noColor() || !rgb || !s ? s : `${fgCode(rgb)}${s}${RESET}`;
 }
-const dim = (s: string) => wrap("2", s);
-const bold = (s: string) => wrap("1", s);
-const c256 = (n: number, s: string) => (noColor() || !s ? s : `\x1b[38;5;${n}m${s}\x1b[0m`);
-const cRGB = (r: number, g: number, b: number, s: string) =>
-  noColor() || !s ? s : `\x1b[38;2;${r};${g};${b}m${s}\x1b[0m`;
+const dim = (s: string) => (noColor() || !s ? s : `\x1b[2m${s}${RESET}`);
 
-/** Color a string by a 0-100 percentage: green → yellow → red. Truecolor gradient when available,
- *  else a 16/256 threshold color. */
+/** Color a string by a 0-100 percentage with a truecolor green->yellow->red gradient. */
 export function byPct(pct: number, s: string): string {
   const p = Math.max(0, Math.min(100, pct));
   if (noColor()) return s;
-  if (TRUECOLOR) {
-    // green (0) → yellow (50) → red (100)
-    const r = p < 50 ? Math.round((p / 50) * 255) : 255;
-    const g = p < 50 ? 255 : Math.round((1 - (p - 50) / 50) * 255);
-    return cRGB(r, g, 40, s);
-  }
-  const n = p < 50 ? 35 : p < 80 ? 178 : 196; // 256-color green / amber / red
-  return c256(n, s);
+  const r = p < 50 ? Math.round((p / 50) * 255) : 255;
+  const g = p < 50 ? 255 : Math.round((1 - (p - 50) / 50) * 255);
+  return `${fgCode([r, g, 40])}${s}${RESET}`;
 }
 
 // ---------------- pure formatters (tested) ----------------
-
-/** Strip context-window suffixes from a model name: "Opus 4.8 (1M context)" → "Opus 4.8". */
 export function stripModel(name: string): string {
   return String(name || "")
     .replace(/\s*\((?:[^)]*context[^)]*)\)\s*$/i, "")
@@ -76,14 +93,12 @@ export function stripModel(name: string): string {
     .trim();
 }
 
-/** A block progress bar of `width` cells for a 0-100 percentage (plain, no color). */
 export function bar(pct: number, width = 10): string {
   const p = Math.max(0, Math.min(100, pct || 0));
   const filled = Math.round((p / 100) * width);
   return G.barFull.repeat(filled) + G.barEmpty.repeat(Math.max(0, width - filled));
 }
 
-/** A ▰▱ phase bar from a "n/total" step string, or "" if unparseable. */
 export function phaseBar(step: string, width = 4): string {
   const m = /^(\d+)\s*\/\s*(\d+)$/.exec(String(step || "").trim());
   if (!m) return "";
@@ -103,7 +118,6 @@ export function fmtDuration(ms: number): string {
   return `${h}h${m % 60}m`;
 }
 
-/** Plain git text from parsed counts, e.g. "main ●3 ↑2 ↓1". Empty branch → "". */
 export function gitText(g: { branch?: string; dirty?: number; ahead?: number; behind?: number }): string {
   if (!g || !g.branch) return "";
   let out = g.branch;
@@ -113,13 +127,11 @@ export function gitText(g: { branch?: string; dirty?: number; ahead?: number; be
   return out;
 }
 
-/** Reasoning-effort label from stdin effort.level, e.g. "think:high". "" if absent/unknown. */
 export function effortLabel(level?: string): string {
   const l = String(level || "").toLowerCase();
   return ["low", "medium", "high", "xhigh", "max"].includes(l) ? `think:${l}` : "";
 }
 
-/** Prompt-cache hit rate (% of input tokens served from cache) from current_usage, or null. */
 export function cacheHitPct(usage: any): number | null {
   if (!usage) return null;
   const read = Number(usage.cache_read_input_tokens) || 0;
@@ -129,7 +141,12 @@ export function cacheHitPct(usage: any): number | null {
   return Math.round((read / denom) * 100);
 }
 
-// ---------------- IO helpers (main only) ----------------
+// ---------------- segments ----------------
+interface Seg {
+  text: string;
+  fg: RGB;
+  bg: RGB;
+}
 interface Progress {
   phase?: string;
   step?: string;
@@ -145,38 +162,125 @@ export function freshProgress(p: any, now = Date.now()): Progress | null {
   return p as Progress;
 }
 
+function projectName(dir: string): string {
+  return dir ? dir.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "" : "";
+}
+
+function segs1(session: any, git: GitInfo, lspInRust: boolean, lspOk: boolean): Seg[] {
+  const out: Seg[] = [];
+  out.push({ text: "\u{1F980} rust-studio", fg: TN.bg, bg: TN.blue }); // 🦀
+  // Prefer the project root name over a subdirectory (e.g. show "rust-studio", not "scripts").
+  const proj = projectName(session?.workspace?.project_dir || session?.workspace?.current_dir || session?.cwd || "");
+  if (proj) out.push({ text: `${I.folder}${proj}`, fg: TN.fg, bg: TN.bg2 });
+  const gt = gitText(git);
+  if (gt) out.push({ text: `${I.branch}${gt}`, fg: TN.bg, bg: git.dirty ? TN.yellow : TN.green });
+  const model = stripModel(session?.model?.display_name || session?.model?.id || "");
+  if (model) out.push({ text: model, fg: TN.bg, bg: TN.magenta });
+  const effort = effortLabel(session?.effort?.level);
+  if (effort) out.push({ text: effort, fg: TN.orange, bg: TN.bg2 });
+  if (lspInRust) out.push({ text: `lsp ${lspOk ? G.ok : G.no}`, fg: lspOk ? TN.green : TN.red, bg: TN.bg2 });
+  return out;
+}
+
+function segs2(session: any, progress: Progress | null): Seg[] {
+  const out: Seg[] = [];
+  const withBar = !POWERLINE(); // a block bar is illegible on a colored powerline background
+  const pct = session?.context_window?.used_percentage;
+  if (typeof pct === "number") {
+    const over = session?.exceeds_200k_tokens === true;
+    const p = over ? Math.max(pct, 85) : pct;
+    const body = withBar ? `${bar(pct)} ${Math.round(pct)}%` : `${Math.round(pct)}%`;
+    out.push({ text: `${I.ctx}${body}`, fg: TN.bg, bg: pctRgb(p) });
+  }
+  const cache = cacheHitPct(session?.context_window?.current_usage);
+  if (cache != null) out.push({ text: `${I.cache}${cache}%`, fg: TN.cyan, bg: TN.bg2 });
+  if (progress?.phase) {
+    const pb = progress.step ? phaseBar(progress.step) : "";
+    out.push({
+      text: `${G.phase} ${progress.phase}` + (pb ? ` ${pb}` : "") + (progress.step ? ` ${progress.step}` : ""),
+      fg: TN.bg,
+      bg: TN.blue,
+    });
+  }
+  if (progress?.tasks) out.push({ text: `${G.ok} ${progress.tasks}`, fg: TN.green, bg: TN.bg2 });
+  const rl = session?.rate_limits;
+  const five = rl?.five_hour?.used_percentage;
+  const seven = rl?.seven_day?.used_percentage;
+  if (typeof five === "number") out.push({ text: `5h ${Math.round(five)}%`, fg: pctRgb(five), bg: TN.bg2 });
+  if (typeof seven === "number") out.push({ text: `7d ${Math.round(seven)}%`, fg: pctRgb(seven), bg: TN.bg2 });
+  const dur = fmtDuration(session?.cost?.total_duration_ms);
+  if (dur) out.push({ text: `${I.clock}${dur}`, fg: TN.dim, bg: TN.bg2 });
+  const add = session?.cost?.total_lines_added || 0;
+  const del = session?.cost?.total_lines_removed || 0;
+  if (add || del) out.push({ text: `+${add} ${G.del}${del}`, fg: TN.green, bg: TN.bg2 });
+  return out;
+}
+
+// ---------------- rendering ----------------
+function renderPowerline(segs: Seg[]): string {
+  const s = segs.filter((x) => x && x.text);
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    out += `${fgCode(s[i].fg)}${bgCode(s[i].bg)} ${s[i].text} ${RESET}`;
+    const next = s[i + 1];
+    if (next) {
+      out += sameRGB(s[i].bg, next.bg)
+        ? `${fgCode(TN.dim)}${bgCode(next.bg)}${G.arrowThin}${RESET}` // subtle divider, same bg
+        : `${fgCode(s[i].bg)}${bgCode(next.bg)}${G.arrow}${RESET}`;
+    } else {
+      out += `${fgCode(s[i].bg)}${G.arrow}${RESET}`;
+    }
+  }
+  return out;
+}
+function renderPlain(segs: Seg[]): string {
+  return segs
+    .filter((x) => x && x.text)
+    .map((x) => paintFg(x.fg, x.text))
+    .join(SEP_PLAIN);
+}
+
+/** Pure: build the status line. opts.git / lspInRust / lspOk are injected (no IO). */
+export function render(
+  session: any,
+  progress: Progress | null,
+  opts: { git?: GitInfo; lspInRust?: boolean; lspOk?: boolean } = {},
+): string {
+  const l1 = segs1(session, opts.git || {}, opts.lspInRust ?? false, opts.lspOk ?? false);
+  const l2 = segs2(session, progress);
+  if (POWERLINE()) {
+    const top = renderPowerline(l1);
+    const bot = renderPowerline(l2);
+    return l2.length ? `${top}\n${bot}` : top;
+  }
+  const top = `${dim(G.topL)} ${renderPlain(l1)}`;
+  const bot = `${dim(G.botL)} ${renderPlain(l2)}`;
+  return l2.length ? `${top}\n${bot}` : top;
+}
+
+// ---------------- IO helpers (main only) ----------------
 function gitRun(cwd: string, args: string[], timeout = 800): string | null {
   try {
-    const r = Bun.spawnSync(["git", "-C", cwd, ...args], {
-      stdout: "pipe",
-      stderr: "ignore",
-      stdin: "ignore",
-      timeout,
-    });
+    const r = Bun.spawnSync(["git", "-C", cwd, ...args], { stdout: "pipe", stderr: "ignore", stdin: "ignore", timeout });
     if ((r.exitCode ?? 1) !== 0) return null;
     return new TextDecoder().decode(r.stdout).trim();
   } catch {
     return null;
   }
 }
-
 interface GitInfo {
   branch?: string;
   dirty?: number;
   ahead?: number;
   behind?: number;
 }
-
-/** Git info with a ~5s tmpdir cache keyed by cwd, so the bar never pays the git cost every tick. */
 function gitInfo(cwd: string): GitInfo {
   const key = cwd.replace(/[^a-z0-9]/gi, "_").slice(-80);
   const cache = join(tmpdir(), `rust-studio-git-${key}.json`);
   try {
-    if (Date.now() - statSync(cache).mtimeMs < 5000) {
-      return JSON.parse(readFileSync(cache, "utf8"));
-    }
+    if (Date.now() - statSync(cache).mtimeMs < 5000) return JSON.parse(readFileSync(cache, "utf8"));
   } catch {
-    /* cache miss */
+    /* miss */
   }
   const info: GitInfo = {};
   const branch = gitRun(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]);
@@ -184,7 +288,7 @@ function gitInfo(cwd: string): GitInfo {
     try {
       writeFileSync(cache, JSON.stringify(info));
     } catch {}
-    return info; // not a repo
+    return info;
   }
   info.branch = branch === "HEAD" ? "(detached)" : branch;
   const porcelain = gitRun(cwd, ["status", "--porcelain"]);
@@ -202,11 +306,6 @@ function gitInfo(cwd: string): GitInfo {
   } catch {}
   return info;
 }
-
-function projectName(dir: string): string {
-  return dir ? dir.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || "" : "";
-}
-
 function readProgress(dir: string): Progress | null {
   try {
     const f = join(dir, ".rust-studio", "progress.json");
@@ -215,91 +314,6 @@ function readProgress(dir: string): Progress | null {
     /* none */
   }
   return null;
-}
-
-function hasRustAnalyzer(): boolean {
-  return Bun.which("rust-analyzer") != null;
-}
-
-// ---------------- assembly ----------------
-function joinSegs(segs: string[]): string {
-  return segs.filter(Boolean).join(SEP);
-}
-
-function buildLine1(session: any, git: GitInfo, lspInRust: boolean): string {
-  const proj = projectName(session?.workspace?.current_dir || session?.cwd || "");
-  const model = stripModel(session?.model?.display_name || session?.model?.id || "");
-  const gt = gitText(git);
-  const gitColored = gt ? (git.dirty ? c256(178, gt) : c256(35, gt)) : "";
-  const effort = effortLabel(session?.effort?.level);
-  const effortColored = effort ? (/(high|xhigh|max)/.test(effort) ? c256(208, effort) : dim(effort)) : "";
-  const lsp = lspInRust ? (hasRustAnalyzer() ? `lsp ${c256(35, G.ok)}` : `lsp ${c256(196, G.no)}`) : "";
-  // Always show the studio tag — the bar should be instantly recognizable in any directory.
-  const tag = `${G.crab} ${c256(208, bold("rust-studio"))}`;
-  return joinSegs([
-    tag,
-    proj ? dim(proj) : "",
-    gitColored,
-    model ? c256(75, model) : "",
-    effortColored,
-    lsp,
-  ]);
-}
-
-function buildLine2(session: any, progress: Progress | null): string {
-  const segs: string[] = [];
-
-  // context bar (mandatory)
-  const pct = session?.context_window?.used_percentage;
-  if (typeof pct === "number") {
-    const over = session?.exceeds_200k_tokens === true;
-    const p = over ? Math.max(pct, 85) : pct;
-    segs.push(`ctx ${byPct(p, bar(pct))} ${byPct(p, Math.round(pct) + "%")}`);
-  }
-
-  // prompt-cache hit rate
-  const cache = cacheHitPct(session?.context_window?.current_usage);
-  if (cache != null) segs.push(`cache ${c256(75, cache + "%")}`);
-
-  // phase progress (mandatory when present)
-  if (progress?.phase) {
-    const pb = progress.step ? phaseBar(progress.step) : "";
-    segs.push(
-      `${c256(208, G.phase)} ${progress.phase}` +
-        (pb ? ` ${pb}` : "") +
-        (progress.step ? ` ${dim(progress.step)}` : ""),
-    );
-  }
-
-  // tasks N/M (from progress.json, when present)
-  if (progress?.tasks) segs.push(`${c256(35, G.ok)} ${progress.tasks}`);
-
-  // rate limits 5h / 7d (Pro/Max only)
-  const rl = session?.rate_limits;
-  const five = rl?.five_hour?.used_percentage;
-  const seven = rl?.seven_day?.used_percentage;
-  if (typeof five === "number") segs.push(`5h ${byPct(five, bar(five, 4))} ${byPct(five, Math.round(five) + "%")}`);
-  if (typeof seven === "number") segs.push(`7d ${byPct(seven, bar(seven, 4))} ${byPct(seven, Math.round(seven) + "%")}`);
-
-  // duration
-  const dur = fmtDuration(session?.cost?.total_duration_ms);
-  if (dur) segs.push(dim(dur));
-
-  // lines +/-
-  const add = session?.cost?.total_lines_added || 0;
-  const del = session?.cost?.total_lines_removed || 0;
-  if (add || del) segs.push(`${c256(35, G.add + add)} ${c256(196, G.del + del)}`);
-
-  return joinSegs(segs);
-}
-
-/** Pure: build both lines from session JSON + progress + lsp flag (no IO). For tests. */
-export function render(session: any, progress: Progress | null, opts: { git?: GitInfo; lspInRust?: boolean } = {}): string {
-  const l1 = buildLine1(session, opts.git || {}, opts.lspInRust ?? false);
-  const l2 = buildLine2(session, progress);
-  const top = `${dim(G.topL)} ${l1}`;
-  const bot = `${dim(G.botL)} ${l2}`;
-  return l2 ? `${top}\n${bot}` : top;
 }
 
 if (import.meta.main) {
@@ -311,13 +325,11 @@ if (import.meta.main) {
     /* empty */
   }
   const dir =
-    session?.workspace?.project_dir ||
-    session?.workspace?.current_dir ||
-    session?.cwd ||
-    process.cwd();
+    session?.workspace?.project_dir || session?.workspace?.current_dir || session?.cwd || process.cwd();
   const progress = readProgress(dir);
   const inRust = existsSync(join(dir, "Cargo.toml"));
+  const lspOk = inRust && Bun.which("rust-analyzer") != null;
   const git = gitInfo(dir);
-  process.stdout.write(render(session, progress, { git, lspInRust: inRust }));
+  process.stdout.write(render(session, progress, { git, lspInRust: inRust, lspOk }));
   process.exit(0);
 }
