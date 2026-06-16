@@ -70,6 +70,25 @@ meets the bar. If the user is time-pressured, cut optional **scope**, not the **
 "scope can be cut; the quality bar cannot" (`maintainer-grade-development.md`). "Reject the task"
 or "do less, properly" are fine options; "do it, but badly" never is.
 
+**Never offload your own analysis as a question.** If you have researched the area, know the
+architecture, and have a defensible answer, that is a *tactical call* — **decide it**, state the
+choice + one-line rationale + how reversible it is, and let the user veto. Do **not** repackage
+your completed analysis as a heavy "what should we do about X long-term?" fork that forces the
+user to reconstruct everything you already worked out. A question that costs the user more to
+*answer* than it cost you to *resolve* is the wrong move — it offloads cognitive load upward
+instead of doing the job. Ask only when the answer genuinely lives in the **user** — taste,
+product priority, risk appetite, willingness to break an API, a true business constraint — not in
+analysis you have done or could do (source it from the code with serena first; the answer is
+often already there).
+
+**When the answer really is the user's, ask grill-me-style, not one heavy fork.** Decompose a
+big decision into a short sequence of **small, concrete questions asked one at a time**, each with
+a **recommended default** and a one-line "cost if wrong", resolving dependencies progressively —
+not a single multidimensional question the user must study to answer. A good ask is cheap to
+answer (pick the default, or correct one axis); a bad ask is an essay-prompt. This is the
+`/grill-me` shape; reach for that skill when a plan needs the user's input pulled out
+deliberately.
+
 **Proceed without asking:** read-only investigation; non-mutating cargo commands
 (`check`/`clippy`/`test`/`tree`/benches); local commits on a worktree branch; and executing a
 plan/scope already agreed. Note that an `AskUserQuestion` answer does **not** by itself

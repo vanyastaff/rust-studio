@@ -15,7 +15,7 @@ This is the curated map (which family to reach for); the exhaustive, always-curr
 list of every installed skill is generated below it.
 
 **Onboarding:** `/start` · `/help` · `/detect-stack` · `/adopt`
-**Design & architecture:** `/brainstorm` · `/design-api` · `/architecture` · `/adr` · `/model-domain`
+**Design & architecture:** `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
 **Build:** `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 **Spec-driven:** `/spec` · `/spec-tasks` · `/spec-verify`
 **TDD & verify:** `/tdd` · `/verify-loop`
