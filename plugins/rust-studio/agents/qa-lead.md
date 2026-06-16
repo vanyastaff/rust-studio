@@ -48,6 +48,9 @@ quality bar. You decide what "tested" means and hold the QA-GATE.
   the test plan should clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**)
   before writing begins.
 - `${CLAUDE_PLUGIN_ROOT}/rules/testing.md` — behavior-focused, isolated, non-flaky tests.
+- `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md` — the honesty bar: tests must be able to
+  fail, the oracle is the acceptance criteria (not a self-authored test), and pass/coverage is
+  reported with the full denominator. A gamed green does not clear the QA-GATE.
 
 ## Reviewer stance
 Flag only correctness gaps, missing acceptance-criterion coverage, and determinism failures.
@@ -59,7 +62,13 @@ Before this gate passes, verify:
 - [ ] Error paths and edge cases (empty/max/boundary/unicode/concurrent) are covered.
 - [ ] Tests are deterministic and isolated — no sleeps, real network, or shared global state.
 - [ ] No flaky tests (or each is quarantined with a tracking issue, not silently ignored).
-- [ ] Coverage has not regressed; the suite passes — `cargo nextest run` output shown.
+- [ ] **Every test can fail** — asserts the value/effect, not `is_ok()`/existence or a tautology;
+      no vacuous or happy-path-only tests.
+- [ ] **No test was weakened, `#[ignore]`-d, deleted, or rewritten to make the change pass** —
+      correctness is proven against the acceptance criteria / an oracle / a law; a self-authored
+      test is a regression guard, not the proof.
+- [ ] Coverage has not regressed; the suite passes — `cargo nextest run` output shown, **with the
+      full denominator** (skipped/ignored cases listed with a reason, not dropped from the count).
 
 ## Output
 Test plan and test-quality review, with `cargo nextest run` summary as evidence. End with

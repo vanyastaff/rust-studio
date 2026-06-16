@@ -16,6 +16,7 @@ benchmarks/
 | folder      | agent under test    |
 |-------------|---------------------|
 | `reviewer`  | `rust-reviewer`     |
+| `integrity` | `rust-reviewer`     |
 | `unsafe`    | `unsafe-auditor`    |
 | `security`  | `security-auditor`  |
 | `perf`      | `perf-engineer`     |

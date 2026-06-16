@@ -50,7 +50,8 @@ not a license for a junior shape.
 ## Guardrails (hard)
 
 - Never make it pass by deleting or `#[ignore]`-ing tests, weakening assertions, adding
-  blanket `#[allow]` to silence a real lint, or masking with `unwrap`. Fix the cause.
+  blanket `#[allow]` to silence a real lint, or masking with `unwrap`. Fix the cause. These are the
+  gaming moves the honesty bar forbids (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).
 - If a fix would change intended behavior or the public API, stop and ask — that is a
   decision for `/dev-task`, not a build fix.
 

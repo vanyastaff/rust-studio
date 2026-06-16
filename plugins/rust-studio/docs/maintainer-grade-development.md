@@ -6,6 +6,12 @@ maintainer review. Existing code is context, not authority: if the local shape i
 duplicated, non-idiomatic, or hostile to the workspace architecture, reshape the affected
 area before implementing the feature.
 
+This standard governs the **shape** of a change. Its companion,
+`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`, governs the **honesty of the result and
+the discipline of the process** — no gamed green (weakened/vacuous test, stub, hidden denominator,
+lint disable), no skipping the disciplined path (failing-test-first, pre-code verdict, review).
+A change must clear both: well-shaped AND honestly verified.
+
 ## Sources Checked
 
 Checked on 2026-06-14:
@@ -244,3 +250,7 @@ regress to junior behavior:
 - `api/non-exhaustive-and-fundamental`: agent must identify the semver hazards — a growable public
   enum/struct missing `#[non_exhaustive]`, a blanket impl on a fundamental type (`&T`, `Box<T>`,
   `Pin<P>`), and a `Result`-like return or guard type missing `#[must_use]`.
+- `integrity/gamed-green`: agent must flag a **gamed green** — a vacuous/tautological test, a
+  canned-return stub, an `#[ignore]`-silenced real test, and an unjustified lint suppression — and
+  return `NEEDS WORK`, not wave it through as "compiles + tests green" (see
+  `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).

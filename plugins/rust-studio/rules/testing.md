@@ -31,6 +31,19 @@ Applies to integration tests, test modules, and benches.
   on shared ports/files — use ephemeral resources.
 - A flaky test is a failing test. Quarantine with an issue link, don't `#[ignore]` silently.
 
+## Integrity — a test must be able to fail
+- A test that **cannot fail is not a test**. Assert the **value/effect**, not mere existence
+  (`is_ok()` with no value check); never a tautology (`assert_eq!(x, x)`) or an assertion-free
+  body. Happy-path-only is not done.
+- **Never** weaken, `#[ignore]`, delete, `SKIP`, or comment out a test (or relax its assertion) to
+  make a change go green — fix the code. Changing the test to fit the code instead of the code to
+  fit the spec is the cheat, not the fix. A genuinely wrong test is a behavior decision: surface it.
+- A test you wrote to match your code is a **regression guard**, not a correctness proof. Prove
+  correctness against the acceptance criteria, an upstream/independent oracle, or a property law.
+- Report pass-rate and coverage with the **full denominator**; list skipped/ignored/out-of-scope
+  cases with a reason and tracking reference — never drop them from the count silently.
+See `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
+
 ## Tooling
 - Prefer `cargo nextest` for speed + isolation. Keep tests fast; mark slow ones.
 - Assertions: `assert_eq!` with helpful messages, or `pretty_assertions` for diffs.

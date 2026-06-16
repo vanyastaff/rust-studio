@@ -44,7 +44,9 @@ way to pass is a wrong-crate or clone-to-appease shape, that is `RESHAPE NEEDED`
 Repeat for the next behavior. Use `/verify-loop` to drive the run→fix→re-run cycle.
 
 ## Guardrails
-- Never weaken or `#[ignore]` a test to go green — fix the code.
+- Never weaken, `#[ignore]`, delete, or rewrite a test to go green — fix the code. The RED test
+  must be **able to fail** (assert the value/effect, not `is_ok()` or a tautology); a vacuous test
+  gives a false GREEN. See `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
 - One behavior per cycle; small steps. Keep the suite green between behaviors.
 
 ## Output
