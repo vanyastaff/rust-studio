@@ -5,6 +5,31 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-06-16
+
+### Added
+
+- **`/grill-me`** — when a decision genuinely needs the user's input, the agent interviews them in
+  **cheap, one-at-a-time questions, each with a recommended default**, instead of dropping a
+  single heavy "what should we do long-term about X?" fork. Adapted from the grill-me productivity
+  skill: it maps the decision tree first, tags each fork **DECIDE** (resolved by analysis / Rust
+  best practice / reading the code via serena/`rust-scout`) vs **ASK** (answer truly lives in the
+  user — taste, priority, risk appetite, breaking-change willingness), and only interviews on the
+  ASK forks, in dependency order, until shared understanding — then hands off to `/spec` /
+  `/architecture` / `/dev-task`. Verified on a caching-layer scenario: it collapsed a 5-dimensional
+  heavy fork into 1 cheap question (2 worst-case), deciding 9/10 forks itself.
+
+### Changed
+
+- **Agents no longer offload their own analysis as a question.** Coordination Protocol §1 now
+  forbids repackaging completed analysis as a heavy future-deciding fork that forces the user to
+  reconstruct what the agent already worked out: if you've researched the area and have a
+  defensible answer, that's a *tactical call* — decide it, state choice + rationale + reversibility,
+  and let the user veto. A question is warranted only when the answer genuinely lives in the user,
+  and then it must be **grill-me-shaped** — small, one-at-a-time, each with a recommended default
+  and a "cost if wrong" — not a single multidimensional question the user must study to answer.
+  Source the answer from the code (serena) before asking; it is often already there.
+
 ## [0.13.0] - 2026-06-16
 
 ### Changed
