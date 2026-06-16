@@ -5,6 +5,14 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2026-06-16
+
+### Added
+
+- **`symbols` icon style** (`/progress-bar symbols`, `statusline.ts --icons symbols`) — plain
+  Unicode glyphs (⌂ ◔ ↻ ⏱) that render in a normal monospace font, **no Nerd Font required**. A
+  middle ground between emoji and Nerd Font icons.
+
 ## [0.11.0] - 2026-06-16
 
 ### Added
