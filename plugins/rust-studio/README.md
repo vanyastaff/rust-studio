@@ -11,7 +11,7 @@ for libraries, async/web services, CLIs, and systems/embedded code.
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
 - **48 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, cross-session memory, and a self-check harness
 - **17 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
-- **7 hooks** — stack detection **+ memory recall** at session start, path-scoped rule pointers, a lint nudge, and session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders)
+- **8 hooks** — stack detection **+ memory recall** at session start, path-scoped rule pointers, a lint nudge, session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders), and an opt-in **stop-guard** that blocks an undisciplined turn ending (ownership-dodging, permission-seeking, test avoidance, "done" without evidence)
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
 - **Configurable + a terse review style** — set a house MSRV, preferred test runner, and default gate intensity per the `/plugin` config dialog; opt into a one-finding-per-line reviewer output style via `/config`
 - **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
@@ -109,6 +109,11 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   (COMPLETE / NEEDS WORK / BLOCKED) with evidence before advancing past it.
 - **PreCompact / SessionEnd** — remind you to persist an in-flight plan to a durable file and to
   run `/session-wrap` so learnings are captured to memory.
+- **Stop-guard (opt-in)** — the mechanical teeth for the integrity doctrine: when `stop_guard` is
+  on, it **blocks** the turn from ending (exit 2 → feedback to the model) if the final message
+  dodges ownership, seeks permission, stops early, avoids tests, leaves stubs, hands the work back
+  to you, or claims done without evidence. Off by default (it's aggressive); fails open — a stall
+  allows the stop, never freezes the turn.
 
 Hooks are TypeScript, run via [`bun`](https://bun.sh). If `bun` isn't on PATH they no-op — the
 studio still works, you just lose auto-injection and recall. Each hook reads stdin behind a
@@ -142,6 +147,18 @@ verdict check) is always on, and the whole plugin disables with `/plugin disable
 
 > LSP and any bundled MCP servers can't be toggled with a flag (they're declared statically) —
 > remove `rust-analyzer` from PATH or disable the whole plugin to turn off the LSP.
+
+**Stop-guard (opt-in enforcement)** — mechanical teeth for the integrity doctrine. Off by default
+because it's aggressive (it can block legitimate stops). When on, the Stop hook returns exit 2 and
+feeds the reason back to the model so it keeps working instead of ending the turn:
+
+| Option | Default | Effect |
+|--------|---------|--------|
+| **Stop-guard** (`stop_guard`) | off | Block a turn ending whose final message dodges ownership, seeks permission, stops early, avoids tests, leaves stubs, hands work back, or claims done without evidence. |
+| **Strict mode** (`stop_guard_strict`) | off | Also block on *soft* signals (speculation, weak completion, evidence-free claims) even when some evidence is present. |
+| **Require evidence** (`stop_guard_require_evidence`) | off | Block any ending whose final message lacks concrete evidence (files changed / commands run / verification / result). |
+
+Fine-tune via env: `STOP_GUARD_MIN_EVIDENCE` (default 2), `STOP_GUARD_MAX_HITS`, `STOP_GUARD_ALLOW_CATEGORIES` (comma-separated categories to exempt), `STOP_GUARD_DISABLED=1`.
 
 **Terse review output style** — the plugin ships a `Rust review (terse)` output style
 (one finding per line, severity-tagged, evidence over prose, verdict last). It is **opt-in**:

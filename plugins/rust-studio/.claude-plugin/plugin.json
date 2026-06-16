@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Turn a single Claude Code session into a full Rust engineering studio. Tiered agent team (architect -> leads -> specialists), path-scoped Rust standards, quality gates, and cargo-aware hooks across libraries, async/web services, CLIs, and systems/embedded code.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": {
     "name": "vanya"
   },
@@ -65,6 +65,24 @@
       "title": "Formatting nudge",
       "description": "After a turn that changed .rs files, nudge to run /lint when they are not rustfmt-clean. Turn off to silence the Stop-hook fmt check.",
       "default": true
+    },
+    "stop_guard": {
+      "type": "boolean",
+      "title": "Stop-guard (block undisciplined turn endings)",
+      "description": "When on, block the turn from ending if the final message dodges ownership, seeks permission, stops early, avoids tests, leaves stubs, hands the work back to you, or claims done without evidence. The feedback is fed back to the model so it continues. Aggressive (it can block legitimate stops) — off by default; the mechanical teeth for docs/integrity-and-evidence.md.",
+      "default": false
+    },
+    "stop_guard_strict": {
+      "type": "boolean",
+      "title": "Stop-guard: strict mode",
+      "description": "Also block on soft signals (speculation, weak completion, evidence-free claims) even when some completion evidence is present. Requires stop_guard on.",
+      "default": false
+    },
+    "stop_guard_require_evidence": {
+      "type": "boolean",
+      "title": "Stop-guard: require evidence",
+      "description": "Block any turn ending whose final message lacks concrete completion evidence (files changed / commands run / verification / result), even with no flagged phrase. Requires stop_guard on.",
+      "default": false
     }
   }
 }
