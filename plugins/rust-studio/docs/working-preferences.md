@@ -45,6 +45,11 @@ changes what "done" means:
   engineering. Execute the full migration including breaking ripples. A deferral is only honest
   if it names a **concrete** blocker (needs a dev-dep, CI infra, a derive macro of its own scope)
   — not a comfort-level excuse.
+- **Don't offer a quick win as a choice either.** When an `AskUserQuestion` presents options,
+  they vary by *scope* or *approach*, never by *quality* — a "fast / Quick Win (recommended) /
+  full" menu is forbidden. Offering substandard work as a selectable, let alone recommended,
+  option is the quick-win laundered through the user. Recommend the option that clears the bar;
+  if time is short, cut scope, not quality. (Binding form in `coordination-protocol.md` §1.)
 - **Finish properly.** No orphaned files, legacy aliases, stub traits, or "I'll update the other
   half next commit" half-states. Align the whole file to the target shape in the same pass.
 - **Green tests ≠ done.** Tests prove you didn't break what was tested; they don't prove the
