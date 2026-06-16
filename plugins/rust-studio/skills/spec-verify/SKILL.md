@@ -27,8 +27,9 @@ Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertio
 4. Delegate to `rust-builder`: write `.rust-studio/specs/<slug>/verify-report.md` from
    `${CLAUDE_PLUGIN_ROOT}/docs/templates/verify-report.md` — each criterion → pass/fail
    + evidence, commands run, gates cleared, follow-ups.
-5. **On pass**: mark the spec `Status: Done` (delegate write). Note any durable learning
-   worth `/remember`-ing; suggest `/changelog` if user-facing; suggest `/commit` + `/pr`
+5. **On pass**: mark the spec `Status: Done` (delegate write). For each durable learning the
+   work produced (a decision + rationale, a gotcha, a convention discovered), run `/remember`
+   to persist it; suggest `/changelog` if user-facing; suggest `/commit` + `/pr`
    to ship — these are outward/irreversible, so confirm before running them.
    **On fail**: list each failing criterion with its gap; hand back to `/dev-task`.
 

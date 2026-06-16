@@ -23,9 +23,9 @@ Five moving parts:
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `ffi.md` on C-ABI boundaries,
   `macros.md` in proc/declarative macros, …).
 - **Hooks** (7) — deterministic automation: stack briefing **+ memory recall** at session start,
-  path-scoped rule pointers after edits, a lint nudge when you stop, and session-lifecycle aids
-  (a `/recall` nudge on each prompt, a sub-agent verdict check, and compaction / session-end
-  reminders).
+  path-scoped rule pointers after edits, a lint nudge **and a memory-capture nudge** when you stop,
+  and session-lifecycle aids (a `/recall` nudge on each prompt, a sub-agent verdict check, and
+  compaction / session-end reminders).
 - **Gates** — named checkpoints a lead clears before work proceeds: `ARCH / API / ASYNC / CLI /
   PERF / SAFETY / QA / RELEASE / BUILD`. Run at **lean** (one crate), **full** (public API,
   unsafe, releases), or **solo** (prototype) intensity.
@@ -169,6 +169,10 @@ Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially —
 - **`/remember`** — capture a durable learning (decision/gotcha/convention/fix).
 - **`/recall`** — surface prior learnings for a topic before you work.
 - **`/session-wrap`** — recap the session, capture learnings, suggest the next step.
+- Capture is also **automatic**: the work skills (`/dev-task`, `/debug`, `/verify-loop`,
+  `/refactor`, `/spec-verify`) run `/remember` for durable learnings, and the `auto_capture`
+  Stop hook nudges you once after a completed unit if nothing was saved. Recall is automatic at
+  session start (`memory_recall`). Both toggle via `/plugin` → Rust Code Studio.
 
 ### Ship & release
 - **`/commit`** — Conventional Commit for the current changes (fmt/clippy first; no hook bypass).
@@ -239,7 +243,14 @@ Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially —
 ## Tooling, memory, and large workspaces
 - Agents prefer **serena** (semantic code nav) and `rg`/`ast-grep` over Bash search, **exa** for
   external evidence, and purpose-built `cargo` subcommands — see `tooling.md`.
-- Memory lives in one Obsidian vault under a per-project folder, accessed through the `obsidian`
-  MCP; the harness native auto-memory injects that project's `MEMORY.md` at session start.
+- Memory has two layers that share **one** Obsidian vault under a per-project folder:
+  - the **shared project store** — `/remember`, `/recall`, and the session-start recall hook
+    read/write `<vault>/projects/<project>/` through the `obsidian` MCP (the hook reads the files
+    directly, since a command hook has no MCP access);
+  - **per-agent memory** — `chief-architect`, `unsafe-auditor`, and `security-auditor` carry
+    `memory: project`, so the harness injects each agent's own `MEMORY.md` at start. For these to be
+    *one* store, the harness auto-memory path must be junctioned into the vault's project folder; if
+    it is not, an agent's memory and `/recall` will diverge. The read-only auditors surface durable
+    findings on a `MEMORY:` line so the orchestrator can `/remember` them into the shared store.
 - For big multi-crate workspaces, see `large-workspace.md` (per-crate CLAUDE.md, `target/`
   read-denies, sparse worktrees, the bundled rust-analyzer LSP).

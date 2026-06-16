@@ -48,3 +48,7 @@ GUARD:      <regression test added + observability landed>.
 ```
 End with **COMPLETE** (cause fixed + regression green) or **STUCK** (state the disproven
 hypotheses and the next experiment — never a guessed patch).
+
+A root cause is a **durable gotcha**: on `COMPLETE`, run `/remember` to capture the cause and
+the fix so the next occurrence is recognized fast — skip only if the bug was trivial/obvious.
+Then `/review` the change, or `/dev-task` any follow-up the root cause exposed.

@@ -155,7 +155,10 @@ The line is observable behavior, not the shape of the code.
 
 18. End with **COMPLETE / NEEDS WORK / BLOCKED**.
 
-19. Suggest next steps as appropriate: `/review` for a deeper audit, `/dev-task` for any
+19. If the refactor revealed a **durable** convention or structural pattern worth keeping
+    (e.g. the boundary that finally made the code compose), run `/remember` to capture it.
+
+20. Suggest next steps as appropriate: `/review` for a deeper audit, `/dev-task` for any
     behavioral improvements that surfaced during the refactor, `/perf` if any hot paths
     were restructured.
 

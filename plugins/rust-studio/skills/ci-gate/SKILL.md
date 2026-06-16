@@ -88,6 +88,8 @@ modern (0.16+) schema — pre-0.14 keys hard-error.
    removes a ban, drops `allow_attributes_without_reason`, or raises a timeout to make code pass is
    **gate-disabling** — `rust-reviewer` and `check-gate.sh` will reject it. Suggest CODEOWNERS /
    required review on the gate paths so the gate can't be edited without a human.
+   Next: `/verify-loop` to drive the current tree green against the freshly-installed gate, or
+   `/lint` for the static pass alone.
 
 ## Do not
 - Do not weaken a check to make existing code pass — fix the call site (inject a clock, bound the

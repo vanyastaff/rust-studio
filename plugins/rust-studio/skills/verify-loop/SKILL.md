@@ -59,5 +59,7 @@ not a license for a junior shape.
 
 Per iteration: what failed → classification → what was fixed (one line each). Final
 `fmt`/`clippy`/`nextest` output as evidence. End with verdict **COMPLETE / NEEDS WORK /
-BLOCKED**. Pairs with `/tdd`; closes the check loop opened by `/spec-verify` or
-`/dev-task`.
+BLOCKED**. If the loop surfaced a **durable gotcha** — a non-obvious fix, a contextual
+`#[allow]` with its justification, a borrow-restructure pattern — run `/remember` to capture
+it. Pairs with `/tdd`; closes the check loop opened by `/spec-verify` or `/dev-task` — once
+green, run `/spec-verify` (if a spec is active) or `/commit` next.

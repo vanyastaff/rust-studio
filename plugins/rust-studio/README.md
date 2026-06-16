@@ -105,6 +105,10 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
 - **UserPromptSubmit** — a light nudge to `/recall` before working in a known area and to prefer a
   studio skill when one fits.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
+- **Auto-capture (Stop)** — after a turn that finished a real unit of work (a completion summary +
+  uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable
+  learning. Blocks the stop a single time and never re-blocks (`stop_hook_active` breaks the loop),
+  so it's far gentler than Stop-guard. On by default (`auto_capture`); fails open.
 - **SubagentStop** — reminds the orchestrator to confirm a sub-agent returned an explicit verdict
   (COMPLETE / NEEDS WORK / BLOCKED) with evidence before advancing past it.
 - **PreCompact / SessionEnd** — remind you to persist an in-flight plan to a durable file and to
@@ -144,6 +148,7 @@ verdict check) is always on, and the whole plugin disables with `/plugin disable
 | **Obsidian vault path** (`vault_path`) | — | Sets the vault used for recall; overrides `OBSIDIAN_VAULT_PATH` (default `~/memory`). |
 | **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
 | **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
+| **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit — capture stays manual (`/remember`, `/session-wrap`) and in-skill. |
 
 > LSP and any bundled MCP servers can't be toggled with a flag (they're declared statically) —
 > remove `rust-analyzer` from PATH or disable the whole plugin to turn off the LSP.
