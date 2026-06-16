@@ -81,9 +81,17 @@ The line is observable behavior, not the shape of the code.
    - unsafe lint → `${CLAUDE_PLUGIN_ROOT}/rules/unsafe.md`
    - test lint → `${CLAUDE_PLUGIN_ROOT}/rules/testing.md`
 
-6. Also note structural issues visible to `rust-scout` that clippy does not catch (duplicated
-   logic, over-long functions, misplaced modules). Prioritize findings by impact — state your
-   ranking and rationale, then proceed to Phase 3.
+6. Also note structural issues visible to `rust-scout` that **clippy does not catch** — these are
+   first-class refactor targets, not afterthoughts:
+   - duplicated logic, over-long functions, misplaced modules;
+   - **intent-hiding names** — bindings/fields/fns/types left as `x`, `tmp`, `data`, `res`, `mgr`,
+     unit-ambiguous (`timeout` not `timeout_secs`), or synonym-colliding (`fetch`/`get`/`load` for
+     one concept), per `${CLAUDE_PLUGIN_ROOT}/rules/core.md` *Naming*. Clippy is silent on these, so
+     if the scope is "make this self-documenting", naming IS the primary target — list each weak
+     name with the better one. Use `ast-grep`/`sg` (via `rust-builder`) for the safe structural
+     rename across the tree.
+
+   Prioritize findings by impact — state your ranking and rationale, then proceed to Phase 3.
 
 ---
 

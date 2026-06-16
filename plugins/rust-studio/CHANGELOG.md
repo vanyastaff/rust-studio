@@ -5,6 +5,30 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-06-16
+
+### Added
+
+- **Self-documenting naming is now a first-class studio standard.** Previously the studio would
+  often leave weak-but-valid identifiers (`x`, `tmp`, `data`, `mgr`, `timeout` with no unit,
+  `fetch`/`get`/`load` for one concept) untouched, because clippy is silent on them and no rule
+  gave agents a mandate to fix them. Naming is now woven through the whole pipeline:
+  - **`rules/core.md`** gains a precise `## Naming (code documents itself)` section — names state
+    intent, encode unit/domain (or use a newtype), use verb-phrase fns / noun types /
+    question-form bools, ban domain-obscuring abbreviations, and converge on one word per concept.
+    Choosing a clear name for code you write or touch is **part of the task, never scope creep**.
+  - **`rust-reviewer`** flags intent-hiding names in its maintainer-shape audit as a 🟣 REDO
+    finding — it is the gate clippy can't be, and must name the better identifier.
+  - **`docs/maintainer-grade-development.md`** adds naming to the Maintainer Rejection Test and the
+    Rust Design Bar, so leads/architects weigh it in the pre-code verdict.
+  - **`rust-builder`** no longer reads "no out-of-task renames" as "don't improve names" — naming
+    what you write/touch is part of the job, enforced by review rather than process.
+  - **`/refactor`** Phase 2 now treats intent-hiding names as a first-class target independent of
+    clippy, so "make this self-documenting" actually reaches the plan.
+- **Eval fixture `naming/self-documenting`** (`/eval-agents naming`) — compiles clean and
+  clippy-green but hides intent in 9 ways; guards that `rust-reviewer` returns **REDO-TO-BAR**
+  instead of waving it through. Verified: 9/9 recall, correct reject verdict.
+
 ## [0.11.1] - 2026-06-16
 
 ### Added
