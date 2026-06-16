@@ -16,7 +16,7 @@ list of every installed skill is generated below it.
 
 **Onboarding:** `/start` · `/help` · `/detect-stack` · `/adopt`
 **Design & architecture:** `/brainstorm` · `/design-api` · `/architecture` · `/adr` · `/model-domain`
-**Build:** `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build`
+**Build:** `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 **Spec-driven:** `/spec` · `/spec-tasks` · `/spec-verify`
 **TDD & verify:** `/tdd` · `/verify-loop`
 **Debug:** `/debug` (root-cause runtime bugs) · `/fix-build` (compile errors) · `/flaky-hunt` (flaky tests)

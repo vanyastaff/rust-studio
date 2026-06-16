@@ -25,6 +25,19 @@ Applies to async service code (handlers, routes, servers, services).
   silently. Return the `Result` from the task and propagate at the join site:
   `let res = handle.await.expect("task panicked")?;`.
 
+## No hangs (bounded time, no deadlock)
+- **Bound every wait.** Wrap outbound `.await`s in `tokio::time::timeout`; never an unbounded await
+  on I/O or a lock. A `sleep`/retry/backoff with a large literal `Duration` is a latent hang — bound
+  it and scrutinize any `from_secs` over a few seconds.
+- **Inject the clock.** `SystemTime::now()` / `Instant::now()` in library logic is non-deterministic
+  and untestable — take `now` (or a clock provider) as an argument; read the wall clock only at the edge.
+- **Deadlock discipline.** Acquire multiple locks in one documented global order; never hold a lock
+  across `.await`; prefer message-passing / a single owner over shared `Arc<Mutex<_>>`. Cover
+  lock-free or ordering-sensitive code with `loom`.
+- Enforced **mechanically**, not on trust: clippy bans `SystemTime::now`/`Instant::now`/`thread::sleep`,
+  and `nextest`'s `terminate-after` turns a deadlock/huge-sleep test into a fast failure instead of a
+  hung CI job. Run **`/ci-gate`** to install/audit it (`${CLAUDE_PLUGIN_ROOT}/docs/templates/`).
+
 ## Async teardown & RAII
 - `Drop` cannot `.await`. Never attempt async cleanup in a destructor. Provide an explicit
   `pub async fn close(self) -> Result<()>` that flushes/finalizes, and let `Drop` be

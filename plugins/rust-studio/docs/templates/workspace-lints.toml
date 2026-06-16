@@ -1,0 +1,27 @@
+# Paste into the workspace root Cargo.toml. These lint LEVELS make the gate self-protecting:
+# - allow_attributes_without_reason = "deny" → an agent can't SILENTLY `#[allow(...)]` a lint to
+#   pass; every allow must carry `, reason = ".."`, which the reviewer then judges (verified: clippy
+#   errors `allow attribute without specifying a reason`).
+# - disallowed_methods/types = "deny" → the clippy.toml bans (SystemTime::now, thread::sleep, …) bite.
+#
+# A per-member crate that defines its OWN [lints] table REPLACES (does not merge) this one — that is
+# a silent way to re-open a deny. check-gate.sh and rust-reviewer flag it; keep `lints.workspace = true`
+# in every member crate.
+
+[workspace.lints.rust]
+unsafe_code = "forbid"            # drop to "deny" (then re-allow per-module) if you genuinely need unsafe
+
+[workspace.lints.clippy]
+# --- gate self-protection ---
+allow_attributes_without_reason = "deny"   # no silent #[allow]; a reason is mandatory
+allow_attributes = "warn"                  # prefer #[expect] over #[allow] where it fits
+# --- the anti-hang / nondeterminism bans (list lives in clippy.toml) ---
+disallowed_methods = "deny"
+disallowed_types = "deny"
+# --- recurring footguns ---
+unwrap_used = "deny"
+expect_used = "deny"
+
+# Then, in EVERY member crate's Cargo.toml:
+# [lints]
+# workspace = true

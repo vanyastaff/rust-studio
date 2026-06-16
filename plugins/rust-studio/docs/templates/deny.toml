@@ -1,0 +1,42 @@
+# deny.toml — cargo-deny supply-chain + license + dependency-hygiene policy (modern 0.16+ schema).
+# WARNING: most blog snippets AND older `cargo deny init` output are PRE-0.14 and use REMOVED keys
+# (vulnerability / copyleft / allow-osi-fsf-free / unlicensed / default) that now HARD-ERROR. This
+# uses only current keys. Run: `cargo deny check` (or `check advisories bans licenses sources`).
+
+[graph]
+all-features = true
+
+[advisories]
+# Vulnerability advisories are ALWAYS errors now (no `vulnerability` key). Tune the rest:
+unmaintained = "workspace"     # all | workspace | transitive | none
+unsound = "all"
+yanked = "deny"
+ignore = []                    # e.g. ["RUSTSEC-2024-0001"] — always with a comment justifying it
+
+[licenses]
+# Deny-by-default: only these SPDX ids pass. Add what your dependency tree actually needs.
+allow = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "MIT",
+  "ISC",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "Unicode-3.0",
+  "Zlib",
+]
+confidence-threshold = 0.93
+exceptions = []                # [{ allow = ["MPL-2.0"], crate = "webpki-roots" }]
+
+[bans]
+multiple-versions = "warn"     # start at "warn"; dedupe with skip/skip-tree, then tighten to "deny"
+wildcards = "deny"             # no `crate = "*"` version reqs
+deny = []                      # [{ crate = "openssl", use-instead = "rustls" }]
+skip = []                      # silence a specific duplicate version
+skip-tree = []                 # silence a whole subtree's duplicates
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

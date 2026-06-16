@@ -93,7 +93,10 @@ test is a behavior decision — surface it, don't flip it silently.
 - A non-trivial change earns a **pre-code shape verdict** and a **pre-merge review**; skipping the
   disciplined path *to go faster* is the quick-win this studio rejects. Green is the floor.
 - `#[allow(...)]` needs a one-line justification; never re-open a workspace `forbid`/`deny` by
-  redefining a crate `[lints]` table (it **replaces**, not merges, the workspace table).
+  redefining a crate `[lints]` table (it **replaces**, not merges, the workspace table). Likewise
+  never weaken the gate config — editing `clippy.toml`/`nextest.toml`/CI/lefthook to drop a check or
+  raise a timeout so failing code passes is gate-disabling; fix the call site (`/ci-gate` installs a
+  self-protecting version).
 See `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
 
 ## Definition of done (observability ships in the same pass)
