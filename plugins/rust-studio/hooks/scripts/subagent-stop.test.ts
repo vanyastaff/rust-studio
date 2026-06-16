@@ -23,11 +23,22 @@ function asstLine(text: string): string {
     message: { role: "assistant", content: [{ type: "text", text }] },
   });
 }
-/** One JSONL line for a user / tool message (never carries the verdict). */
+/** One JSONL line for a human prompt (role=user, content is plain text). */
 function userLine(text: string): string {
   return JSON.stringify({
     type: "user",
     message: { role: "user", content: [{ type: "text", text }] },
+  });
+}
+/** One JSONL line for a tool_result (role=user, content is tool_result list).
+ *  These are internal turn boundaries between tool-call round-trips, NOT human prompts. */
+function toolResultLine(content = "ok"): string {
+  return JSON.stringify({
+    type: "user",
+    message: {
+      role: "user",
+      content: [{ type: "tool_result", tool_use_id: "t1", content }],
+    },
   });
 }
 
@@ -112,11 +123,57 @@ describe("verdictPresent — over a JSONL transcript", () => {
   });
 
   test("a stray verdict word far back does not count once newer messages exist", () => {
+    // The stale BLOCKED appears before the human prompt that starts the actual task.
+    // verdictPresent stops at the human-prompt boundary and only sees text after it.
     const raw = [
       asstLine("Earlier the build was BLOCKED, then I unblocked it."),
+      userLine("Now finish the task."),             // human prompt — hard stop
       asstLine("More work..."),
+      toolResultLine(),
       asstLine("Another step..."),
+      toolResultLine(),
       asstLine("Final summary, with no verdict token at all."),
+    ].join("\n");
+    expect(verdictPresent(raw)).toBe(false);
+  });
+
+  test("REGRESSION: verdict in an earlier text block of the final work block is found", () => {
+    // A single agent response produces multiple JSONL text-block entries (one per
+    // content block). The verdict may appear in an earlier block (e.g., the summary)
+    // while a later block (e.g., a trailing snippet) contains no verdict token.
+    // All text since the last human prompt must be checked together.
+    const raw = [
+      userLine("Implement the fix."),
+      asstLine("## Summary\n\nCOMPLETE\n\nFiles changed: subagent-stop.ts"),
+      toolResultLine(),                            // internal tool round-trip (pass-through)
+      asstLine("Tests: 26/26 pass, 0 fail."),     // no verdict in THIS block
+    ].join("\n");
+    expect(verdictPresent(raw)).toBe(true);
+  });
+
+  test("REGRESSION: verdict is found even when next response is already streaming", () => {
+    // SubagentStop fires while the next response is already being streamed into the
+    // transcript. The in-progress text has no verdict yet; the verdict lives in the
+    // earlier work block. tool_result entries between them are pass-throughs; only
+    // a human-prompt entry (userLine) is a hard stop.
+    const raw = [
+      userLine("Gate this."),
+      asstLine("Analysis complete. COMPLETE"),     // has verdict
+      toolResultLine(),                            // internal boundary — pass-through
+      asstLine("The hook is still firing..."),     // in-progress next response, no verdict yet
+    ].join("\n");
+    expect(verdictPresent(raw)).toBe(true);
+  });
+
+  test("stale verdict before the human prompt that starts the task does not count", () => {
+    // A verdict from a prior conversation (before the task-starting human prompt)
+    // must not satisfy the check. The human-prompt boundary is the hard cutoff.
+    const raw = [
+      asstLine("Prior work: COMPLETE"),            // before the human prompt — excluded
+      userLine("Now do this new task."),           // human prompt — hard stop
+      asstLine("Working on it..."),
+      toolResultLine(),
+      asstLine("Final summary, no verdict."),
     ].join("\n");
     expect(verdictPresent(raw)).toBe(false);
   });
