@@ -141,9 +141,11 @@ hard timeout with a watchdog, so it can never freeze the session (even mid-subag
 
   Truecolor Tokyo Night theme, fast cached git, and smart-hiding of empty segments; the context
   segment is colored by threshold; `▸ <phase>` / `✓ <tasks>` track the active orchestration via
-  `.rust-studio/progress.json`. Needs a Nerd Font for icons/arrows — fallbacks via env:
-  `RUST_STUDIO_STATUSLINE_NERDFONT=0` (text labels), `RUST_STUDIO_STATUSLINE_POWERLINE=0`
-  (middot separators + rounded caps), `RUST_STUDIO_STATUSLINE_ASCII=1`, `NO_COLOR`.
+  `.rust-studio/progress.json`. Icons are **emoji by default** (no special font needed); the
+  powerline arrows + git branch glyph need a powerline-patched font. Env:
+  `RUST_STUDIO_STATUSLINE_NERDFONT=1` (sleek FontAwesome icons, needs a Nerd Font) or `=0` (text
+  labels) · `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot + rounded caps) ·
+  `RUST_STUDIO_STATUSLINE_ASCII=1` · `NO_COLOR`.
   Manage with **`/progress-bar`** — refresh after a plugin update, or `/progress-bar off` to remove.
   Set the `statusline` config off to skip the auto-install entirely.
 

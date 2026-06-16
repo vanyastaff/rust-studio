@@ -17,8 +17,19 @@ import { readFileSync, writeFileSync, statSync, existsSync } from "node:fs";
 // ---------------- capabilities (env) ----------------
 const noColor = () => !!process.env.NO_COLOR;
 const ASCII = process.env.RUST_STUDIO_STATUSLINE_ASCII === "1";
-const NERD = !ASCII && process.env.RUST_STUDIO_STATUSLINE_NERDFONT !== "0";
-const POWERLINE = () => NERD && !noColor() && process.env.RUST_STUDIO_STATUSLINE_POWERLINE !== "0";
+// Powerline-range glyphs (arrows E0B0/E0B1, branch E0A0) ship in powerline-patched fonts — far
+// more common than a full Nerd Font. Decorative icons default to EMOJI (render without any special
+// font), with opt-in Nerd Font (FontAwesome F0xx) via RUST_STUDIO_STATUSLINE_NERDFONT=1, or text
+// labels via =0.
+const PLGLYPH = !ASCII;
+const ICON_MODE: "emoji" | "nerd" | "off" = ASCII
+  ? "off"
+  : process.env.RUST_STUDIO_STATUSLINE_NERDFONT === "0"
+    ? "off"
+    : process.env.RUST_STUDIO_STATUSLINE_NERDFONT === "1"
+      ? "nerd"
+      : "emoji";
+const POWERLINE = () => PLGLYPH && !noColor() && process.env.RUST_STUDIO_STATUSLINE_POWERLINE !== "0";
 
 // ---------------- Tokyo Night palette (truecolor) ----------------
 type RGB = [number, number, number];
@@ -58,12 +69,16 @@ const G = {
   topL: ASCII ? "+-" : "╭─", // ╭─
   botL: ASCII ? "+-" : "╰─", // ╰─
 };
+const EMOJI = { folder: "📁 ", ctx: "📊 ", cache: "💾 ", clock: "🕐 " };
+const NF = { folder: "\u{F07B} ", ctx: "\u{F0E4} ", cache: "\u{F1C0} ", clock: "\u{F017} " };
+const pick = (k: "folder" | "ctx" | "cache" | "clock", textLabel: string) =>
+  ICON_MODE === "emoji" ? EMOJI[k] : ICON_MODE === "nerd" ? NF[k] : textLabel;
 const I = {
-  folder: NERD ? "\u{F07B} " : "",
-  branch: NERD ? "\u{E0A0} " : "",
-  ctx: NERD ? "\u{F0E4} " : "ctx ",
-  clock: NERD ? "\u{F017} " : "",
-  cache: NERD ? "\u{F1C0} " : "cache ",
+  folder: pick("folder", ""),
+  branch: PLGLYPH ? "\u{E0A0} " : "", // powerline branch glyph (renders wherever the arrows do)
+  ctx: pick("ctx", "ctx "),
+  clock: pick("clock", ""),
+  cache: pick("cache", "cache "),
 };
 const SEP_PLAIN = ASCII ? " | " : " · "; // ·
 
@@ -173,9 +188,9 @@ function segs1(session: any, git: GitInfo, lspInRust: boolean, lspOk: boolean): 
   const proj = projectName(session?.workspace?.project_dir || session?.workspace?.current_dir || session?.cwd || "");
   if (proj) out.push({ text: `${I.folder}${proj}`, fg: TN.fg, bg: TN.bg2 });
   const gt = gitText(git);
-  if (gt) out.push({ text: `${I.branch}${gt}`, fg: TN.bg, bg: git.dirty ? TN.yellow : TN.green });
+  if (gt) out.push({ text: `${I.branch}${gt}`, fg: git.dirty ? TN.yellow : TN.green, bg: TN.bg2 });
   const model = stripModel(session?.model?.display_name || session?.model?.id || "");
-  if (model) out.push({ text: model, fg: TN.bg, bg: TN.magenta });
+  if (model) out.push({ text: model, fg: TN.magenta, bg: TN.bg2 });
   const effort = effortLabel(session?.effort?.level);
   if (effort) out.push({ text: effort, fg: TN.orange, bg: TN.bg2 });
   if (lspInRust) out.push({ text: `lsp ${lspOk ? G.ok : G.no}`, fg: lspOk ? TN.green : TN.red, bg: TN.bg2 });
@@ -198,8 +213,8 @@ function segs2(session: any, progress: Progress | null): Seg[] {
     const pb = progress.step ? phaseBar(progress.step) : "";
     out.push({
       text: `${G.phase} ${progress.phase}` + (pb ? ` ${pb}` : "") + (progress.step ? ` ${progress.step}` : ""),
-      fg: TN.bg,
-      bg: TN.blue,
+      fg: TN.blue,
+      bg: TN.bg2,
     });
   }
   if (progress?.tasks) out.push({ text: `${G.ok} ${progress.tasks}`, fg: TN.green, bg: TN.bg2 });
