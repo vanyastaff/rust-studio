@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Turn a single Claude Code session into a full Rust engineering studio. Tiered agent team (architect -> leads -> specialists), path-scoped Rust standards, quality gates, and cargo-aware hooks across libraries, async/web services, CLIs, and systems/embedded code.",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "author": {
     "name": "vanya"
   },
@@ -58,6 +58,12 @@
       "type": "boolean",
       "title": "Auto-capture learnings",
       "description": "When a turn finishes a real unit of work (a completion summary + uncommitted changes) but nothing was saved to memory, block the stop ONCE and nudge the agent to /remember any non-obvious, durable learning. The agent does the judging and writing (a hook has no MCP access). Nudges at most once per turn and never re-blocks (stop_hook_active breaks the loop), so it is far gentler than stop_guard. Turn off to keep memory capture purely manual.",
+      "default": true
+    },
+    "statusline": {
+      "type": "boolean",
+      "title": "Auto-install status line",
+      "description": "On the first session, install the rich studio status line into ~/.claude/settings.json (a plugin cannot ship a top-level statusLine itself). It is installed ONCE, never clobbers an existing statusLine, and backs settings up first. Turn off to skip auto-install; manage or remove anytime with /progress-bar.",
       "default": true
     },
     "progress_tracking": {

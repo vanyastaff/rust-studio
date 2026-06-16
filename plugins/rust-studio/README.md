@@ -129,11 +129,21 @@ hard timeout with a watchdog, so it can never freeze the session (even mid-subag
 - **Per-sub-agent rows (automatic).** The plugin ships a `subagentStatusLine`, so each sub-agent
   in the agent panel below the prompt shows `● <type>: <description> · <elapsed> · <tokens>`
   (✓ done, ✗ error) instead of a bare name + token count. Renders in the Desktop app too. No setup.
-- **Main bar (opt-in).** Run **`/progress-bar`** to wire a `statusLine` into your
-  `~/.claude/settings.json`: `🦀 rust-studio · <project> · ▸ <phase> · <model> · ctx %`. The
-  `▸ <phase>` segment tracks the live orchestration phase (`/dev-task`, `team-*`, …). A plugin
-  can't ship a top-level `statusLine`, so this edits your settings — re-run after a plugin update;
-  `/progress-bar off` removes it.
+- **Main bar (on by default).** Installed automatically into your `~/.claude/settings.json` on the
+  first session (the `statusline` config; it never clobbers an existing `statusLine` and backs the
+  file up). A plugin can't ship a top-level `statusLine`, hence the one-time auto-install. A two-line
+  rounded bar:
+
+  ```
+  ╭─ 🦀 rust-studio · <project> · <branch ●dirty ↑ahead ↓behind> · <model> · think:<effort> · lsp ✓
+  ╰─ ctx <bar> % · cache % · ▸ <phase> <bar> n/total · ✓ <tasks> · 5h/7d · <dur> · +A −R
+  ```
+
+  Truecolor gradient (→256→ASCII), fast cached git, and smart-hiding of empty segments; the
+  `▸ <phase>` / `✓ <tasks>` segments track the active orchestration via `.rust-studio/progress.json`.
+  Env toggles: `RUST_STUDIO_STATUSLINE_ASCII=1`, `RUST_STUDIO_STATUSLINE_POWERLINE=1`, `NO_COLOR`.
+  Manage with **`/progress-bar`** — refresh after a plugin update, or `/progress-bar off` to remove.
+  Set the `statusline` config off to skip the auto-install entirely.
 
 ## Configuration
 

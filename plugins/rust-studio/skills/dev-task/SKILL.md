@@ -39,9 +39,10 @@ until the end. When `progress_tracking` is on (`${user_config.progress_tracking}
    not one final dump.
 4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
 5. (Optional status bar) If the user ran `/progress-bar`, also mirror the phase to the studio
-   status line: `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" set "<phase>" "<n/total>"` at each
-   boundary, and `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" clear` at the end. It is a
-   harmless no-op if they never enabled the status line.
+   status line at each boundary:
+   `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" set --phase "<phase>" --step "<n/total>" [--tasks "<done/total>"]`,
+   and `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" clear` at the end. Harmless no-op if they
+   never enabled the status line.
 When off, run the phases without the task-list narration.
 
 ## Input
