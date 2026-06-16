@@ -18,7 +18,7 @@ claude plugin marketplace add vanyastaff/rust-studio
 ```
 
 Claude Code clones the repo, so the relative `./plugins/rust-studio` source resolves correctly.
-Pin to a tag with `@ref`, e.g. `vanyastaff/rust-studio@rust-studio--v0.6.0`.
+Pin to a tag with `@ref`, e.g. `vanyastaff/rust-studio@rust-studio--v0.7.0`.
 
 ### From a local clone (no GitHub needed)
 
@@ -123,7 +123,9 @@ for other platforms.
 
 On enable, Claude Code prompts for the studio's options: behavioral defaults (preferred test
 runner, gate intensity, house MSRV fallback) and toggles for ambient behaviors (`memory_recall`,
-`routing_nudge`, `fmt_nudge` — all on by default — plus an Obsidian `vault_path`). Change them
+`routing_nudge`, `fmt_nudge` — all on by default — plus an Obsidian `vault_path`). There's also an
+opt-in **`stop_guard`** (+ `stop_guard_strict`) that mechanically blocks an undisciplined turn
+ending (ownership-dodging, test avoidance, "done" without evidence) — off by default. Change them
 later via `/plugin` → **Rust Code Studio** → configure. The plugin also ships an opt-in
 `Rust review (terse)` output style — select it under `/config` → Output style. Full table:
 [`plugins/rust-studio/README.md`](plugins/rust-studio/README.md#configuration).

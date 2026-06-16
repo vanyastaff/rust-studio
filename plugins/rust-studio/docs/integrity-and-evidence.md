@@ -75,6 +75,9 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
   vacuous test, hidden denominator, skipped gate.
 - **`/dev-task`, `/tdd`, `/verify-loop`, `/spec-verify`, `/coverage`** — carry the evidence rules
   and refuse to report a green they did not earn.
+- **the `stop-guard` hook (opt-in)** — the mechanical teeth: when `stop_guard` is enabled it blocks
+  a turn from ending (exit 2 → feedback to the model) when the final message dodges ownership, seeks
+  permission, avoids tests, leaves stubs, or claims done without evidence. Off by default; fails open.
 
 ## Kept Honest By Eval Fixtures
 

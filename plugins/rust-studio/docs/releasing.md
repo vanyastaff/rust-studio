@@ -48,7 +48,7 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
 - They added the marketplace via `vanyastaff/rust-studio` (GitHub) or a local path.
 - On `claude plugin update rust-studio@vanya` (or background auto-update) Claude Code compares the
   resolved version; a bumped `plugin.json` `version` is a new version, so the cache refreshes.
-- To pin, users add the marketplace at a tag: `/plugin marketplace add vanyastaff/rust-studio@rust-studio--v0.6.0`.
+- To pin, users add the marketplace at a tag: `/plugin marketplace add vanyastaff/rust-studio@rust-studio--v0.7.0`.
 
 ## Component inventory before publishing
 
