@@ -11,6 +11,17 @@ Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertio
 (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §7). You are the orchestrator:
 **delegate writes (the verify report) to `rust-builder`**; do not write files directly.
 
+## Progress visibility
+The user follows the **task list** to know where things stand — keep it live, do not go silent
+until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on):
+1. At the start, `TaskCreate` one task per step below so the whole verification is visible up front.
+2. `TaskUpdate` each task to `in_progress` before you start it.
+3. The moment a step produces its result (a criterion's evidence, a gate's pass/fail), surface it
+   in one line and `TaskUpdate` the task to `completed` — **before** the next step. The user sees
+   intermediate results, not a final dump.
+4. Keep steps the user is waiting on in the **foreground** — a backgrounded step reads as a hang.
+When off, run the steps without the task-list narration.
+
 ## Steps
 1. Read the spec's **acceptance criteria** (`$ARGUMENTS` = slug or path).
 2. For each criterion, find and run the evidence:

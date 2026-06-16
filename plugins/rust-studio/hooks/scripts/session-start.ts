@@ -305,6 +305,7 @@ if (!manifestExists) {
 
   const testRunner = option("test_runner") || "nextest";
   const gates = option("gate_intensity") || "full";
+  const progress = optionBool("progress_tracking", true) ? "on" : "off";
 
   const lines = [
     "## Rust Code Studio active",
@@ -320,7 +321,7 @@ if (!manifestExists) {
       "ripple; observability ships in the same pass. See docs/working-preferences.md.",
     "**Team:** directors (chief-architect, product-steward) → leads → specialists. " +
       "Path-scoped Rust standards are injected automatically when you edit matching files.",
-    `**Studio config:** gates **${gates}** · tests **${testRunner}**` +
+    `**Studio config:** gates **${gates}** · tests **${testRunner}** · progress **${progress}**` +
       (msrvDefault ? ` · MSRV-default **${msrvDefault}**` : "") +
       " (change via `/plugin` → Rust Code Studio → configure). " +
       "rust-analyzer LSP is bundled — diagnostics surface after each edit when the binary is on PATH.",

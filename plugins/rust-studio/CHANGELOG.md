@@ -5,6 +5,18 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-06-15
+
+### Added
+
+- **Progress visibility (`progress_tracking`, on by default).** Orchestrating skills —
+  `/dev-task`, `/team-api`, `/team-async`, `/team-perf`, `/team-release`, `/refactor`, and
+  `/spec-verify` — now keep a **live task list** (one task per phase) and surface each phase's
+  result as it completes, in both team and single-orchestrator mode. You follow
+  scout → plan → build → review on the task list instead of waiting in silence until the end —
+  intermediate results, not one final dump. Reads in skills via `${user_config.progress_tracking}`
+  and is shown in the SessionStart briefing (`Studio config: … · progress on`).
+
 ## [0.6.0] - 2026-06-15
 
 ### Added

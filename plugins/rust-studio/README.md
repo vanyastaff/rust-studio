@@ -149,6 +149,7 @@ verdict check) is always on, and the whole plugin disables with `/plugin disable
 | **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
 | **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
 | **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit — capture stays manual (`/remember`, `/session-wrap`) and in-skill. |
+| **Progress visibility** (`progress_tracking`) | on | Orchestrating skills (`/dev-task`, `team-*`, `/refactor`, `/spec-verify`) stop keeping a live task list + per-phase result lines — phases run without the checklist narration. |
 
 > LSP and any bundled MCP servers can't be toggled with a flag (they're declared statically) —
 > remove `rust-analyzer` from PATH or disable the whole plugin to turn off the LSP.
