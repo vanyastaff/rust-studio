@@ -34,4 +34,8 @@ Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertio
 
 ## Output
 A criterion-by-criterion verdict with evidence, then **COMPLETE / NEEDS WORK / BLOCKED**.
-No green claim without the command output to back it.
+No green claim without the command output to back it. Prove each criterion against the spec's
+acceptance **text** (the oracle), not merely "a test I added passes". Report pass-rate with the
+**full denominator** — list skipped/ignored tests with a reason, never drop them from the count.
+A vacuous test, a weakened assertion, or a skipped gate is `NEEDS WORK`, not a pass
+(`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).

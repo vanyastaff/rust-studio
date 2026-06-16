@@ -35,6 +35,7 @@ Agent folder → agent mapping:
 | Folder | Agent | Mode |
 |--------|-------|------|
 | `reviewer` | `rust-reviewer` | defect-recall |
+| `integrity` | `rust-reviewer` | defect-recall |
 | `unsafe` | `unsafe-auditor` | defect-recall |
 | `security` | `security-auditor` | defect-recall |
 | `perf` | `perf-engineer` | defect-recall / first-pass bar |

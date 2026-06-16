@@ -99,6 +99,10 @@ Do **not** chase 100%. The goal is **meaningful coverage of behavior**:
 - Internal helpers: line coverage ≥ 70 % is a reasonable floor.
 - Below-floor modules warrant a comment in the gap list, not panic.
 - Celebrate closed error-path gaps more than closed trivial-getter gaps.
+- Coverage measures **execution, not correctness**: a line covered only by a vacuous test
+  (`is_ok()` with no value check, a tautology) is not tested — flag it, don't bank it as covered
+  behavior. Report the real denominator: `#[ignore]`-d / skipped tests don't inflate the number;
+  if cases are excluded, say so. Honesty bar: `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
 
 ## Error recovery
 

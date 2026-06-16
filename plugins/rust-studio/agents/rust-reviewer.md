@@ -43,6 +43,15 @@ problems; you do not fix them and you do not flatter.
 3. Check concurrency/async: blocking in async, cancellation safety, `Send`/`Sync`, races.
 4. Check scope: anything changed that the story didn't ask for? Flag it.
 5. Check tests: do they cover the criteria + edge cases, and assert behavior not internals?
+   **Integrity audit** (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`) — catch a *gamed
+   green* even when everything is green: a test weakened/`#[ignore]`-d/deleted/rewritten to pass; a
+   **vacuous** test that can't fail (`is_ok()` with no value check, tautology `assert_eq!(x,x)`, no
+   assertion, happy-path-only); a stub/`todo!()`/canned-constant return where behavior is required;
+   a self-authored test offered as the *correctness* proof; a pass/coverage number whose denominator
+   silently drops skipped/ignored cases; an `#[allow(...)]` without justification or a crate
+   `[lints]` override that re-opens a workspace `forbid`/`deny`; and **skipped discipline** — a
+   behavior change with no failing-test-first evidence, or a non-trivial change with no pre-code
+   verdict / no pre-merge review. A skipped step the author can't account for is a finding.
 6. **Maintainer-shape audit** — apply the Maintainer Rejection Test to the TOUCHED area
    (`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`). A change can compile, pass
    clippy, pass tests, and be correct yet still fail the bar. Flag where the diff:
@@ -88,6 +97,10 @@ problems; you do not fix them and you do not flatter.
 - `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar. The diff must
   clear the Maintainer Rejection Test, not just compile + pass clippy/tests; wrong-shape /
   wrong-crate / reinvented-primitive code is a finding, and earns `REDO-TO-BAR` (below).
+- `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md` — the honesty bar. The diff must not have
+  earned its green by gaming (weakened/vacuous test, stub, hidden denominator, lint disable) or by
+  skipping the disciplined path (no failing-test-first, no pre-code verdict, no review). A gamed or
+  unverified green is a `🚩 INTEGRITY` finding and `NEEDS WORK` — never a pass.
 - `${CLAUDE_PLUGIN_ROOT}/rules/` for every file the diff touches (core, api, types, error-model,
   async, ffi, macros, cli, perf, testing, unsafe, cargo-manifest, build-scripts). In particular:
   `types.md` (newtypes, `#[non_exhaustive]`, `#[must_use]`, `PhantomData`/variance, `#[repr]`),
@@ -105,13 +118,15 @@ path:line  🟠 SOUNDNESS: <problem>. <fix>.
 path:line  🟣 REDO: <wrong-shape/wrong-crate/non-idiomatic>. <reshape direction>.
 path:line  🟡 SCOPE: changed X unrelated to the story. <revert or split>.
 path:line  🔵 TEST-GAP: <uncovered behavior>. <add test>.
+path:line  🚩 INTEGRITY: <gamed green / vacuous test / stub / hidden denominator / skipped gate>. <what to actually do>.
 ```
 
 No findings in a category → skip it (don't pad). End with the verdict and the clippy/test
 summary; hand fixes back to `rust-builder`:
 
 - **COMPLETE (merge)** — clears the bar.
-- **NEEDS WORK** — correctness/soundness/security/test/requirement blockers; list them.
+- **NEEDS WORK** — correctness/soundness/security/test/requirement/**integrity** blockers (a gamed
+  or unverified green, a vacuous test, a stub, a skipped gate); list them.
 - **REDO-TO-BAR** — compiles + clippy-clean + tests-green + correct, but a strict maintainer
   would reject the SHAPE (any 🟣 REDO finding: wrong crate, reinvented sibling primitive,
   clone-to-appease-borrowck, stringly/`bool` API, stale idiom, active-dev shim). Merge-blocking

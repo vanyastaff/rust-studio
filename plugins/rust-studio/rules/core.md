@@ -80,6 +80,22 @@ Applies to every `.rs` file.
   only the `(ptr,len,cap)` header. Use `smallvec`/`arrayvec` when inline-size matters.
 - Complexity comments state **average AND worst case** (+ a bounding note when N is bounded).
 
+## Integrity & discipline (not optional)
+The goal is correct behavior, not a green checkmark. Make the code satisfy the test — **never**
+weaken, `#[ignore]`, delete, or rewrite a test (or its assertion) to go green; a genuinely wrong
+test is a behavior decision — surface it, don't flip it silently.
+- A **behavior** change rides on a test that **failed before the fix** (red→green). A test that
+  can't fail (asserts `is_ok()` not the value, a tautology, happy-path-only, no assertion) doesn't count.
+- A self-authored test proves *no regression*, not *correctness* — correctness is vs the acceptance
+  criteria / an oracle / a property law. Report pass-rate & coverage with the **full denominator**;
+  name what's skipped/ignored and why — never silently drop it from the count.
+- No stub / `todo!()` / canned-constant return / phase-marker where real behavior is required.
+- A non-trivial change earns a **pre-code shape verdict** and a **pre-merge review**; skipping the
+  disciplined path *to go faster* is the quick-win this studio rejects. Green is the floor.
+- `#[allow(...)]` needs a one-line justification; never re-open a workspace `forbid`/`deny` by
+  redefining a crate `[lints]` table (it **replaces**, not merges, the workspace table).
+See `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
+
 ## Definition of done (observability ships in the same pass)
 A change that adds/modifies a state, error variant, hot path, or cross-crate call ships its
 observability now, not as a follow-up: a typed error variant (`#[source]` chains, not `String`),

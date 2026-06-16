@@ -66,7 +66,9 @@ Any non-trivial task must also apply the pre-code maintainer standard in
 9. Task owned by **`rust-builder`** with the approved plan and the maintainer-grade verdict
    (pass them in the spawn prompt —
    teammates don't inherit it). Instruct it to:
-   - work test-driven where practical (failing test → implement → refactor),
+   - for any **behavior** change, write the test FIRST and show it **failed before the fix**
+     (red→green) — this evidence is required, not "where practical"; the test must be able to fail
+     (assert the value/effect, not `is_ok()` or a tautology),
    - implement the smallest correct architecture-compatible change, not the smallest textual
      diff,
    - reshape touched code when the approved plan requires it; no compatibility shims or
@@ -88,6 +90,10 @@ Any non-trivial task must also apply the pre-code maintainer standard in
 13. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything
     left out of scope. Every teammate's contribution ends in **COMPLETE / NEEDS WORK /
     BLOCKED** with evidence. End with **COMPLETE / NEEDS WORK / BLOCKED**.
+    A `COMPLETE` verdict **requires** the Phase 5 review verdict and the failing-test-first
+    evidence; if any disciplined step (pre-code verdict, red test, review) was skipped, say which
+    and why — an unaccounted skip is `NEEDS WORK`, not `COMPLETE`. Honesty bar:
+    `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
 14. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound. If running as a team,
     drive cleanup: `SendMessage {type:"shutdown_request"}` to each teammate, then `TeamDelete`.
