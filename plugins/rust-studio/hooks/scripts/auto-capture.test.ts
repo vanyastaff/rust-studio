@@ -7,6 +7,7 @@ import {
   capturedSignal,
   lastBlockRaw,
   buildCaptureFeedback,
+  asText,
   type CaptureSignals,
 } from "./auto-capture.ts";
 
@@ -108,5 +109,27 @@ describe("buildCaptureFeedback", () => {
     const fb = buildCaptureFeedback();
     expect(fb).toContain("/remember");
     expect(fb.toLowerCase()).toContain("durable");
+  });
+});
+
+describe("asText (last_assistant_message normalization)", () => {
+  test("a plain string passes through", () => {
+    expect(asText("Result: COMPLETE")).toBe("Result: COMPLETE");
+  });
+
+  test("a content-block array joins its text blocks, skipping non-text", () => {
+    expect(
+      asText([{ type: "text", text: "line a" }, { type: "tool_use", name: "X" }, { type: "text", text: "line b" }]),
+    ).toBe("line a\nline b");
+  });
+
+  test("a single block object with text", () => {
+    expect(asText({ text: "hello" })).toBe("hello");
+  });
+
+  test("nullish or unrecognized shapes → empty string (falls back to transcript)", () => {
+    expect(asText(undefined)).toBe("");
+    expect(asText(null)).toBe("");
+    expect(asText(42)).toBe("");
   });
 });

@@ -201,6 +201,9 @@ export function verdictPresent(raw: string): boolean {
 interface Input {
   agent_type?: string;
   transcript_path?: string;
+  /** The sub-agent's OWN transcript path (Claude Code ≥ 2.0.42). Preferred over
+   *  resolving it from the parent session's `subagents/` directory. */
+  agent_transcript_path?: string;
 }
 
 if (import.meta.main) {
@@ -240,12 +243,16 @@ if (import.meta.main) {
   let verdictSeen = false;
   let couldRead = false;
   try {
-    if (data.transcript_path) {
-      // The `transcript_path` Claude Code passes to SubagentStop is the PARENT
-      // session's JSONL, not the sub-agent's own transcript. Resolve the sub-agent's
-      // own transcript from the `subagents/` sibling directory first.
-      const subagentPath = resolveSubagentTranscript(data.transcript_path);
-      const pathToRead = subagentPath ?? data.transcript_path;
+    // Prefer the sub-agent's OWN transcript when Claude Code provides it directly
+    // (`agent_transcript_path`, ≥ 2.0.42). Older versions only pass the PARENT
+    // session's `transcript_path`, so fall back to resolving the sub-agent's own
+    // transcript from the `subagents/` sibling directory, then the parent itself.
+    const pathToRead =
+      data.agent_transcript_path ??
+      (data.transcript_path
+        ? resolveSubagentTranscript(data.transcript_path) ?? data.transcript_path
+        : null);
+    if (pathToRead) {
       const raw = readFileSync(pathToRead, "utf8");
       couldRead = true;
       verdictSeen = verdictPresent(raw);

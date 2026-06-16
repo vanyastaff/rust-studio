@@ -44,6 +44,24 @@ export function capturedSignal(blockRaw: string): boolean {
   return CAPTURE_SIGNAL.test(blockRaw);
 }
 
+/** Normalize the harness-provided `last_assistant_message` (string | content-block
+ *  array | block object) to plain text. Prefer this over re-parsing the transcript:
+ *  it is the authoritative final assistant text (Claude Code ≥ 2.1.47). */
+export function asText(m: unknown): string {
+  if (!m) return "";
+  if (typeof m === "string") return m;
+  if (Array.isArray(m)) {
+    return m
+      .map((p: any) => (typeof p === "string" ? p : typeof p?.text === "string" ? p.text : ""))
+      .filter(Boolean)
+      .join("\n");
+  }
+  const o = m as any;
+  if (typeof o.text === "string") return o.text;
+  if (typeof o.content === "string") return o.content;
+  return "";
+}
+
 /** Raw transcript lines since the last GENUINE human prompt. tool_result user entries
  *  are internal tool-call round-trips, not turn boundaries (mirrors subagent-stop's
  *  boundary handling), so the scan is scoped to exactly this turn's work block. */
@@ -105,6 +123,9 @@ interface Input {
   cwd?: string;
   stop_hook_active?: boolean;
   transcript_path?: string;
+  /** Authoritative final assistant text (Claude Code ≥ 2.1.47) — preferred over
+   *  parsing the transcript tail. */
+  last_assistant_message?: unknown;
 }
 
 function gitDirty(cwd: string): boolean {
@@ -157,7 +178,9 @@ if (import.meta.main) {
     }
   }
 
-  const lastText = lastAssistantFromTranscript(raw);
+  // Prefer the harness-provided final assistant text (≥ 2.1.47); fall back to the
+  // transcript tail. (raw is still read above — capturedSignal needs the work block.)
+  const lastText = asText(input.last_assistant_message) || lastAssistantFromTranscript(raw);
   if (!lastText.trim()) {
     disarm();
     process.exit(0); // nothing to judge — allow
