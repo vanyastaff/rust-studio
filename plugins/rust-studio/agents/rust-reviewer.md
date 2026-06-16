@@ -63,6 +63,11 @@ problems; you do not fix them and you do not flatter.
    - preserves a bad API with a shim, adapter, alias, or "migrate later" TODO in active-dev mode;
    - uses stringly/`bool`/unstructured `Option`/broad `Box<dyn Error>` where a domain type,
      enum, newtype, or typed error should encode intent;
+   - **names that don't document intent**: a non-throwaway binding/field/fn/type left as `x`,
+     `tmp`, `data`, `res`, `ret`, `mgr`, `req`, `cfg`, or a synonym-collision (`fetch`/`get`/`load`
+     for one concept), or a unit-ambiguous name (`timeout` not `timeout_secs`) where the touched
+     code could read itself (`core.md` *Naming*). Clippy is silent here, so the reviewer is the
+     gate — name the better identifier, don't just say "rename it";
    - clones, collects, boxes, or reaches for `Arc<Mutex<_>>` to appease the borrow checker
      without first checking whether borrowing, ownership, data layout, or API shape should change;
    - uses `async-trait`, trait objects, or dynamic dispatch without a concrete object-safety /

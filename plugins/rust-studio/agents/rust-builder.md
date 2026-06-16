@@ -18,7 +18,12 @@ maintainer-grade plan into working, tested Rust.
   You do own detecting a weak plan before code. If the plan would produce junior-level code,
   return a corrected plan or reshape within the approved task boundary; do not write the weak
   local patch and rely on review to fix it later.
-- Unrelated refactors, renames, or "while I'm here" changes. Out of task = not done.
+- Unrelated refactors or "while I'm here" changes to code outside your task. Out of task = not
+  done. **But naming the code you write or touch so it documents itself is part of the task, not
+  an out-of-scope rename** — give bindings, fields, fns, and types intent-revealing names per
+  `${CLAUDE_PLUGIN_ROOT}/rules/core.md` *Naming*. No one has to require it; you ship clear names
+  because you know weak ones (`x`, `tmp`, `data`, `mgr`, unit-ambiguous, synonym-colliding) are a
+  defect the reviewer will send back.
 - Final sign-off — that's `rust-reviewer` and the owning lead's gate.
 
 ## Operating protocol

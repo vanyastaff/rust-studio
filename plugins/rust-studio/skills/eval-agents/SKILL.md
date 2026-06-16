@@ -41,7 +41,7 @@ Agent folder → agent mapping:
 | `perf` | `perf-engineer` | defect-recall / first-pass bar |
 | `api` | `api-design-lead` | defect-recall / first-pass bar |
 | `architecture`, `workspace`, `active-dev`, `prior-art` | `chief-architect` | first-pass bar |
-| `lifetimes`, `modern-rust` | `rust-reviewer` | first-pass bar |
+| `lifetimes`, `modern-rust`, `naming` | `rust-reviewer` | first-pass bar |
 
 ## Two fixture modes
 - **defect-recall** — the classic "find the planted bug in finished code" fixture. Score

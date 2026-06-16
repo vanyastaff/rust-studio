@@ -97,6 +97,10 @@ before writing code if it has any of these problems:
   mode.
 - It relies on a stringly typed protocol, `bool` flags, unstructured `Option`, or broad
   `Box<dyn Error>` where a domain type, enum, newtype, or typed error should encode intent.
+- It leaves names that hide intent — `x`/`tmp`/`data`/`res`/`mgr`/`req`, unit-ambiguous
+  (`timeout` not `timeout_secs`), or synonym-colliding (`fetch`/`get`/`load` for one concept) —
+  where the touched code should document itself (see the Design Bar and `rules/core.md` *Naming*).
+  Good naming is a design decision made here, not a cleanup deferred to review.
 - It clones, collects, boxes, allocates, or uses `Arc<Mutex<_>>` to satisfy the borrow checker
   without checking whether borrowing, ownership, data layout, or API shape should change.
 - It uses `async-trait`, trait objects, dynamic dispatch, or type erasure without a concrete
@@ -113,6 +117,9 @@ For every touched API, prefer structural guarantees over caller discipline:
 - Encode invariants with newtypes, enums, typestate, sealed traits, private fields, smart
   constructors, and RAII guards.
 - Parse once into a stronger type instead of validating repeatedly downstream.
+- Name every public item so it documents its own intent — verb-phrase fns, noun types,
+  question-form `bool`s, unit/domain in the name (or a newtype that carries it). A surface a
+  reader can navigate by names alone needs fewer docs; treat naming as part of API shape.
 - Use standard traits (`From`, `TryFrom`, `AsRef`, `Borrow`, `IntoIterator`, `Extend`,
   `FromIterator`, `Display`, `Debug`) where they make integration idiomatic.
 - Prefer caller-controlled copying and borrowing. Return borrowed views, iterators, or
@@ -232,6 +239,9 @@ regress to junior behavior:
 - `active-dev/no-shim`: compatibility shim must be rejected when the workspace is unpublished.
 - `workspace/full-ripple`: cross-crate change must update every affected member.
 - `api/bool-and-stringly-types`: API must use domain types/newtypes/enums.
+- `naming/self-documenting`: agent must reject intent-hiding names (abbreviations,
+  unit-ambiguous fields, non-question bools, synonym-collisions, throwaway locals) that compile
+  clippy-clean — naming is a maintainer-bar concern clippy can't catch.
 - `lifetimes/clone-to-appease-borrowck`: agent must restructure ownership/borrows before
   adding clones.
 - `perf/hot-loop-allocation`: agent must identify and prove allocation-sensitive behavior.

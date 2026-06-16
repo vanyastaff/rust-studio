@@ -46,6 +46,28 @@ Applies to every `.rs` file.
 - `if let` guards in `match` arms do **not** count toward exhaustiveness — always pair a
   guarded arm with a non-guarded or wildcard arm covering the same case.
 
+## Naming (code documents itself)
+- A name states **intent**: what the value *is* or *means*, not its type or how it was made.
+  `elapsed_ms`, `retry_budget`, `parsed_header` — not `x`, `tmp`, `val`, `data`, `res`, `ret`,
+  `obj`, `the_thing`, `data2`. A reader who sees only the name should know what it holds.
+- This is **not optional polish**: clippy is silent on weak-but-valid names, so naming is a
+  first-class correctness-of-communication concern, judged by the maintainer bar — not "while
+  I'm here" churn. Choosing a clear name for code you write or touch is *part of the task*, never
+  scope creep.
+- Functions/methods read as verb phrases (`resolve_path`, `try_connect`); types/structs/enums as
+  nouns (`ConnectionPool`, `RetryPolicy`); `bool` getters/fields ask a question
+  (`is_ready`, `has_capacity`, `should_retry`) — not `flag`, `status`, `check`.
+- Encode the **unit/domain** in the name when ambiguity costs: `timeout` → `timeout_secs`,
+  `size` → `size_bytes`, `id` → `user_id`. A newtype (`Secs(u64)`, `UserId`) is even better — see
+  *Make illegal states unrepresentable* above; the type carries what the name otherwise must.
+- No domain-obscuring abbreviations: spell out `manager`, `request`, `configuration`, `message`,
+  `index` — not `mgr`, `req`, `cfg`, `msg`, `idx`. Established idioms stay (`ctx`, `len`, `i`/`j`
+  for tight loop counters, `tx`/`rx` for channel ends, `db`, `id`).
+- One concept, one word, across the whole surface: don't mix `fetch`/`get`/`load`/`retrieve` or
+  `user`/`account`/`customer` for the same thing. Rename to converge, don't add a synonym.
+- A name that needs a comment to explain *what it is* is the wrong name — fix the name, drop the
+  comment. Reserve comments for *why*, not *what*.
+
 ## Drop & raw pointers
 - Variables drop in **reverse** declaration order within a scope; struct/tuple/variant fields
   drop in **declaration** order; array/slice elements drop first-to-last. When a `Drop` impl or

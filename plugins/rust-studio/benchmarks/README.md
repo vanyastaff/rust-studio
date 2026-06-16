@@ -22,6 +22,7 @@ benchmarks/
 | `perf`      | `perf-engineer`     |
 | `api`       | `api-design-lead`   |
 | `architecture` | `chief-architect` |
+| `naming`    | `rust-reviewer`     |
 
 (Add more folders → agents as you grow it. The full mapping incl. first-pass-bar folders lives
 in the `/eval-agents` skill.)
