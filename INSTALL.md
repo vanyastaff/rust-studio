@@ -18,7 +18,7 @@ claude plugin marketplace add vanyastaff/rust-studio
 ```
 
 Claude Code clones the repo, so the relative `./plugins/rust-studio` source resolves correctly.
-Pin to a tag with `@ref`, e.g. `vanyastaff/rust-studio@rust-studio--v0.8.0`.
+Pin to a tag with `@ref`, e.g. `vanyastaff/rust-studio@rust-studio--v0.5.0`.
 
 ### From a local clone (no GitHub needed)
 
