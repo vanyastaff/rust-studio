@@ -5,6 +5,39 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-06-15
+
+### Added
+
+- **The main status line is now ON BY DEFAULT.** A SessionStart hook installs the rich `statusLine`
+  into `~/.claude/settings.json` once (the `statusline` config, default on) — a plugin cannot ship a
+  top-level `statusLine` itself. It **never clobbers an existing `statusLine`**, backs settings up
+  first, refuses to touch a malformed settings file, and is one-time (a marker prevents re-edits).
+  The studio "🦀 rust-studio" tag shows only in Rust projects; elsewhere the bar degrades to
+  project · git · model · ctx. Manage/remove with `/progress-bar`. (Per-sub-agent rows were already
+  on by default.)
+
+### Changed
+
+- **Rich main status line.** `/progress-bar`'s `statusLine` is now a two-line rounded bar with a
+  truecolor gradient (→256→16→none; `NO_COLOR` honored), ASCII / powerline env toggles
+  (`RUST_STUDIO_STATUSLINE_ASCII`, `RUST_STUDIO_STATUSLINE_POWERLINE`), and fast git cached ~5s:
+  ```
+  ╭─ 🦀 rust-studio · <project> · <branch ●dirty ↑ahead ↓behind> · <model> · think:<effort> · lsp ✓
+  ╰─ ctx <bar> % · cache % · ▸ <phase> <bar> n/total · ✓ <tasks> · 5h/7d · <dur> · +A −R
+  ```
+  The model's context suffix (`(1M context)` / `[1m]`) is stripped; prompt **cache-hit %** and
+  **reasoning effort** (`think:<level>`) are shown; empty/zero segments are smart-hidden. Inspired by
+  ccstatusline / claude-powerline / pi-lens.
+- `progress.ts` now takes flags — `set --phase <p> [--step n/total] [--tasks n/total] [--note ..]` —
+  and records a task count for the `✓ <tasks>` segment.
+
+### Notes
+
+- A pi-lens-style diagnostics segment (`●E ▲W` from cargo/clippy) was scoped and **deferred**: Rust
+  has no cheap incremental diagnostics CLI, so it needs a debounced PostToolUse check-runner writing
+  `.rust-studio/diag.json` — expensive on large projects. Layout presets were deferred too.
+
 ## [0.8.0] - 2026-06-15
 
 ### Added

@@ -1,16 +1,18 @@
 ---
 name: progress-bar
-description: "progress bar statusline live visibility — set up the optional studio status line so the bottom bar shows the live orchestration phase (scout → plan → build → review) plus model and context %. Per-sub-agent rows in the agent panel are already on automatically; this wires the main bar, which a plugin cannot ship itself."
+description: "progress bar statusline live visibility — manage the studio status line (the rich bottom bar: plugin · project · git · model · context · phase progress). It is auto-installed by default on first session; use this to refresh it after a plugin update, remove it (off), or re-install if you turned auto-install off."
 argument-hint: "[off — to remove it]"
 user-invocable: true
 ---
 
-# /progress-bar — wire the live status line
+# /progress-bar — manage the live status line
 
 The studio already customizes **per-sub-agent rows** in the agent panel automatically (shipped in
-the plugin `settings.json` as `subagentStatusLine`) — no setup needed. This skill wires the
-**main status bar** (`statusLine`), which a plugin may NOT ship, so it has to live in your own
-`~/.claude/settings.json`. Once set, the bottom bar shows:
+the plugin `settings.json` as `subagentStatusLine`), and the **main status bar** (`statusLine`) is
+**auto-installed into your `~/.claude/settings.json` on the first session** (the `statusline`
+config, default on; a plugin may not ship a top-level `statusLine` itself). Use this skill to
+**refresh** the installed script after a plugin update, **remove** it (`/progress-bar off`), or
+**(re)install** it if you turned auto-install off. Once set, the bottom bar shows:
 
 ```
 🦀 rust-studio  ·  <project>  ·  ▸ build 2/4  ·  Opus  ·  ctx 41%
