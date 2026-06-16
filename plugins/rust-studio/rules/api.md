@@ -12,10 +12,18 @@ Applies to crate roots (`lib.rs`), public surface modules, and anything re-expor
 - Everything `pub` is a contract. Default to `pub(crate)`; promote to `pub`
   deliberately. Re-export the intended surface from the crate root; keep module
   paths from leaking. Respect `unreachable_pub`.
+- Never re-export a whole crate or glob a module into your public surface
+  (`pub use other_crate;`, `pub use other::*;`): every current **and future** `pub` item in it
+  joins your contract with no one deciding to, and pins your semver to it. Name the items you
+  mean to export; `cargo public-api` surfaces the blowup. This matters most under a
+  single-public-crate facade, whose entire value is a curated surface.
 - For cross-crate growth, use `#[non_exhaustive]` on public enums (forces a `_` arm
   downstream) and on structs that may grow fields. For within-crate discipline only,
   a private marker field (`_priv: ()`) blocks outside record-literal/destructure
   without the `_` ceremony. `#[non_exhaustive]` has no effect inside the defining crate.
+  It is not free: the forced `_` arm suppresses exhaustiveness, so do **not** apply it to an
+  enum the workspace must handle completely (a state machine a sibling crate transitions) —
+  there you want the compiler to flag every unhandled variant.
 - Public structs that may grow fields: `#[non_exhaustive]` or constructor + getters
   (or a builder when there are many fields).
 - Seal traits you don't want implemented downstream (private supertrait pattern).

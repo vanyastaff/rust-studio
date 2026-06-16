@@ -14,6 +14,11 @@ Applies to crate roots, domain/API modules, module boundaries, and manifests.
 - Check sibling crates for an existing primitive before creating a new one.
 - The owning crate owns the invariant and the public contract. Consumers should not rebuild
   the same invariant with local validation.
+- A type that *describes* something (a definition, spec, schema, config) and a type that tracks
+  the *runtime state* of executing it (a progress / lifecycle state machine) are different
+  concepts with different owners. Keep run-time state out of the crate that only defines the
+  shape — a runtime state machine sitting in, or re-exported from, the definition/spec crate is
+  boundary erosion even when it compiles.
 
 ## Struct decomposition for independent borrowing
 - The borrow checker sees a struct's fields independently but cannot split a borrow across a
