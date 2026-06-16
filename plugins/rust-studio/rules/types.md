@@ -13,6 +13,11 @@ Applies to domain models, protocols, parsers, config, and error types.
   over bool flags, stringly protocols, unstructured `Option`, or caller discipline.
 - Parse once into a stronger type; downstream code should receive valid data, not repeat
   validation checks.
+- A witness / typestate proof (`Validated<T>`, a `*Checked` newtype with a private field) must
+  bind to *what* it proves. If it was checked against external state (a registry, schema version,
+  config), record that binding (version/epoch/snapshot) or scope its lifetime to that state —
+  otherwise the proof goes stale when the state drifts (TOCTOU) and the type asserts a fact that
+  is no longer true. "Structurally valid at some past instant" is not "valid now."
 - Builders are for genuinely complex construction or staged invariants, not as a reflex.
 
 ## Borrowing before allocation
@@ -76,7 +81,9 @@ Applies to domain models, protocols, parsers, config, and error types.
 
 ## Controlled growth
 - Use `#[non_exhaustive]` on public enums/structs that may grow, so cross-crate code must use a
-  wildcard arm or `..` and cannot exhaustively destructure.
+  wildcard arm or `..` and cannot exhaustively destructure. Conversely, do **not** put it on an
+  internal enum the workspace must match exhaustively (a state machine a sibling crate
+  transitions): the forced `_` arm hides new variants the consumer should be made to handle.
 - For within-crate discipline only, a private marker field (`_priv: ()`) blocks outside literal
   construction without the cross-crate semantics of `#[non_exhaustive]`.
 

@@ -21,8 +21,10 @@ benchmarks/
 | `security`  | `security-auditor`  |
 | `perf`      | `perf-engineer`     |
 | `api`       | `api-design-lead`   |
+| `architecture` | `chief-architect` |
 
-(Add more folders → agents as you grow it.)
+(Add more folders → agents as you grow it. The full mapping incl. first-pass-bar folders lives
+in the `/eval-agents` skill.)
 
 ## Running
 ```
