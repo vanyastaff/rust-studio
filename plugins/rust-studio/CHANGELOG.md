@@ -5,6 +5,15 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-06-16
+
+### Fixed
+
+- The status line's **`🦀 rust-studio` tag now shows in every directory**, not only Rust projects —
+  so it's visible while working in the plugin repo itself (no root `Cargo.toml`) and in any other
+  repo. The `lsp ✓` segment stays Rust-only. (Earlier gating hid the bar's identity exactly where
+  the author was testing it.)
+
 ## [0.9.0] - 2026-06-15
 
 ### Added
