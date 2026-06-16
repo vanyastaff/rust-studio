@@ -234,9 +234,8 @@ function buildLine1(session: any, git: GitInfo, lspInRust: boolean): string {
   const effort = effortLabel(session?.effort?.level);
   const effortColored = effort ? (/(high|xhigh|max)/.test(effort) ? c256(208, effort) : dim(effort)) : "";
   const lsp = lspInRust ? (hasRustAnalyzer() ? `lsp ${c256(35, G.ok)}` : `lsp ${c256(196, G.no)}`) : "";
-  // Studio branding only in a Rust project — the auto-installed bar is global, so a Python repo
-  // shouldn't read "🦀 rust-studio"; there it degrades to project · git · model · ctx.
-  const tag = lspInRust ? `${G.crab} ${c256(208, bold("rust-studio"))}` : "";
+  // Always show the studio tag — the bar should be instantly recognizable in any directory.
+  const tag = `${G.crab} ${c256(208, bold("rust-studio"))}`;
   return joinSegs([
     tag,
     proj ? dim(proj) : "",

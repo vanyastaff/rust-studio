@@ -130,9 +130,10 @@ describe("render (two-line rounded layout)", () => {
     expect(lines[1]).toContain("+318"); // lines added
   });
 
-  test("collapses to a single line when there are no metrics", () => {
+  test("collapses to a single line when there are no metrics; crab always shown", () => {
     const out = render({ model: { display_name: "Opus" } }, null, {});
     expect(out.split("\n").length).toBe(1);
     expect(out).toContain("╭─");
+    expect(out).toContain("🦀"); // studio tag always present, even outside a Rust project
   });
 });
