@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   message; *that* became the message returned to the caller, while the actual deliverable (a
   research digest, a code map, an answer) survived only in the output file. The caller got
   "VERDICT: COMPLETE" and had to dig the content out of disk.
-  - **Gating:** the hook now nags **only studio agents that owe a verdict** — classified against
-    the `agents/*.md` roster (auto-maintained) plus a built-in denylist (`Explore`, `Plan`,
+  - **Gating:** the hook now nags **only studio agents that owe a verdict** — classified by the
+    agent's frontmatter `name` (the value `SubagentStop` actually passes as `agent_type`) against
+    the `agents/*.md` roster (auto-maintained), plus a built-in denylist (`Explore`, `Plan`,
     `general-purpose`, `claude-code-guide`, …). Non-studio/data-returning agents are left alone.
   - **Non-displacing wording:** when it does nag, the reminder says to **append** the verdict as a
     trailing line to the existing deliverable — never to write a new verdict-only message or move

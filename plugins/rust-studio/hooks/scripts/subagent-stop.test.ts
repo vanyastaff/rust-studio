@@ -8,12 +8,14 @@
 // detected" on every one of 5 consecutive turns. These cases lock that shut.
 
 import { test, expect, describe } from "bun:test";
+import { join } from "node:path";
 import {
   hasVerdict,
   assistantTexts,
   verdictPresent,
   normalizeAgentType,
   owesStudioVerdict,
+  studioRoster,
   BUILTIN_DENY,
 } from "./subagent-stop.ts";
 
@@ -241,6 +243,21 @@ describe("owesStudioVerdict — gate the nag to studio agents", () => {
   test("a studio agent in the roster DOES owe a verdict", () => {
     expect(owesStudioVerdict("rust-studio:rust-reviewer", roster)).toBe(true);
     expect(owesStudioVerdict("rust-builder", roster)).toBe(true);
+  });
+
+  test("studioRoster reads the REAL agents dir by frontmatter name", () => {
+    // agent_type is the frontmatter `name`, so the roster must match real agent
+    // identities a SubagentStop would carry — not just filenames.
+    const dir = join(import.meta.dir, "..", "..", "agents");
+    const roster = studioRoster(dir);
+    expect(roster).not.toBeNull();
+    // Known studio agents owe a verdict through the real roster.
+    expect(owesStudioVerdict("rust-reviewer", roster)).toBe(true);
+    expect(owesStudioVerdict("chief-architect", roster)).toBe(true);
+    expect(owesStudioVerdict("rust-studio:rust-builder", roster)).toBe(true);
+    // Built-ins stay silent even against the real roster.
+    expect(owesStudioVerdict("general-purpose", roster)).toBe(false);
+    expect(owesStudioVerdict("claude-code-guide", roster)).toBe(false);
   });
 
   test("a non-roster, non-denylist agent: nag only when roster is readable says no", () => {
