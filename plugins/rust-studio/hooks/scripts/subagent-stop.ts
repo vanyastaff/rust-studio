@@ -33,15 +33,18 @@
 // Gating (why we don't nag every sub-agent):
 //   The verdict convention is a STUDIO convention. Built-in / non-studio agents
 //   (Explore, Plan, general-purpose, claude-code-guide, …) return DATA — a research
-//   digest, a code map, an answer — not a verdict. Nagging them backfires: the
-//   reminder lands in the sub-agent, which then appends a fresh verdict-only closing
-//   message; THAT becomes the message returned to the parent, while the actual
-//   deliverable is now an earlier message that only survives in the output file. The
-//   parent gets "VERDICT: COMPLETE" instead of the content it asked for. So we
-//   classify the agent (roster of `agents/*.md` + a built-in denylist) and stay
-//   silent for anything that doesn't owe a studio verdict. And when we DO nag, the
-//   wording tells the agent to APPEND the verdict to its existing deliverable, never
-//   to replace it with a summary.
+//   digest, a code map, an answer — not a verdict. Nagging them backfires: observed
+//   behavior is that the reminder reaches the sub-agent, which appends a fresh
+//   verdict-only closing message; THAT becomes the message returned to the parent,
+//   while the actual deliverable is now an earlier message that only survives in the
+//   output file — the parent gets "VERDICT: COMPLETE" instead of the content it asked
+//   for. (The hook docs don't pin down whether additionalContext lands in the
+//   sub-agent or the parent; this fix is correct either way — if it reaches the parent
+//   it just stops a spurious "UNVERIFIED" nag about an agent that correctly returned
+//   data.) So we classify the agent — `agent_type` is its frontmatter `name`, matched
+//   against the `agents/*.md` roster, plus a built-in denylist — and stay silent for
+//   anything that doesn't owe a studio verdict. And when we DO nag, the wording tells
+//   the agent to APPEND the verdict to its existing deliverable, never replace it.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -83,14 +86,26 @@ export function normalizeAgentType(t?: string): string {
     .trim();
 }
 
-/** The studio agent roster: the bare names of `agents/*.md`, lowercased. Read at
- *  runtime so adding/removing an agent file auto-maintains the list. Returns null if
- *  the directory can't be read (caller then falls back to the built-in denylist). */
+/** The studio agent roster: the frontmatter `name:` of each `agents/*.md`, lowercased.
+ *  `agent_type` is the agent's frontmatter `name` (per the SubagentStop hook contract),
+ *  not its filename — so we match on `name`, falling back to the filename only when a
+ *  file has no parseable `name:`. Read at runtime so adding/removing an agent file
+ *  auto-maintains the list. Returns null if the directory can't be read (caller then
+ *  falls back to the built-in denylist). */
 export function studioRoster(dir: string): Set<string> | null {
   try {
     const names = readdirSync(dir)
       .filter((f) => f.endsWith(".md"))
-      .map((f) => f.replace(/\.md$/, "").toLowerCase());
+      .map((f) => {
+        try {
+          const head = readFileSync(join(dir, f), "utf8").slice(0, 2000);
+          const m = head.match(/^name:\s*["']?([^"'\n]+?)["']?\s*$/m);
+          if (m) return m[1].trim().toLowerCase();
+        } catch {
+          /* fall through to filename */
+        }
+        return f.replace(/\.md$/, "").toLowerCase();
+      });
     return names.length ? new Set(names) : null;
   } catch {
     return null;
