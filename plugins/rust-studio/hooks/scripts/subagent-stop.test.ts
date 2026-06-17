@@ -12,6 +12,9 @@ import {
   hasVerdict,
   assistantTexts,
   verdictPresent,
+  normalizeAgentType,
+  owesStudioVerdict,
+  BUILTIN_DENY,
 } from "./subagent-stop.ts";
 
 // --- transcript fixtures ----------------------------------------------------
@@ -205,5 +208,49 @@ describe("assistantTexts — JSONL parsing", () => {
   test("tolerates a raw message shape without the Claude Code wrapper", () => {
     const raw = JSON.stringify({ role: "assistant", content: "VERDICT: COMPLETE" });
     expect(assistantTexts(raw)).toEqual(["VERDICT: COMPLETE"]);
+  });
+});
+
+// --- agent gating: who owes a studio verdict --------------------------------
+
+describe("normalizeAgentType — namespace stripping", () => {
+  test("strips the rust-studio namespace and lowercases", () => {
+    expect(normalizeAgentType("rust-studio:rust-reviewer")).toBe("rust-reviewer");
+    expect(normalizeAgentType("rust-studio/chief-architect")).toBe("chief-architect");
+    expect(normalizeAgentType("Explore")).toBe("explore");
+    expect(normalizeAgentType(undefined)).toBe("");
+  });
+});
+
+describe("owesStudioVerdict — gate the nag to studio agents", () => {
+  const roster = new Set(["rust-reviewer", "rust-builder", "chief-architect", "rust-scout"]);
+
+  test("built-in / non-studio agents are NEVER nagged (they return data)", () => {
+    // The exact pain: claude-code-guide and general-purpose returned a verdict-only
+    // summary because the nag displaced their content. They must be silent.
+    for (const t of ["general-purpose", "claude-code-guide", "Explore", "Plan", "statusline-setup"]) {
+      expect(owesStudioVerdict(t, roster)).toBe(false);
+    }
+  });
+
+  test("the denylist covers the built-ins regardless of roster", () => {
+    expect(BUILTIN_DENY.has("claude-code-guide")).toBe(true);
+    expect(owesStudioVerdict("general-purpose", null)).toBe(false);
+  });
+
+  test("a studio agent in the roster DOES owe a verdict", () => {
+    expect(owesStudioVerdict("rust-studio:rust-reviewer", roster)).toBe(true);
+    expect(owesStudioVerdict("rust-builder", roster)).toBe(true);
+  });
+
+  test("a non-roster, non-denylist agent: nag only when roster is readable says no", () => {
+    // Unknown studio-ish name with a readable roster that lacks it → not a studio
+    // agent → silent.
+    expect(owesStudioVerdict("some-random-agent", roster)).toBe(false);
+    // Roster unreadable → fall back to the backstop (nag); harmless now that the
+    // wording appends rather than displaces.
+    expect(owesStudioVerdict("some-random-agent", null)).toBe(true);
+    // Absent agent_type → keep the backstop.
+    expect(owesStudioVerdict(undefined, roster)).toBe(true);
   });
 });

@@ -29,6 +29,19 @@
 // block would wedge a legitimate non-studio / built-in sub-agent (Explore, Plan,
 // general-purpose) that never speaks in studio verdicts. additionalContext is the
 // safe escalation. Never fails the session — on any error it exits 0 silently.
+//
+// Gating (why we don't nag every sub-agent):
+//   The verdict convention is a STUDIO convention. Built-in / non-studio agents
+//   (Explore, Plan, general-purpose, claude-code-guide, …) return DATA — a research
+//   digest, a code map, an answer — not a verdict. Nagging them backfires: the
+//   reminder lands in the sub-agent, which then appends a fresh verdict-only closing
+//   message; THAT becomes the message returned to the parent, while the actual
+//   deliverable is now an earlier message that only survives in the output file. The
+//   parent gets "VERDICT: COMPLETE" instead of the content it asked for. So we
+//   classify the agent (roster of `agents/*.md` + a built-in denylist) and stay
+//   silent for anything that doesn't owe a studio verdict. And when we DO nag, the
+//   wording tells the agent to APPEND the verdict to its existing deliverable, never
+//   to replace it with a summary.
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -45,6 +58,59 @@ export const VERDICT =
 /** Does this text carry an explicit studio verdict token? */
 export function hasVerdict(text: string): boolean {
   return VERDICT.test(text);
+}
+
+/** Built-in / non-studio agent types that return DATA, never a studio verdict.
+ *  These must never be nagged (nagging them displaces their deliverable — see header).
+ *  Compared against the normalized (lowercased, prefix-stripped) agent_type. */
+export const BUILTIN_DENY: ReadonlySet<string> = new Set([
+  "explore",
+  "plan",
+  "general-purpose",
+  "claude-code-guide",
+  "statusline-setup",
+  "output-style-setup",
+]);
+
+/** Normalize an agent_type for roster comparison: lowercase, strip a leading
+ *  `rust-studio:` / `rust-studio/` / `rust-studio-` (or `rust_studio…`) namespace,
+ *  and trim. `"rust-studio:rust-reviewer"` → `"rust-reviewer"`; `"Explore"` →
+ *  `"explore"`. */
+export function normalizeAgentType(t?: string): string {
+  return (t ?? "")
+    .toLowerCase()
+    .replace(/^rust[-_ ]?studio[:/ -]/, "")
+    .trim();
+}
+
+/** The studio agent roster: the bare names of `agents/*.md`, lowercased. Read at
+ *  runtime so adding/removing an agent file auto-maintains the list. Returns null if
+ *  the directory can't be read (caller then falls back to the built-in denylist). */
+export function studioRoster(dir: string): Set<string> | null {
+  try {
+    const names = readdirSync(dir)
+      .filter((f) => f.endsWith(".md"))
+      .map((f) => f.replace(/\.md$/, "").toLowerCase());
+    return names.length ? new Set(names) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Does this agent owe a studio verdict (i.e. should the hook consider nagging it)?
+ *  - Built-in / denylisted types → no (they return data, not verdicts).
+ *  - When the roster is readable → only agents in it owe a verdict.
+ *  - Roster unreadable or agent_type absent → default to yes, so the studio backstop
+ *    is never silently lost; the non-displacing nag wording keeps this harmless. */
+export function owesStudioVerdict(
+  agentType: string | undefined,
+  roster: Set<string> | null,
+): boolean {
+  const n = normalizeAgentType(agentType);
+  if (!n) return true; // unknown caller — keep the backstop (wording won't displace)
+  if (BUILTIN_DENY.has(n)) return false;
+  if (roster && roster.size) return roster.has(n);
+  return true; // roster unreadable — fall back to backstop
 }
 
 /** Pull the assistant text out of one parsed transcript entry, or null if the entry
@@ -211,6 +277,12 @@ if (import.meta.main) {
   const data = await readInput<Input>();
   disarm();
 
+  // Gate: only studio agents owe a verdict. Built-in / non-studio agents (Explore,
+  // general-purpose, claude-code-guide, …) return data — nagging them would displace
+  // their deliverable with a verdict-only closing message. Stay silent for them.
+  const agentsDir = join(import.meta.dir, "..", "..", "agents");
+  if (!owesStudioVerdict(data.agent_type, studioRoster(agentsDir))) done();
+
   const who = data.agent_type ? `\`${data.agent_type}\`` : "the sub-agent";
 
   // Resolve the sub-agent's own transcript. The `transcript_path` Claude Code passes
@@ -287,8 +359,12 @@ if (import.meta.main) {
         "**ACCEPTABLE / RESHAPE NEEDED**) — with evidence (commands run, files " +
         "touched). A `REDO-TO-BAR` means the work compiles but the shape must be " +
         "reshaped to the maintainer bar before it is accepted; a `BLOCKED` verdict " +
-        "halts its dependents until the blocker clears. If no verdict was given, ask " +
-        "for one rather than advancing on an unverified result.",
+        "halts its dependents until the blocker clears. **Append the verdict as a " +
+        "trailing line to your EXISTING final deliverable — do NOT write a new " +
+        "verdict-only message, and do NOT move your findings/data/answer to a " +
+        "separate earlier message. The requested content must remain in your final " +
+        "message in full; the verdict supplements it, never replaces it.** If no " +
+        "verdict was given, add one rather than advancing on an unverified result.",
     },
   });
 }
