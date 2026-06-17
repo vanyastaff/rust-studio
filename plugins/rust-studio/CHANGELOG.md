@@ -5,6 +5,28 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1] - 2026-06-17
+
+### Fixed
+
+- **Sub-agents no longer return a verdict-only summary instead of their content.** The
+  `SubagentStop` hook nagged **every** sub-agent — including built-ins like `Explore`,
+  `general-purpose`, and `claude-code-guide` — when its final message lacked a studio verdict
+  token. The nag landed in the sub-agent, which then appended a fresh verdict-only closing
+  message; *that* became the message returned to the caller, while the actual deliverable (a
+  research digest, a code map, an answer) survived only in the output file. The caller got
+  "VERDICT: COMPLETE" and had to dig the content out of disk.
+  - **Gating:** the hook now nags **only studio agents that owe a verdict** — classified against
+    the `agents/*.md` roster (auto-maintained) plus a built-in denylist (`Explore`, `Plan`,
+    `general-purpose`, `claude-code-guide`, …). Non-studio/data-returning agents are left alone.
+  - **Non-displacing wording:** when it does nag, the reminder says to **append** the verdict as a
+    trailing line to the existing deliverable — never to write a new verdict-only message or move
+    the content elsewhere.
+  - Documented the rule in `coordination-protocol.md` §5 and `agent-template.md`: the verdict
+    supplements the deliverable, never replaces it; for data-return agents the data IS the
+    deliverable. New tests for the gating (`owesStudioVerdict`, `normalizeAgentType`); 75/75 hook
+    tests pass.
+
 ## [0.15.0] - 2026-06-16
 
 ### Changed

@@ -212,6 +212,14 @@ verdict so you always know where things stand:
   WORK; `REDO-TO-BAR` explicitly authorizes replacing the wrong shape within the task's blast
   radius — the learning is kept, the junior patch is not.
 
+**The verdict supplements the deliverable; it never replaces it.** A sub-agent's final message is
+what the caller receives — put the actual deliverable (code map, digest, findings, answer) there
+in full and add the verdict as a trailing line. Never close with a verdict-only "I did the work"
+summary while the content sits in an earlier message: the caller then gets only the verdict and
+must dig the deliverable out of the output file. The `SubagentStop` hook enforces this — it nags
+**only** studio agents that owe a verdict (built-in/non-studio agents like `Explore` or
+`claude-code-guide` return data and are left alone), and its reminder says *append*, not replace.
+
 ---
 
 ## 6. File-write protocol

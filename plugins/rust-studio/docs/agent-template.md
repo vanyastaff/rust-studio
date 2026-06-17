@@ -50,6 +50,13 @@ Before this gate passes, verify:
   and evidence (command output, bench numbers). Hand off to `<skill/agent>`.
 ```
 
+**The verdict supplements the deliverable — it never replaces it.** Your final message is what
+the caller receives; put the actual deliverable (the map, the digest, the findings, the answer)
+there in full, then add the verdict as a trailing line. Never close with a verdict-only / "I did
+the work" summary and leave the content in an earlier message — the caller then gets only the
+verdict and has to dig the content out of the output file. For data-return agents (`rust-scout`
+locator maps, research digests, answers) the **data IS the deliverable**: return it, verdict last.
+
 ## Rules of thumb
 - **Read-only agents** (`rust-scout`, `rust-reviewer`, auditors): `tools: Read, Grep, Glob, Bash`. No Write/Edit.
 - **The builder** (`rust-builder`): full tools. It is the only agent that routinely writes source.
