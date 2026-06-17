@@ -5,6 +5,23 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-06-16
+
+### Changed
+
+- **`/dev-task` approval gate now uses native plan mode** (pilot). Its plan/approve phases run
+  through `EnterPlanMode` → write the plan file → `ExitPlanMode` instead of an `AskUserQuestion`
+  "approve the plan?" card. The consolidated plan (lead's plan + maintainer pre-code verdict) is
+  written to the plan file, so it renders live in the **Claude Code Desktop Plan pane** ("Claude
+  writes the plan here as it explores") and is approved natively; on the CLI it is the standard
+  plan-mode approval, so there is no regression. The orchestration model (delegate writes to
+  `rust-builder`) and progress-visibility task list are unchanged. Verified by writing this
+  release's own pilot plan to the plan file and approving it through the native flow.
+- **Coordination Protocol §1** documents the pattern: implementation-planning skills MAY surface
+  the Draft→Approval step through native plan mode; research/elicitation skills (`/brainstorm`,
+  `/grill-me`) keep their own gate (`ExitPlanMode` is for code-bound plans). Rolls out to `/spec`,
+  `/architecture`, `/refactor` after the `/dev-task` pilot validates in real Desktop use.
+
 ## [0.14.0] - 2026-06-16
 
 ### Added

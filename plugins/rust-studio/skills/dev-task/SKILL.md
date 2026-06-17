@@ -10,9 +10,12 @@ user-invocable: true
 Run a single task through **scout → plan → approve → build → review**, honoring the
 collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §8 team
 execution). You are the orchestrator: **you do not write code or tests yourself — you
-delegate writes to `rust-builder`.** Gate with `AskUserQuestion` only at phase boundaries
-(plan approval, BLOCKED recovery) — decide tactical calls yourself, state choice + one-line
-rationale.
+delegate writes to `rust-builder`.** **The plan-approval gate runs through native plan mode**
+(`EnterPlanMode` → write the plan file → `ExitPlanMode`), so the plan renders in the Desktop
+**Plan** pane and is approved natively (on CLI it's the standard plan-mode approval — no
+regression). Use `AskUserQuestion` only for genuine design forks and BLOCKED recovery, **not**
+for "approve the plan?" — that's what `ExitPlanMode` is for. Decide tactical calls yourself,
+state choice + one-line rationale.
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run this as a real
@@ -56,6 +59,11 @@ Any non-trivial task must also apply the pre-code maintainer standard in
 `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` before code is written.
 
 ## Phase 1 — Scope & locate
+0. **Enter plan mode.** If you are not already in plan mode, call `EnterPlanMode` to obtain the
+   plan-file path. Phases 1–2 are read-only anyway (scout + lead plan, no code until approval),
+   so this fits with no workflow change — it just routes the upcoming Draft→Approval through the
+   native Plan pane. `AskUserQuestion` is still allowed *inside* plan mode for genuine design
+   forks (Phase 2 step 7); only the approval gate moves to `ExitPlanMode`.
 1. Restate the task and its acceptance criteria in 1–3 bullets. Confirm with the user if fuzzy.
 2. Task owned by **`rust-scout`** to map the edit sites and existing tests. Don't guess the
    layout. Scout uses serena MCP for symbol/reference navigation and `rg` for macro-generated
@@ -76,13 +84,21 @@ Any non-trivial task must also apply the pre-code maintainer standard in
    the junior local patch and rely on review to fix it afterward. If the reshape changes
    product scope or creates an irreversible/outward action, surface the fork for approval.
 7. If the plan reveals a real design decision, present 2–4 options with trade-offs.
+8. **Write the plan into the plan file** (the one from `EnterPlanMode`), building it
+   incrementally — this is what renders in the Desktop **Plan** pane. Consolidate the lead's
+   plan (files to change, approach, test strategy, risks, applicable gates) **and** the
+   `ACCEPTABLE / RESHAPE NEEDED / BLOCKED` maintainer verdict into it. Keep mirroring each
+   phase's one-line result to the task list as before (progress visibility is unchanged).
 
 ## Phase 3 — Approve (gate)
-8. `AskUserQuestion`: show the plan and the chosen approach; get explicit approval before
-   any code is written. If the user wants changes, loop back to Phase 2.
+9. **`ExitPlanMode`** to request approval — it reads the plan from the plan file (do not pass
+   the plan as an argument, and do not use `AskUserQuestion` to ask "approve?"). Pass
+   `allowedPrompts` for the build commands the plan needs (e.g. `run tests`, `run clippy`,
+   `cargo fmt`). If the user rejects or asks for changes, loop back to Phase 2 and **rewrite the
+   plan file** — same loop, native surface.
 
 ## Phase 4 — Build (blocked by approval)
-9. Task owned by **`rust-builder`** with the approved plan and the maintainer-grade verdict
+10. Task owned by **`rust-builder`** with the approved plan and the maintainer-grade verdict
    (pass them in the spawn prompt —
    teammates don't inherit it). Instruct it to:
    - for any **behavior** change, write the test FIRST and show it **failed before the fix**
@@ -95,38 +111,38 @@ Any non-trivial task must also apply the pre-code maintainer standard in
    - run `cargo test`/`nextest`, `cargo clippy --all-targets --all-features -- -D warnings`,
      and `cargo fmt`, and fix issues,
    - add `// SAFETY:` notes to any `unsafe` and flag it.
-10. The builder reports a diff summary + command output. Show it to the user.
+11. The builder reports a diff summary + command output. Show it to the user.
 
 ## Phase 5 — Review (gate; blocked by build)
 Two stages — **spec compliance first, then code quality** (the superpowers subagent-driven-dev
 pattern); a finding in EITHER stage loops back to `rust-builder` and re-runs that stage before
 advancing.
-11. **Stage 5a — spec compliance.** Check the diff against the Phase-1 acceptance criteria and the
+12. **Stage 5a — spec compliance.** Check the diff against the Phase-1 acceptance criteria and the
     approved plan: does it do exactly what was specified — nothing missing, nothing extra (scope
     creep)? Use `rust-reviewer` with a spec-compliance lens (or `product-steward` for scope). On a
     gap, hand back to `rust-builder` and re-run 5a. **Do not start 5b until 5a is ✅.**
-12. **Stage 5b — code quality.** Task owned by **`rust-reviewer`** on the diff for correctness,
+13. **Stage 5b — code quality.** Task owned by **`rust-reviewer`** on the diff for correctness,
     soundness, standards, and tests. For **full** mode, also run the owning lead's gate checklist as
     sibling tasks (and `unsafe-auditor` if `unsafe` was touched, `security-auditor` for
     input/auth/deserialization) — these read-only lenses run concurrently as teammates.
-13. If either stage returns NEEDS WORK, hand findings back to `rust-builder` (loop Phase 4) and
+14. If either stage returns NEEDS WORK, hand findings back to `rust-builder` (loop Phase 4) and
     re-run the failing stage until clean or the user decides to stop.
 
 ## Phase 6 — Verdict
-14. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything
+15. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything
     left out of scope. Every teammate's contribution ends in **COMPLETE / NEEDS WORK /
     BLOCKED** with evidence. End with **COMPLETE / NEEDS WORK / BLOCKED**.
     A `COMPLETE` verdict **requires both Phase 5 stages (spec compliance + code quality)** and the
     failing-test-first evidence; if any disciplined step (pre-code verdict, red test, either review
     stage) was skipped, say which and why — an unaccounted skip is `NEEDS WORK`, not `COMPLETE`.
     Honesty bar: `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
-15. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
+16. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
     and durable** this task produced — a design decision + rationale, a gotcha that cost
     time, a convention discovered, or a non-trivial fix. For each, run `/remember` directly
     (it writes the note to the Obsidian vault); report the resulting note path. Skip what
     the code, git history, or `Cargo.toml` already makes obvious. If nothing is durable, say
     so and move on.
-16. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
+17. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound, `/session-wrap` to close
     out the session. If running as a team,
     drive cleanup: `SendMessage {type:"shutdown_request"}` to each teammate, then `TeamDelete`.

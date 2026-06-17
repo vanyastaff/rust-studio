@@ -70,6 +70,13 @@ meets the bar. If the user is time-pressured, cut optional **scope**, not the **
 "scope can be cut; the quality bar cannot" (`maintainer-grade-development.md`). "Reject the task"
 or "do less, properly" are fine options; "do it, but badly" never is.
 
+**Implementation-planning skills MAY surface the Draft→Approval step through native plan mode**
+(`EnterPlanMode` → write the plan file → `ExitPlanMode`) instead of an `AskUserQuestion`
+"approve?" card, so the plan renders in the Desktop **Plan** pane and is approved natively (on
+CLI it's the standard plan-mode approval — no regression). `ExitPlanMode` is for plans that lead
+to **code**; research/elicitation skills (`/brainstorm`, `/grill-me`) keep their own gate. Piloted
+in **`/dev-task`**; rolls out to `/spec`, `/architecture`, `/refactor` once validated.
+
 **Never offload your own analysis as a question.** If you have researched the area, know the
 architecture, and have a defensible answer, that is a *tactical call* — **decide it**, state the
 choice + one-line rationale + how reversible it is, and let the user veto. Do **not** repackage
