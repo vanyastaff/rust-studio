@@ -14,16 +14,17 @@ Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8 (team execut
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the fixtures as a
-real team: `TeamCreate`, then create one `TaskCreate` task per fixture (the fixtures are
-independent and read-only — no `addBlockedBy` between them) and spawn each mapped agent as a
+real team (the session already has one implicit shared team — no `TeamCreate`): create one
+`TaskCreate` task per fixture (the fixtures are independent and read-only — no `addBlockedBy`
+between them) and spawn each mapped agent as a
 teammate so they run concurrently, reporting findings via `SendMessage`; the lead scores. The
 lighter alternative for these read-only evaluations is to spawn each as a **background
 subagent** (`background: true`) without forming a team. Otherwise fall back to
 single-orchestrator delegation: spawn the agents sequentially, one per fixture. Teammates
 don't inherit this context (pass the fixture's `input.rs` in the spawn prompt — never the
-ground truth) and don't get bundled MCP (they rely on the user's ambient serena/exa). Drive
-`TeamDelete` cleanup at the end (shut teammates down with `SendMessage
-{type:"shutdown_request"}` first).
+ground truth) and don't get bundled MCP (they rely on the user's ambient serena/exa). Shut
+teammates down at the end with `SendMessage {type:"shutdown_request"}` — there is no team to
+delete; idle teammates auto-hide.
 
 ## Fixture layout
 Each fixture lives at `benchmarks/fixtures/<agent>/<case>/` with:

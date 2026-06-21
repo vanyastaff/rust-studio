@@ -21,8 +21,10 @@
 // stop_hook_active is true and we allow — a missed capture beats a wedged turn.
 //
 // HARD RULE (every studio hook): never freeze the session. Watchdog fails OPEN
-// (exit 0 = allow). Mechanism note: a Stop hook cannot inject additionalContext; the
-// supported way to hand text to the model and make it continue is exit 2 + stderr.
+// (exit 0 = allow). Mechanism note: since Claude Code v2.1.163 a Stop hook MAY return
+// hookSpecificOutput.additionalContext to hand the model text and continue the turn, but
+// we deliberately keep exit 2 + stderr — we want to *block* the stop once (forcing the
+// agent to act on the nudge), not merely append context it can ignore.
 
 import { join } from "node:path";
 import { readInput, watchdog, optionBool, run, which } from "./_lib.ts";

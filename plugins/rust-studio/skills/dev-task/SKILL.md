@@ -19,15 +19,16 @@ state choice + one-line rationale.
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run this as a real
-team: `TeamCreate`, then spawn `rust-scout`, the owning lead, `rust-builder`, and
-`rust-reviewer` as teammates and coordinate via the shared task list (`TaskCreate` one task
+team: the session already has one implicit shared team, so spawn `rust-scout`, the owning lead,
+`rust-builder`, and `rust-reviewer` as teammates directly (no `TeamCreate`) and coordinate via
+the shared task list (`TaskCreate` one task
 per phase, order with `addBlockedBy`: scout → plan → build → review, assign with
 `TaskUpdate owner`) + `SendMessage`. Otherwise fall back to single-orchestrator delegation:
 spawn sub-agents sequentially and inline each phase's context into the spawn prompt. Teammates
 don't inherit this plan (pass it in the spawn prompt) and don't get bundled MCP (they rely on
 the user's ambient serena/exa); status can lag, so have teammates mark tasks `completed`.
-Drive `TeamDelete` cleanup at the end (shut teammates down with `SendMessage
-{type:"shutdown_request"}` first).
+Shut teammates down at the end with `SendMessage {type:"shutdown_request"}` — there is no team
+to delete; idle teammates auto-hide.
 
 ## Progress visibility
 The user follows the **task list** to know where things stand — keep it live, do not go silent
@@ -145,7 +146,7 @@ advancing.
 17. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound, `/session-wrap` to close
     out the session. If running as a team,
-    drive cleanup: `SendMessage {type:"shutdown_request"}` to each teammate, then `TeamDelete`.
+    shut each teammate down with `SendMessage {type:"shutdown_request"}` (no `TeamDelete`).
 
 ## Error recovery
 If any sub-agent returns **BLOCKED** (missing ADR, undecided design, absent dependency):

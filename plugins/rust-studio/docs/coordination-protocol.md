@@ -254,18 +254,20 @@ and fall back to single-orchestrator prose delegation otherwise. The team model 
 documented default path; the fallback is one short paragraph in each skill.
 
 **Capability gate.** Agent teams are gated by `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (OFF
-by default; needs Claude Code v2.1.32+). A published plugin must not assume teams exist, so
-every orchestrator skill carries a one-line guard: if the gate is set, run as a team;
-otherwise spawn sub-agents sequentially and inline each phase's context into the spawn
-prompt. The structured task tools (`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet`) are
+by default). As of Claude Code v2.1.178 the model is **one implicit team per session**: there
+is no longer a `TeamCreate`/`TeamDelete` step (those tools were removed) — when the gate is
+set, the session already has a single shared team and task list, and you just spawn teammates
+into it. A published plugin must not assume teams exist, so every orchestrator skill carries a
+one-line guard: if the gate is set, run as a team; otherwise spawn sub-agents sequentially and
+inline each phase's context into the spawn prompt. The structured task tools (`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet`) are
 a separate, more reliable gate (`CLAUDE_CODE_ENABLE_TASKS`, default ON as of v2.1.142) — but
 still version-gate them.
 
-**Roles.** One session is the **team lead** (the orchestrator skill). The lead calls
-`TeamCreate` (creates the team and its single shared task list), spawns **teammates** via the
-`Agent` tool with `team_name` + `name` (+ `subagent_type` = a studio agent such as
-`rust-builder`), assigns work, synthesizes results, and drives cleanup. Teammates do the
-focused work and report back.
+**Roles.** One session is the **team lead** (the orchestrator skill). The session's single
+implicit team and its shared task list already exist; the lead spawns **teammates** directly
+via the `Agent` tool with `name` (+ `subagent_type` = a studio agent such as `rust-builder`),
+assigns work, synthesizes results, and drives cleanup. (`team_name` is still accepted but
+ignored — don't pass it.) Teammates do the focused work and report back.
 
 **Shared task list.** The lead encodes each skill's **phases / work-items as tasks**:
 `TaskCreate` (subject, description, optional `activeForm`/`metadata`; tasks start pending with
@@ -279,9 +281,9 @@ to spawn each as a **background subagent** (`background: true`) since they only 
 **Mailbox.** Teammates communicate **only** via `SendMessage` — plain text in a turn is
 invisible to other agents. Messages auto-deliver as turns; there is no polling.
 
-**Cleanup.** The lead drives teardown with `TeamDelete`, which fails while members are still
-active — so shut teammates down first by sending each a `SendMessage` `{type:"shutdown_request"}`,
-then delete the team.
+**Cleanup.** There is no `TeamDelete` (the team is implicit and lives for the session). Shut
+teammates down at the end by sending each a `SendMessage` `{type:"shutdown_request"}`; idle
+teammates also auto-hide after ~30s.
 
 **Gotchas (load-bearing).**
 - **No plan inheritance** — teammates do *not* inherit the lead's conversation or plan; *all*

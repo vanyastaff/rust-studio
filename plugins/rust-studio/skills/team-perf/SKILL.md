@@ -14,14 +14,14 @@ Rules: `${CLAUDE_PLUGIN_ROOT}/rules/perf.md` · `${CLAUDE_PLUGIN_ROOT}/rules/uns
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run this as a real
-team: `TeamCreate`, then spawn the named agents as teammates and coordinate via the shared
-task list (`TaskCreate` one task per phase, order with `addBlockedBy`, assign with
-`TaskUpdate owner`) + `SendMessage`. Otherwise fall back to single-orchestrator delegation:
+team: the session already has one implicit shared team, so spawn the named agents as teammates
+directly (no `TeamCreate`) and coordinate via the shared task list (`TaskCreate` one task per
+phase, order with `addBlockedBy`, assign with `TaskUpdate owner`) + `SendMessage`. Otherwise fall back to single-orchestrator delegation:
 spawn sub-agents sequentially and inline each phase's context into the spawn prompt. Teammates
 don't inherit this plan (pass the baseline + approved optimization plan in the spawn prompt)
 and don't get bundled MCP (they rely on the user's ambient serena/exa); status can lag, so
-have teammates mark tasks `completed`. Drive `TeamDelete` cleanup at the end (shut teammates
-down with `SendMessage {type:"shutdown_request"}` first).
+have teammates mark tasks `completed`. Shut teammates down at the end with `SendMessage
+{type:"shutdown_request"}` — there is no team to delete; idle teammates auto-hide.
 
 ## Progress visibility
 The user follows the **task list** to know where things stand — keep it live, do not go silent
@@ -144,8 +144,8 @@ the baseline once all four report via `SendMessage`.
 - Verdict: **COMPLETE / NEEDS WORK / BLOCKED**.
 - Suggest next steps: `/review` for a deeper audit, `/changelog` if user-facing,
   `/publish` if release-bound.
-- If running as a team, drive cleanup: `SendMessage {type:"shutdown_request"}` to each
-  teammate, then `TeamDelete`.
+- If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`
+  (no `TeamDelete` — the team is implicit).
 
 ## Error recovery
 

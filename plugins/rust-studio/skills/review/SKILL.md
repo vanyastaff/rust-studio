@@ -19,16 +19,17 @@ abstraction or defensive code (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.m
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) and you run a
-`--full` multi-lens pass, run it as a real team: `TeamCreate`, then create one `TaskCreate`
-task per lens (these are independent and read-only — no `addBlockedBy` between them) and spawn
+`--full` multi-lens pass, run it as a real team (the session already has one implicit shared
+team — no `TeamCreate`): create one `TaskCreate` task per lens (these are independent and
+read-only — no `addBlockedBy` between them) and spawn
 each lens as a teammate so they run concurrently, reporting via `SendMessage`; the lead merges
 and de-duplicates. The lighter alternative for these read-only lenses is to spawn each as a
 **background subagent** (`background: true`) without forming a team. Otherwise (no teams, or a
 single-reviewer pass) fall back to single-orchestrator delegation: spawn the lenses
 sequentially and inline the diff + scope into each spawn prompt. Teammates don't inherit this
 context (pass the diff/scope in the spawn prompt) and don't get bundled MCP (they rely on the
-user's ambient serena/exa). Drive `TeamDelete` cleanup at the end (shut teammates down with
-`SendMessage {type:"shutdown_request"}` first).
+user's ambient serena/exa). Shut teammates down at the end with `SendMessage
+{type:"shutdown_request"}` — there is no team to delete; idle teammates auto-hide.
 
 ## Scope
 `$ARGUMENTS` may be a path or a git ref. Default to the working-tree diff
