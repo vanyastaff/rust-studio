@@ -5,6 +5,30 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.2] - 2026-06-21
+
+### Fixed
+
+- **Multi-agent skills no longer call the removed `TeamCreate`/`TeamDelete` tools.** Claude Code
+  v2.1.178 removed those tools: every session now has **one implicit team** and shared task list,
+  and teammates are spawned directly via the `Agent` tool with `name` (the `team_name` parameter
+  is accepted but ignored). The orchestration prose in `coordination-protocol.md` §8 and the nine
+  team-capable skills (`team-api`, `team-async`, `team-perf`, `team-release`, `dev-task`,
+  `doc-review`, `eval-agents`, `review`, `spec-tasks`) still instructed the lead to call
+  `TeamCreate` up front and `TeamDelete` at teardown — dead tool calls under the new runtime.
+  - Teams are still gated by `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; the dual-path (team vs.
+    single-orchestrator fallback) is unchanged. Only the lifecycle changed: spawn into the
+    implicit team, and shut teammates down at the end with `SendMessage {type:"shutdown_request"}`
+    (no `TeamDelete`; idle teammates auto-hide).
+  - Removed the now-ignored `team_name` argument from the `Agent` spawn instructions in `team-api`.
+
+### Changed
+
+- **`auto-capture` Stop hook comment corrected for Claude Code v2.1.163.** Stop/`SubagentStop`
+  hooks can now return `hookSpecificOutput.additionalContext`; the stale "a Stop hook cannot inject
+  additionalContext" note is fixed. The hook deliberately keeps `exit 2 + stderr` — it must *block*
+  the stop once to force the nudge, not merely append ignorable context. No behavior change.
+
 ## [0.15.1] - 2026-06-17
 
 ### Fixed

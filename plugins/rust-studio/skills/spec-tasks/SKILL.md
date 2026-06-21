@@ -14,12 +14,12 @@ Orchestrate; delegate writes. Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination
 ## Orchestration
 The durable `.rust-studio/specs/<slug>/tasks.md` file is the human-readable record and source
 of truth. When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), **mirror**
-those task rows into the shared task list — `TeamCreate`, then one `TaskCreate` per row (id ↔
-`#`, owner lead ↔ `owner`, "Blocked by" ↔ `addBlockedBy`) — and use it as the live
-coordination surface while keeping `tasks.md` in sync as each task lands. Otherwise drive the
-file alone, running each task sequentially. Each task still executes through `/dev-task`
-(which itself runs as a team when the gate is set). Drive `TeamDelete` cleanup at the end
-(shut teammates down with `SendMessage {type:"shutdown_request"}` first).
+those task rows into the shared task list — the session already has one implicit shared team,
+so just `TaskCreate` one task per row (id ↔ `#`, owner lead ↔ `owner`, "Blocked by" ↔
+`addBlockedBy`) — and use it as the live coordination surface while keeping `tasks.md` in sync
+as each task lands. Otherwise drive the file alone, running each task sequentially. Each task
+still executes through `/dev-task` (which itself runs as a team when the gate is set). Shut
+teammates down at the end with `SendMessage {type:"shutdown_request"}` (no `TeamDelete`).
 
 ## Input
 `$ARGUMENTS` is a spec slug or path. If empty, list available specs under

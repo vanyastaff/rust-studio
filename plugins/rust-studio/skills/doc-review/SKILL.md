@@ -15,15 +15,16 @@ Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8 (team execut
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the panel as a
-real team: `TeamCreate`, then create one `TaskCreate` task per persona (the personas are
-independent and read-only — no `addBlockedBy` between them) and spawn each as a teammate so
+real team (the session already has one implicit shared team — no `TeamCreate`): create one
+`TaskCreate` task per persona (the personas are independent and read-only — no `addBlockedBy`
+between them) and spawn each as a teammate so
 they run concurrently, reporting via `SendMessage`; the lead merges and de-duplicates. The
 lighter alternative for these read-only personas is to spawn each as a **background subagent**
 (`background: true`) without forming a team. Otherwise fall back to single-orchestrator
 delegation: spawn the personas sequentially and inline the document text into each spawn
 prompt. Teammates don't inherit this context (pass the doc in the spawn prompt) and don't get
-bundled MCP (they rely on the user's ambient serena/exa). Drive `TeamDelete` cleanup at the
-end (shut teammates down with `SendMessage {type:"shutdown_request"}` first).
+bundled MCP (they rely on the user's ambient serena/exa). Shut teammates down at the end with
+`SendMessage {type:"shutdown_request"}` — there is no team to delete; idle teammates auto-hide.
 
 ## When NOT this skill
 - Reviewing a code diff → `/review`.
