@@ -5,6 +5,21 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] - 2026-06-23
+
+### Added
+
+- **Given/When/Then scenario discipline** in `docs/testing-model.md` — a worked `RateLimiter`
+  example (Given/When/Then → Rust `#[test]`) plus a case-enumeration rule that drives agents to
+  **derive** realistic, diverse scenarios — the happy path **plus** error paths, boundaries
+  (empty/zero/max/overflow/unicode), sequence/state (rollover, idempotence), and concurrency /
+  cancellation for async — instead of writing a single happy-path example. This is the *generative*
+  half of the existing `rules/testing.md` rule "happy-path-only is not done": the standard already
+  requires the coverage; Given/When/Then is how the case set is produced. Also distinguishes
+  example-based scenarios (Given/When/Then) from universal laws (`proptest`/`quickcheck`
+  properties). `/dev-task` Phase 1, `/spec` Phase 4, and the `test-engineer` agent now derive
+  acceptance criteria and tests this way.
+
 ## [0.17.0] - 2026-06-23
 
 A studio-wide audit pass: propagate the new behavioral norms, make the methodology coherent across

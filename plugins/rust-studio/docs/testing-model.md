@@ -29,6 +29,52 @@ Keep them to what actually pins the behavior — a sprawl of criteria for a smal
 over-specification failure mode (see *Right-size*, below). Prose criteria that can't be turned into
 an assertion are not "done" criteria; sharpen them until they can.
 
+## Writing criteria as scenarios (Given / When / Then)
+
+Express each criterion as a scenario: **Given** a precondition, **When** one action, **Then** an
+observable result — a return value, an error, a state change, an output, never "works correctly".
+One `When` per scenario; two actions are two scenarios. This maps 1:1 to a test: `Given` → arrange,
+`When` → act, `Then` → assert.
+
+Worked example — a token-bucket `RateLimiter`:
+
+```text
+Given a fresh RateLimiter at 2 requests/second
+When  3 requests arrive in the same second
+Then  the first two return Ready and the third returns Throttled { retry_after }
+
+Given a RateLimiter already at its limit
+When  the 1-second window elapses
+Then  the next request returns Ready again
+
+Given a RateLimiter configured with limit 0
+When  any request arrives
+Then  it returns Throttled immediately — never Ready
+```
+
+```rust
+#[test]
+fn third_request_in_window_is_throttled() {
+    let mut rl = RateLimiter::per_second(2);                   // Given
+    let out = [rl.check(), rl.check(), rl.check()];            // When
+    assert!(matches!(out, [Ready, Ready, Throttled { .. }]));  // Then
+}
+```
+
+**Enumerate across categories — one happy-path scenario is the floor, not the deliverable.** From
+the feature, derive scenarios covering the `rules/testing.md` set: the happy path, **error / failure
+paths**, **boundaries** (empty, zero, max, off-by-one, overflow, unicode), **sequence / state**
+(re-entry, window rollover, idempotence), and **concurrency / cancellation** for async (interleavings,
+dropped futures, timeouts). If a feature yields only one trivial scenario, either it is genuinely
+trivial (take the `/dev-task` fast path) or the criteria are under-thought — push for the real cases.
+This is the generative half of *happy-path-only is not done*: the studio already requires the
+coverage; Given/When/Then is how you **derive** the cases instead of hoping you remember them.
+
+**Examples vs. laws.** Given/When/Then captures **example-based** behavior ("this input → this
+effect"). When the behavior is a **universal law** ("for *any* `x`, `decode(encode(x)) == x`", an
+invariant, an ordering), encode it as a `proptest` / `quickcheck` property instead — it covers the
+whole input space, not enumerated points. The two coexist: scenarios for examples, properties for laws.
+
 ## One outer test per spec (the spec chain)
 
 In `/spec → /spec-tasks → /dev-task (per task) → /spec-verify`:
