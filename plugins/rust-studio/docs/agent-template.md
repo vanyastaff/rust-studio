@@ -48,6 +48,9 @@ Before this gate passes, verify:
 ## Output
 - Findings/plan as <format>. End with verdict **COMPLETE / NEEDS WORK / BLOCKED**
   and evidence (command output, bench numbers). Hand off to `<skill/agent>`.
+- **Lead with the outcome and stay readable** — first line says what you found / what changed,
+  detail after; drop working shorthand in the summary the caller actually reads. See
+  `${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` → *Communicate the result, not your working thread*.
 ```
 
 **The verdict supplements the deliverable — it never replaces it.** Your final message is what

@@ -7,7 +7,8 @@ user-invocable: true
 
 # /dev-task — implement one unit of work
 
-Run a single task through **scout → plan → approve → build → review**, honoring the
+Run a single task through **scout → plan → approve → build → review** — or a **fast path** for
+genuinely trivial changes (Phase 0) — honoring the
 collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §8 team
 execution). You are the orchestrator: **you do not write code or tests yourself — you
 delegate writes to `rust-builder`.** **The plan-approval gate runs through native plan mode**
@@ -59,13 +60,40 @@ cross-crate changes. Use **solo** for prototypes. State which mode you're using 
 Any non-trivial task must also apply the pre-code maintainer standard in
 `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` before code is written.
 
+## Phase 0 — Right-size the ceremony (triage first)
+The most common SDD failure mode is *over-process* — turning a one-line fix into a multi-phase
+plan and a spec nobody needed. Match the ceremony to the change, **never the quality bar**: a
+fast path skips planning *overhead*, not tests, idiom, or review.
+
+**Fast path** — take it only when ALL hold: a single obvious edit site (or a few mechanical
+ones), no design fork, no new/changed public API, no `unsafe`, no cross-crate ripple, no new
+dependency (a typo/doc fix, a localized bug with a clear cause, a serena-drivable rename). Then:
+- Skip Phases 1–3 — no scout sweep, no plan file, no `ExitPlanMode` gate. State one line:
+  *"Fast path: <change> — <why it qualifies>."*
+- Still **red→green for any behavior change**, still `clippy -D warnings` + `fmt` clean, still a
+  quick `rust-reviewer` pass (Phase 5b) and a Phase 6 verdict. Quality is never on the chopping block.
+- If triage proves wrong — the "one-liner" reveals a design choice, a cross-crate ripple, or a
+  public-API/`unsafe` touch — **stop and enter the full loop.** Abandoning a fast path mid-task
+  is correct, not failure; it's the honest move the moment a condition above stops holding.
+
+**Full loop** — everything else (features, public-API / `unsafe` / cross-crate changes, anything
+with a real design decision) runs Phases 1–6 below under the chosen review mode. This is *not* a
+quick-win escape hatch: when in doubt, take the full loop.
+
 ## Phase 1 — Scope & locate
 0. **Enter plan mode.** If you are not already in plan mode, call `EnterPlanMode` to obtain the
    plan-file path. Phases 1–2 are read-only anyway (scout + lead plan, no code until approval),
    so this fits with no workflow change — it just routes the upcoming Draft→Approval through the
    native Plan pane. `AskUserQuestion` is still allowed *inside* plan mode for genuine design
    forks (Phase 2 step 7); only the approval gate moves to `ExitPlanMode`.
-1. Restate the task and its acceptance criteria in 1–3 bullets. Confirm with the user if fuzzy.
+1. Restate the task as **acceptance criteria in observable form** — given/when/then, or
+   input → effect → edge case — 1–3 of them, not a sprawl (over-specification is the Phase-0
+   failure; keep criteria to what actually pins the behavior). Confirm with the user if fuzzy.
+   Where the change has an **externally observable behavior**, write the **outer acceptance test**
+   now (the highest-level test that asserts the feature from outside) and confirm it **fails** (red).
+   This is the outer loop of a double loop: the acceptance test pins "done from the outside", and
+   Phase 4's unit-level TDD drives inward to make it pass. Pure internal refactors with no external
+   behavior change skip the acceptance test — their existing unit tests are the anchor.
 2. Task owned by **`rust-scout`** to map the edit sites and existing tests. Don't guess the
    layout. Scout uses serena MCP for symbol/reference navigation and `rg` for macro-generated
    or `cfg`-gated sites serena can't see — never Bash `grep`/`find`. (As a teammate, scout
@@ -99,6 +127,9 @@ Any non-trivial task must also apply the pre-code maintainer standard in
    plan file** — same loop, native surface.
 
 ## Phase 4 — Build (blocked by approval)
+**Inner loop drives toward the outer acceptance test.** Each unit-level red→green cycle moves the
+Phase-1 acceptance test closer to green; build is complete only when that outer test (where one was
+written) passes — not merely when the unit tests do.
 10. Task owned by **`rust-builder`** with the approved plan and the maintainer-grade verdict
    (pass them in the spawn prompt —
    teammates don't inherit it). Instruct it to:
@@ -118,8 +149,10 @@ Any non-trivial task must also apply the pre-code maintainer standard in
 Two stages — **spec compliance first, then code quality** (the superpowers subagent-driven-dev
 pattern); a finding in EITHER stage loops back to `rust-builder` and re-runs that stage before
 advancing.
-12. **Stage 5a — spec compliance.** Check the diff against the Phase-1 acceptance criteria and the
-    approved plan: does it do exactly what was specified — nothing missing, nothing extra (scope
+12. **Stage 5a — spec compliance.** First, the **outer acceptance test passes** (the executable
+    anchor from Phase 1, where one exists) — a green acceptance test is the objective proof the spec
+    is met, not a re-reading of prose. Then check the diff against the Phase-1 acceptance criteria
+    and the approved plan: exactly what was specified — nothing missing, nothing extra (scope
     creep)? Use `rust-reviewer` with a spec-compliance lens (or `product-steward` for scope). On a
     gap, hand back to `rust-builder` and re-run 5a. **Do not start 5b until 5a is ✅.**
 13. **Stage 5b — code quality.** Task owned by **`rust-reviewer`** on the diff for correctness,
@@ -136,6 +169,10 @@ advancing.
     A `COMPLETE` verdict **requires both Phase 5 stages (spec compliance + code quality)** and the
     failing-test-first evidence; if any disciplined step (pre-code verdict, red test, either review
     stage) was skipped, say which and why — an unaccounted skip is `NEEDS WORK`, not `COMPLETE`.
+    On the **fast path** (Phase 0) the gate is narrower *by design* — red→green for any behavior
+    change, `clippy`/`fmt` clean, and the 5b quality pass; there is no plan or 5a stage to run.
+    That earns `COMPLETE` only if Phase-0 triage genuinely held; if the change turned out
+    non-trivial and the full loop was skipped anyway, that is `NEEDS WORK`, not a shortcut earned.
     Honesty bar: `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
 16. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
     and durable** this task produced — a design decision + rationale, a gotcha that cost

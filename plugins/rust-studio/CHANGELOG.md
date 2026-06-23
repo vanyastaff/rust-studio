@@ -5,6 +5,41 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-06-23
+
+### Added
+
+- **Three cross-cutting behavioral norms in `working-preferences.md`** (the operating-mode canon
+  every agent and skill honors), so agents communicate and self-manage better:
+  - **Assessment vs. action** — when the owner is describing a problem, asking a question, or
+    thinking out loud, the deliverable is the assessment: report and stop, don't apply a fix until
+    a change is actually requested. Confirm evidence supports a state-changing command before
+    running it; unrequested adjacent actions are scope creep. Sharpens the autonomy section
+    (autonomy = executing a *requested* change, not inventing one).
+  - **Finish the turn — don't end on intent** — before ending, if the last paragraph is a plan,
+    a self-answerable question, a promise ("I'll…"), or next steps about undone work, do that work
+    now. End only when complete or blocked on owner-only input.
+  - **Communicate the result, not your working thread** — lead with the outcome; readability beats
+    brevity; drop working shorthand (arrow chains, packed identifiers, coined labels) in the final
+    summary; report outcomes faithfully and audit progress claims against tool results.
+  - `agent-template.md` gains a one-line Output pointer so every new agent inherits the readability norm.
+
+### Changed
+
+- **`/dev-task` is now a right-sized double-loop**, informed by 2025–2026 spec-driven-development
+  practice (GitHub Spec Kit / Kiro / BMAD) and Böckeler's SDD critique:
+  - **Phase 0 — right-size the ceremony.** A **fast path** for genuinely trivial changes (single
+    obvious edit site, no design fork, no public-API/`unsafe`/cross-crate/new-dep) skips Phases 1–3
+    planning *overhead* — never the quality bar (red→green for behavior, clippy/fmt, a 5b review,
+    a verdict all remain). Directly targets the documented SDD failure of turning a one-line fix
+    into a multi-phase spec. Includes an anti-laundering guard: if triage proves wrong, stop and
+    enter the full loop; "when in doubt, take the full loop."
+  - **Double loop (ATDD outer + TDD inner).** Phase 1 writes a failing **outer acceptance test**
+    for externally observable behavior (criteria in given/when/then form); Phase 4's unit-level
+    red→green drives inward to make it pass; Phase 5a checks that **green acceptance test** as the
+    executable spec-compliance anchor instead of re-reading prose. Fills the TDD-integration gap
+    that mainstream SDD tools leave open. Phase 6's verdict is reconciled with the fast-path gate.
+
 ## [0.15.2] - 2026-06-21
 
 ### Fixed
