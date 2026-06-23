@@ -80,6 +80,10 @@ dependency (a typo/doc fix, a localized bug with a clear cause, a serena-drivabl
 with a real design decision) runs Phases 1–6 below under the chosen review mode. This is *not* a
 quick-win escape hatch: when in doubt, take the full loop.
 
+The double-loop, observable-criteria, and full **fast-path abort protocol** are defined once in
+`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md` — abort the fast path the moment a trivial condition
+stops holding, re-enter the full loop, and reuse (don't discard) the work already done.
+
 ## Phase 1 — Scope & locate
 0. **Enter plan mode.** If you are not already in plan mode, call `EnterPlanMode` to obtain the
    plan-file path. Phases 1–2 are read-only anyway (scout + lead plan, no code until approval),

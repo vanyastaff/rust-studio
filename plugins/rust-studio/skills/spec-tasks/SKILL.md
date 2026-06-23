@@ -44,7 +44,10 @@ teammates down at the end with `SendMessage {type:"shutdown_request"}` (no `Team
 ## Phase 3 — Execute
 4. Once approved, mirror the rows into the shared task list with `TaskCreate` (when teams are
    active — see Orchestration). Run each ready task through **`/dev-task`** (scout → plan →
-   approve → build → review with the owning lead's gate). Update both `tasks.md` and the
+   approve → build → review with the owning lead's gate), passing the **spec-level outer
+   acceptance test** and the task's slice of the criteria as context: the task's inner TDD drives
+   toward that one outer test, and it writes its own outer test only if it independently ships
+   externally-observable behavior (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`). Update both `tasks.md` and the
    mirrored `TaskUpdate` status as each task lands — `tasks.md` is the durable record, the
    task list is the live surface. Decide execution order and parallelism yourself based on the
    dependency graph (`addBlockedBy` enforces it for teammates) — state your sequencing

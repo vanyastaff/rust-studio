@@ -35,7 +35,10 @@ user's ambient serena/exa). Shut teammates down at the end with `SendMessage
 `$ARGUMENTS` may be a path or a git ref. Default to the working-tree diff
 (`git diff` + staged + untracked `.rs`). State what you're reviewing.
 If the intended story/acceptance criteria aren't in the diff, infer from context
-and proceed — ask only if the diff is genuinely ambiguous about its goal.
+and proceed — ask only if the diff is genuinely ambiguous about its goal. Where an **outer
+acceptance test** exists for the change, a green outer test is the spec-compliance anchor — check
+the diff satisfies the observable criteria (nothing missing, nothing extra), not just the lines
+(`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`).
 
 ## How to run
 1. Get the diff. Determine scope from context; proceed without asking unless the
