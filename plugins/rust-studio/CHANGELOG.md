@@ -5,6 +5,25 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-06-23
+
+### Fixed
+
+- **`stop_guard` no longer false-positives on meta-discussion.** The opt-in Stop guard scanned the
+  raw final message, so a flagged phrase merely *discussed* in `inline code`, a fenced block, a
+  "quote", or a `>` blockquote — including the guard's own category names like `incomplete-work` —
+  tripped a hard block. It now strips code, inline code, blockquotes, and quoted spans before phrase
+  matching (mirroring the always-on session-level guard), while still detecting completion evidence
+  on the full text. Surfaced live the moment `stop_guard` was enabled as the primary guard;
+  regression tests added (23/23 pass).
+
+### Added
+
+- **`stop_guard` loop cap.** The guard now gives up after 4 consecutive blocks in a session (a
+  per-session counter, reset on a clean stop) so it can never trap a turn — matching the safety the
+  session-level guard already had. Previously it relied only on the hang-watchdog, which guards
+  against stalls but not a re-block loop.
+
 ## [0.18.0] - 2026-06-23
 
 ### Added
