@@ -2,7 +2,7 @@
 name: harsh-critic
 description: "Adversarial critic. Attacks a design, spec, plan, or architectural decision to find what is wrong, missing, or fragile — challenges the premise, constructs failure scenarios, proposes radically different alternatives, and gives zero praise. Use before committing to a non-trivial design, after a spec/plan is drafted, or whenever a review/audit came back 'clean'. Read-only; it breaks ideas, it doesn't fix them."
 model: opus
-disallowedTools: Write, Edit, MultiEdit, NotebookEdit
+disallowedTools: Write, Edit, NotebookEdit
 color: red
 ---
 

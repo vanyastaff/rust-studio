@@ -61,8 +61,11 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
 7. Slugify the feature. Draft `.rust-studio/specs/<slug>/spec.md` from
    `${CLAUDE_PLUGIN_ROOT}/docs/templates/spec.md`: problem, goals/non-goals, chosen approach +
    alternatives (with each approach's invariant-encoding, abuse cases, and forward view),
-   public-surface & semver impact, the recorded pre-code verdict, **acceptance criteria** (a
-   checklist — this is what `/spec-verify` checks), risks, and links (ADR, recalled memory).
+   public-surface & semver impact, the recorded pre-code verdict, **acceptance criteria in
+   observable form** (given/when/then or input → effect → edge case — the basis for the **one
+   spec-level outer acceptance test** that tasks drive toward; `/spec-verify` checks it green),
+   risks, and links (ADR, recalled memory). Testing model:
+   `${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`.
 8. **Terminal gate ("here's the plan — build it?"):** present the spec draft for the user to
    approve using native plan mode (on approval the user transitions into an edit mode and the
    write proceeds — delegate the write to a sub-agent). Keep `AskUserQuestion` for the earlier

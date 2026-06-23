@@ -5,6 +5,39 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-06-23
+
+A studio-wide audit pass: propagate the new behavioral norms, make the methodology coherent across
+the spec chain, and clear stale tool references.
+
+### Added
+
+- **`docs/testing-model.md`** — single source of truth for the double-loop (outer ATDD + inner
+  TDD), observable-form acceptance criteria, the **one-outer-test-per-spec** propagation through
+  `/spec → /spec-tasks → /dev-task → /spec-verify`, and the fast-path abort protocol. The six
+  methodology skills now reference it instead of each redefining the concepts (the concepts were
+  previously defined only inside `/dev-task`).
+- **Behavioral norms now actually reach dispatched agents.** `coordination-protocol.md` §1 (read by
+  26/33 agents) embeds a pointer to the three operating-mode norms from 0.16.0 —
+  assessment-vs-action, finish-the-turn, communicate-the-result — which previously lived only in
+  `working-preferences.md` (referenced by just 2/33 agents), so they barely propagated.
+
+### Changed
+
+- **Spec chain aligned to the double-loop** — resolves the cross-skill inconsistency the 0.16.0
+  `/dev-task` rework introduced: `/spec` writes acceptance criteria in observable form (given/when/
+  then) as the basis for one spec-level outer acceptance test; `/spec-tasks` passes that outer test
+  to each `/dev-task` (tasks drive toward it; only an externally-observable task writes its own);
+  `/spec-verify` runs the green outer test as the primary executable oracle; `/review` gains a
+  spec-compliance anchor; `/tdd` is documented as the inner loop.
+
+### Fixed
+
+- **Removed stale `MultiEdit` references** (the tool was merged into `Edit` in current Claude Code)
+  from the `PreToolUse` hook matcher and the `disallowedTools` of five read-only agents
+  (`harsh-critic`, `rust-reviewer`, `security-auditor`, `unsafe-auditor`, `rust-scout`). Cosmetic —
+  a matcher term that never fired — but removed for accuracy.
+
 ## [0.16.0] - 2026-06-23
 
 ### Added

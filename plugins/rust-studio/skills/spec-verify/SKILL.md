@@ -24,7 +24,9 @@ When off, run the steps without the task-list narration.
 
 ## Steps
 1. Read the spec's **acceptance criteria** (`$ARGUMENTS` = slug or path).
-2. For each criterion, find and run the evidence:
+2. **First, run the spec-level outer acceptance test** — a green outer test is the primary
+   executable proof the feature is met (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`). Then, for
+   each remaining criterion, find and run the evidence:
    - Use serena MCP (`find_symbol`, `search_for_pattern`) to locate test functions and
      impl sites relevant to each criterion — never Bash `grep` for symbols.
    - `cargo nextest run` (fall back to `cargo test`), including `--doc` for doc-tests —
@@ -46,8 +48,9 @@ When off, run the steps without the task-list narration.
 
 ## Output
 A criterion-by-criterion verdict with evidence, then **COMPLETE / NEEDS WORK / BLOCKED**.
-No green claim without the command output to back it. Prove each criterion against the spec's
-acceptance **text** (the oracle), not merely "a test I added passes". Report pass-rate with the
+No green claim without the command output to back it. The **green outer acceptance test** is the
+executable oracle where one exists; for the remaining criteria, prove each against the spec's
+acceptance **text** — not merely "a test I added passes". Report pass-rate with the
 **full denominator** — list skipped/ignored tests with a reason, never drop them from the count.
 A vacuous test, a weakened assertion, or a skipped gate is `NEEDS WORK`, not a pass
 (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).

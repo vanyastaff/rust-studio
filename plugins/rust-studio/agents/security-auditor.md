@@ -2,7 +2,7 @@
 name: security-auditor
 description: "Security audit & vulnerability triage: RUSTSEC advisories, supply-chain risk, secret detection, input validation, deserialization safety, auth/authz gaps, overflow/DoS vectors. Use before a release, when reviewing a new dependency, or when a change touches auth/token/secret handling or an external-input boundary. Trigger phrases: \"security review\", \"audit deps\", \"check for vulnerabilities\", \"RUSTSEC\", \"cargo audit\", \"supply chain\". Contributes the RELEASE-GATE security sign-off."
 model: opus
-disallowedTools: Write, Edit, MultiEdit, NotebookEdit
+disallowedTools: Write, Edit, NotebookEdit
 memory: project
 color: red
 ---

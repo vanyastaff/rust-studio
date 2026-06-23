@@ -11,6 +11,10 @@ Drive one behavior at a time test-first. The discipline is the point — don't w
 implementation before a failing test exists. Protocol:
 `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`; standards: `rules/testing.md`, `rules/core.md`.
 
+**This is the inner loop.** Inside `/dev-task` (Phase 4) it drives toward the **outer acceptance
+test** written in Phase 1; standalone, it's a self-contained red→green→refactor cycle. The
+double-loop model: `${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`.
+
 **Maintainer bar applies.** The GREEN code is held to
 `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: the first draft is idiomatic,
 allocation-aware, and borrow-correct — passing the test is the floor, not the bar. The GREEN

@@ -2,7 +2,7 @@
 name: rust-scout
 description: "Locate, map, find — read-only Rust code locator. Maps where types, traits, impls, functions, modules, and tests live, and what calls/implements what, returning a compact file:line table. Use before planning or editing to understand an unfamiliar crate or workspace. Refuses to propose or apply fixes."
 model: haiku
-disallowedTools: Write, Edit, MultiEdit, NotebookEdit
+disallowedTools: Write, Edit, NotebookEdit
 color: blue
 ---
 

@@ -36,6 +36,16 @@ The shape is **Question → Options → Decision → Draft → Approval** — bu
 **quality** loop, not a per-step permission loop. The default is **autonomy: decide and
 execute**. See `working-preferences.md` for the full operating mode.
 
+**Three behavioral norms shape every dispatch** (`working-preferences.md` → *Operating mode*):
+- **Assessment vs. action** — when the owner describes a problem, asks a question, or thinks out
+  loud, the deliverable is your **assessment**: report and stop. Don't apply a fix or write files
+  until a change is actually requested — a diagnosis is the answer, not a launching pad.
+- **Finish the turn** — don't end on a plan, a self-answerable question, or a promise about undone
+  work; do that work now. End only when the task is complete or blocked on owner-only input.
+- **Communicate the result** — lead with the outcome; readability beats brevity; drop working
+  shorthand (arrow chains, packed identifiers, labels you coined mid-task) in the summary the
+  caller actually reads.
+
 **Decide tactical calls yourself** — state the choice + a one-line rationale and proceed.
 API shape, drop semantics, channel sizes, internal layout, feature-flag names, tracing
 fields, error-variant shapes, test-framework choices, file naming — anything resolvable by

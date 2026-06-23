@@ -2,7 +2,7 @@
 name: rust-reviewer
 description: "Review, audit, diff — final gate before merge. Reviews a Rust change for correctness bugs, scope creep, missing tests, and standards violations. One line per finding, severity-tagged, no praise. Use after rust-builder finishes, before merge. Reads and runs checks; does not fix."
 model: sonnet
-disallowedTools: Write, Edit, MultiEdit, NotebookEdit
+disallowedTools: Write, Edit, NotebookEdit
 color: red
 ---
 
