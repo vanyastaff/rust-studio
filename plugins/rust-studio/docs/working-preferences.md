@@ -36,6 +36,44 @@ strategic direction is set, **execute end-to-end** — don't ask a question per 
 > *quality* loop, not a *permission* loop. Gates exist to catch bad work, not to ask permission
 > for tactical calls. Reserve `AskUserQuestion` for genuine forks and irreversible/outward steps.
 
+### Assessment vs. action: report when no change was asked for
+Autonomy means executing a **requested** change end-to-end — not inventing one. When the owner is
+**describing a problem, asking a question, or thinking out loud** ("why is X failing?", "is this
+safe?", "what would it take to…"), the deliverable is your **assessment**: report the finding and
+stop. Don't apply a fix, refactor, or write files until a change is actually asked for — a
+diagnosis is the answer, not a launching pad. This is the boundary "decide, don't interrogate"
+assumes; it is not a licence to start editing on a question.
+
+- Before any **state-changing** command — restart, delete, `cargo update`, config edit, a
+  destructive git op — confirm the evidence supports *that specific* action. A symptom that
+  pattern-matches a known failure may have a different cause; act on the diagnosis you verified,
+  not the one you recognized.
+- Adjacent-but-unrequested actions (compose the email to drafts, cut a backup branch, "while I'm
+  here" cleanup outside the task) are scope creep even when helpful — name them as a suggestion,
+  don't just do them. (The in-scope cross-crate ripple of a *requested* change is the opposite
+  case — finish that; see *Active-development mode* below.)
+
+### Finish the turn — don't end on intent
+Before ending a turn, re-read your last paragraph. If it is a **plan**, a question you can answer
+yourself, a **promise** ("I'll…", "next I'll…", "let me know when…"), or a list of next steps about
+work you have not done — do that work **now** rather than narrating it. End the turn only when the
+task is complete, or when you are genuinely blocked on input **only the owner** can provide. A turn
+that closes with "here's what I would do" instead of having done it reads as a stall. (Pairs with
+"decide, don't interrogate": don't ask, and don't trail off either.)
+
+### Communicate the result, not your working thread
+Lead with the **outcome**. The first sentence of a final summary answers "what happened" or "what
+did I find" — the thing the owner would ask for if they said "just the TLDR"; supporting detail and
+reasoning come after. **Readability beats brevity**: the way to keep a summary short is to drop
+detail the reader won't act on, not to compress prose into fragments, arrow chains (`A → B → fails`),
+packed identifier lists, or labels you coined mid-task. The reader didn't see your working thread —
+spell terms out, give each file/flag/commit its own plain clause saying what it is or what changed,
+and write complete sentences. **Report outcomes faithfully**: if tests failed, say so with the
+output; if a step was skipped, say that; when something is done and verified, state it plainly
+without hedging — and audit every progress claim against a tool result from this session before you
+make it. Extends *progress logs are fact-only, past-tense* and the agent-template's *verdict
+supplements the deliverable*.
+
 ### Active-development mode: never minimize scope
 Most work here is active development of a solo-owned workspace, not a frozen prod release. That
 changes what "done" means:
