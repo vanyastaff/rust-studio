@@ -62,7 +62,11 @@ not correctness — prove correctness against the acceptance criteria / an oracl
    project's fixture and harness conventions. Use serena MCP
    (`get_symbols_overview`, `search_for_pattern`) for symbol-level scouting; use
    `rg` to catch macro-generated or `cfg`-gated test sites serena can't see.
-3. Map each behavior and error path to a test type: property test for laws and
+3. **Derive the scenarios first (Given/When/Then), then map each to a test type.** From the
+   acceptance criteria, enumerate concrete scenarios across categories — happy path, error/failure,
+   boundaries (empty/zero/max/overflow/unicode), sequence/state, and concurrency/cancellation for
+   async (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`); a single happy-path example is the floor,
+   not the deliverable. Then map each: property test for laws and
    round-trips; integration test for the public API surface; golden/snapshot test
    for stable serialized outputs; doc-test for usage examples; criterion bench for
    perf-sensitive paths.

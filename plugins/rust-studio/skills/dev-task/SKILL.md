@@ -91,8 +91,11 @@ stops holding, re-enter the full loop, and reuse (don't discard) the work alread
    native Plan pane. `AskUserQuestion` is still allowed *inside* plan mode for genuine design
    forks (Phase 2 step 7); only the approval gate moves to `ExitPlanMode`.
 1. Restate the task as **acceptance criteria in observable form** — given/when/then, or
-   input → effect → edge case — 1–3 of them, not a sprawl (over-specification is the Phase-0
-   failure; keep criteria to what actually pins the behavior). Confirm with the user if fuzzy.
+   input → effect → edge case. Enumerate the scenarios the behavior **really** has: the happy path
+   **plus** error paths, boundaries, and (for async) concurrency/cancellation — happy-path-only is
+   under-thought (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`). Don't pad with contrived cases
+   either — that's the Phase-0 over-specification failure; cover the real cases, no more. Confirm
+   with the user if fuzzy.
    Where the change has an **externally observable behavior**, write the **outer acceptance test**
    now (the highest-level test that asserts the feature from outside) and confirm it **fails** (red).
    This is the outer loop of a double loop: the acceptance test pins "done from the outside", and
