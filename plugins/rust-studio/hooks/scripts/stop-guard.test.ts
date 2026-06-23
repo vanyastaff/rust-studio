@@ -10,6 +10,7 @@ import {
   getEvidenceGroups,
   phraseToRegex,
   normalizeText,
+  toProse,
   lastAssistantFromTranscript,
 } from "./stop-guard.ts";
 
@@ -97,6 +98,44 @@ describe("word boundaries prevent false positives", () => {
     // "obviously" is a fake-certainty phrase; "unobviously" (nonsense) must not match.
     expect(phraseToRegex("obviously").test("obviously broken")).toBe(true);
     expect(phraseToRegex("obviously").test("unobviously")).toBe(false);
+  });
+});
+
+describe("prose stripping prevents meta-discussion false positives", () => {
+  // Regression: the guard fired on the word "incomplete" inside the category
+  // name `incomplete-work` while a message was *explaining* the categories.
+  test("a flagged phrase inside inline code does not trigger", () => {
+    const d = evaluate(
+      "The hard categories include `incomplete-work` and `handoff-to-user`. Result: COMPLETE.",
+      cfg(),
+    );
+    expect(d.block).toBe(false);
+  });
+
+  test("a flagged phrase inside a fenced code block does not trigger", () => {
+    const d = evaluate(
+      "```\nincomplete\nstubbed\n```\nFiles changed: a.rs. Result: COMPLETE.",
+      cfg(),
+    );
+    expect(d.block).toBe(false);
+  });
+
+  test("a quoted phrase is treated as discussion, not a commit", () => {
+    const d = evaluate(
+      'I removed the "placeholder" comment. Files changed: a.rs. Result: COMPLETE.',
+      cfg(),
+    );
+    expect(d.block).toBe(false);
+  });
+
+  test("the same phrase in bare prose still blocks", () => {
+    expect(evaluate("This is still incomplete.", cfg()).block).toBe(true);
+  });
+
+  test("toProse strips code, blockquotes, and quoted spans", () => {
+    expect(toProse("a `b` c").trim()).toBe("a   c".trim());
+    expect(toProse("> quoted\nplain").includes("quoted")).toBe(false);
+    expect(toProse('say "placeholder" here').includes("placeholder")).toBe(false);
   });
 });
 

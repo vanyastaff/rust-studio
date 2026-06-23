@@ -16,6 +16,9 @@
 // behind a timeout and a watchdog force-exits 0 (ALLOW) if anything stalls — failing
 // OPEN, because trapping the user in a hung turn is worse than a missed block.
 
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { readFileSync, writeFileSync } from "node:fs";
 import { readInput, watchdog, option, optionBool } from "./_lib.ts";
 
 type Severity = "hard" | "soft";
@@ -481,11 +484,59 @@ async function getLastAssistantText(input: any): Promise<string> {
   return "";
 }
 
+/** Remove fenced code, inline code, markdown blockquotes, and quoted spans so that
+ *  *discussing* a flagged phrase — in `code`, a "quote", a > blockquote, or
+ *  meta-commentary about this guard's own category list — is not mistaken for
+ *  committing it. Mirrors the session-level stop-phrase guard's prose preprocessing. */
+export function toProse(text: string): string {
+  return String(text ?? "")
+    .replace(/```[\s\S]*?```/g, " ") // fenced code blocks
+    .replace(/`[^`]*`/g, " ") // inline code spans
+    .replace(/^\s*>.*$/gm, " ") // markdown blockquotes
+    .replace(/"[^"\n]*"/g, " ") // straight double-quoted spans
+    .replace(/[“”][^“”\n]*[“”]/g, " ") // curly double quotes
+    .replace(/«[^»\n]*»/g, " ") // guillemets
+    .replace(/„[^“”\n]*[“”]/g, " "); // low „ … “/” quotes
+}
+
 /** Pure decision over a final message — the unit tests' entry point. */
 export function evaluate(text: string, cfg: GuardConfig): Decision {
   const rules = buildRules(cfg.allowedCategories);
-  const hits = scan(text, rules, cfg.maxHits);
+  // Phrase-match on prose only (strip code/quotes/blockquotes); keep evidence
+  // detection on the FULL text so a summary inside a code fence still counts.
+  const hits = scan(toProse(text), rules, cfg.maxHits);
   return shouldBlock(text, hits, cfg);
+}
+
+// Loop-cap: never trap the turn. After this many consecutive blocks in a session
+// the guard gives up and allows the stop (mirrors the session-level guard's cap).
+const MAX_BLOCKS = 4;
+
+function blockCounterFile(sessionId: string): string {
+  return join(tmpdir(), `rust-studio-stopguard-${sessionId.replace(/[^A-Za-z0-9]/g, "_")}.json`);
+}
+function bumpBlocks(sessionId: string): number {
+  const f = blockCounterFile(sessionId);
+  let n = 0;
+  try {
+    n = JSON.parse(readFileSync(f, "utf8"))?.count ?? 0;
+  } catch {
+    n = 0;
+  }
+  n += 1;
+  try {
+    writeFileSync(f, JSON.stringify({ count: n }));
+  } catch {
+    /* non-fatal */
+  }
+  return n;
+}
+function resetBlocks(sessionId: string): void {
+  try {
+    writeFileSync(blockCounterFile(sessionId), JSON.stringify({ count: 0 }));
+  } catch {
+    /* non-fatal */
+  }
 }
 
 if (import.meta.main) {
@@ -503,10 +554,21 @@ if (import.meta.main) {
 
   if (!lastText.trim()) process.exit(0); // nothing to judge — allow
 
+  const sessionId = String(input?.session_id ?? "unknown");
   const decision = evaluate(lastText, cfg);
   if (decision.block && decision.reason) {
-    process.stderr.write(buildFeedback(decision, cfg.minEvidence));
+    const n = bumpBlocks(sessionId);
+    if (n > MAX_BLOCKS) {
+      // Give up — never trap the turn in an endless stop loop.
+      resetBlocks(sessionId);
+      process.stderr.write(
+        `Rust Code Studio stop-guard: ${MAX_BLOCKS} consecutive blocks this session — allowing the stop so the turn is never trapped.`,
+      );
+      process.exit(0);
+    }
+    process.stderr.write(`${buildFeedback(decision, cfg.minEvidence)}\n\n(stop-guard block ${n}/${MAX_BLOCKS})`);
     process.exit(2); // block the stop; stderr becomes feedback to Claude
   }
+  resetBlocks(sessionId); // a clean stop resets the streak
   process.exit(0);
 }
