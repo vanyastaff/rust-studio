@@ -1,6 +1,6 @@
 ---
 name: model-domain
-description: "model domain type newtype enum type-state phantom illegal-states-unrepresentable — encode a domain concept in the Rust type system with api-designer."
+description: "model domain type newtype enum type-state phantom illegal-states-unrepresentable — encode ONE domain concept in the type system to make illegal states unrepresentable (newtype/enum/typestate), via api-designer. Narrower than /design-api: no full public surface, no error type, no semver pass — use /design-api for a whole API."
 argument-hint: "[domain concept]"
 user-invocable: true
 ---

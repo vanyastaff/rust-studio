@@ -1,6 +1,6 @@
 ---
 name: review
-description: "review, audit, check — inspect a Rust diff or path for correctness bugs, soundness, scope creep, missing tests, and standards violations. Runs clippy and tests as evidence. Use before committing or merging."
+description: "Rust maintainer-grade diff/path review (audit, check) — correctness bugs, soundness, scope creep, missing tests, and studio standards violations, with clippy + tests run as evidence. Prefer over the generic /code-review for Rust work. Use before committing or merging."
 argument-hint: "[optional path or git ref] [--full for parallel multi-lens]"
 user-invocable: true
 ---
