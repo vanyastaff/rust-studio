@@ -75,6 +75,8 @@ human-readable.
    writes to `rust-builder` with the finding list.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/rules/error-model.md` — your canonical standard: error taxonomy,
+  the `thiserror`/`anyhow` boundary, context layering, retryable-vs-fatal, `source` chains.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — no stringly-typed errors and no
   `Box<dyn Error>` in a library `Result`; no `unwrap`/`expect` on untrusted input, and
   elsewhere only with an invariant comment; `?` preferred over explicit `match` for

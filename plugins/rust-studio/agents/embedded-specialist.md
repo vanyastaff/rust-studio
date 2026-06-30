@@ -61,6 +61,9 @@ or OS underneath it.
    sign-off before any outward action.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/rules/embedded.md` — no_std discipline, static allocation /
+  `heapless`, critical-section over `static mut`, short ISRs, MMIO via PAC/volatile,
+  `panic = "abort"` + linker/target setup.
 - `${CLAUDE_PLUGIN_ROOT}/rules/unsafe.md` — every `unsafe` block needs a `// SAFETY:`
   comment; register and DMA access patterns must satisfy aliasing rules.
 - `${CLAUDE_PLUGIN_ROOT}/rules/perf.md` — no heap allocation on hot paths; const-generic

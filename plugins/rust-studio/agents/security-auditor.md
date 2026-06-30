@@ -87,6 +87,9 @@ Never substitute "probably safe" for checking.
 
 ## Standards you enforce
 
+- `${CLAUDE_PLUGIN_ROOT}/rules/security.md` — your canonical standard: untrusted-input
+  validation, injection prevention, deserialization safety, secret handling at trust
+  boundaries.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — project-wide correctness and panic
   discipline; informs DoS and error-handling findings.
 - `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` — dependency declarations,
