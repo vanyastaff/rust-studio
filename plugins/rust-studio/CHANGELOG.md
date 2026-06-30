@@ -5,6 +5,40 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-06-30
+
+### Fixed
+
+- **Skills no longer write outputs into the plugin's own template files.** `add-dep`,
+  `audit-unsafe`, `perf`, `architecture`, and `team-perf` populated reports at
+  `${CLAUDE_PLUGIN_ROOT}/docs/templates/*` — the read-only install dir — instead of the
+  user's project. They now write to `docs/*` in the project *from* the template (matching
+  the `spec` pattern). Fixed dead skill refs (`/release` → `/team-release`, `/tooling` →
+  `/ci-gate`) and a `session-wrap` specs path that pointed into the plugin dir.
+- **`ffi.md` missing edition-2024 syntax.** Added `unsafe extern "C"` blocks and
+  `#[unsafe(no_mangle)]` / `#[unsafe(export_name)]` — code written from the old guidance
+  fails to compile on edition 2024. Corrected `unsafe.md`: `unsafe_op_in_unsafe_fn` is
+  default-*warn* (not deny), matching `cargo-manifest.md`.
+- **`auto-capture` re-nudged every dirty turn.** The `stop_hook_active` loop-breaker only
+  suppressed a re-block within one continuation; across turns it reset. Added a
+  per-session nudge cap (`MAX_NUDGES = 2`).
+- **`stop-guard` false positives.** Demoted `incomplete-work` / `scope-escape` to soft
+  (block only without evidence, so an honest evidence-backed "NEEDS WORK" passes); dropped
+  `best-effort` and `edge case` phrases that the studio's own rules use approvingly.
+
+### Added
+
+- **`rust-reviewer` promoted to `opus`.** The final merge gate ran on `sonnet` while
+  `harsh-critic` and the read-only auditors ran on `opus`; model capability now tracks
+  decision stakes.
+- **New path-scoped rules: `database.md`, `wasm.md`, `embedded.md`.** The DB, wasm, and
+  embedded specialists existed with no standards to inject. `database-specialist` gains
+  parameterized-query / injection discipline, cites `security.md` + `database.md`, and
+  routes async-correctness to `async-runtime-specialist` and untrusted-input paths to
+  `security-auditor`.
+- **Domain owners cite their canonical rule.** `security-auditor` → `security.md`,
+  `error-architect` → `error-model.md`, `observability-engineer` → `observability.md`.
+
 ## [0.19.0] - 2026-06-23
 
 ### Fixed
