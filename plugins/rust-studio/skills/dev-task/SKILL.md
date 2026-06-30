@@ -1,14 +1,14 @@
 ---
 name: dev-task
-description: "implement feature story task build — run one unit of Rust work end-to-end: scout → plan → approve → build → review. Use for any scoped change that needs discipline: new feature, story, or multi-file edit."
+description: "implement feature story task build — run one unit of Rust work end-to-end: scout → plan → plan-review → approve → build → review. Use for any scoped change that needs discipline: new feature, story, or multi-file edit."
 argument-hint: "[task/story description, or path to a story file]"
 user-invocable: true
 ---
 
 # /dev-task — implement one unit of work
 
-Run a single task through **scout → plan → approve → build → review** — or a **fast path** for
-genuinely trivial changes (Phase 0) — honoring the
+Run a single task through **scout → plan → plan-review → approve → build → review** — or a
+**fast path** for genuinely trivial changes (Phase 0) — honoring the
 collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §8 team
 execution). You are the orchestrator: **you do not write code or tests yourself — you
 delegate writes to `rust-builder`.** **The plan-approval gate runs through native plan mode**
@@ -19,7 +19,7 @@ for "approve the plan?" — that's what `ExitPlanMode` is for. Decide tactical c
 state choice + one-line rationale.
 
 ## Orchestration & progress
-Run the four phases (scout → plan → build → review) as an agent team per
+Run the phases (scout → plan → plan-review → build → review) as an agent team per
 **`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8** (implicit session team, shared task
 list ordered with `addBlockedBy`, `SendMessage`, teammate shutdown). Gate on
 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, spawn the sub-agents sequentially and inline
@@ -112,6 +112,28 @@ stops holding, re-enter the full loop, and reuse (don't discard) the work alread
    plan (files to change, approach, test strategy, risks, applicable gates) **and** the
    `ACCEPTABLE / RESHAPE NEEDED / BLOCKED` maintainer verdict into it. Keep mirroring each
    phase's one-line result to the task list as before (progress visibility is unchanged).
+
+## Phase 2.5 — Plan review (adversarial gate, before approval)
+The lead's maintainer verdict in Phase 2 is a *self*-check; this gate adds an **independent**
+adversarial pass so a flawed plan is caught **before any code is written**, not after. Reviewers
+are read-only — they attack the PLAN, never edit. Scale the depth to the **review mode** chosen
+above (which defaults from `${user_config.gate_intensity}`):
+- **solo** — run it only when the plan is boundary-moving (public API, `unsafe`, cross-crate, a
+  new dependency, or data/migration). Then spawn `harsh-critic` to attack the plan; otherwise
+  state *"solo: plan-review skipped — localized change, no boundary"* and proceed.
+- **lean** — always spawn `harsh-critic` for one adversarial pass over the plan.
+- **full** — spawn `harsh-critic` **plus** the relevant domain reviewer as a concurrent second
+  lens, chosen by what the plan touches: `unsafe-auditor` (any `unsafe`/FFI), `security-auditor`
+  (untrusted input, auth, deserialization), `api-design-lead` (public surface / semver), or
+  `systems-perf-lead` (hot path / allocation). Run them as sibling tasks / background subagents
+  (read-only, so they parallelize).
+
+Reviewers target the plan, not code: wrong or oversized decomposition, a simpler approach
+missed, an unhandled failure/edge case, a boundary/semver hazard, an ownership/sibling-reuse
+miss. Each returns **ACCEPTABLE / RESHAPE NEEDED / BLOCKED** with concrete reasons (no praise).
+**Gate:** any `RESHAPE NEEDED` → fold the findings in and loop back to Phase 2 to rewrite the
+plan file before approval; any `BLOCKED` → stop and surface the blocker. Only a plan that
+survives this pass reaches Phase 3 — the user approves a design that has already been reviewed.
 
 ## Phase 3 — Approve (gate)
 9. **`ExitPlanMode`** to request approval — it reads the plan from the plan file (do not pass

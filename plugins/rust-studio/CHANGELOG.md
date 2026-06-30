@@ -5,6 +5,23 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2026-06-30
+
+### Added
+
+- **Plan-review gate in `/dev-task` — adversarial review of the plan BEFORE any code is
+  written.** New **Phase 2.5** between Plan and Approve: an *independent* reviewer attacks the
+  plan (wrong/oversized decomposition, a simpler approach missed, unhandled edge case, a
+  boundary/semver hazard, an ownership/reuse miss) and returns ACCEPTABLE / RESHAPE NEEDED /
+  BLOCKED. A `RESHAPE NEEDED` loops back to Phase 2 and rewrites the plan before approval, so the
+  user only ever approves a design that already survived review. The phase before this was a
+  *self*-check by the same lead that wrote the plan; this adds an outside set of eyes so agents
+  can't run off and build a flawed plan. Depth scales with the review mode (from `gate_intensity`):
+  solo → only on boundary-moving plans; lean → one `harsh-critic` pass; full → `harsh-critic`
+  plus the relevant domain reviewer (`unsafe-auditor` / `security-auditor` / `api-design-lead` /
+  `systems-perf-lead`) as a concurrent second lens. Trivial fast-path changes (Phase 0) skip it,
+  as they skip Phases 1–3. Flow is now scout → plan → **plan-review** → approve → build → review.
+
 ## [0.22.0] - 2026-06-30
 
 ### Changed
