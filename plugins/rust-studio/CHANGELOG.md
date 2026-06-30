@@ -5,6 +5,17 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2026-06-30
+
+### Changed
+
+- **Tightened tool grants: every agent now blocks `NotebookEdit`.** The 5 read-only
+  auditors already disallowed it; the other 28 agents inherited the full tool set and so
+  carried `NotebookEdit` as dead weight (a Rust studio never edits Jupyter notebooks).
+  Adding `disallowedTools: NotebookEdit` shrinks each agent's blast radius to match its
+  role — the tool grant enforces the leash instead of relying on the prompt. The auditors
+  keep their stricter `Write, Edit, NotebookEdit` disallow.
+
 ## [0.20.0] - 2026-06-30
 
 ### Fixed

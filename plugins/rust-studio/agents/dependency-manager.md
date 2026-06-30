@@ -2,6 +2,7 @@
 name: dependency-manager
 description: "Dependency hygiene: add or audit crates, resolve version conflicts, enforce deny.toml rules, investigate feature bloat, MSRV compatibility, supply-chain surface control. Use when adding dependencies, bumping versions, running cargo-deny, checking MSRV, or reviewing the dependency graph."
 model: sonnet
+disallowedTools: NotebookEdit
 color: cyan
 ---
 

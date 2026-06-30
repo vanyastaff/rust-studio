@@ -2,6 +2,7 @@
 name: api-designer
 description: "Trait and type design specialist: trait design, type-state machines, builders, sealed traits, newtypes, GATs, trait-objects-vs-generics, standard impls (From/TryFrom/Display/Error/Iterator/Default). Use to design a public API surface or make illegal states unrepresentable. Trigger phrases: \"design this trait\", \"typestate builder\", \"sealed trait\", \"newtype pattern\", \"object safety\", \"illegal states unrepresentable\", \"GAT\", \"From vs TryFrom\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: yellow
 ---
 

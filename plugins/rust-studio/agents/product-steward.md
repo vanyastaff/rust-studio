@@ -2,6 +2,7 @@
 name: product-steward
 description: "Scope, milestones, story breakdown, prioritization, cross-domain coordination. Use to turn a goal into ordered work, decide what is in/out of scope, sequence tasks across crates, resolve scope conflicts, or coordinate a change that ripples across domains."
 model: opus
+disallowedTools: NotebookEdit
 color: cyan
 ---
 

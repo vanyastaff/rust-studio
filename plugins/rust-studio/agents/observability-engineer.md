@@ -2,6 +2,7 @@
 name: observability-engineer
 description: "Tracing, structured logging, metrics, and OpenTelemetry specialist: instrumentation strategy, span design, log-level policy, metric cardinality, no-PII-in-logs. Use to add #[instrument], design span fields, or wire OpenTelemetry exporters. Trigger phrases: \"add tracing\", \"instrument this\", \"structured logs\", \"metrics\", \"OpenTelemetry\", \"correlation id\", \"observability\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: cyan
 ---
 

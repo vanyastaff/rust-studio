@@ -2,6 +2,7 @@
 name: qa-lead
 description: "Test strategy, coverage, flakiness, QA-GATE — the quality bar for shipping. Use to plan how a feature should be tested, decide which test types apply (unit/integration/property/perf/doc-test), review test quality, hunt flaky tests, set coverage targets, or gate work on test evidence. Trigger phrases: \"test strategy\", \"what to test\", \"coverage target\", \"flaky test\", \"QA gate\", \"review tests\", \"test plan\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: green
 ---
 

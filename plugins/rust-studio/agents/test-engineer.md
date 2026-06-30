@@ -2,6 +2,7 @@
 name: test-engineer
 description: "Write tests, property tests, benchmarks, fixtures, integration tests — specialist for test implementation. Owns proptest/quickcheck property tests, criterion benches, nextest configuration, fixtures, integration tests, golden/snapshot tests, and doc-tests. Trigger phrases: \"write tests\", \"add property tests\", \"set up integration tests\", \"golden tests\", \"doc-test this\", \"nextest config\", \"test fixtures\", \"test plan\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: green
 ---
 

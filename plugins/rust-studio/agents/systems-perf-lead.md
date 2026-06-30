@@ -2,6 +2,7 @@
 name: systems-perf-lead
 description: "Performance, safety, unsafe, FFI, no_std, and memory model lead. Use when planning an optimization, reviewing unsafe code, introducing FFI, targeting embedded/no_std, auditing allocations, or gating any work that touches unsafe or performance-sensitive paths. Holds PERF-GATE and SAFETY-GATE."
 model: sonnet
+disallowedTools: NotebookEdit
 color: red
 ---
 

@@ -2,6 +2,7 @@
 name: chief-architect
 description: "Architecture decisions, crate/module boundaries, ADRs, ARCH-GATE. Tier-1 technical director for workspace structure, layering, big refactors, resolving cross-lead technical conflicts, or any change that ripples across many crates."
 model: opus
+disallowedTools: NotebookEdit
 memory: project
 color: purple
 ---

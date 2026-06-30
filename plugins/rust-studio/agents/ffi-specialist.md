@@ -2,6 +2,7 @@
 name: ffi-specialist
 description: "FFI and C-interop specialist: bindgen/cbindgen, C ABI correctness, extern \"C\" boundaries, repr(C) layouts, cross-boundary ownership/lifetime contracts, panic=abort, no_std FFI. Use to add/audit a C binding, review a cbindgen header, write build.rs probes for a native library, or diagnose ABI mismatches and undefined behavior at the language boundary."
 model: sonnet
+disallowedTools: NotebookEdit
 color: orange
 ---
 
