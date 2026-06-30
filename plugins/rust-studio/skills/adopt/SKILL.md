@@ -150,7 +150,7 @@ ask: "Where is the crate or workspace you want to adopt?" before proceeding.
 
 14. End with a **prioritized adoption todo** — the three to five actions with the highest
     leverage, ordered by risk/impact. For each, name the skill to run next:
-    - Missing CI or `deny.toml` → `/tech-debt` or `/tooling`
+    - Missing CI or `deny.toml` → `/ci-gate` or `/tech-debt`
     - No architecture doc → already handled above, or re-run `/architecture`
     - Unsafe without SAFETY docs → `/dev-task` scoped to the unsafe module
     - No tests → `/test-setup`

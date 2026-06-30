@@ -19,7 +19,7 @@ or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`) i
    resulting note path in the output. Skip what the code, git history, or `Cargo.toml` already
    make obvious.
 3. **State of play** — list done / in-progress / blocked with the next action for each open
-   item. If a spec is active (`${CLAUDE_PLUGIN_ROOT}/.rust-studio/specs/`), update its task
+   item. If a spec is active (`.rust-studio/specs/`), update its task
    statuses.
 4. **Suggest the next step** and offer to run it:
    - Uncommitted work that's coherent → `/commit` (then `/pr`).

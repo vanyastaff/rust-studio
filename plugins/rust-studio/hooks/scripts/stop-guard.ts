@@ -52,10 +52,8 @@ const HARD_CATEGORIES = new Set([
   "permission-seeking",
   "premature-stopping",
   "test-avoidance",
-  "incomplete-work",
   "soft-failure",
   "handoff-to-user",
-  "scope-escape",
 ]);
 
 const SOFT_CATEGORIES = new Set([
@@ -66,6 +64,12 @@ const SOFT_CATEGORIES = new Set([
   "doc-only-dodge",
   "fallback-without-root-cause",
   "fake-certainty",
+  // Demoted from HARD: honestly reporting genuinely out-of-scope work or remaining work
+  // WITH evidence should not unconditionally block — these now block only when evidence
+  // is missing (or in strict mode). Avoids false positives on disciplined "NEEDS WORK"
+  // reports and on negated forms ("no placeholders left", "nothing out of scope").
+  "incomplete-work",
+  "scope-escape",
 ]);
 
 const CATEGORY_ADVICE: Record<string, string> = {
@@ -180,7 +184,9 @@ const PHRASES: Record<string, string[]> = {
     "this resolves it", "problem solved", "issue resolved", "all set",
   ],
   "risk-dismissal": [
-    "safe enough", "low risk", "minor issue", "edge case", "rare case", "unlikely to happen",
+    // "edge case" intentionally omitted: testing/async rules instruct the agent to call
+    // out "the empty edge case" etc., so flagging the bare term produced false positives.
+    "safe enough", "low risk", "minor issue", "rare case", "unlikely to happen",
     "not a big deal", "probably fine", "should be fine", "acceptable risk", "can ignore",
     "ignore this", "harmless", "benign", "cosmetic only", "minor cleanup",
   ],
@@ -189,7 +195,9 @@ const PHRASES: Record<string, string[]> = {
     "mentioned in the readme", "left a comment", "documented as limitation", "documented limitation",
   ],
   "fallback-without-root-cause": [
-    "graceful fallback", "silent fallback", "best effort", "best-effort", "degrade gracefully",
+    // "best effort"/"best-effort" intentionally omitted: core.md/async.md use the phrase
+    // approvingly ("Drop is best-effort"), so flagging it produced false positives.
+    "graceful fallback", "silent fallback", "degrade gracefully",
     "swallow the error", "ignore the error", "catch and ignore", "return default",
     "use a default", "fallback to", "fall back to",
   ],

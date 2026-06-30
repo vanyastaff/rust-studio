@@ -71,7 +71,8 @@ path does not exist, ask the user to clarify before proceeding.
 ## Phase 4 — Record
 
 8. Delegate to **`rust-builder`** to write the safety review document to
-   `${CLAUDE_PLUGIN_ROOT}/docs/templates/safety-review.md`. The document must include:
+   `docs/safety-review.md` in the project, using
+   `${CLAUDE_PLUGIN_ROOT}/docs/templates/safety-review.md` as the template. The document must include:
    - Audit date and scope (crate(s), commit/ref if available).
    - Complete findings table (all sites, status, severity, miri result).
    - Summary of SAFETY-GATE status: PASS / FAIL / PARTIAL.

@@ -27,11 +27,44 @@
 // agent to act on the nudge), not merely append context it can ignore.
 
 import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { readFileSync, writeFileSync } from "node:fs";
 import { readInput, watchdog, optionBool, run, which } from "./_lib.ts";
 import { getEvidenceGroups, lastAssistantFromTranscript } from "./stop-guard.ts";
 
 const MIN_EVIDENCE = 2;
 const TAIL_BYTES = 200_000;
+
+// Per-session nudge cap. The stop_hook_active loop-breaker only suppresses a re-block
+// WITHIN one continuation; across turns it resets, so previously every dirty turn in a
+// long session re-nudged. This caps the total nudges per session — remind a couple of
+// times, then leave the user alone. Mirrors stop-guard's MAX_BLOCKS. State lives in a
+// per-session tmp file; absent/corrupt → 0 (fail toward nudging, never toward trapping).
+export const MAX_NUDGES = 2;
+
+function nudgeCountFile(sessionId: string): string {
+  return join(tmpdir(), `rust-studio-autocapture-${sessionId.replace(/[^A-Za-z0-9]/g, "_")}.json`);
+}
+export function peekNudges(sessionId: string): number {
+  try {
+    return JSON.parse(readFileSync(nudgeCountFile(sessionId), "utf8"))?.count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+export function bumpNudges(sessionId: string): number {
+  const n = peekNudges(sessionId) + 1;
+  try {
+    writeFileSync(nudgeCountFile(sessionId), JSON.stringify({ count: n }));
+  } catch {
+    /* non-fatal */
+  }
+  return n;
+}
+/** Cap gate: has this session already used up its nudge budget? */
+export function nudgeBudgetExhausted(sessionId: string, max = MAX_NUDGES): boolean {
+  return peekNudges(sessionId) >= max;
+}
 
 /** Strong signals that a capture already happened in this work block: a /remember or
  *  /session-wrap invocation, or an obsidian note write (note_create / note_write /
@@ -124,6 +157,7 @@ export function buildCaptureFeedback(): string {
 interface Input {
   cwd?: string;
   stop_hook_active?: boolean;
+  session_id?: string;
   transcript_path?: string;
   /** Authoritative final assistant text (Claude Code ≥ 2.1.47) — preferred over
    *  parsing the transcript tail. */
@@ -197,6 +231,11 @@ if (import.meta.main) {
   disarm();
 
   if (shouldNudge(signals)) {
+    const sessionId = String(input.session_id ?? "unknown");
+    if (nudgeBudgetExhausted(sessionId)) {
+      process.exit(0); // already nudged enough this session — don't pester
+    }
+    bumpNudges(sessionId);
     process.stderr.write(buildCaptureFeedback());
     process.exit(2); // block the stop; stderr becomes feedback to Claude
   }

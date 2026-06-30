@@ -191,3 +191,44 @@ describe("normalizeText", () => {
     expect(normalizeText("“Looks Good”")).toBe('"looks good"');
   });
 });
+
+
+describe("severity tuning (incomplete-work / scope-escape demoted to soft)", () => {
+  const cfg2 = (over = {}) => ({
+    enabled: true, strict: false, requireEvidence: false,
+    minEvidence: 2, maxHits: 8, allowedCategories: new Set<string>(), ...over,
+  });
+
+  test("honest remaining-work WITH evidence is now allowed (no hard block)", () => {
+    const d = evaluate(
+      "Some polish remains. Files changed: a.rs. Commands run: cargo nextest run. " +
+      "Verification: 12 passed. Result: NEEDS WORK.", cfg2());
+    expect(d.block).toBe(false);
+  });
+
+  test("genuinely out-of-scope deferral WITH evidence is allowed", () => {
+    const d = evaluate(
+      "The auth refactor is out of scope here. Files changed: a.rs. " +
+      "Commands run: cargo test. Verification: passed. Result: COMPLETE.", cfg2());
+    expect(d.block).toBe(false);
+  });
+
+  test("but a bare 'still incomplete' with no evidence still blocks (as soft)", () => {
+    const d = evaluate("This is still incomplete.", cfg2());
+    expect(d.block).toBe(true);
+    expect(d.reason).toBe("soft-hit-without-evidence");
+  });
+});
+
+describe("phrase collisions removed (studio's own approved wording)", () => {
+  const cfg3 = () => ({
+    enabled: true, strict: false, requireEvidence: false,
+    minEvidence: 2, maxHits: 8, allowedCategories: new Set<string>(),
+  });
+  test("'best-effort' is no longer flagged", () => {
+    expect(evaluate("Drop is best-effort here.", cfg3()).block).toBe(false);
+  });
+  test("'edge case' is no longer flagged", () => {
+    expect(evaluate("Handled the empty edge case.", cfg3()).block).toBe(false);
+  });
+});

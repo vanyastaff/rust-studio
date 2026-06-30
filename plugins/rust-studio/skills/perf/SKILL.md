@@ -27,8 +27,8 @@ Performance work, end to end, with `perf-engineer`. **No change lands without nu
 
 ## Phase 4 — Prove it (re-measure)
 - Re-run the bench; show **before/after** side by side (criterion saved baselines). Re-profile
-  to confirm the hot path moved. Record results in
-  `${CLAUDE_PLUGIN_ROOT}/docs/templates/benchmark-report.md`.
+  to confirm the hot path moved. Record results in `docs/benchmark-report.md` in the project,
+  using `${CLAUDE_PLUGIN_ROOT}/docs/templates/benchmark-report.md` as the template.
 
 ## Output
 The bottleneck found, the change, and before/after numbers (verbatim, not summarized). Verdict
