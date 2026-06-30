@@ -10,6 +10,15 @@ Applies to FFI shims, `-sys` crates, generated bindings, and any `extern` bounda
 Owned by `ffi-specialist` / `unsafe-auditor`; the unsafe surface also answers to
 `unsafe.md` and SAFETY-GATE.
 
+## Edition 2024 syntax
+- `extern` blocks must be written `unsafe extern "C" { … }` — the `unsafe` keyword is
+  required in edition 2024.
+- Linkage/symbol attributes are now unsafe: use `#[unsafe(no_mangle)]`,
+  `#[unsafe(export_name = "…")]`, `#[unsafe(link_section = "…")]`. The bare forms are a
+  hard error in edition 2024.
+- Inside an `unsafe extern` block an item may be marked `safe` when calling it needs no
+  `unsafe` (a pure C function with no preconditions); default to `unsafe` otherwise.
+
 ## Layout & ABI
 - `#[repr(C)]` on every struct that crosses the boundary: field order = declaration order,
   alignment = max field alignment, size rounded up to alignment. Never assume `repr(Rust)`

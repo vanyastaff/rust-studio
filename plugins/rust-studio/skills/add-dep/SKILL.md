@@ -68,7 +68,8 @@ Every item below must be reported; "unknown" is valid, silence is not.
   API ergonomics, adoption.
 
 ### Template record
-- Populate `${CLAUDE_PLUGIN_ROOT}/docs/templates/dependency-review.md` with the findings.
+- Write the findings to `docs/dependency-review.md` in the project, using
+  `${CLAUDE_PLUGIN_ROOT}/docs/templates/dependency-review.md` as the template.
   `dependency-manager` drafts the record; do not write it yourself.
 
 ## Phase 3 — Present findings (gate)
@@ -114,7 +115,7 @@ Summarize: crate added, version pinned, features selected, MSRV status, license 
 advisory status, anything deferred. End with **COMPLETE / NEEDS WORK / BLOCKED**.
 
 Suggest next steps: `/dev-task` to wire up the new API, `/review` if the integration
-touches a public surface, `/release` if this bumps MSRV or changes the public dependency
+touches a public surface, `/team-release` if this bumps MSRV or changes the public dependency
 surface of a published crate.
 
 ## Error recovery

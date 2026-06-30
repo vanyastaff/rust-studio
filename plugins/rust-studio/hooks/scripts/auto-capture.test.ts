@@ -8,6 +8,10 @@ import {
   lastBlockRaw,
   buildCaptureFeedback,
   asText,
+  MAX_NUDGES,
+  peekNudges,
+  bumpNudges,
+  nudgeBudgetExhausted,
   type CaptureSignals,
 } from "./auto-capture.ts";
 
@@ -131,5 +135,40 @@ describe("asText (last_assistant_message normalization)", () => {
     expect(asText(undefined)).toBe("");
     expect(asText(null)).toBe("");
     expect(asText(42)).toBe("");
+  });
+});
+
+
+describe("per-session nudge cap", () => {
+  const sid = () => `cap-test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  test("a fresh session has used no budget", () => {
+    const id = sid();
+    expect(peekNudges(id)).toBe(0);
+    expect(nudgeBudgetExhausted(id)).toBe(false);
+  });
+
+  test("bumpNudges increments and persists across reads", () => {
+    const id = sid();
+    expect(bumpNudges(id)).toBe(1);
+    expect(peekNudges(id)).toBe(1);
+    expect(bumpNudges(id)).toBe(2);
+    expect(peekNudges(id)).toBe(2);
+  });
+
+  test("budget exhausts once MAX_NUDGES is reached, ending the every-turn nag", () => {
+    const id = sid();
+    for (let i = 0; i < MAX_NUDGES; i++) {
+      expect(nudgeBudgetExhausted(id)).toBe(false); // still allowed to nudge
+      bumpNudges(id);
+    }
+    expect(nudgeBudgetExhausted(id)).toBe(true); // capped: no more nudges this session
+  });
+
+  test("separate sessions keep independent budgets", () => {
+    const a = sid(), b = sid();
+    for (let i = 0; i < MAX_NUDGES; i++) bumpNudges(a);
+    expect(nudgeBudgetExhausted(a)).toBe(true);
+    expect(nudgeBudgetExhausted(b)).toBe(false);
   });
 });

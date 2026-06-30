@@ -26,7 +26,8 @@ SAFETY-GATE.
   preconditions the caller MUST uphold (valid-for-reads/writes of N bytes, alignment,
   no concurrent mutation, lifetime). Prefer safe fns with internal `unsafe` over public
   `unsafe fn`.
-- `unsafe_op_in_unsafe_fn` is default-**deny** in Edition 2024: inside an `unsafe fn`,
+- `unsafe_op_in_unsafe_fn` is default-**warn** in Edition 2024 (escalate it to `deny` in
+  `[workspace.lints.rust]` — see cargo-manifest.md): inside an `unsafe fn`,
   each unsafe op still needs its own `unsafe { … }` wrapper with its own SAFETY comment.
   Never disable the lint.
 - Encapsulate raw operations behind a small module (1–3 types, 10–20 methods) whose

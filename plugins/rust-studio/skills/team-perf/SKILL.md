@@ -130,8 +130,8 @@ the baseline once all four report via `SendMessage`.
 
 ## Phase 5 — Sign-off (blocked by 4)
 
-- `systems-perf-lead` produces the final summary using
-  `${CLAUDE_PLUGIN_ROOT}/docs/templates/benchmark-report.md` as the template. Delegate
+- `systems-perf-lead` produces the final summary, written to `docs/benchmark-report.md` in the
+  project using `${CLAUDE_PLUGIN_ROOT}/docs/templates/benchmark-report.md` as the template. Delegate
   writing the filled-out report to `rust-builder`. Every teammate's contribution ends in
   **COMPLETE / NEEDS WORK / BLOCKED** with evidence.
 - Summary must include:

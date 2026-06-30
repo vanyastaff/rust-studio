@@ -97,8 +97,8 @@ the key use-cases before proceeding.
     for the user to approve using native plan mode (on approval the user transitions into an edit
     mode). Keep `AskUserQuestion` for the earlier option forks (the Phase 3 decision gate), not
     for this final go-ahead. If approved, delegate to **`rust-builder`** to write
-    `docs/templates/architecture.md` (`${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`)
-    from the approved draft. The builder must not add content beyond what was approved in Phase 4.
+    `docs/architecture.md` in the project (using `${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`
+    as the template) from the approved draft. The builder must not add content beyond what was approved in Phase 4.
 14. Show the committed doc path and a diff summary.
 
 ## Phase 6 — ARCH-GATE
