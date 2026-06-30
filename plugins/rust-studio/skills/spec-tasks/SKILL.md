@@ -17,9 +17,10 @@ of truth. When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
 those task rows into the shared task list — the session already has one implicit shared team,
 so just `TaskCreate` one task per row (id ↔ `#`, owner lead ↔ `owner`, "Blocked by" ↔
 `addBlockedBy`) — and use it as the live coordination surface while keeping `tasks.md` in sync
-as each task lands. Otherwise drive the file alone, running each task sequentially. Each task
-still executes through `/dev-task` (which itself runs as a team when the gate is set). Shut
-teammates down at the end with `SendMessage {type:"shutdown_request"}` (no `TeamDelete`).
+as each task lands; follow the team mechanics in
+**`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8** (`SendMessage`, teammate shutdown).
+Otherwise drive the file alone, running each task sequentially. Each task still executes through
+`/dev-task` (which itself runs as a team when the gate is set).
 
 ## Input
 `$ARGUMENTS` is a spec slug or path. If empty, list available specs under

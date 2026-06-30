@@ -12,29 +12,17 @@ sub-agents; the orchestrator never writes.** Gate at phase boundaries (quality g
 not permission loops) — decide tactical calls yourself with a one-line rationale.
 Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` (§8 team execution).
 
-## Orchestration
-When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run this as a real
-team: the session already has one implicit shared team, so spawn the named agents as teammates
-directly (`Agent` with `name` + `subagent_type` — no `TeamCreate`, no `team_name`) and
-coordinate via the shared task list (`TaskCreate` one task per phase, order with `addBlockedBy`,
-assign with `TaskUpdate owner`) + `SendMessage`. Otherwise
-fall back to single-orchestrator delegation: spawn sub-agents sequentially and inline each
-phase's context into the spawn prompt. Teammates don't inherit this plan (pass it in the spawn
-prompt) and don't get bundled MCP (they rely on the user's ambient serena/exa); status can lag,
-so have teammates mark tasks `completed`. Shut teammates down at the end with `SendMessage
-{type:"shutdown_request"}` — there is no team to delete; idle teammates auto-hide.
+## Orchestration & progress
+Execute the phases as an agent team per **`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8**
+(implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
+shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
+single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
+into the spawn prompt.
 
-## Progress visibility
-The user follows the **task list** to know where things stand — keep it live, do not go silent
-until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on), in
-**both** team and single-orchestrator mode:
-1. At the start, `TaskCreate` one task per phase so the whole plan is visible up front.
-2. `TaskUpdate` each task to `in_progress` before you start its phase.
-3. The moment a phase produces its result, surface it in one line and `TaskUpdate` the task to
-   `completed` — **before** starting the next phase. The user sees intermediate results, not a
-   final dump.
-4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
-When off, run the phases without the task-list narration.
+Keep the **task list live** when `progress_tracking` is on (`${user_config.progress_tracking}`,
+default on): one `TaskCreate` per phase up front, flip to `in_progress` before each phase and
+`completed` the moment it yields a result (surfaced in one line) so the user sees intermediate
+progress, not a final dump. Foreground the phase being waited on. Off → no task-list narration.
 
 ## Team composition
 `api-design-lead` (owns API-GATE) · `api-designer` · `error-architect` · `docs-engineer`

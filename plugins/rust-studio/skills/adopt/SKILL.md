@@ -36,14 +36,9 @@ ask: "Where is the crate or workspace you want to adopt?" before proceeding.
 
 ## Phase 2 — Classify domains and infer standards
 
-3. From the scout report, run `/detect-stack` logic to classify which studio domains are
-   in play. Check for signals:
-   - **async/web**: `tokio`, `async-std`, `axum`, `actix-web`, `hyper`, `reqwest`, `tonic`
-   - **CLI/TUI**: `clap`, `structopt`, `crossterm`, `ratatui`, `indicatif`
-   - **systems/perf**: `unsafe` blocks, `no_std`, `libc`, `bindgen`, FFI modules, `criterion`
-   - **API surface**: `pub` items in `lib.rs`, re-exports, public trait impls
-   - **data/storage**: `sqlx`, `diesel`, `serde`, `postcard`, `prost`, `redis`, `sled`
-   - **WASM**: `wasm-bindgen`, `wasm-pack`, `web-sys`
+3. Run `/detect-stack` to classify which studio domains are in play, feeding it the scout
+   report. It owns the canonical dependency-signal table (async/web, CLI/TUI, systems/perf,
+   API surface, data/storage, WASM) — don't re-derive the signals here.
 4. Identify which leads own each domain (see
    `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md`). List them — they will be consulted in
    Phase 4.

@@ -5,6 +5,22 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] - 2026-06-30
+
+### Changed
+
+- **Deduplicated orchestration boilerplate across the team skills.** `team-api`, `team-async`,
+  `team-perf`, `team-release`, `dev-task`, and `spec-tasks` each restated the agent-team
+  execution protocol (~25 drifted lines) that already lives canonically in
+  `docs/coordination-protocol.md` §8. They now carry a tight reference + the one-line fallback
+  guard §8 prescribes, keeping their skill-specific team composition and phases. Net −69 lines,
+  zero drift.
+- **`adopt` no longer re-derives the stack-signal table.** It invoked "`/detect-stack` logic"
+  then inlined the dependency signals; it now calls `/detect-stack` (the canonical owner).
+- **Sharper routing descriptions.** `model-domain` now states it encodes ONE concept (narrower
+  than `/design-api`, no error type / full surface); `review` leads with "Rust maintainer-grade"
+  to win routing over the generic built-in `/code-review`.
+
 ## [0.21.0] - 2026-06-30
 
 ### Changed

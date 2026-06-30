@@ -18,37 +18,24 @@ regression). Use `AskUserQuestion` only for genuine design forks and BLOCKED rec
 for "approve the plan?" — that's what `ExitPlanMode` is for. Decide tactical calls yourself,
 state choice + one-line rationale.
 
-## Orchestration
-When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run this as a real
-team: the session already has one implicit shared team, so spawn `rust-scout`, the owning lead,
-`rust-builder`, and `rust-reviewer` as teammates directly (no `TeamCreate`) and coordinate via
-the shared task list (`TaskCreate` one task
-per phase, order with `addBlockedBy`: scout → plan → build → review, assign with
-`TaskUpdate owner`) + `SendMessage`. Otherwise fall back to single-orchestrator delegation:
-spawn sub-agents sequentially and inline each phase's context into the spawn prompt. Teammates
-don't inherit this plan (pass it in the spawn prompt) and don't get bundled MCP (they rely on
-the user's ambient serena/exa); status can lag, so have teammates mark tasks `completed`.
-Shut teammates down at the end with `SendMessage {type:"shutdown_request"}` — there is no team
-to delete; idle teammates auto-hide.
+## Orchestration & progress
+Run the four phases (scout → plan → build → review) as an agent team per
+**`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8** (implicit session team, shared task
+list ordered with `addBlockedBy`, `SendMessage`, teammate shutdown). Gate on
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, spawn the sub-agents sequentially and inline
+each phase's context into the spawn prompt.
 
-## Progress visibility
-The user follows the **task list** to know where things stand — keep it live, do not go silent
-until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on), in
-**both** team and single-orchestrator mode:
-1. At the start, `TaskCreate` one task per phase — scout → plan → build → review — so the whole
-   plan is visible up front (team mode also wires `addBlockedBy`; solo mode just creates them).
-2. Before spawning a phase, `TaskUpdate` its task to `in_progress`.
-3. The moment that phase's sub-agent returns, surface its result in one line (scout's edit-site
-   map, the plan's verdict, the build's diff summary, the review's findings) and `TaskUpdate` the
-   task to `completed` — **before** starting the next phase. The user sees intermediate results,
-   not one final dump.
-4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
-5. (Optional status bar) If the user ran `/progress-bar`, also mirror the phase to the studio
-   status line at each boundary:
-   `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" set --phase "<phase>" --step "<n/total>" [--tasks "<done/total>"]`,
-   and `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" clear` at the end. Harmless no-op if they
-   never enabled the status line.
-When off, run the phases without the task-list narration.
+Keep the task list live when `progress_tracking` is on (`${user_config.progress_tracking}`,
+default on): `TaskCreate` one task per phase up front, flip each to `in_progress` before its
+phase, and the moment a phase returns surface its result in one line (scout's edit-site map, the
+plan's verdict, the build's diff summary, the review's findings) and mark it `completed` before
+the next phase — intermediate results, not a final dump. Foreground the phase being waited on.
+
+(Optional status bar) If the user ran `/progress-bar`, also mirror the phase to the studio
+status line at each boundary:
+`bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" set --phase "<phase>" --step "<n/total>" [--tasks "<done/total>"]`,
+and `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" clear` at the end. Harmless no-op if they
+never enabled the status line. When off, run the phases without the task-list narration.
 
 ## Input
 `$ARGUMENTS` is the task. If it's a path, read that file. If empty, ask: "What should we
