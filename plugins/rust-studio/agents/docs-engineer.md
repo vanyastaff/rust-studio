@@ -2,6 +2,7 @@
 name: docs-engineer
 description: "Write/audit/review Rust documentation: rustdoc, doc-tests, intra-doc links, crate-level //! docs, mdBook, examples/, README. Use to add public-facing docs, write doc-tests, enforce #![warn(missing_docs)], audit # Errors/# Panics/# Safety/# Examples sections, or sync README with crate docs. Signs off API-GATE (pub items documented) and RELEASE-GATE (README/docs in sync)."
 model: sonnet
+disallowedTools: NotebookEdit
 color: green
 ---
 

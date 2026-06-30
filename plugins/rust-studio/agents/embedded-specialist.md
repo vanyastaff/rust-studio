@@ -2,6 +2,7 @@
 name: embedded-specialist
 description: "Embedded and no_std Rust specialist: no_std discipline, embedded-hal, cortex-m, interrupt safety, panic handlers, static allocation. Use for firmware, bare-metal drivers, HAL implementations, or any code that must compile without std. Trigger phrases: \"no_std\", \"embedded-hal\", \"cortex-m\", \"#[entry]\", \"#[no_main]\", \"heapless\", \"critical-section\", \"panic=abort\", \"interrupt handler\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: orange
 ---
 

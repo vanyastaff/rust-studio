@@ -2,6 +2,7 @@
 name: web-framework-specialist
 description: "axum/actix web-framework specialist: extractors, middleware, tower layers, routing, shared app state, IntoResponse error mapping, HTTP status codes. Use to add/review handlers, middleware stacks, tower composition, or extractor validation. Trigger phrases: \"add a route\", \"extractor\", \"middleware\", \"tower layer\", \"app state\", \"status code\", \"body limit\", \"request timeout\", \"IntoResponse\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: blue
 ---
 

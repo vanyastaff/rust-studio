@@ -2,6 +2,7 @@
 name: perf-engineer
 description: "Performance measurement & optimization: criterion benches, flamegraph/perf/samply/cachegrind profiling, allocation profiling, SIMD, micro-optimization. Use to write/run benchmarks, profile a hot path, cut allocations/clones, or prove a speedup with numbers. Trigger phrases: \"is this fast enough\", \"profile this\", \"too many allocations\", \"write a bench\", \"micro-optimize\", \"flamegraph\", \"cachegrind\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: red
 ---
 

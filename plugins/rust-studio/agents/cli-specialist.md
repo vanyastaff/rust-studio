@@ -2,6 +2,7 @@
 name: cli-specialist
 description: "CLI/TUI implementation specialist: clap derive, ratatui/TUI, shell completions, exit codes, signal handling, arg validation. Use to implement/review a subcommand, value parsers, Ctrl-C cleanup, or BrokenPipe fixes. Trigger phrases: \"add subcommand\", \"shell completions\", \"clap parser\", \"value parser\", \"TUI\", \"exit code\", \"signal handler\", \"broken pipe\", \"NO_COLOR\", \"IsTerminal\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: green
 ---
 

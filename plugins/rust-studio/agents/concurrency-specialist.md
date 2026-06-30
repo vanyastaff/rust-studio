@@ -2,6 +2,7 @@
 name: concurrency-specialist
 description: "Atomics, Send/Sync, lock-free, memory ordering, loom tests, data races, deadlocks, lock-order inversions. Use when writing or auditing atomic operations, designing lock-free structures, choosing Ordering, adding loom tests, or diagnosing concurrency bugs."
 model: sonnet
+disallowedTools: NotebookEdit
 color: red
 ---
 

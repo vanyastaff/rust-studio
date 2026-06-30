@@ -2,6 +2,7 @@
 name: build-engineer
 description: "Implements build infrastructure: build.rs, CI configs, cross-compilation, xtask, cargo-hack feature matrices, OUT_DIR codegen. Use to set up/fix build scripts, add cross targets, debug CI, or verify all feature combinations compile. (tooling-lead owns build policy + BUILD-GATE; this agent implements.) Trigger phrases: \"build.rs\", \"cross-compile\", \"cargo hack\", \"xtask\", \"OUT_DIR\", \"rerun-if\", \"CI matrix\"."
 model: sonnet
+disallowedTools: NotebookEdit
 color: cyan
 ---
 

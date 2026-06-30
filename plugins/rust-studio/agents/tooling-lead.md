@@ -2,6 +2,7 @@
 name: tooling-lead
 description: "Tier-2 lead who DECIDES build/CI/dev-tooling policy and owns the BUILD-GATE — the feature/target-matrix strategy, workspace structure, cross-compilation policy, and tooling choices. Use to set build/CI strategy, restructure a Cargo workspace, decide the feature/target matrix, or gate work on build evidence. Delegates the actual build.rs/CI/xtask implementation to build-engineer."
 model: sonnet
+disallowedTools: NotebookEdit
 color: cyan
 ---
 
