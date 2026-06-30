@@ -58,6 +58,8 @@ signal without leaking secrets or exploding cardinality.
    configured, confirm the exporter initialises cleanly in the test harness.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/rules/observability.md` — your canonical standard: span design,
+  log-level policy, metric cardinality, structured fields, no PII in logs.
 - `${CLAUDE_PLUGIN_ROOT}/rules/async.md` — async context propagation, `Span::enter`
   usage in async code (`instrument` future, not blocking `.enter()` across `.await`).
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — general Rust quality: no `unwrap` in

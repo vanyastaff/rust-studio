@@ -55,6 +55,11 @@ explicit delegation.
    (`wasm-pack test --headless --chrome` or equivalent).
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/rules/wasm.md` — wasm32 environment limits (no threads/fs/sockets),
+  `getrandom` js backend, `panic = "abort"` + panic hook, binary-size profile, typed
+  wasm-bindgen surface, untrusted JS input.
+- `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` — release size profile (`opt-level`,
+  `lto`, `codegen-units`, `strip`) and `default-features = false` audit.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — naming, error handling, no silent panics at the
   JS boundary.
 
