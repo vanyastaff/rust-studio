@@ -5,6 +5,18 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.28.1] - 2026-07-01
+
+### Fixed (both found by running /env-setup for real on a live machine)
+
+- **`env-setup.sh --nightly` crashed**: `rustup toolchain install nightly --component miri
+  rust-src` parses `rust-src` as a toolchain name — the flag must be repeated
+  (`--component miri --component rust-src`). The `set -e` script died there, before any
+  binstall batch ran.
+- **False MISSING for `cargo-careful`**: it has no `--version` flag (subcommands only), so
+  the probe reported it absent after a successful install. The probe now falls back to
+  PATH presence (`cargo careful` → `cargo-careful`).
+
 ## [0.28.0] - 2026-07-01
 
 ### Added

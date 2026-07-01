@@ -121,9 +121,11 @@ QOL_TOOLS=(
   "sccache|sccache"
 )
 
-probe() { # probe "cargo nextest" -> 0 if it answers --version
+probe() { # probe "cargo nextest" -> 0 if it answers --version or its binary is on PATH
   # shellcheck disable=SC2086 — word-splitting the probe command is intended
-  $1 --version >/dev/null 2>&1
+  $1 --version >/dev/null 2>&1 && return 0
+  # some tools (e.g. cargo-careful) have no --version — fall back to PATH presence
+  have "${1// /-}"
 }
 
 report_tier() { # report_tier <label> <array-name>
@@ -133,7 +135,7 @@ report_tier() { # report_tier <label> <array-name>
   for entry in "$@"; do
     cmd="${entry%%|*}"; crate="${entry##*|}"
     if probe "$cmd"; then
-      printf '  ok       %-20s %s\n' "$crate" "$($cmd --version 2>/dev/null | head -1)"
+      printf '  ok       %-20s %s\n' "$crate" "$($cmd --version 2>/dev/null | head -1 || true)"
     else
       printf '  MISSING  %s\n' "$crate"
       missing+=("$crate")
@@ -239,7 +241,7 @@ else
 fi
 run rustup component add clippy rustfmt rust-analyzer rust-src llvm-tools-preview
 if [ "$NIGHTLY" = 1 ]; then
-  run rustup toolchain install nightly --component miri rust-src
+  run rustup toolchain install nightly --component miri --component rust-src
 fi
 
 # ---------- 3. cargo-binstall -----------------------------------------------------
