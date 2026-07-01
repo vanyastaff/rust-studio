@@ -5,6 +5,14 @@
 .fastembed_cache/
 plugins/.rust-studio.backup-pre-memory-unify/
 
+# MCP / tool-local state
+.serena/
+.obsidian-mcp/
+
+# Rust build artifacts (benchmark fixtures are source-only)
+target/
+*.rlib
+
 # OS / editor junk
 .DS_Store
 Thumbs.db
