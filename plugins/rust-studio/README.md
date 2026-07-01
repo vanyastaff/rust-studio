@@ -277,7 +277,10 @@ just makes the relevant skill report it's unavailable and point you at the insta
 
 - **MCP servers**, used when present: a symbol-navigation server (serena) for `rust-scout` /
   `rust-builder`, a web-search server (exa) for advisory / freshness lookups, and the `obsidian`
-  server for cross-session memory (`/remember`, `/recall`).
+  server ([`lstpsche/obsidian-mcp`](https://github.com/lstpsche/obsidian-mcp), filesystem-direct —
+  no Obsidian app needed) for cross-session memory (`/remember`, `/recall`). See
+  [`docs/tooling.md`](docs/tooling.md#prerequisites--serena--exa--obsidian-companions-not-bundled)
+  for the install/register snippet.
 
 ## License
 
