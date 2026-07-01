@@ -5,6 +5,256 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.28.0] - 2026-07-01
+
+### Added
+
+- **New `/env-setup` skill + `scripts/env-setup.sh`** — provision a development machine
+  end-to-end: OS build prerequisites per platform (dnf/apt/pacman/zypper/apk/brew), latest
+  stable Rust via rustup with the components the studio needs (`clippy`, `rustfmt`,
+  `rust-analyzer`, `rust-src`, `llvm-tools-preview`), `cargo-binstall`, and the studio's
+  cargo tool suite installed as **prebuilt binaries** in tiers (core / deep-quality+perf /
+  QoL), aligned with the `docs/tooling.md` canon. The mechanical work lives in one
+  idempotent, root-refusing bash script (`--check` / `--core` / `--full` / `--qol` /
+  `--nightly` / `--os-deps` / `--yes` / `--dry-run`) — also usable standalone — and the
+  skill orchestrates: detect → scope gate → run script → verify by re-probed `--version`
+  output (non-zero exit = something still missing). Optional skill-driven extras:
+  nightly+miri, mold linker and sccache `~/.cargo/config.toml` merges. Listed under
+  Onboarding in `/help`, the README, and the usage guide.
+
+### Changed
+
+- **Unused-dep canon: `cargo-machete` → `cargo-shear`.** shear parses imports with
+  rust-analyzer's parser instead of regex, also catches *misplaced* deps (dev/build in the
+  wrong section) and unlinked source files, ships `--fix` / `--deny-warnings` /
+  `--format=json`, and auto-recognizes cargo-hakari `workspace-hack` crates. machete and
+  `cargo-udeps` stay documented as fallbacks. Updated: `docs/tooling.md`,
+  `docs/ci-best-practices.md`, `dependency-manager` agent, `/deps-check`, the README tool
+  table, and the `/env-setup` core tier.
+- **`/env-setup` full tier grew the tools the studio already references but never
+  installed:** `cargo-llvm-lines` (`/bloat` monomorphization pass), `cargo-insta`
+  (snapshot review CLI for `/test-setup`), `cargo-hakari` (20+-crate workspaces).
+- **`/env-setup --memory`** installs the studio's memory stack: `obsidian-mcp` built with
+  `--features embeddings` (`cargo install` — the one deliberate compile-from-source, since
+  prebuilt binaries don't carry the feature), then prints the user-scope
+  `claude mcp add obsidian …` registration line. The `--check` report now shows the
+  memory server's presence alongside rustup/binstall.
+
+## [0.27.0] - 2026-07-01
+
+### Changed (Claude 5 / Fable 5 readiness — from Anthropic's official Fable 5 prompting & migration guidance)
+
+- **Judgment-heavy agents now inherit the session model.** `chief-architect`,
+  `product-steward`, `harsh-critic`, `rust-reviewer`, and `unsafe-auditor` switch from
+  `model: opus` to `model: inherit` — a gate should never judge below the model that wrote
+  the code. On a Claude 5 session the gates get Fable 5, whose code-review recall exceeds
+  Opus 4.8; on an Opus session nothing changes. Specialists stay `sonnet`, the scout `haiku`.
+- **`security-auditor` stays deliberately pinned to `opus`.** Fable 5's cyber safety
+  classifiers screen exactly the content a vulnerability audit produces; a mid-audit refusal
+  would silently weaken the RELEASE-GATE. Opus 4.8 runs the same audit refusal-free. This
+  also keeps `/eval-agents` security-fixture scoring stable.
+- **New `docs/claude-5-compat.md`** — what changed with the Claude 5 family (always-on
+  adaptive thinking, effort default flipped to `high`, refusal classifiers, higher review
+  recall, more dependable parallel subagents) and how the studio responds, with links to the
+  official docs. Includes the verified Claude Code classifier mechanics (interactive = auto
+  fallback to Opus with a sticky session swap, headless = refusal; first-request workspace
+  context can trip it — relevant to the planted-vulnerability benchmark fixtures, with
+  `claude --safe-mode` as the diagnostic) and a periodic self-audit prompt for finding
+  weaker-model guardrails and drift in the studio's own instruction layer.
+- **Agent authoring rules hardened for Claude 5** (`docs/agent-template.md`): never instruct
+  an agent to echo/transcribe its reasoning (trips the `reasoning_extraction` refusal
+  classifier — full-plugin audit found zero occurrences today); encode judgment, not
+  scripts — Anthropic reports over-prescriptive step lists degrade Fable 5 output.
+- Roster, usage guide, coordination protocol, `/team-perf`, and README updated to reflect
+  the model policy.
+
+### Changed (from a three-way audit of agents, skills, and hooks against the Fable 5 guidance)
+
+- **Stale exa tool name fixed everywhere.** 5 skills, 5 agents, and `docs/tooling.md`
+  instructed calls to `get_code_context_exa`, which the current exa MCP no longer exposes —
+  on Fable 5 an invitation to attempt a nonexistent tool. Renamed to the real
+  `web_fetch_exa` (paired with `web_search_exa`); the optional crate-docs MCPs
+  (cratesio/context7/rust-docs) named in 4 skills now carry the "if one is configured"
+  hedge the coordination protocol already used.
+- **`/team-async` test gate aligned with `/dev-task`.** Its builder instruction said
+  "test-driven where practical" — the exact hedge dev-task forbids; now red→green is
+  required for any behavior change, same wording as the rest of the studio.
+- **stop-guard recalibrated for Claude 5** (opt-in hook): `permission-seeking` and
+  `premature-stopping` demoted from hard to soft — Fable 5 asks far less, and the asks
+  that remain are disproportionately the legitimate strategic/irreversible forks the
+  protocol itself says to escalate (a hard block was shoving the model past them);
+  "i can't/cannot verify"/"unable to verify" moved from hard `test-avoidance` to soft
+  `untested-mention` so an honest, evidenced impossibility report isn't punished.
+  Evidence-free occurrences of all three still block. Hook tests: 99 → 101, all passing.
+- **De-duplicated the judgment agents** (they now run at the session model, where repeated
+  scaffolding costs more than it helps): `unsafe-auditor`'s "You own" no longer restates the
+  full UB checklist that "How you work" owns, its "≥20 lines of context" micro-instruction is
+  gone, and the 🟡 MINIMIZATION vs REDO-TO-BAR boundary is defined (blocker only when the
+  diff introduced the avoidable unsafe); `rust-reviewer` states the integrity taxonomy and
+  the "green is the floor" formula once instead of four times and points its command list at
+  step 7; `chief-architect` drops the generic understand-the-goal/identify-the-decision steps
+  and the textbook halves of the SOLID bullets (the studio rulings stay); `product-steward`
+  and coordination-protocol §1/§5 lose their duplicated escalation/verdict restatements.
+- **Personal name removed from shipped prompts** (`keep plugin universal`): "vanya's bar" /
+  "vanya rejects" in `rust-reviewer`, `harsh-critic`, and `working-preferences.md` are now
+  "the studio".
+- **Edited review agents re-validated with `/eval-agents`** (both on Fable 5 via
+  `model: inherit`): `rust-reviewer` 34/34 planted defects across 8 fixtures with all
+  first-pass-bar reject verdicts, `unsafe-auditor` 7/7 across 2 fixtures with miri named —
+  100% recall, no noise. One fixture premise had drifted, not an agent gap:
+  `modern-rust/stale-idiom` claims "compiles on a current toolchain", but on edition 2024
+  its `static mut` shared reference is a deny-by-default hard error (`static_mut_refs`) —
+  ground truth now also accepts NEEDS WORK backed by rustc output, with all three rows
+  still required.
+
+## [0.26.0] - 2026-07-01
+
+### Fixed (hooks — from a full audit of all 12 scripts, tests run)
+
+- **Timed-out checks no longer read as failures.** `_lib.ts run()` mapped a
+  timeout-killed child (`exitCode: null` + signal) to exit code 1 — so on any workspace
+  where `cargo fmt --all --check` exceeded its budget, the fmt nudge fired on **every
+  stop** claiming files weren't rustfmt-clean. `run()` now returns `null` ("couldn't
+  check, stay silent") on timeout/signal, with a regression test.
+- **`inject-rules` is now import-safe and matches relative dir globs.** The script ran
+  its main flow at import time (importing it for tests exited the host process); it is
+  now guarded by `import.meta.main`. A relative glob with a slash (`src/**/*.rs`) was
+  `^`-anchored and could never match an absolute tool path — now retried anchored
+  anywhere (latent: all shipped rules start with `**/`; it bit user-authored rules).
+- **Watchdog gaps closed.** `session-start`, `fmt-check`, and `session-end` disarmed
+  their watchdog after stdin — leaving the slow part (git calls, vault walk, cargo)
+  unguarded; a stall handed the whole hook to the harness's kill. Watchdogs now stay
+  armed for the entire run (fail-open exit 0) with budgets trimmed to fit.
+- **Session-state keys no longer pool across id-less sessions.** stop-guard,
+  auto-capture, inject-rules, and the routing nudge keyed tmp state on a shared
+  `"unknown"`/`"nosession"` constant when `session_id` was absent — the auto-capture
+  budget was then never reset (permanently un-nudged after 2 nudges ever) and rule
+  injection was suppressed for every later id-less session. Now keyed by
+  `transcript_path` fallback or skipped entirely, failing toward the useful behavior.
+- **A stop-guard block no longer starves the capture nudge.** auto-capture exited
+  unconditionally on `stop_hook_active` — but that flag is also set when *stop-guard*
+  blocked, so any turn stop-guard fired on silently lost its memory-capture check.
+  auto-capture now stands down only when its *own* recent nudge caused the continuation.
+- **SubagentStop misc.** Parallel subagents finishing within 5s can't be attributed to
+  a transcript — the hook now fails open instead of judging agent A against agent B's
+  file; the parent-transcript fallback reads a bounded 2MB tail instead of the whole
+  session JSONL; `harsh-critic`'s prescribed verdicts (SURVIVES / DOESN'T SURVIVE /
+  INSUFFICIENT INFO) are now in the verdict regex, so the hook stops nagging it on
+  every run (regression-tested).
+- **stop-guard: "untested"/"not tested" demoted to a soft category** — they are
+  legitimate REVIEW findings ("the error path is untested"); hard-blocking punished
+  honest review deliverables. With evidence they pass; evidence-free they still block.
+- **Memory-protocol alignment.** session-start's recall no longer groups by
+  `decisions/planning/specs` subfolders the flat vault layout doesn't have (which
+  silently capped matched notes at 4 — now a pure ranked top-8) and its orient text +
+  auto-capture's nudge both point at `docs/memory-protocol.md` as the canonical rule.
+- New toggles: `lifecycle_notes` (pre-compaction warning + session-end reminder);
+  `stop_guard_allow_categories` is now declared in the manifest. `pluginRoot()` handles
+  install paths containing spaces. Hook test suite: 90 → 99 tests, all passing.
+
+### Changed (agents — from a full audit of all 33 definitions)
+
+- **Verdict discipline aligned with protocol §5.** The 11 agents that judge work
+  (directors, leads, both auditors) now carry the four-verdict set including
+  **REDO-TO-BAR**; `perf-engineer` used plan-review vocabulary (RESHAPE NEEDED) as a
+  final verdict — fixed; `docs/agent-template.md` no longer seeds the stale 3-verdict
+  set.
+- **Memory convention completed.** memory-protocol.md promised the `MEMORY:` line from
+  all reviewers/critics/specialists-with-decisions; 9 more agents now deliver it
+  (rust-reviewer, harsh-critic, rust-build-resolver, api-designer, dependency-manager,
+  database-specialist, concurrency-specialist, ffi-specialist, macro-specialist) — 22
+  agents total.
+- **Dangling references removed.** `search_for_pattern` (a serena tool the pinned build
+  doesn't expose) purged from 15 agents, 7 skills, and tooling.md in favor of harness
+  Grep; product-steward's `team-review` skill reference fixed; rust-build-resolver's
+  `cratesio/context7/rust-docs` MCP advice made conditional on the user having one
+  configured (also in coordination-protocol §0).
+- **SCOPE-GATE formally registered** (owner: product-steward — diff/plan vs acceptance
+  criteria) in the §4 gate table and roster; product-steward's output is now an
+  evidence-backed story/scope table, never a verdict-only reply.
+- **Weakest agents strengthened.** web-framework-specialist (security.md standard,
+  ASYNC-GATE contribution, maintainer-grade ref); docs-engineer (core.md +
+  working-preferences refs, explicit API-GATE/RELEASE-GATE sign-off checklists).
+- **Docs de-drifted.** rust-reviewer is opus everywhere (roster ×2, protocol §2, usage
+  guide); docs-engineer/wasm-specialist/dependency-manager tier claims aligned to
+  frontmatter (sonnet); harsh-critic and rust-build-resolver added to the org chart and
+  §2 ("Execution trio" → Execution (4)); routing rows for adversarial review and test
+  strategy added.
+
+## [0.25.0] - 2026-07-01
+
+### Added
+
+- **`docs/memory-protocol.md` — the canonical second-brain contract.** One doc now owns
+  when/who/what for cross-session memory: the layer map (session-start recall, `/recall`,
+  `/remember`, `MEMORY:` verdict lines, auto-capture, `/session-wrap`), the canonical
+  what-to-capture rule (all other restatements are one-line echoes that defer to it), the
+  recall-before / remember-after patterns skills encode, and the single-writer contract
+  (the orchestrator persists; agents only emit `MEMORY:` lines). Coordination protocol
+  gains a §9 pointer; `/help` and the usage guide link it.
+- **Recall-before / remember-after woven through 21 skills.** Before this pass exactly
+  one skill (`/spec`) recalled before working; now every skill that plans, designs,
+  debugs, or builds in a known area starts with `/recall <area>` and closes by sweeping
+  agent verdicts for `MEMORY:` lines + persisting what settled (or stating "nothing
+  durable"): `dev-task`, `debug`, `refactor`, `architecture`, `adr`, `design-api`,
+  `perf`, `tdd`, `flaky-hunt`, `fix-build`, `resolve-pr`, `brainstorm`, the four
+  `team-*` orchestrators (which now paste recalled context INTO team spawn prompts —
+  teammates don't inherit session context), and the new `fuzz`/`mutants`/`bloat`.
+  `/adopt` now seeds the vault at onboarding (inferred conventions, domain map, top
+  gotchas) instead of leaving memory empty.
+- **`MEMORY:` verdict lines on 10 more agents.** The convention existed on only the three
+  `memory: project` agents; now every decision-making lead (`api-design-lead`,
+  `async-systems-lead`, `systems-perf-lead`, `qa-lead`, `cli-ux-lead`, `tooling-lead`,
+  `release-lead`, `product-steward`, `error-architect`) surfaces durable decisions for
+  the orchestrator to persist, and `rust-scout` reads recalled notes before re-deriving
+  a map (flagging code-vs-decision drift).
+
+### Fixed
+
+- **`/security-audit` and `/audit-unsafe` now persist their agents' `MEMORY:` lines.**
+  `security-auditor`/`unsafe-auditor` are read-only and surfaced durable triage
+  (RUSTSEC waivers, accepted invariants, false positives) on `MEMORY:` lines that no
+  skill ever harvested — the emit side existed, the persist side didn't.
+- **Worktree path divergence between recall and remember.** The session-start hook
+  resolves the vault project folder from the **main worktree root**, but `/remember` and
+  `/recall` used the raw cwd basename — so a git-worktree session read one project
+  folder and wrote another. Both skills now resolve via `git rev-parse
+  --git-common-dir`, matching the hook.
+- **Dangling protocol pointer in `/recall`** (cited `coordination-protocol.md`, which had
+  no memory section) now points at `memory-protocol.md`.
+- **Personal project names removed from the plugin — fully universal.** Benchmark
+  fixtures used `nebula-*` crate names and `directory-conventions.md` named
+  nebula/surge/flui-scale; fixtures now use `acme-*` and docs use neutral wording.
+  Stale counts corrected (54 skills, 20 rules).
+
+## [0.24.0] - 2026-07-01
+
+### Added
+
+- **`/fuzz` — coverage-guided fuzzing, crash to regression test.** Sets up `cargo-fuzz`,
+  ranks fuzz surfaces by risk (untrusted-input parsers, `unsafe` boundaries, custom
+  `Deserialize`, stateful APIs), writes property-asserting targets with seeded corpora,
+  runs a bounded campaign, and triages every crash: minimize (`tmin`) → classify (UB goes
+  to `unsafe-auditor`) → root-cause → fix via `rust-builder` **with a committed `#[test]`
+  regression** (corpus files don't run in CI). Offers CI wiring via `build-engineer`.
+  Closes the studio's biggest testing gap — nothing covered the inputs nobody wrote a
+  test for.
+- **`/mutants` — mutation testing with `cargo-mutants`.** Coverage says a line *ran*;
+  mutation testing says a bug on it would be *caught*. Runs a scoped, cost-estimated
+  pass (`--list` first, `--in-diff` suggested for CI), ranks missed mutants by
+  behavioral risk (error-path swaps, boundary arithmetic, match-arm deletions over
+  formatting noise), drafts the minimal killing assertion with `qa-lead`, and verifies
+  each fix by re-running the exact mutant — missed → caught is the acceptance criterion.
+- **`/bloat` — binary-size audit with the `/perf` discipline (measure → cut → prove in
+  bytes).** Baselines the real artifact (gzipped for wasm, `cargo size` for embedded),
+  checks profile wins first (`strip`, LTO, `codegen-units`, `panic`), attributes bytes
+  with `cargo bloat` / `cargo llvm-lines` / `twiggy`, then cuts one change at a time with
+  re-measurement — a cut that saves nothing gets reverted. Confirms dep removals actually
+  left the binary (feature unification), and offers a CI size-regression check.
+- The three skills form an explicit testing triad, cross-linked from `/coverage`,
+  `/test-plan`, `/security-audit`, `/audit-unsafe`, and `/perf`: coverage = what runs,
+  mutants = what's checked, fuzz = what nobody imagined.
+
 ## [0.23.0] - 2026-06-30
 
 ### Added

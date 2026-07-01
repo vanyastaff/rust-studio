@@ -17,6 +17,10 @@ compiling and tested. Don't perform agreement on wrong feedback; reason it throu
 (a background poll loop whose stdout lines arrive as events) rather than blocking the session.
 Be explicit about that.
 
+**Recall first (light):** `/recall <PR area / review conventions>` (or reuse the session-start
+memory index) — conventions reviewers enforce here inform triage. If nothing surfaces, proceed
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 ## Mode A — one-shot (default)
 1. Resolve the PR from `$ARGUMENTS` or the current branch:
    `gh pr view --json number,title,headRefName,reviewDecision`, then fetch unresolved review
@@ -83,5 +87,6 @@ One row per thread, plus a CI line:
 CI: <green | red: failing job → routed to /fix-build|/debug | slow: Nm over budget → speedups proposed>
 ```
 End with the clippy/test summary and **COMPLETE** / **NEEDS WORK** (numbered) / **WATCHING**
-(monitors armed, what they're waiting on). Don't push, merge, or resolve GitHub threads without
-explicit go-ahead.
+(monitors armed, what they're waiting on). If a reviewer convention recurred across threads,
+it's durable — `/remember` it (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Don't push,
+merge, or resolve GitHub threads without explicit go-ahead.

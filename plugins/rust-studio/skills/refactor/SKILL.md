@@ -51,6 +51,11 @@ The line is observable behavior, not the shape of the code.
 
 ## Phase 1 — Confirm scope & invariants
 
+**Recall first:** `/recall <target area>` (or reuse the session-start memory index if it already
+surfaced this area) and carry prior boundary decisions and gotchas into the plan — prior boundary
+decisions bind refactors; say when a recalled note changes the approach. If nothing surfaces,
+proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 1. Restate the scope in one sentence and list 2–3 explicit "must not change" invariants
    (e.g. public API surface, observable behavior, performance characteristics).
 2. `AskUserQuestion`: confirm the scope and invariants before touching anything. If the user
@@ -176,7 +181,8 @@ The line is observable behavior, not the shape of the code.
 18. End with **COMPLETE / NEEDS WORK / BLOCKED**.
 
 19. If the refactor revealed a **durable** convention or structural pattern worth keeping
-    (e.g. the boundary that finally made the code compose), run `/remember` to capture it.
+    (e.g. the boundary that finally made the code compose), run `/remember` to capture it
+    (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 
 20. Suggest next steps as appropriate: `/review` for a deeper audit, `/dev-task` for any
     behavioral improvements that surfaced during the refactor, `/perf` if any hot paths

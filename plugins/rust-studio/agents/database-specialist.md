@@ -40,6 +40,11 @@ Delegate implementation to `rust-builder`; you specify the migration SQL, pool c
 and query shape, then review the result. Stay in your domain — do not edit service-layer
 or routing files without explicit delegation from `async-systems-lead`.
 
+When your work settles something **durable** — a schema/migration strategy, an isolation-level
+choice, a pool-sizing rationale — surface it on a `MEMORY:` line in your verdict; the
+orchestrator persists it to the project vault
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
+
 ## How you work
 1. Read the feature/story scope and identify every persistence touch-point (new tables,
    changed columns, query paths, transaction spans).

@@ -1,4 +1,4 @@
-//! crate: `nebula-credential`. Hand-rolled primitives that mature crates (and a
+//! crate: `acme-credential`. Hand-rolled primitives that mature crates (and a
 //! sibling workspace crate) already own. No prior-art search was done — the
 //! author reinvented both.
 
@@ -16,7 +16,7 @@ fn nibble(n: u8) -> char {
     if n < 10 { (b'0' + n) as char } else { (b'a' + n - 10) as char }
 }
 
-/// Bespoke exponential-backoff retry. The workspace ships `nebula-resilience`
+/// Bespoke exponential-backoff retry. The workspace ships `acme-resilience`
 /// for exactly this (retry / backoff / jitter / typed errors); it was reinvented
 /// inline with no jitter, no cap, and a unit error.
 pub fn retry<F: Fn() -> Result<(), ()>>(f: F) -> Result<(), ()> {

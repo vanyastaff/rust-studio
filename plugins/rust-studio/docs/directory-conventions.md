@@ -62,7 +62,7 @@ A project can be several at once; the studio loads the relevant leads/specialist
 for each.
 
 ## Large multi-crate workspaces
-For big workspaces (nebula/surge/flui-scale), scope context to the crate a task touches rather
+For big workspaces (10+ crates), scope context to the crate a task touches rather
 than loading everything: per-crate `CLAUDE.md` (owner-maintained, layered on the root one),
 `permissions.deny` on `target/`/generated, the bundled rust-analyzer LSP for symbol lookup, and sparse
 worktrees. Per-crate `CLAUDE.md` and the studio's central path-scoped `rules/` complement each

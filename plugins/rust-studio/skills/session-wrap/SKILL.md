@@ -17,7 +17,7 @@ or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`) i
    decision + rationale, a gotcha, a convention discovered). For each, run `/remember`
    directly — it writes the note into the Obsidian vault via the `obsidian` MCP; note the
    resulting note path in the output. Skip what the code, git history, or `Cargo.toml` already
-   make obvious.
+   make obvious (canonical capture rule: `${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 3. **State of play** — list done / in-progress / blocked with the next action for each open
    item. If a spec is active (`.rust-studio/specs/`), update its task
    statuses.

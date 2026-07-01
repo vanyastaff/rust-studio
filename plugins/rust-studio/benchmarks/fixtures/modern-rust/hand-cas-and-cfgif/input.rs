@@ -1,4 +1,4 @@
-//! crate: `nebula-metrics`. Compiles on a current toolchain, but every item reaches
+//! crate: `acme-metrics`. Compiles on a current toolchain, but every item reaches
 //! for a pre-1.95 form the std has since replaced. A current-edition maintainer rejects
 //! the shape: each pattern has a shorter, safer std-native spelling now.
 

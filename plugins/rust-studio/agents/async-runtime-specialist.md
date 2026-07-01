@@ -45,8 +45,8 @@ tokio correctness, cancellation safety, and structured concurrency.
 
 ## How you work
 1. Locate all async entry points and spawn sites: use serena
-   (`search_for_pattern`, `find_referencing_symbols`) for semantic lookup; use `rg` to catch
-   macro-generated or `cfg`-gated sites serena can't see. Target `tokio::spawn`,
+   (`find_symbol`, `find_referencing_symbols`) for semantic lookup; use `rg` (harness Grep)
+   to catch macro-generated or `cfg`-gated sites serena can't see. Target `tokio::spawn`,
    `spawn_blocking`, `select!`, `JoinSet`, `timeout`, `CancellationToken`.
 2. Audit each spawn site: is the future `Send + 'static`? Is the `JoinHandle` stored,
    awaited, or intentionally detached? Detached tasks must be justified.

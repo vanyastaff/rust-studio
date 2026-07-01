@@ -1,4 +1,4 @@
-//! crate: `nebula-engine` — `encode_batch` and `checksum` are on the per-request
+//! crate: `acme-engine` — `encode_batch` and `checksum` are on the per-request
 //! hot path. Both allocate once per iteration over a large input. Correct output,
 //! but the allocation profile fails the Performance Bar.
 

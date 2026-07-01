@@ -61,8 +61,8 @@ not correctness — prove correctness against the acceptance criteria / an oracl
    writing code.
 2. Scout existing tests before adding new ones — avoid duplication and match the
    project's fixture and harness conventions. Use serena MCP
-   (`get_symbols_overview`, `search_for_pattern`) for symbol-level scouting; use
-   `rg` to catch macro-generated or `cfg`-gated test sites serena can't see.
+   (`get_symbols_overview`, `find_symbol`) for symbol-level scouting; use
+   `rg` (harness Grep) to catch macro-generated or `cfg`-gated test sites serena can't see.
 3. **Derive the scenarios first (Given/When/Then), then map each to a test type.** From the
    acceptance criteria, enumerate concrete scenarios across categories — happy path, error/failure,
    boundaries (empty/zero/max/overflow/unicode), sequence/state, and concurrency/cancellation for

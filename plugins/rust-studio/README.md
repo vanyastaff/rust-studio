@@ -15,6 +15,7 @@ for libraries, async/web services, CLIs, and systems/embedded code.
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
 - **Configurable + a terse review style** — set a house MSRV, preferred test runner, and default gate intensity per the `/plugin` config dialog; opt into a one-finding-per-line reviewer output style via `/config`
 - **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
+- **Claude 5 (Fable 5) ready** — judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code; `security-auditor` stays pinned to Opus so Fable 5's cyber classifiers can't refuse mid-audit; authoring rules keep prompts refusal-safe and non-prescriptive ([`docs/claude-5-compat.md`](docs/claude-5-compat.md))
 
 ---
 
@@ -31,12 +32,12 @@ and [`docs/agent-roster.md`](docs/agent-roster.md) for who owns what.
 
 ## The team
 
-**Directors (opus)** — `chief-architect` (ARCH-GATE), `product-steward` (scope & sequencing).
+**Directors (inherit — session model)** — `chief-architect` (ARCH-GATE), `product-steward` (scope & sequencing).
 
 **Leads (sonnet)** — `api-design-lead`, `async-systems-lead`, `cli-ux-lead`,
 `systems-perf-lead`, `qa-lead`, `release-lead`, `tooling-lead`. Each owns a quality gate.
 
-**Specialists (sonnet/haiku; auditors opus)** — API (`api-designer`, `error-architect`,
+**Specialists (sonnet/haiku; judgment-heavy auditors inherit)** — API (`api-designer`, `error-architect`,
 `macro-specialist`, `docs-engineer`), async/web (`async-runtime-specialist`,
 `web-framework-specialist`, `database-specialist`, `observability-engineer`,
 `wasm-specialist`), systems/perf (`concurrency-specialist`, `unsafe-auditor`,
@@ -57,13 +58,13 @@ intensity to match the work.
 
 > Plugin commands are namespaced: `/rust-studio:<name>`.
 
-- **Onboarding** — `/start` · `/help` · `/detect-stack` · `/adopt`
+- **Onboarding** — `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt`
 - **Design** — `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
 - **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 - **Spec-driven** — `/spec` · `/spec-tasks` · `/spec-verify` (persisted in `.rust-studio/specs/`)
 - **TDD & verify** — `/tdd` · `/verify-loop`
-- **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
-- **Testing** — `/test-plan` · `/test-setup` · `/coverage` · `/flaky-hunt`
+- **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
+- **Testing** — `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
 - **Memory** — `/remember` · `/recall` · `/session-wrap` (cross-session, stored in the Obsidian vault via the `obsidian` MCP)
 - **Ship** — `/commit` · `/pr`
 - **Release** — `/publish` · `/changelog` · `/msrv-check`
@@ -246,7 +247,7 @@ cargo install cargo-nextest cargo-deny cargo-audit
 | `/api-review`, `/publish` | `cargo-public-api`, `cargo-semver-checks` | `cargo install cargo-public-api cargo-semver-checks` |
 | `/msrv-check` | `cargo-msrv` | `cargo install cargo-msrv` |
 | `/coverage` | `cargo-llvm-cov` (or `cargo-tarpaulin`) | `cargo install cargo-llvm-cov` |
-| `/deps-check` | `cargo-hack`, `cargo-machete`, `cargo-hakari` (20+ crates) | `cargo install cargo-hack cargo-machete cargo-hakari` |
+| `/deps-check` | `cargo-hack`, `cargo-shear`, `cargo-hakari` (20+ crates) | `cargo binstall cargo-hack cargo-shear cargo-hakari` |
 | macro crates | `cargo-expand` | `cargo install cargo-expand` |
 | snapshot tests | `cargo-insta` | `cargo install cargo-insta` |
 | mutation testing | `cargo-mutants` | `cargo install cargo-mutants` |

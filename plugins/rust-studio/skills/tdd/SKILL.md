@@ -23,6 +23,11 @@ way to pass is a wrong-crate or clone-to-appease shape, that is `RESHAPE NEEDED`
 
 ## Per behavior, loop these three phases
 
+**Recall first (once, before the first test):** `/recall <area>` (or reuse the session-start
+memory index if it already surfaced this area) — area gotchas and conventions shape the first
+test; say when a recalled note changes the approach. If nothing surfaces, proceed
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 ### 🔴 RED — a failing test
 1. State the one behavior in a sentence (input → expected output / effect, incl. an edge case).
 2. Spawn `test-engineer` (or write directly) to add the **smallest** test that captures it —

@@ -28,6 +28,11 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
 
 ## Phase 1 — Question (clarify scope)
 
+**Recall first:** `/recall <API area>` (or reuse the session-start memory index if it already
+surfaced this area) — prior API decisions and semver constraints bind the shape; carry them into
+the options and say when a recalled note changes the approach. If nothing surfaces, proceed
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 1. Restate what is being designed in one sentence. If genuinely ambiguous (not just
    underspecified), batch all scope questions into one `AskUserQuestion`.
 2. Identify the consumer: internal crate, external downstream, or public crates.io
@@ -74,8 +79,8 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
    - Key trade-off in one sentence.
    **Freshness (cite-or-declare-version, REQUIRED when the shape depends on ecosystem behavior):**
    cite the crates.io adoption pattern / RUSTSEC advisory / docs.rs API shape you checked via
-   **exa MCP** (`get_code_context_exa` / `web_search_exa`) and **cratesio** / **context7** /
-   **rust-docs**, OR state the last-verified version. Silence is a gap, not a pass.
+   **exa MCP** (`web_search_exa` / `web_fetch_exa`) — or a crate-docs MCP
+   (cratesio/context7/rust-docs) if one is configured — OR state the last-verified version. Silence is a gap, not a pass.
    **Spawn `harsh-critic` by DEFAULT** for any new-trait, cross-crate, or boundary-moving surface:
    it attacks the recommended shape (premise, failure modes, radically different decomposition);
    fold real findings into the options before the gate.
@@ -158,6 +163,9 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
     API-GATE audit before the change is considered mergeable.
 17. If the design reveals a meaningful architecture decision (crate boundary, new
     abstraction, MSRV implication), surface it as an ADR candidate via `/adr`.
+18. **Persist what settled:** sweep agent verdicts for `MEMORY:` lines and run `/remember` for
+    each (it dedups); `/remember` the settled API shape decision + rejected alternatives — or
+    state "nothing durable" (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 
 ## Error recovery
 

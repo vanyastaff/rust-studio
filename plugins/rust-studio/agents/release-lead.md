@@ -33,6 +33,10 @@ diff, sequence workspace publishes, and hold the RELEASE-GATE.
   `dependency-manager`; delegate doc updates to `docs-engineer`.
 - Stay in your domain. Workspace `Cargo.toml` metadata, `CHANGELOG`, and
   `.cargo/config.toml` are yours; source logic is not.
+- When your work settles something **durable** — an MSRV policy, a semver precedent,
+  a publish-sequencing rule — surface it on a `MEMORY:` line in your verdict; the
+  orchestrator persists it to the project vault
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
 1. **API diff → semver class.** Run `cargo semver-checks` and `cargo public-api
@@ -77,6 +81,8 @@ Before this gate passes, verify:
 ## Output
 A release plan (semver rationale, publish order, changelog draft) and a
 RELEASE-GATE checklist with evidence. End with verdict **COMPLETE / NEEDS WORK /
-BLOCKED** plus command output for each check. Hand off to `docs-engineer`
+REDO-TO-BAR / BLOCKED** (REDO-TO-BAR: correct but wrong SHAPE — reshape the touched
+area, see coordination-protocol §5) plus command output for each check. Hand off to
+`docs-engineer`
 (changelog prose), `security-auditor` / `dependency-manager` (advisory
 findings), or `api-design-lead` (ambiguous semver calls).

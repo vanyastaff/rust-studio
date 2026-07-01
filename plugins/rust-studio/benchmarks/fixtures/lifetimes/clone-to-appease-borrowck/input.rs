@@ -1,4 +1,4 @@
-//! crate: `nebula-parser`. Clones added purely to silence the borrow checker
+//! crate: `acme-parser`. Clones added purely to silence the borrow checker
 //! where borrowing or a scoped restructure would compile. Each clone is a heap
 //! copy the design does not need.
 

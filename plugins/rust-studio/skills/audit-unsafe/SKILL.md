@@ -23,7 +23,7 @@ path does not exist, ask the user to clarify before proceeding.
 1. Restate the audit scope (path, crate name(s)); if genuinely ambiguous, ask once before
    proceeding.
 2. Use `rg 'unsafe'` (via the Grep tool) to locate every `unsafe` token across the target
-   tree; confirm non-obvious hits with `serena search_for_pattern`. Collect results as a
+   tree; confirm non-obvious hits by reading the surrounding context. Collect results as a
    `file:line` map grouped by crate.
 3. Report the count: N sites across M files. If count is 0, state that and stop — verdict
    **COMPLETE (nothing to audit)**.
@@ -90,13 +90,20 @@ path does not exist, ask the user to clarify before proceeding.
 
 ## Phase 6 — Verdict
 
-11. Report:
+11. **Persist the audit's memory.** `unsafe-auditor` surfaces durable items (accepted
+    invariants, settled soundness arguments, known false positives) on `MEMORY:` lines in
+    its verdicts — it is read-only and cannot write the vault. Sweep every verdict for
+    `MEMORY:` lines and run `/remember` for each (it dedups); state "nothing durable" if
+    none (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+12. Report:
     - Total sites found vs. sites resolved vs. sites deferred.
     - Miri status (clean / skipped / failing).
     - SAFETY-GATE: **PASS** (all sites sound + documented) / **FAIL** (unsound sites
       remain) / **PARTIAL** (all documented but miri skipped or some deferred by choice).
-12. End with **COMPLETE / NEEDS WORK (numbered blockers) / BLOCKED**.
+13. End with **COMPLETE / NEEDS WORK (numbered blockers) / BLOCKED**.
     - Suggest `/review` if the diff is ready for a broader audit.
+    - Suggest `/fuzz` on the safe wrappers around audited `unsafe` — miri checks the
+      paths tests reach; a fuzzer hunts the inputs that reach new paths.
     - Suggest `/dev-task` to track any deferred findings as stories.
 
 ## Error recovery

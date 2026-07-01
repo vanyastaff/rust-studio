@@ -113,6 +113,13 @@ If any CRITICAL or HIGH findings remain unresolved, the RELEASE-GATE is **BLOCKE
 this explicitly. `release-lead` must acknowledge before shipping.
 
 ## Verdict
+**Persist the audit's memory first.** `security-auditor` surfaces durable triage
+(RUSTSEC waivers + justification, accepted advisory exceptions, confirmed false
+positives) on `MEMORY:` lines in its verdicts — it is read-only and cannot write the
+vault. Sweep every verdict for `MEMORY:` lines and run `/remember` for each (it
+dedups); state "nothing durable" if none
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 End with **COMPLETE / NEEDS WORK / BLOCKED**:
 
 - **COMPLETE** — no CRITICAL/HIGH findings remain open; evidence (`cargo audit` + `cargo deny`
@@ -123,7 +130,8 @@ End with **COMPLETE / NEEDS WORK / BLOCKED**:
   unresolved RUSTSEC advisory under active exploit); named with a suggested next step.
   Completed fixes are never discarded.
 
-Suggest next steps: `/review` for a broader correctness audit, `/dev-task` to implement
+Suggest next steps: `/review` for a broader correctness audit, `/fuzz` on any
+attacker-facing parser/decoder surfaced by the audit, `/dev-task` to implement
 a non-trivial fix, `/publish` once the RELEASE-GATE is clear.
 
 ## Error recovery

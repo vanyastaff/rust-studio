@@ -18,9 +18,7 @@ import { basename, join } from "node:path";
 import { tmpdir } from "node:os";
 import { readInput, emit, done, watchdog, pluginRoot } from "./_lib.ts";
 
-const disarm = watchdog();
-
-function globToRegex(pattern: string): RegExp {
+export function globToRegex(pattern: string): RegExp {
   pattern = pattern.trim().replace(/\\/g, "/");
   const n = pattern.length;
   let i = 0;
@@ -66,14 +64,18 @@ function parseFrontmatter(text: string): [Record<string, string>, string] {
   return [fm, body.replace(/^\n+/, "")];
 }
 
-function pathMatches(globs: string, path: string): boolean {
+export function pathMatches(globs: string, path: string): boolean {
   path = path.replace(/\\/g, "/");
   for (let raw of globs.split(",")) {
     raw = raw.trim();
     if (!raw) continue;
     try {
       if (globToRegex(raw).test(path)) return true;
-      if (!raw.includes("/") && globToRegex("**/" + raw).test(path)) return true;
+      // A relative glob (no leading "**" or "/") is ^-anchored and can never match
+      // the absolute tool path — retry it anchored anywhere. Covers both bare
+      // names ("Cargo.toml") and relative dir globs ("src/**/*.rs").
+      if (!raw.startsWith("**") && !raw.startsWith("/") && globToRegex("**/" + raw).test(path))
+        return true;
     } catch {
       continue;
     }
@@ -94,122 +96,131 @@ interface Input {
   };
 }
 
-const data = await readInput<Input>();
-disarm();
+// Main flow is guarded so importing this module (tests import globToRegex /
+// pathMatches) doesn't read stdin, arm the watchdog, or process.exit the host.
+if (import.meta.main) {
+  const disarm = watchdog();
+  const data = await readInput<Input>();
+  disarm();
 
-const event = data.hook_event_name || "PreToolUse";
-const filePath = data.tool_input?.file_path || data.tool_input?.path || "";
-if (!filePath) done();
-const norm = String(filePath).replace(/\\/g, "/");
+  const event = data.hook_event_name || "PreToolUse";
+  const filePath = data.tool_input?.file_path || data.tool_input?.path || "";
+  if (!filePath) done();
+  const norm = String(filePath).replace(/\\/g, "/");
 
-const rulesDir = join(pluginRoot(), "rules");
-let entries: string[];
-try {
-  if (!statSync(rulesDir).isDirectory()) done();
-  entries = readdirSync(rulesDir).filter((f) => f.endsWith(".md")).sort();
-} catch {
-  done();
-}
-
-// Collect rules whose path glob matches. Rules with an empty `paths:` are
-// content-triggered (e.g. unsafe.md) and handled below, not by path.
-interface Rule {
-  name: string;
-  desc: string;
-}
-const matched: Rule[] = [];
-const contentTriggered: Rule[] = [];
-for (const f of entries!) {
-  let text: string;
+  const rulesDir = join(pluginRoot(), "rules");
+  let entries: string[];
   try {
-    text = readFileSync(join(rulesDir, f), "utf8");
+    if (!statSync(rulesDir).isDirectory()) done();
+    entries = readdirSync(rulesDir).filter((f) => f.endsWith(".md")).sort();
   } catch {
-    continue;
+    done();
   }
-  const [fm] = parseFrontmatter(text);
-  const name = fm.name || basename(f, ".md");
-  const desc = fm.description || "(see rule)";
-  const globs = fm.paths || "";
-  if (!globs) {
-    contentTriggered.push({ name, desc });
-    continue;
+
+  // Collect rules whose path glob matches. Rules with an empty `paths:` are
+  // content-triggered (e.g. unsafe.md) and handled below, not by path.
+  interface Rule {
+    name: string;
+    desc: string;
   }
-  if (pathMatches(globs, norm)) matched.push({ name, desc });
-}
-
-// Content trigger: an edit that introduces or touches `unsafe` pulls in the
-// unsafe standard (which carries no path glob) — restoring what the removed
-// unsafe-guard hook used to do, now folded into this one injector.
-const payload = [
-  data.tool_input?.content,
-  data.tool_input?.new_string,
-  data.tool_input?.old_string,
-  ...(data.tool_input?.edits || []).flatMap((e) => [e?.new_string, e?.old_string]),
-]
-  .filter(Boolean)
-  .join("\n");
-// Only a real unsafe CONSTRUCT in a Rust file pulls in unsafe.md — not the bare
-// word "unsafe" in prose/comments/markdown, not the `unsafe_op_in_unsafe_fn` lint
-// name, and not a doc that merely discusses unsafe. Match `unsafe` immediately
-// followed by a block/fn/impl/trait/extern.
-const touchesUnsafe =
-  norm.endsWith(".rs") && /\bunsafe\s*(?:\{|fn\b|impl\b|trait\b|extern\b)/.test(payload);
-if (touchesUnsafe) {
-  for (const r of contentTriggered) {
-    if (!matched.some((m) => m.name === r.name)) matched.push(r);
+  const matched: Rule[] = [];
+  const contentTriggered: Rule[] = [];
+  for (const f of entries!) {
+    let text: string;
+    try {
+      text = readFileSync(join(rulesDir, f), "utf8");
+    } catch {
+      continue;
+    }
+    const [fm] = parseFrontmatter(text);
+    const name = fm.name || basename(f, ".md");
+    const desc = fm.description || "(see rule)";
+    const globs = fm.paths || "";
+    if (!globs) {
+      contentTriggered.push({ name, desc });
+      continue;
+    }
+    if (pathMatches(globs, norm)) matched.push({ name, desc });
   }
-}
 
-if (!matched.length) done();
+  // Content trigger: an edit that introduces or touches `unsafe` pulls in the
+  // unsafe standard (which carries no path glob) — restoring what the removed
+  // unsafe-guard hook used to do, now folded into this one injector.
+  const payload = [
+    data.tool_input?.content,
+    data.tool_input?.new_string,
+    data.tool_input?.old_string,
+    ...(data.tool_input?.edits || []).flatMap((e) => [e?.new_string, e?.old_string]),
+  ]
+    .filter(Boolean)
+    .join("\n");
+  // Only a real unsafe CONSTRUCT in a Rust file pulls in unsafe.md — not the bare
+  // word "unsafe" in prose/comments/markdown, not the `unsafe_op_in_unsafe_fn` lint
+  // name, and not a doc that merely discusses unsafe. Match `unsafe` immediately
+  // followed by a block/fn/impl/trait/extern.
+  const touchesUnsafe =
+    norm.endsWith(".rs") && /\bunsafe\s*(?:\{|fn\b|impl\b|trait\b|extern\b)/.test(payload);
+  if (touchesUnsafe) {
+    for (const r of contentTriggered) {
+      if (!matched.some((m) => m.name === r.name)) matched.push(r);
+    }
+  }
 
-// core.md is the universal baseline — sort it first so a length cap never drops
-// it; everything else stays alphabetical for stable, predictable output.
-matched.sort((a, b) =>
-  a.name === "core" ? -1 : b.name === "core" ? 1 : a.name.localeCompare(b.name),
-);
+  if (!matched.length) done();
 
-// Inject a given path's rules at most once per session — a Read followed by
-// several Edits to the same file shouldn't re-inject the same standard each time.
-// Fail-open: any fs error just means we inject (never wedge the session).
-try {
-  const dir = join(tmpdir(), "rust-studio-rules");
-  const sid = (data.session_id || "nosession").replace(/[^A-Za-z0-9]/g, "_");
-  // Key the marker by whether `unsafe` is present so the first edit that
-  // introduces unsafe still surfaces unsafe.md even if the path was seen before.
-  const suffix = touchesUnsafe ? "__unsafe" : "";
-  const marker = join(
-    dir,
-    `${sid}__${norm.replace(/[^A-Za-z0-9]/g, "_")}${suffix}`,
+  // core.md is the universal baseline — sort it first so a length cap never drops
+  // it; everything else stays alphabetical for stable, predictable output.
+  matched.sort((a, b) =>
+    a.name === "core" ? -1 : b.name === "core" ? 1 : a.name.localeCompare(b.name),
   );
-  if (existsSync(marker)) done();
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(marker, "1");
-} catch {
-  /* inject anyway */
+
+  // Inject a given path's rules at most once per session — a Read followed by
+  // several Edits to the same file shouldn't re-inject the same standard each time.
+  // Fail-open: any fs error just means we inject (never wedge the session).
+  // No session_id → no dedupe key: a shared "nosession" marker would persist in tmp
+  // and suppress rule injection for every LATER id-less session. Rules are
+  // high-value; fail toward injecting (skip the dedupe entirely).
+  try {
+    if (!data.session_id) throw new Error("no session key");
+    const dir = join(tmpdir(), "rust-studio-rules");
+    const sid = String(data.session_id).replace(/[^A-Za-z0-9]/g, "_");
+    // Key the marker by whether `unsafe` is present so the first edit that
+    // introduces unsafe still surfaces unsafe.md even if the path was seen before.
+    const suffix = touchesUnsafe ? "__unsafe" : "";
+    const marker = join(
+      dir,
+      `${sid}__${norm.replace(/[^A-Za-z0-9]/g, "_")}${suffix}`,
+    );
+    if (existsSync(marker)) done();
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(marker, "1");
+  } catch {
+    /* inject anyway */
+  }
+
+  // Emit POINTERS, not bodies. Each matching rule contributes one bullet: name +
+  // one-line description + the absolute path to Read on demand. core.md is first in
+  // `matched` so the universal baseline always heads the list. Safety/security-
+  // critical rules are flagged REQUIRED so the agent does not skip the read.
+  const root = pluginRoot().replace(/\\/g, "/").replace(/\/+$/, "");
+  const CRITICAL = new Set(["unsafe", "ffi", "security"]);
+
+  const header =
+    `Path-scoped Rust standards apply to \`${basename(norm)}\` (Rust Code Studio). ` +
+    "These are BINDING — do not shape the edit from memory. Before you finish this " +
+    "edit, **read (Read tool) each rule below that you have not already read this " +
+    "session**:\n";
+
+  const bullets = matched.map((r) => {
+    const ptr = `${root}/rules/${r.name}.md`;
+    const tag = CRITICAL.has(r.name) ? " — ⚠️ **REQUIRED before this edit**" : "";
+    return `- **${r.name}** — ${r.desc}${tag}\n    Read: \`${ptr}\``;
+  });
+
+  emit({
+    hookSpecificOutput: {
+      hookEventName: event,
+      additionalContext: header + "\n" + bullets.join("\n"),
+    },
+  });
 }
-
-// Emit POINTERS, not bodies. Each matching rule contributes one bullet: name +
-// one-line description + the absolute path to Read on demand. core.md is first in
-// `matched` so the universal baseline always heads the list. Safety/security-
-// critical rules are flagged REQUIRED so the agent does not skip the read.
-const root = pluginRoot().replace(/\\/g, "/").replace(/\/+$/, "");
-const CRITICAL = new Set(["unsafe", "ffi", "security"]);
-
-const header =
-  `Path-scoped Rust standards apply to \`${basename(norm)}\` (Rust Code Studio). ` +
-  "These are BINDING — do not shape the edit from memory. Before you finish this " +
-  "edit, **read (Read tool) each rule below that you have not already read this " +
-  "session**:\n";
-
-const bullets = matched.map((r) => {
-  const ptr = `${root}/rules/${r.name}.md`;
-  const tag = CRITICAL.has(r.name) ? " — ⚠️ **REQUIRED before this edit**" : "";
-  return `- **${r.name}** — ${r.desc}${tag}\n    Read: \`${ptr}\``;
-});
-
-emit({
-  hookSpecificOutput: {
-    hookEventName: event,
-    additionalContext: header + "\n" + bullets.join("\n"),
-  },
-});

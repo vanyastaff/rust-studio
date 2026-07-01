@@ -33,6 +33,10 @@ across specialists, create sibling tasks (same blocker, no dependency between th
 run concurrently as teammates; the lead synthesizes when all report via `SendMessage`.
 
 ## Phase 1 — Scope & scout
+- **Recall first:** `/recall <service area>` (or reuse the session-start memory index) and paste
+  what binds — prior runtime/topology decisions, async gotchas — INTO the team spawn prompts
+  (teammates do not inherit session context); say when a recalled note changes the approach. If
+  nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Restate the feature and its acceptance criteria in 1–3 bullets. If `$ARGUMENTS` is empty,
   ask: "What async service feature should we build?" and suggest `/architecture` or
   `/brainstorm` for broad explorations.
@@ -68,7 +72,8 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
 ## Phase 4 — Build (blocked by 3; parallel where independent)
 - `rust-builder` implements all components under direction of `async-systems-lead` — all
   writes go through it. Instruct the builder to:
-  - work test-driven where practical (failing test → implement → refactor),
+  - work test-driven (failing test → implement → refactor) for any behavior change —
+    this evidence is required, not optional (`docs/testing-model.md`),
   - stay strictly in scope (no opportunistic refactors),
   - add `// SAFETY:` notes to any `unsafe` and flag it for `unsafe-auditor`.
 - Parallelize independent work streams where the design permits — create one sibling task per
@@ -106,6 +111,10 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
 - Summary: the final handler surface, runtime topology chosen, database layer design,
   observability instrumentation added, ASYNC-GATE status, and test evidence. Every teammate's
   contribution ends in **COMPLETE / NEEDS WORK / BLOCKED** with evidence.
+- **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
+  for each (it dedups); `/remember` team-level decisions (runtime topology, backpressure
+  strategy) too — or state "nothing durable"
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Verdict **COMPLETE / NEEDS WORK / BLOCKED**. Next steps: `/review` for a deeper audit,
   `/perf` if latency or throughput is sensitive, `/changelog` if user-facing, `/publish` if
   release-bound.

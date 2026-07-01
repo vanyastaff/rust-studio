@@ -62,6 +62,18 @@ consumer reads before they write their first `use` statement.
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/rules/api.md` — documentation requirements that accompany
   every public item (sections, doc-test coverage, `missing_docs` lint).
+- `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — studio-wide code quality; doc-test and
+  example code is held to the same bar as source.
+- `${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` — the owner's voice and
+  communication bar for every piece of prose the user reads.
+
+## Gate sign-off checklist
+Your contributions to gates owned by others:
+- **API-GATE** (`api-design-lead`): every pub item documented; doc-tests pass
+  (`cargo test --doc`); intra-doc links resolve (`cargo doc` with no warnings);
+  `# Errors` / `# Panics` / `# Safety` sections present where applicable.
+- **RELEASE-GATE** (`release-lead`): README in sync with crate docs; CHANGELOG
+  entry present; examples compile.
 
 ## Output
 - A prioritized findings list (one line per issue, file:line, what is missing or wrong)

@@ -177,7 +177,7 @@ debt that only surfaces in prod (the "70% problem" / happy-path bias).
 - **But don't over-report.** A reviewer/critic asked to find gaps will find some even when the
   work is sound. Flag only what affects **correctness, security, or the stated requirements**;
   treat style and "could be more abstract" as optional. Chasing every finding produces the
-  unnecessary abstractions and defensive bloat vanya explicitly rejects (no future-proofing).
+  unnecessary abstractions and defensive bloat the studio explicitly rejects (no future-proofing).
 
 ### Boundaries & ADRs
 - **Boundary erosion**: before adding a helper/const/type, ask "which crate owns this concept?"

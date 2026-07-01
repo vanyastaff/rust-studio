@@ -47,8 +47,8 @@ If either tool is absent, note it clearly and fall back to a manual
 Also collect:
 - `cargo doc --no-deps 2>&1` for any newly undocumented public items.
 - Items marked `pub` in the diff that are absent from the documented surface
-  (potential accidental `pub`). Use **`rg '^pub '`** or serena
-  `search_for_pattern` to enumerate them; cross-reference against rustdoc output.
+  (potential accidental `pub`). Use **`rg '^pub '`** (the harness Grep tool)
+  to enumerate them; cross-reference against rustdoc output.
 
 ## Phase 3 — Classify changes
 

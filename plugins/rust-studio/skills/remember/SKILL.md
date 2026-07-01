@@ -9,12 +9,16 @@ user-invocable: true
 
 Persist a learning so future sessions start with it. Notes live in one Obsidian vault under a
 per-project folder, written through the **obsidian** MCP, so every session — and `/recall` —
-retrieves from the same place. Companion to `/recall` and `/session-wrap`.
+retrieves from the same place. Companion to `/recall` and `/session-wrap`; the when/who/what
+contract lives in `${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md` — this skill owns the mechanics.
 
 ## Where notes live (resolve every time)
 - **Vault root:** `$OBSIDIAN_VAULT_PATH`, default `~/memory` (cross-platform — never hardcode a path).
 - **Project folder:** `<vault>/projects/<project>/`, where `<project>` is the basename of the
-  session cwd (for a repo at `…/nebula`, that is `nebula`). The skill owns this flat layout: notes
+  **main worktree root** — `git rev-parse --git-common-dir` → the dir containing it (plain
+  checkout: just the repo root, e.g. `…/myrepo` → `myrepo`; a git-worktree session at
+  `…/myrepo-fix/` still writes `projects/myrepo/`, matching what the session-start hook reads).
+  The skill owns this flat layout: notes
   are `<vault>/projects/<project>/<kebab-slug>.md`; the index is `<vault>/projects/<project>/MEMORY.md`.
   Create the folder + index on first write if absent. No subfolders, no registry, no external skill
   required — just the vault + the obsidian MCP.

@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Turn a single Claude Code session into a full Rust engineering studio. Tiered agent team (architect -> leads -> specialists), path-scoped Rust standards, quality gates, and cargo-aware hooks across libraries, async/web services, CLIs, and systems/embedded code.",
-  "version": "0.23.0",
+  "version": "0.28.0",
   "author": {
     "name": "vanya"
   },
@@ -84,6 +84,12 @@
       "description": "After a turn that changed .rs files, nudge to run /lint when they are not rustfmt-clean. Turn off to silence the Stop-hook fmt check.",
       "default": true
     },
+    "lifecycle_notes": {
+      "type": "boolean",
+      "title": "Session-lifecycle notes",
+      "description": "Surface the pre-compaction warning (persist in-flight plans before compaction drops them) and the session-end /session-wrap reminder. Turn off to silence both.",
+      "default": true
+    },
     "stop_guard": {
       "type": "boolean",
       "title": "Stop-guard (block undisciplined turn endings)",
@@ -101,6 +107,11 @@
       "title": "Stop-guard: require evidence",
       "description": "Block any turn ending whose final message lacks concrete completion evidence (files changed / commands run / verification / result), even with no flagged phrase. Requires stop_guard on.",
       "default": false
+    },
+    "stop_guard_allow_categories": {
+      "type": "string",
+      "title": "Stop-guard: allowed categories",
+      "description": "Comma-separated stop-guard categories to exempt from blocking (e.g. \"speculation,fake-certainty\"). Useful to tune false positives without turning the guard off. Requires stop_guard on."
     }
   }
 }

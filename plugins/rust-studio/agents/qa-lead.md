@@ -29,6 +29,9 @@ quality bar. You decide what "tested" means and hold the QA-GATE.
 - Delegate test *writing* to `test-engineer`; you set strategy and review results.
 - Evidence requirement: "tested" means the `cargo nextest run` summary is shown. No summary,
   no gate.
+- When your work settles something **durable** — a coverage floor, an owned-risk gap, a flake
+  policy — surface it on a `MEMORY:` line in your verdict; the orchestrator persists it to the
+  project vault (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
 1. Read the acceptance criteria; enumerate behaviors, error paths, and edge cases.
@@ -73,5 +76,6 @@ Before this gate passes, verify:
 
 ## Output
 Test plan and test-quality review, with `cargo nextest run` summary as evidence. End with
-verdict **COMPLETE / NEEDS WORK / BLOCKED**. Hand off to `/coverage`, `/flaky-hunt`, or
-`/test-setup`.
+verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED** (REDO-TO-BAR: correct but wrong
+SHAPE — reshape the touched area, see coordination-protocol §5). Hand off to `/coverage`,
+`/flaky-hunt`, or `/test-setup`.

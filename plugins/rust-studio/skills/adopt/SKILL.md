@@ -23,6 +23,10 @@ ask: "Where is the crate or workspace you want to adopt?" before proceeding.
 
 ## Phase 1 — Map the structure
 
+**Recall first (light):** `/recall <project>` (or reuse the session-start memory index) — prior
+adoption notes exist if this was run before; carry them in. If nothing surfaces, proceed
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 1. Spawn **`rust-scout`** on the target root. Ask it to return:
    - workspace members (if a workspace), crate names, and `lib`/`bin`/`proc-macro` layout,
    - module tree (top-level `mod` declarations and `pub use` re-exports),
@@ -154,6 +158,12 @@ ask: "Where is the crate or workspace you want to adopt?" before proceeding.
       the bundled rust-analyzer LSP, sparse worktrees) using
       `${CLAUDE_PLUGIN_ROOT}/docs/templates/large-workspace-settings.json`
     - Public API hygiene issues → `/review` in **full** mode
+
+15. **Seed the memory vault.** Adoption infers a project's durable facts in one pass — persist
+    them so the vault starts populated: run `/remember` for the domain map decision, each
+    inferred convention (error style, test patterns, MSRV posture), and the top gotchas from the
+    debt catalog (it dedups). Report the note paths
+    (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 
 ---
 

@@ -4,7 +4,7 @@
 > **RESHAPE NEEDED**. `REDO-TO-BAR` is the `rust-reviewer` equivalent — accept either as
 > "rejected the shape".
 
-A published-crate (`nebula-store` 1.x) public surface. Every `pub` item is a semver
+A published-crate (`acme-store` 1.x) public surface. Every `pub` item is a semver
 contract. The shape pins this crate's future in four ways that compile today but force a
 breaking release later — fix the shape before it ships, not after.
 

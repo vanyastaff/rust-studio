@@ -1,4 +1,4 @@
-//! crate: `nebula-config` (unpublished — 0.0.x, NO external consumers yet).
+//! crate: `acme-config` (unpublished — 0.0.x, NO external consumers yet).
 //!
 //! The loader was renamed, but instead of changing the (few, in-workspace)
 //! callers, compatibility shims were kept "to be safe". In an unpublished

@@ -8,12 +8,15 @@
 //
 // Non-blocking and cheap. Never fails the session.
 
-import { readInput, emit, watchdog } from "./_lib.ts";
+import { readInput, emit, watchdog, optionBool } from "./_lib.ts";
 
 const disarm = watchdog(6_000);
 
 await readInput();
 disarm();
+
+// Opt-out: studio config `lifecycle_notes` (default on) — also gates session-end.
+if (!optionBool("lifecycle_notes", true)) process.exit(0);
 
 emit({
   systemMessage:

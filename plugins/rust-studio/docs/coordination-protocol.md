@@ -12,7 +12,9 @@ First-pass quality is the contract; everything downstream — gates, reviews, ve
 safety net, **not** where quality is created. Before the first source edit on anything that adds
 or moves logic, the planning AND the writing agent run the **maintainer-grade pre-code gate**:
 crate ownership; a sibling-crate reuse survey (serena) before inventing; verify crate
-version/current docs (cratesio/context7/rust-docs) before coding from memory; the
+version/current docs before coding from memory (via a docs MCP server such as
+cratesio/context7/rust-docs **if the user has one configured**; otherwise docs.rs via
+WebFetch or a local `cargo doc`); the
 borrow/allocation/lifetime posture; the latest-edition construct when it encodes the contract
 better; and the Maintainer Rejection Test. The gate is the universal **DEFAULT**, not opt-in —
 every per-domain gate in §4 runs **on top of** it, and a genuinely trivial change records a
@@ -87,16 +89,11 @@ CLI it's the standard plan-mode approval — no regression). `ExitPlanMode` is f
 to **code**; research/elicitation skills (`/brainstorm`, `/grill-me`) keep their own gate. Piloted
 in **`/dev-task`**; rolls out to `/spec`, `/architecture`, `/refactor` once validated.
 
-**Never offload your own analysis as a question.** If you have researched the area, know the
-architecture, and have a defensible answer, that is a *tactical call* — **decide it**, state the
-choice + one-line rationale + how reversible it is, and let the user veto. Do **not** repackage
-your completed analysis as a heavy "what should we do about X long-term?" fork that forces the
-user to reconstruct everything you already worked out. A question that costs the user more to
-*answer* than it cost you to *resolve* is the wrong move — it offloads cognitive load upward
-instead of doing the job. Ask only when the answer genuinely lives in the **user** — taste,
-product priority, risk appetite, willingness to break an API, a true business constraint — not in
-analysis you have done or could do (source it from the code with serena first; the answer is
-often already there).
+**Never offload your own analysis as a question.** If you have a defensible answer, that is a
+tactical call — decide it, state how reversible it is, and let the user veto. Ask only when the
+answer genuinely lives in the **user** — taste, product priority, risk appetite, willingness to
+break an API, a true business constraint — not in analysis you have done or could do (source it
+from the code with serena first; the answer is often already there).
 
 **When the answer really is the user's, ask grill-me-style, not one heavy fork.** Decompose a
 big decision into a short sequence of **small, concrete questions asked one at a time**, each with
@@ -116,7 +113,7 @@ confirmation and must not be bypassed with bash/filesystem tools (§6).
 
 ## 2. The team (3 tiers)
 
-**Tier 1 — Directors** (model: opus). Own cross-cutting decisions and final gates.
+**Tier 1 — Directors** (model: inherit — the session model). Own cross-cutting decisions and final gates.
 - `chief-architect` — architecture, crate/module boundaries, ADRs, final technical gate.
 - `product-steward` — scope, priorities, milestones, story breakdown, change propagation.
 
@@ -129,17 +126,19 @@ confirmation and must not be bypassed with bash/filesystem tools (§6).
 - `release-lead` — versioning, crates.io publish, changelog, MSRV.
 - `tooling-lead` — build/cargo/CI infrastructure, workspace config, dev tooling.
 
-**Tier 3 — Specialists** (model: sonnet/haiku, high-stakes ones opus). Do focused work.
+**Tier 3 — Specialists** (model: sonnet; judgment-heavy ones inherit, `security-auditor` pinned opus). Do focused work.
 - API: `api-designer`, `error-architect`, `macro-specialist`, `docs-engineer`
 - Async/web: `async-runtime-specialist`, `web-framework-specialist`, `database-specialist`, `observability-engineer`, `wasm-specialist`
-- Systems/perf: `concurrency-specialist`, `unsafe-auditor` (opus), `ffi-specialist`, `perf-engineer`, `embedded-specialist`
+- Systems/perf: `concurrency-specialist`, `unsafe-auditor` (inherit), `ffi-specialist`, `perf-engineer`, `embedded-specialist`
 - CLI: `cli-specialist`
 - Quality: `test-engineer`, `security-auditor` (opus), `dependency-manager`, `build-engineer`
+- Cross-cutting: `harsh-critic` (inherit) — adversarial design/spec/plan critic, read-only.
 
-**Execution trio** (the hands — they actually touch code).
+**Execution (4)** (the hands — they actually touch code).
 - `rust-scout` (haiku) — read-only locator; returns a `file:line` map.
 - `rust-builder` (sonnet) — implements within an approved plan; writes code + tests.
-- `rust-reviewer` (sonnet) — diff auditor and final gate.
+- `rust-build-resolver` (sonnet) — gets a failing build green; fixes the root cargo/rustc error.
+- `rust-reviewer` (inherit) — diff auditor and final gate.
 
 See `agent-roster.md` for the full org chart and who-owns-what.
 
@@ -181,6 +180,7 @@ gate has an ID so it can be referenced in stories and reviews.
 | Gate ID         | Owner               | Checks |
 |-----------------|---------------------|--------|
 | `ARCH-GATE`     | chief-architect     | Module/crate boundaries sound; ADR exists for non-trivial design; no layering violations. |
+| `SCOPE-GATE`    | product-steward     | Diff/plan matches acceptance criteria; over-scope/under-scope flagged; non-goals stated. |
 | `API-GATE`      | api-design-lead     | Public items documented; semver impact understood; `#[non_exhaustive]`/sealed where needed; no accidental pub. |
 | `ASYNC-GATE`    | async-systems-lead  | No blocking in async; cancellation-safe; `Send`/`'static` bounds correct; backpressure considered. |
 | `CLI-GATE`      | cli-ux-lead         | Exit codes correct; stdout=data / stderr=diagnostics; `--help` complete; errors actionable. |
@@ -189,6 +189,9 @@ gate has an ID so it can be referenced in stories and reviews.
 | `QA-GATE`       | qa-lead             | Tests cover acceptance criteria + edge cases; no flaky tests; coverage not regressed. |
 | `RELEASE-GATE`  | release-lead        | Version bumped per semver; changelog updated; MSRV verified; `cargo publish --dry-run` clean. |
 | `BUILD-GATE`    | tooling-lead        | Builds on all feature combinations + targets; CI green; no warnings. |
+
+`docs-engineer` contributes to `API-GATE` (pub items documented, doc-tests pass) and
+`RELEASE-GATE` (README/CHANGELOG in sync); the owning lead still signs off.
 
 ### Review modes
 
@@ -216,11 +219,10 @@ verdict so you always know where things stand:
   an active-dev shim. The fix is to **reshape the TOUCHED area**, not apply line patches. It is
   merge-blocking but **blast-radius-bounded** — only code the task touched is reshaped; untouched
   code is never force-reshaped, and this verdict is **not** for speculative abstraction or
-  future-proofing.
+  future-proofing. The learning is kept, the junior patch is not.
 - **BLOCKED** — a hard dependency is missing (e.g. an ADR, an upstream decision);
-  the blocker is named with a suggested next step. Completed work is never discarded for NEEDS
-  WORK; `REDO-TO-BAR` explicitly authorizes replacing the wrong shape within the task's blast
-  radius — the learning is kept, the junior patch is not.
+  the blocker is named with a suggested next step. Completed work is never discarded for
+  NEEDS WORK.
 
 **The verdict supplements the deliverable; it never replaces it.** A sub-agent's final message is
 what the caller receives — put the actual deliverable (code map, digest, findings, answer) there
@@ -315,3 +317,15 @@ its dependents until the blocker clears.
 `TeammateIdle` lifecycle hooks exist (a hook may exit 2 to block with feedback), so gate
 enforcement can hang off them in principle. Those hooks are owned by the hooks work — this
 protocol only notes the seam; none are wired in this pass.
+
+## 9. Memory (the second brain)
+
+Work compounds only if it is recalled before and captured after. The full contract —
+recall-before, remember-after, the `MEMORY:` verdict-line handoff from agents to the
+orchestrator (the single vault writer), the canonical vault path rule, and what is worth
+capturing — lives in `docs/memory-protocol.md`. Two lines every skill and agent honors:
+
+- **Before** planning/designing/debugging/building in a known area: `/recall <area>`; say
+  when a recalled note changed the approach.
+- **After** settling something durable (or seeing a `MEMORY:` line in any agent's verdict):
+  persist it via `/remember` before the final verdict — or state "nothing durable" explicitly.

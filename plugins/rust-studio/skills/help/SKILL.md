@@ -14,15 +14,15 @@ Print a grouped catalog. If `$ARGUMENTS` names a topic (e.g. "async", "release",
 This is the curated map (which family to reach for); the exhaustive, always-current
 list of every installed skill is generated below it.
 
-**Onboarding:** `/start` · `/help` · `/detect-stack` · `/adopt`
+**Onboarding:** `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt`
 **Design & architecture:** `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
 **Build:** `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 **Spec-driven:** `/spec` · `/spec-tasks` · `/spec-verify`
 **TDD & verify:** `/tdd` · `/verify-loop`
 **Debug:** `/debug` (root-cause runtime bugs) · `/fix-build` (compile errors) · `/flaky-hunt` (flaky tests)
-**Quality & review:** `/review` (`--full` = parallel multi-lens) · `/doc-review` (specs/plans/ADRs) · `/lint` · `/audit-unsafe` · `/perf` · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
+**Quality & review:** `/review` (`--full` = parallel multi-lens) · `/doc-review` (specs/plans/ADRs) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
 **Studio self-check:** `/eval-agents` (run the review agents against planted-bug fixtures)
-**Testing:** `/test-plan` · `/test-setup` · `/coverage` · `/flaky-hunt`
+**Testing:** `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
 **Memory (cross-session):** `/remember` · `/recall` · `/session-wrap`
 **Release:** `/publish` · `/changelog` · `/msrv-check`
 **Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback)
@@ -47,4 +47,5 @@ See `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md` for who-owns-what,
 protocol, and `${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` for the operating mode
 (decide-don't-interrogate, no quick wins, modern idioms, observability-as-DoD). Path-scoped
 standards live in `${CLAUDE_PLUGIN_ROOT}/rules/`; cross-session memory in the Obsidian vault
-via the `obsidian` MCP.
+via the `obsidian` MCP, under the memory contract in
+`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md` (recall-before / remember-after / `MEMORY:` lines).

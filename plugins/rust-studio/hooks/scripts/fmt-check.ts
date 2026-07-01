@@ -13,14 +13,16 @@
 import { join } from "node:path";
 import { readInput, emit, done, watchdog, run, which, optionBool } from "./_lib.ts";
 
-const disarm = watchdog(12_000);
+// Armed for the WHOLE run (children included): worst case is 2s stdin + 3+3s git
+// + 6s cargo ≈ 14s, and the watchdog's exit(0) fails open — better a missed
+// nudge than the harness's 20s kill.
+watchdog(15_000);
 
 interface Input {
   cwd?: string;
 }
 
 const data = await readInput<Input>();
-disarm();
 
 // Opt-out: studio config `fmt_nudge` (default on).
 if (!optionBool("fmt_nudge", true)) done();
@@ -37,8 +39,8 @@ if (!which("cargo") || !which("git")) done();
 
 // Did any .rs file change? Fast git queries, tight timeouts.
 function changedRs(): boolean {
-  const diff = run(["git", "-C", cwd, "diff", "--name-only", "HEAD"], { timeout: 5_000 });
-  const others = run(["git", "-C", cwd, "ls-files", "--others", "--exclude-standard"], { timeout: 5_000 });
+  const diff = run(["git", "-C", cwd, "diff", "--name-only", "HEAD"], { timeout: 3_000 });
+  const others = run(["git", "-C", cwd, "ls-files", "--others", "--exclude-standard"], { timeout: 3_000 });
   if (!diff && !others) return false;
   const names = (diff?.stdout || "") + "\n" + (others?.stdout || "");
   return names.split("\n").some((l) => l.trim().endsWith(".rs"));
@@ -46,9 +48,9 @@ function changedRs(): boolean {
 
 if (!changedRs()) done();
 
-// Format check, hard-capped at 8s. If it times out (null), stay silent — better
+// Format check, hard-capped at 6s. If it times out (null), stay silent — better
 // a missed nudge than a frozen turn. /lint and CI remain the real gate.
-const res = run(["cargo", "fmt", "--all", "--check"], { cwd, timeout: 8_000 });
+const res = run(["cargo", "fmt", "--all", "--check"], { cwd, timeout: 6_000 });
 if (res && res.exitCode !== 0) {
   emit({
     systemMessage:

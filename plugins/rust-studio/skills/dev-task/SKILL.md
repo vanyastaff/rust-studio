@@ -72,6 +72,10 @@ The double-loop, observable-criteria, and full **fast-path abort protocol** are 
 stops holding, re-enter the full loop, and reuse (don't discard) the work already done.
 
 ## Phase 1 — Scope & locate
+**Recall first:** `/recall <task area>` (or reuse the session-start memory index if it already
+surfaced this area) and carry prior decisions and gotchas into the plan; say when a recalled note
+changes the approach. If nothing surfaces, proceed
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 0. **Enter plan mode.** If you are not already in plan mode, call `EnterPlanMode` to obtain the
    plan-file path. Phases 1–2 are read-only anyway (scout + lead plan, no code until approval),
    so this fits with no workflow change — it just routes the upcoming Draft→Approval through the
@@ -195,7 +199,8 @@ advancing.
     time, a convention discovered, or a non-trivial fix. For each, run `/remember` directly
     (it writes the note to the Obsidian vault); report the resulting note path. Skip what
     the code, git history, or `Cargo.toml` already makes obvious. If nothing is durable, say
-    so and move on.
+    so and move on. Also sweep every agent verdict for `MEMORY:` lines and run `/remember`
+    for each (it dedups) — canonical rule: `${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`.
 17. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound, `/session-wrap` to close
     out the session. If running as a team,

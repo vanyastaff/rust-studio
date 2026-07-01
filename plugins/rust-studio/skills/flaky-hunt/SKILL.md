@@ -22,9 +22,14 @@ restate the target and confirm with the user before proceeding.
 
 ## Phase 1 — Reproduce
 
+**Recall first:** `/recall <test/area>` (or reuse the session-start memory index if it already
+surfaced this area) — was this test flaky before? Known flake sources bind the diagnosis; say
+when a recalled note changes the approach. If nothing surfaces, proceed
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 1. Spawn **`rust-scout`** to locate the test(s) and any setup/teardown fixtures that
-   might be implicated. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`,
-   `search_for_pattern`) for symbol-level navigation and `rg` for macro-generated or
+   might be implicated. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`)
+   for symbol-level navigation and `rg` (harness Grep) for macro-generated or
    `cfg`-gated sites. Record `file:line` for each candidate.
 2. Run the suite in stress mode — no retries, randomized order — to surface failures:
    ```
@@ -120,6 +125,9 @@ quarantine the test rather than leaving it silently broken:
 16. Summarize: tests hunted, root cause found, fix applied (or quarantine applied),
     evidence (nextest output, clippy output), gates passed.
     End with **COMPLETE / NEEDS WORK / BLOCKED**.
+    **Persist what settled:** a root-caused flake is a canonical durable gotcha — sweep agent
+    verdicts for `MEMORY:` lines and `/remember` each (it dedups); `/remember` the flake class +
+    cure too — or state "nothing durable" (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 17. Suggest next steps: `/review` to audit the full diff, `/dev-task` if the fix requires
     a larger refactor (e.g. introducing a `Clock` abstraction across many callers), or
     `/perf` if the isolation change touches hot paths.

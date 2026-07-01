@@ -1,4 +1,4 @@
-//! crate: `nebula-net` (internal). A tiny config-backed connection manager + retry
+//! crate: `acme-net` (internal). A tiny config-backed connection manager + retry
 //! helper. It compiles, is clippy-clean, and behaves correctly — yet the names hide
 //! intent: an abbreviated type/field, a unit-ambiguous field, a non-question bool, a
 //! fetch/get/load synonym collision for one concept, and throwaway locals. A strict

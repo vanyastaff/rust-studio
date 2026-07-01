@@ -27,8 +27,8 @@ When off, run the steps without the task-list narration.
 2. **First, run the spec-level outer acceptance test** — a green outer test is the primary
    executable proof the feature is met (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`). Then, for
    each remaining criterion, find and run the evidence:
-   - Use serena MCP (`find_symbol`, `search_for_pattern`) to locate test functions and
-     impl sites relevant to each criterion — never Bash `grep` for symbols.
+   - Use serena MCP (`find_symbol`) and the harness Grep (ripgrep) to locate test functions
+     and impl sites relevant to each criterion — never Bash `grep` for symbols.
    - `cargo nextest run` (fall back to `cargo test`), including `--doc` for doc-tests —
      map test names to criteria in the report.
    - `cargo clippy --all-targets --all-features -- -D warnings` and `cargo fmt --check`.

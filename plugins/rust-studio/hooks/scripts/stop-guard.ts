@@ -49,8 +49,6 @@ interface GuardConfig {
 
 const HARD_CATEGORIES = new Set([
   "ownership-dodging",
-  "permission-seeking",
-  "premature-stopping",
   "test-avoidance",
   "soft-failure",
   "handoff-to-user",
@@ -70,6 +68,16 @@ const SOFT_CATEGORIES = new Set([
   // reports and on negated forms ("no placeholders left", "nothing out of scope").
   "incomplete-work",
   "scope-escape",
+  // Soft by design: "untested"/"not tested" are legitimate REVIEW findings ("the error
+  // path is untested" as a severity-tagged finding) — hard-blocking them punished honest
+  // review deliverables. With evidence present they pass; evidence-free they still block.
+  "untested-mention",
+  // Demoted from HARD for Claude 5 models (docs/claude-5-compat.md): Fable 5 asks far
+  // less, and the asks that remain are disproportionately the legitimate ones — a
+  // strategic/irreversible fork the protocol itself says to escalate, or a session-wrap
+  // handoff with completion evidence. Evidence-backed asks pass; evidence-free still block.
+  "permission-seeking",
+  "premature-stopping",
 ]);
 
 const CATEGORY_ADVICE: Record<string, string> = {
@@ -81,6 +89,8 @@ const CATEGORY_ADVICE: Record<string, string> = {
     "Do not pause early. Continue until the task is genuinely complete or externally blocked.",
   "test-avoidance":
     "Do not stop without verification. Run cargo test/clippy/nextest or state the exact hard constraint preventing it.",
+  "untested-mention":
+    "Flagging untested code in a review is fine; leaving YOUR OWN change untested is not — verify it or show the evidence.",
   "incomplete-work":
     "No TODOs, placeholders, stubs, or unwired code unless the user explicitly asked for a scaffold.",
   "soft-failure":
@@ -128,10 +138,10 @@ const PHRASES: Record<string, string[]> = {
   ],
   "test-avoidance": [
     "i didn't run tests", "i did not run tests", "i have not run tests", "i haven't run tests",
-    "i couldn't run tests", "i could not run tests", "tests were not run", "not tested",
-    "untested", "please test", "you should test", "needs testing", "manual testing needed",
-    "verify on your side", "please verify", "i recommend testing", "i can't verify",
-    "i cannot verify", "unable to verify", "without running it", "assuming it works",
+    "i couldn't run tests", "i could not run tests", "tests were not run",
+    "please test", "you should test", "needs testing", "manual testing needed",
+    "verify on your side", "please verify", "i recommend testing",
+    "without running it", "assuming it works",
     "should compile", "should pass", "should work now", "should be fixed",
     "this should resolve", "hopefully this fixes", "i believe this fixes",
   ],
@@ -204,6 +214,12 @@ const PHRASES: Record<string, string[]> = {
   "fake-certainty": [
     "definitely", "clearly", "obviously", "all we need", "all that's needed",
     "no further changes", "no other changes needed", "no further action", "complete solution",
+  ],
+  // "i can't/cannot verify"/"unable to verify" live here, not in test-avoidance: an honest
+  // impossibility report with evidence ("tests pass; can't verify the embedded target — no
+  // hardware") must not hard-block. Evidence-free, they still block.
+  "untested-mention": [
+    "not tested", "untested", "i can't verify", "i cannot verify", "unable to verify",
   ],
 };
 
@@ -562,7 +578,9 @@ if (import.meta.main) {
 
   if (!lastText.trim()) process.exit(0); // nothing to judge — allow
 
-  const sessionId = String(input?.session_id ?? "unknown");
+  // Key the block counter by session; fall back to transcript_path (unique per
+  // session) so id-less sessions don't all share one "unknown" counter.
+  const sessionId = String(input?.session_id ?? input?.transcript_path ?? "unknown");
   const decision = evaluate(lastText, cfg);
   if (decision.block && decision.reason) {
     const n = bumpBlocks(sessionId);

@@ -27,7 +27,7 @@ progress, not a final dump. Foreground the phase being waited on. Off → no tas
 ## Team composition
 
 `systems-perf-lead` (owns PERF-GATE + SAFETY-GATE) · `perf-engineer` · `concurrency-specialist`
-· `unsafe-auditor` (opus; any `unsafe` touched) · `rust-builder` (writes code + tests)
+· `unsafe-auditor` (inherit; any `unsafe` touched) · `rust-builder` (writes code + tests)
 · `rust-reviewer` (diff audit).
 
 Create one task per phase via `TaskCreate`; chain them with `addBlockedBy` (1 → 2 → 3 → 4 →
@@ -39,6 +39,11 @@ the baseline once all four report via `SendMessage`.
 
 ## Phase 1 — Measure (baseline only; no optimization yet)
 
+- **Recall first:** `/recall <target>` (or reuse the session-start memory index) and paste what
+  binds — known hot paths, past optimization attempts and rejected ones, `unsafe` decisions —
+  INTO the team spawn prompts (teammates do not inherit session context); say when a recalled
+  note changes the approach. If nothing surfaces, proceed
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Task owned by `rust-scout` to locate the target crate(s), hot-path entry points, existing
   criterion benches, and any current `unsafe` blocks. Scout uses serena MCP for symbol
   navigation (`find_symbol`, `find_referencing_symbols`, `get_symbols_overview`) and `rg`
@@ -123,6 +128,10 @@ the baseline once all four report via `SendMessage`.
   - Gates passed: PERF-GATE ✓ / SAFETY-GATE ✓ (with evidence citations).
   - Any scope explicitly left out and suggested follow-up skills
     (`/dev-task`, `/perf`, `/security-audit`).
+- **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
+  for each (it dedups); `/remember` team-level decisions (proven win + why, `unsafe` calls,
+  rejected strategies) too — or state "nothing durable"
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Verdict: **COMPLETE / NEEDS WORK / BLOCKED**.
 - Suggest next steps: `/review` for a deeper audit, `/changelog` if user-facing,
   `/publish` if release-bound.

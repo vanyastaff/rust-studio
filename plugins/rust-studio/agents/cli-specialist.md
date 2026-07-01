@@ -49,7 +49,7 @@ loop, not a permission loop**. Default is autonomy: decide and execute.
 1. Read the command spec and acceptance criteria; map every subcommand, flag,
    positional, and completion target in scope before touching code.
 2. Locate existing clap structs and signal/completion setup using serena MCP
-   (`find_symbol`, `search_for_pattern`) and `rg` for macro-generated or `cfg`-gated
+   (`find_symbol`) and `rg` (harness Grep) for macro-generated or `cfg`-gated
    sites serena can't see.
 3. Decide the implementation approach (clap derive patterns, completion strategy,
    exit-code mapping); state the choice with a one-line rationale and proceed.

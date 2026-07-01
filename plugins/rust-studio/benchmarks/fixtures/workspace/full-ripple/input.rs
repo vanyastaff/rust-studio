@@ -1,16 +1,16 @@
-//! Shared type lives in `nebula-core`; consumers in `nebula-api` and
-//! `nebula-worker`. A variant was added to the shared enum, but only ONE
+//! Shared type lives in `acme-core`; consumers in `acme-api` and
+//! `acme-worker`. A variant was added to the shared enum, but only ONE
 //! consumer was updated — the other still compiles via a catch-all `_` arm that
 //! now silently mishandles the new case. It builds green; the ripple is incomplete.
 
-// --- nebula-core ---
+// --- acme-core ---
 pub enum Job {
     Email { to: String },
     Sms { to: String },
     Push { device: String }, // NEW variant added in this change
 }
 
-// --- nebula-api (UPDATED for Push) ---
+// --- acme-api (UPDATED for Push) ---
 pub fn describe(job: &Job) -> String {
     match job {
         Job::Email { to } => format!("email -> {to}"),
@@ -19,7 +19,7 @@ pub fn describe(job: &Job) -> String {
     }
 }
 
-// --- nebula-worker (STALE — catch-all silently swallows Push) ---
+// --- acme-worker (STALE — catch-all silently swallows Push) ---
 pub fn dispatch(job: &Job) -> Result<(), String> {
     match job {
         Job::Email { to } => send_email(to),

@@ -1,7 +1,7 @@
-//! crate: `nebula-http` (the HTTP transport crate).
+//! crate: `acme-http` (the HTTP transport crate).
 //!
 //! A checkout handler needed order math + an order rule, so the helpers were
-//! dropped HERE — the easiest edit site — even though `nebula-domain` owns the
+//! dropped HERE — the easiest edit site — even though `acme-domain` owns the
 //! Order / Money / Currency concepts. The code compiles and the tests pass; the
 //! defect is the SHAPE (wrong crate), which a reviewer would wave through.
 

@@ -1,4 +1,4 @@
-//! crate: `nebula-runtime`. Pre-2021 idioms a current-edition maintainer flags.
+//! crate: `acme-runtime`. Pre-2021 idioms a current-edition maintainer flags.
 //! Compiles, but reaches for unsafe `static mut` and verbose forms the modern
 //! std/edition replaced.
 

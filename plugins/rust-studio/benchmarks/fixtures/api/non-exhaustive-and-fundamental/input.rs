@@ -1,4 +1,4 @@
-//! crate: `nebula-store` 1.x (published public API surface). A small key/value
+//! crate: `acme-store` 1.x (published public API surface). A small key/value
 //! store façade. Compiles fine; the shape pins this crate's semver in four ways
 //! that will hurt at the next release.
 

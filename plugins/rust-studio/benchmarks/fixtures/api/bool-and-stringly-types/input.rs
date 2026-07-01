@@ -1,4 +1,4 @@
-//! crate: `nebula-client` (public API surface). Connection + apply options
+//! crate: `acme-client` (public API surface). Connection + apply options
 //! encoded as bool flags and stringly params. Compiles fine; the call sites are
 //! unreadable and illegal combinations are representable.
 

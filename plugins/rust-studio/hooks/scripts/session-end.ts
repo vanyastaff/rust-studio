@@ -11,16 +11,20 @@
 // fails the session.
 
 import { join } from "node:path";
-import { readInput, emit, done, watchdog, run, which } from "./_lib.ts";
+import { readInput, emit, done, watchdog, run, which, optionBool } from "./_lib.ts";
 
-const disarm = watchdog();
+// Armed for the whole run — the git dirty-check child runs after stdin, so an
+// early disarm would leave it unguarded. Watchdog fails open (exit 0).
+watchdog(10_000);
 
 interface Input {
   cwd?: string;
 }
 
 const data = await readInput<Input>();
-disarm();
+
+// Opt-out: studio config `lifecycle_notes` (default on) — also gates pre-compact.
+if (!optionBool("lifecycle_notes", true)) done();
 
 const cwd = data.cwd || process.cwd();
 

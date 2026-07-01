@@ -50,6 +50,11 @@ Receive delegation from `systems-perf-lead`; consult `unsafe-auditor` for
 `unsafe impl Send/Sync` and `async-systems-lead` for runtime topology questions.
 Stay in your domain — do not edit unrelated files without explicit delegation.
 
+When your work settles something **durable** — a memory-ordering choice and its
+happens-before argument, a lock-order rule — surface it on a `MEMORY:` line in your verdict;
+the orchestrator persists it to the project vault
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
+
 See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1 for the full autonomy contract.
 
 ## How you work

@@ -34,6 +34,10 @@ compiler and cargo errors and fix their root cause, one error at a time, without
   instead of the crate that OWNS the concept is a defect; check the crate boundary first. Match
   surrounding idiom; conform to the path-scoped standards the inject-rules hook points to —
   **Read each pointed-to rule** (the hook injects a pointer, not the body) before relying on it.
+- When your work settles something **durable** — a root-caused build failure (a textbook
+  gotcha), a feature/version conflict and how it resolved — surface it on a `MEMORY:` line in
+  your verdict; the orchestrator persists it to the project vault
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
 1. Capture the full picture: run `cargo check --workspace --all-targets --message-format=short`
@@ -54,7 +58,8 @@ compiler and cargo errors and fix their root cause, one error at a time, without
    - **Missing feature/dep** → enable the cargo feature or add the dep (hand manifest edits to
      `dependency-manager` / `/add-dep` for vetting on anything non-trivial). Before enabling a
      feature, adding a dep, or changing an API call, verify the installed crate version and
-     current docs via cratesio / context7 / rust-docs MCP — never code from stale memory
+     current docs — via a docs MCP (cratesio / context7 / rust-docs) if the user has one
+     configured, otherwise docs.rs via WebFetch or `cargo doc` — never code from stale memory
      (cite-or-declare-version).
    - **Edition/cfg** → fix the `cfg`, edition idiom, or conditional compilation.
 5. Re-run `cargo check`; repeat from step 2 until clean. Then `cargo clippy -- -D warnings`

@@ -89,8 +89,10 @@ default to `--all` but note the scope and proceed — do not stop to ask.
     - Gaps closed vs. gaps left out of scope (with rationale).
     - Evidence: paste the llvm-cov/tarpaulin summary line.
 13. End with **COMPLETE / NEEDS WORK / BLOCKED**.
-14. Suggest next steps: `/test-plan` to formalize the test strategy, `/review` for a
-    pre-merge audit, `/dev-task` if a gap reveals missing behavior.
+14. Suggest next steps: `/test-plan` to formalize the test strategy, `/mutants` to check
+    the newly covered lines are actually *asserted* (coverage measures execution, not
+    checking), `/review` for a pre-merge audit, `/dev-task` if a gap reveals missing
+    behavior.
 
 ## Coverage targets
 
