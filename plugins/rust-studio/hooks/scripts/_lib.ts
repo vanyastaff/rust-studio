@@ -6,6 +6,8 @@
 // helpers so none can hang: stdin reads race a hard timeout, and a global
 // watchdog force-exits the process if anything stalls.
 
+import { fileURLToPath } from "node:url";
+
 /** Read + parse the hook's JSON stdin, racing a hard timeout so a stdin that
  *  never closes can't wedge the hook. Returns {} on timeout / parse error. */
 export async function readInput<T = any>(timeoutMs = 2000): Promise<T> {
@@ -44,7 +46,10 @@ export function done(): never {
 }
 
 /** Run a command synchronously with a hard timeout. Returns null on any error
- *  or timeout — callers treat that as "couldn't check, stay silent". */
+ *  or timeout — callers treat that as "couldn't check, stay silent". A child
+ *  killed by the timeout reports exitCode:null + signalCode, NOT a failure
+ *  exit code — mapping it to 1 would turn "couldn't check" into "check failed"
+ *  (a false nudge on every slow workspace). */
 export function run(
   cmd: string[],
   opts: { cwd?: string; timeout?: number } = {},
@@ -57,8 +62,9 @@ export function run(
       stderr: "pipe",
       stdin: "ignore",
     });
+    if ((r as any).exitedDueToTimeout || r.signalCode != null || r.exitCode == null) return null;
     return {
-      exitCode: r.exitCode ?? 1,
+      exitCode: r.exitCode,
       stdout: r.stdout ? new TextDecoder().decode(r.stdout) : "",
       stderr: r.stderr ? new TextDecoder().decode(r.stderr) : "",
     };
@@ -72,11 +78,13 @@ export function which(bin: string): boolean {
   return Bun.which(bin) != null;
 }
 
-/** Plugin root: CLAUDE_PLUGIN_ROOT if set, else two dirs up from scripts/. */
+/** Plugin root: CLAUDE_PLUGIN_ROOT if set, else two dirs up from scripts/.
+ *  fileURLToPath (not .pathname) so %-encoded chars — e.g. a space in the
+ *  install path — decode correctly on every platform. */
 export function pluginRoot(): string {
   const env = process.env.CLAUDE_PLUGIN_ROOT;
   if (env) return env;
-  return new URL("../..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+  return fileURLToPath(new URL("../..", import.meta.url));
 }
 
 /** Read a plugin userConfig value, exposed to hook subprocesses as

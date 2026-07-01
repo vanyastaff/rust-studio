@@ -42,9 +42,9 @@ signal without leaking secrets or exploding cardinality.
   without explicit delegation.
 
 ## How you work
-1. Survey existing instrumentation: use serena (`search_for_pattern`) for `#[instrument]`,
-   `tracing::`, `metrics::`, and any OTel setup (`tracing-opentelemetry`, `opentelemetry-otlp`);
-   use the **Grep** tool (ripgrep) to catch macro-generated or `cfg`-gated sites serena may miss.
+1. Survey existing instrumentation: use the **Grep** tool (ripgrep) for `#[instrument]`,
+   `tracing::`, `metrics::`, and any OTel setup (`tracing-opentelemetry`, `opentelemetry-otlp`),
+   including macro-generated or `cfg`-gated sites.
 2. Identify gaps: uninstrumented public entry points, missing error events on `Err`
    branches, spans with no meaningful fields, log statements at the wrong level.
 3. Check for hazards: PII in field values, unbounded label sets on metrics, secrets

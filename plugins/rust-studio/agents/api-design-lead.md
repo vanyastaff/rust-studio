@@ -37,10 +37,14 @@ permission loop.
   `rust-builder`.
 - Stay in your domain. Don't edit implementation files outside the public surface without
   explicit delegation.
+- When your work settles something **durable** — a semver policy call, a sealed-trait /
+  `#[non_exhaustive]` decision, a rejected API shape and why — surface it on a `MEMORY:` line
+  in your verdict; the orchestrator persists it to the project vault
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
 1. Map the current public surface: use `cargo public-api` to enumerate every exported item;
-   use serena (`get_symbols_overview`, `search_for_pattern`) for symbol-level navigation;
+   use serena (`get_symbols_overview`) for symbol-level navigation;
    use `rg` (harness Grep) to catch `cfg`-gated or macro-generated pub items serena may
    miss. Confirm scope before proposing changes.
 2. Weigh ergonomics vs. flexibility vs. semver cost for each decision. Prefer
@@ -60,7 +64,7 @@ permission loop.
    breaking-change checklist below before signing off — `cargo semver-checks` does not catch
    every hazard (blanket impls on fundamental types, auto-trait narrowing on `dyn` returns).
 6. For prior-art and crates.io adoption evidence use exa (`web_search_exa`,
-   `get_code_context_exa`). Decisions want data, not opinion.
+   `web_fetch_exa`). Decisions want data, not opinion.
 7. Produce a draft API (trait signatures, type names, re-export tree) and hand to
    `api-designer` or `rust-builder` for implementation. No blocking approval loop for
    tactical choices already within the agreed scope.
@@ -135,6 +139,8 @@ Before this gate passes, verify:
 ## Output
 A design summary (surface map, rationale, semver verdict) and a review of API quality.
 Flag only correctness, security, and requirement gaps — not style or unnecessary abstraction.
-End with verdict **COMPLETE / NEEDS WORK / BLOCKED** plus evidence (`cargo semver-checks`
+End with verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED** (REDO-TO-BAR: correct
+but wrong SHAPE — reshape the touched area, see coordination-protocol §5) plus evidence
+(`cargo semver-checks`
 output, `cargo public-api` diff). Hand off to `api-designer`, `error-architect`, or
 `docs-engineer`.

@@ -14,10 +14,10 @@ Five moving parts:
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (45) — slash commands. They are *workflows*: a skill orchestrates the right agents
+- **Skills** (54) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
-- **Rules** (17) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
+- **Rules** (20) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
   relevant standard is auto-injected (a hook does this) and the agent reads the full rule on
   demand, so it has the right bar in front of it without bloating the window (`core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `ffi.md` on C-ABI boundaries,
@@ -67,7 +67,7 @@ Plan only when the approach is uncertain or the change spans files.
 
 ## The agents (33)
 
-### Tier 1 — Directors (opus)
+### Tier 1 — Directors (inherit — run at the session model)
 - **`chief-architect`** — crate/module boundaries, layering, ADRs, big refactors, cross-lead
   technical conflicts. Holds ARCH-GATE. Call for any change that ripples across many crates.
 - **`product-steward`** — scope, milestones, story breakdown, prioritization, cross-domain
@@ -87,7 +87,7 @@ Plan only when the approach is uncertain or the change spans files.
 - **`tooling-lead`** — *decides* build/CI/dev-tooling policy + matrix strategy. BUILD-GATE.
   (Delegates implementation to `build-engineer`.)
 
-### Tier 3 — Specialists (sonnet/haiku; auditors opus)
+### Tier 3 — Specialists (sonnet; auditors inherit/opus)
 API & types: **`api-designer`** (traits, type-state, builders, conversions), **`error-architect`**
 (thiserror/anyhow boundary, error taxonomy), **`macro-specialist`** (proc/derive/`macro_rules!`),
 **`docs-engineer`** (rustdoc, doc-tests, README).
@@ -95,32 +95,35 @@ Async & web: **`async-runtime-specialist`** (tokio, cancellation, spawn), **`web
 (axum/actix, extractors, middleware), **`database-specialist`** (sqlx/diesel, migrations, pools),
 **`observability-engineer`** (tracing, metrics, OTel), **`wasm-specialist`** (wasm32, wasm-bindgen, size).
 Systems & perf: **`concurrency-specialist`** (atomics, lock-free, loom), **`unsafe-auditor`**
-(opus; reviews every `unsafe` for soundness, miri — read-only), **`ffi-specialist`** (bindgen/cbindgen,
+(inherit; reviews every `unsafe` for soundness, miri — read-only), **`ffi-specialist`** (bindgen/cbindgen,
 C ABI), **`perf-engineer`** (criterion, flamegraph, allocations, SIMD), **`embedded-specialist`**
 (`no_std`, embedded-hal, cortex-m).
 CLI: **`cli-specialist`** (clap derive, ratatui, completions, signals).
 Quality: **`test-engineer`** (proptest, criterion, nextest, fixtures), **`security-auditor`** (opus;
-RUSTSEC, input/secret/auth/DoS), **`dependency-manager`** (haiku; cargo-deny, features, MSRV),
+RUSTSEC, input/secret/auth/DoS), **`dependency-manager`** (sonnet; cargo-deny, features, MSRV),
 **`build-engineer`** (*implements* build.rs, CI, cross, xtask).
-Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially — no praise, read-only).
+Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially — no praise, read-only).
 
-### Execution trio (the hands)
+### Execution (4) — the hands
 - **`rust-scout`** (haiku, read-only) — locates symbols/impls/tests via serena, returns a
   `file:line` map. Never writes or proposes fixes.
 - **`rust-builder`** (sonnet) — the only agent that routinely writes source; implements an
   approved plan, runs cargo check/clippy/test/fmt, reports a diff.
 - **`rust-build-resolver`** (sonnet) — gets a failing build green; fixes the root cargo/rustc
   error (borrowck, trait bounds, lifetimes) in a check→fix loop.
-- **`rust-reviewer`** (sonnet, read-only) — final gate before merge; severity-tagged findings,
+- **`rust-reviewer`** (inherit, read-only) — final gate before merge; severity-tagged findings,
   no praise, flags only correctness/requirement gaps.
 
 ---
 
-## The skills (45)
+## The skills (55)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
 - **`/help`** — the catalog (filter by topic, e.g. `/help async`).
+- **`/env-setup`** — provision the machine: OS build prerequisites, latest stable Rust via
+  rustup (+ components), `cargo-binstall`, and the studio's cargo tool suite as prebuilt
+  binaries (`check` mode = report only).
 - **`/detect-stack`** — classify a project's domain(s) + the relevant leads/specialists/rules.
 - **`/adopt`** — reverse-engineer an existing crate/workspace into studio docs + a debt catalog.
 
@@ -153,6 +156,7 @@ Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially —
 - **`/lint`** — rustfmt + clippy zero-warning gate (`--fix` applies).
 - **`/audit-unsafe`** — review all `unsafe` (invariants, miri).
 - **`/perf`** — profile → benchmark → optimize → prove the win with before/after numbers.
+- **`/bloat`** — measure binary size (cargo-bloat/llvm-lines), cut it, prove the delta in bytes.
 - **`/security-audit`** — CODE security: untrusted input, injection, secrets, auth + advisories.
 - **`/deps-check`** — DEPENDENCY hygiene: cargo-deny, versions, duplicates, features, MSRV.
 - **`/api-review`** — semver hazards + required version bump on a public-API change.
@@ -163,6 +167,9 @@ Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially —
 - **`/test-plan`** — a test plan for a feature (types, cases, edge cases, property laws).
 - **`/test-setup`** — wire proptest/criterion/nextest/coverage into the project.
 - **`/coverage`** — measure coverage, surface meaningful gaps, close them.
+- **`/mutants`** — mutation-test the suite (cargo-mutants): find code tests run but don't check.
+- **`/fuzz`** — coverage-guided fuzzing (cargo-fuzz) on untrusted-input surfaces; every crash
+  becomes a minimized regression test.
 - **`/flaky-hunt`** — reproduce, diagnose, and fix/quarantine a flaky test.
 
 ### Memory (cross-session, in the Obsidian vault via the `obsidian` MCP)
@@ -173,6 +180,8 @@ Cross-cutting: **`harsh-critic`** (opus; attacks designs/specs adversarially —
   `/refactor`, `/spec-verify`) run `/remember` for durable learnings, and the `auto_capture`
   Stop hook nudges you once after a completed unit if nothing was saved. Recall is automatic at
   session start (`memory_recall`). Both toggle via `/plugin` → Rust Code Studio.
+- The full contract (recall-before, remember-after, `MEMORY:` verdict lines, vault path rule)
+  lives in [`docs/memory-protocol.md`](memory-protocol.md).
 
 ### Ship & release
 - **`/commit`** — Conventional Commit for the current changes (fmt/clippy first; no hook bypass).

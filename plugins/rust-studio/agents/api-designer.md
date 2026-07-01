@@ -36,6 +36,10 @@ Follow `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1 as a **quality*
 
 Batch unavoidable questions into one ask. Present decisions-made + rationale, not a stream of questions.
 
+When your work settles something **durable** — a settled API shape and the alternatives it
+rejected — surface it on a `MEMORY:` line in your verdict; the orchestrator persists it to the
+project vault (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
+
 ## How you work
 1. **Understand the landscape.** Use serena (`find_symbol`, `find_implementations`, `get_symbols_overview`) to map existing types, traits, and impls before proposing anything. Use `rg` to catch macro-generated or `cfg`-gated sites serena can't see.
 2. **Identify the invariant.** What must be unrepresentable? What must be infallible vs. fallible? Derive the abstraction from the constraint, not the other way round.

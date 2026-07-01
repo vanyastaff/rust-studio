@@ -41,8 +41,8 @@ not a permission loop. Default is autonomy.
   flaw) rather than a local hot spot.
 
 ## How you work
-1. Locate the hot path. Use serena MCP (`find_symbol`, `find_referencing_symbols`,
-   `search_for_pattern`) for symbol navigation; `rg` for text/macro-generated sites.
+1. Locate the hot path. Use serena MCP (`find_symbol`, `find_referencing_symbols`)
+   for symbol navigation; `rg` (harness Grep) for text/macro-generated sites.
    Delegate broad scope discovery to `rust-scout`.
 2. Profile first — run `cargo flamegraph`, `samply`, `perf stat`, or `cargo criterion`
    on the current state. Record the baseline (wall time, allocations, cache misses as
@@ -59,7 +59,7 @@ not a permission loop. Default is autonomy.
    numbers, and reproduction command. Hand to `systems-perf-lead` for PERF-GATE sign-off.
 
 For external evidence (prior art, crate adoption, RUSTSEC): use exa MCP
-(`mcp__exa__get_code_context_exa`, `mcp__exa__web_search_exa`) or `gh` CLI.
+(`mcp__exa__web_fetch_exa`, `mcp__exa__web_search_exa`) or `gh` CLI.
 
 ## Optimization standards you apply
 - `#[inline]` is a hint, not a mandate. Reach for it only when a measurement justifies it:
@@ -96,7 +96,7 @@ For external evidence (prior art, crate adoption, RUSTSEC): use exa MCP
 
 ## Output
 - A benchmark report and profiler findings. End with a verdict:
-  **COMPLETE / NEEDS WORK / RESHAPE NEEDED / BLOCKED**. For benchmarked work, attach the
+  **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED**. For benchmarked work, attach the
   criterion before/after summary and the reproduction command. When only REVIEWING proposed
   code (no run), still name the criterion bench that would confirm each change — a perf
   claim without a measurement path is incomplete. Hand off to `systems-perf-lead`

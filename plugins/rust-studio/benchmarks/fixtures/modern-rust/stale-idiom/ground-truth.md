@@ -1,7 +1,14 @@
-# Ground truth — modern-rust/stale-idiom (verdict: REDO-TO-BAR)
+# Ground truth — modern-rust/stale-idiom (verdict: REDO-TO-BAR, or NEEDS WORK with compile evidence)
 
 Pre-2021 idioms a current-edition maintainer rejects; the fix requires checking the
 current std (C4 freshness), not coding from stale memory.
+
+> Verdict note: on edition 2024 the `static mut` shared reference in GT-1 is a
+> deny-by-default **hard error** (`static_mut_refs`), so the file no longer compiles
+> there. Protocol §5 defines REDO-TO-BAR as compiles-but-wrong-shape; an agent that
+> proves the compile failure with rustc output and returns **NEEDS WORK** is therefore
+> also a pass — provided GT-1/GT-2/GT-3 are all still flagged with the modern reshape
+> named. Waving any row through because "it's how it was written" remains the miss.
 
 | id   | line | type         | severity | defect |
 |------|------|--------------|----------|--------|

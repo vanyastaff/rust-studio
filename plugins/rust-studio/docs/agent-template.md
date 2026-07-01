@@ -9,7 +9,9 @@ name: <kebab-name>            # must match the filename
 description: <Third-person. What it owns + WHEN to use it, with trigger phrases.
               Claude reads this to decide delegation. One or two sentences.>
 tools: <comma list>          # omit to inherit all. Read-only agents: Read, Grep, Glob, Bash
-model: <opus|sonnet|haiku>   # directors+high-stakes=opus, leads/specialists=sonnet, cheap=haiku
+model: <inherit|opus|sonnet|haiku>   # judgment-heavy (directors, critic, reviewer, unsafe-auditor)=inherit;
+                             # leads/specialists=sonnet, cheap=haiku; security-auditor pinned opus
+                             # (rationale + Claude 5 notes: docs/claude-5-compat.md)
 color: <red|blue|green|yellow|purple|orange|pink|cyan>
 ---
 
@@ -46,7 +48,8 @@ Before this gate passes, verify:
 - [ ] <check>
 
 ## Output
-- Findings/plan as <format>. End with verdict **COMPLETE / NEEDS WORK / BLOCKED**
+- Findings/plan as <format>. End with verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED**
+  (REDO-TO-BAR applies to agents that judge work shape — see coordination-protocol §5)
   and evidence (command output, bench numbers). Hand off to `<skill/agent>`.
 - **Lead with the outcome and stay readable** — first line says what you found / what changed,
   detail after; drop working shorthand in the summary the caller actually reads. See
@@ -69,3 +72,11 @@ locator maps, research digests, answers) the **data IS the deliverable**: return
   nav) and `rg`/`ast-grep` over Bash `grep`/`find`; exa for external evidence; purpose-built
   `cargo` subcommands. Bash runs things — it isn't a search tool.
 - Bodies describe behavior, not Rust tutorials. Assume Rust expertise; encode judgment + boundaries.
+- **Never ask an agent to echo its reasoning.** Instructions like "show your thinking",
+  "transcribe your reasoning", or "explain your chain of thought in the output" trigger the
+  `reasoning_extraction` refusal classifier on Claude 5 models. Ask for **conclusions,
+  findings, and evidence** — never for the reasoning itself. (`docs/claude-5-compat.md`)
+- **Encode judgment, not scripts.** State the goal, the boundaries, and the quality bar;
+  keep "How you work" at intent level (a handful of moves, not a rigid procedure). Claude 5
+  models perform *worse* under over-prescriptive step lists — when default behavior already
+  clears the bar, delete the instruction rather than refine it. (`docs/claude-5-compat.md`)

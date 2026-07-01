@@ -28,6 +28,11 @@ cross-crate concern) before proceeding.
 
 ## Phase 1 — Clarify intent
 
+**Recall first:** `/recall <idea/area>` (or reuse the session-start memory index if it already
+surfaced this area) — prior decisions and rejected alternatives shape ideation; carry them into
+the approaches and say when a recalled note changes the direction. If nothing surfaces, proceed
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 1. Restate the idea in one sentence. Flag immediately if it is under-specified.
 2. `AskUserQuestion` with targeted questions — no more than three at once — to surface:
    - **Goal**: what problem does this solve for users of the crate/binary?
@@ -47,8 +52,8 @@ cross-crate concern) before proceeding.
    - **[NICE-TO-KNOW]** — informational; does not block.
 
    For ecosystem-alternative unknowns, pull data before presenting — use the **exa** MCP
-   (`web_search_exa` for crates.io adoption / RUSTSEC, `get_code_context_exa` for real
-   usage examples). Evidence over opinion (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md`).
+   (`web_search_exa` for crates.io adoption / RUSTSEC, `web_fetch_exa` to read the
+   docs/source pages found). Evidence over opinion (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md`).
 
 5. If a `[BLOCKER]` is present, surface it immediately and `AskUserQuestion` with options
    before continuing.

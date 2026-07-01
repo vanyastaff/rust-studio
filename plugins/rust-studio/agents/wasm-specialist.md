@@ -38,8 +38,8 @@ explicit delegation.
 
 ## How you work
 1. Identify the wasm target (`wasm32-unknown-unknown` vs. `wasm32-wasi`) and confirm the
-   intended runtime (browser, Node, Wasmtime, etc.). Use serena `find_symbol` /
-   `search_for_pattern` for target-cfg sites; `rg` to catch `cfg`-gated and macro-generated
+   intended runtime (browser, Node, Wasmtime, etc.). Use serena `find_symbol` for symbol
+   navigation; `rg` (harness Grep) for target-cfg sites and `cfg`-gated or macro-generated
    uses serena misses.
 2. Audit `Cargo.toml` for the wasm32 profile: `panic = "abort"`, `opt-level`, `lto`, and
    correct `getrandom` feature flag (`features = ["js"]`).

@@ -23,9 +23,13 @@ a module reorganization, or a specific subsystem?" and, for greenfield work, sug
 the key use-cases before proceeding.
 
 ## Phase 1 — Map the current structure
+**Recall first:** `/recall <scope>` (or reuse the session-start memory index if it already
+surfaced this area) — prior ADRs and architecture decisions are binding context; carry them into
+the mapping and options, and say when a recalled note changes the approach. If nothing surfaces,
+proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 1. Spawn **`rust-scout`** to produce a `file:line` map of all crate roots (`Cargo.toml`),
    `lib.rs` / `main.rs` entry points, `pub use` re-exports, and existing module boundaries in
-   scope. Use **serena** (`find_symbol`, `get_symbols_overview`, `search_for_pattern`) for symbol
+   scope. Use **serena** (`find_symbol`, `get_symbols_overview`) for symbol
    and boundary navigation; use **`cargo modules`** to render the module tree; use **`rg`** for
    macro-generated or `cfg`-gated sites serena can't see. Do not guess the layout.
 2. **Sibling-crate reuse survey (mandatory, BEFORE proposing any new type/trait/helper).** Have
@@ -58,8 +62,8 @@ the key use-cases before proceeding.
      responsibility still sit in the right crate? Not just a one-line trade-off.
    - **Freshness (cite-or-declare-version):** when the decision depends on ecosystem behavior
      (a crate's API shape, an adoption pattern, RUSTSEC posture), cite the docs.rs / release-notes
-     / source you checked via **exa** (`web_search_exa`, `get_code_context_exa`) and **cratesio** /
-     **context7** / **rust-docs**, OR state the last-verified version. Silence is a gap, not a pass.
+     / source you checked via **exa** (`web_search_exa`, `web_fetch_exa`) — or a crate-docs MCP
+     (cratesio/context7/rust-docs) if one is configured — OR state the last-verified version. Silence is a gap, not a pass.
    Mark the architect's recommended default. **Spawn `harsh-critic` by DEFAULT** for any new-crate,
    cross-crate, or boundary-moving plan — not opt-in "load-bearing only": it attacks the recommended
    option (challenge the premise, propose a radically different decomposition) — let the design
@@ -121,6 +125,10 @@ the key use-cases before proceeding.
     - a prompt to break the design into implementable stories for `/dev-task`.
 19. Summarize to the user: decisions made, ADRs written, doc location, open items (if any), and
     the first suggested `/dev-task` to kick off implementation.
+    **Persist what settled:** an architecture decision is the #1 thing to persist — sweep agent
+    verdicts for `MEMORY:` lines and run `/remember` for each (it dedups), and `/remember` each
+    settled decision + rationale — or state "nothing durable"
+    (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 20. Suggest next steps: `/dev-task` for the first story, `/review` after an initial implementation,
     `/perf` if performance boundaries were a driver.
 

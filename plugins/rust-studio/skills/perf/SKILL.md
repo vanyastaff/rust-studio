@@ -11,6 +11,10 @@ Performance work, end to end, with `perf-engineer`. **No change lands without nu
 (`${CLAUDE_PLUGIN_ROOT}/rules/perf.md`, `${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md`).
 
 ## Phase 1 — Find the real bottleneck (profile)
+- **Recall first:** `/recall <target>` (or reuse the session-start memory index if it already
+  surfaced this area) — known hot paths and past optimization attempts (including rejected ones)
+  bind this pass; say when a recalled note changes the approach. If nothing surfaces, proceed
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Establish a representative workload. Spawn `perf-engineer` to **profile** it —
   `cargo flamegraph`, `samply`, or `perf` — and identify where time/allocations actually go.
   Optimize the **measured** hot path, never a guessed one.
@@ -33,4 +37,8 @@ Performance work, end to end, with `perf-engineer`. **No change lands without nu
 ## Output
 The bottleneck found, the change, and before/after numbers (verbatim, not summarized). Verdict
 **COMPLETE / NEEDS WORK / BLOCKED**. A perf change that doesn't beat the baseline is reverted.
-Hand off to `/review` (or `/team-perf` for a full systems+safety hardening pass).
+**Persist what settled:** a proven win + why (and any rejected attempt) is durable — sweep agent
+verdicts for `MEMORY:` lines and `/remember` each (it dedups); `/remember` the win too — or state
+"nothing durable" (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+Hand off to `/review` (or `/team-perf` for a full systems+safety hardening pass); if the
+concern is artifact size rather than speed, that's `/bloat`.

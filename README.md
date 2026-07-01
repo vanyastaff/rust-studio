@@ -47,9 +47,9 @@ rust-studio/                         (this repo = the "vanya" marketplace)
 │       ├── .claude-plugin/plugin.json
 │       ├── .lsp.json                # bundled rust-analyzer LSP
 │       ├── agents/                  # 33 agent definitions
-│       ├── skills/                  # 48 slash commands
+│       ├── skills/                  # 55 slash commands
 │       ├── hooks/                   # hooks.json + Bun/TypeScript scripts
-│       ├── rules/                   # 17 path-scoped Rust standards
+│       ├── rules/                   # 20 path-scoped Rust standards
 │       ├── output-styles/           # opt-in terse review style
 │       ├── monitors/                # background monitors (PR CI status)
 │       ├── docs/                    # protocol, roster, releasing, templates/

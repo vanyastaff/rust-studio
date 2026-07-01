@@ -46,7 +46,7 @@
 //   anything that doesn't owe a studio verdict. And when we DO nag, the wording tells
 //   the agent to APPEND the verdict to its existing deliverable, never replace it.
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, openSync, readSync, closeSync } from "node:fs";
 import { join } from "node:path";
 import { readInput, emit, done, watchdog } from "./_lib.ts";
 
@@ -56,7 +56,7 @@ import { readInput, emit, done, watchdog } from "./_lib.ts";
  *  `:`, `#` and whitespace are all non-word characters. The internal space in the
  *  two-word verdicts is relaxed to `\s+`, so a line-wrapped `NEEDS\nWORK` counts. */
 export const VERDICT =
-  /\b(COMPLETE|NEEDS\s+WORK|REDO-TO-BAR|BLOCKED|ACCEPTABLE|RESHAPE\s+NEEDED|MERGE-READY)\b/;
+  /\b(COMPLETE|NEEDS\s+WORK|REDO-TO-BAR|BLOCKED|ACCEPTABLE|RESHAPE\s+NEEDED|MERGE-READY|SURVIVES|DOESN(?:'|’)T\s+SURVIVE|INSUFFICIENT\s+INFO)\b/;
 
 /** Does this text carry an explicit studio verdict token? */
 export function hasVerdict(text: string): boolean {
@@ -305,6 +305,10 @@ if (import.meta.main) {
   // sub-agent's own transcript. The sub-agent's transcript lives at:
   //   `<session_dir>/subagents/<agent-id>.jsonl`
   // We find the most recently modified `.jsonl` in that `subagents/` directory.
+  // AMBIGUOUS: two subagents finishing within a few seconds of each other means
+  // "newest file" may be the OTHER agent's transcript — judging A against B's
+  // output yields a false nag (or a false pass). Fail open in that case.
+  const AMBIGUOUS = "__ambiguous__";
   function resolveSubagentTranscript(parentPath: string): string | null {
     try {
       // Parent path: /path/to/<session-id>.jsonl
@@ -317,6 +321,7 @@ if (import.meta.main) {
           return { path: full, mtime: statSync(full).mtimeMs };
         })
         .sort((a, b) => b.mtime - a.mtime); // newest first
+      if (files.length >= 2 && files[0].mtime - files[1].mtime < 5_000) return AMBIGUOUS;
       return files[0]?.path ?? null;
     } catch {
       return null;
@@ -334,13 +339,31 @@ if (import.meta.main) {
     // (`agent_transcript_path`, ≥ 2.0.42). Older versions only pass the PARENT
     // session's `transcript_path`, so fall back to resolving the sub-agent's own
     // transcript from the `subagents/` sibling directory, then the parent itself.
-    const pathToRead =
-      data.agent_transcript_path ??
-      (data.transcript_path
+    const resolved = data.agent_transcript_path
+      ? data.agent_transcript_path
+      : data.transcript_path
         ? resolveSubagentTranscript(data.transcript_path) ?? data.transcript_path
-        : null);
-    if (pathToRead) {
-      const raw = readFileSync(pathToRead, "utf8");
+        : null;
+    if (resolved === AMBIGUOUS) done(); // parallel finishers — can't attribute; fail open
+    if (resolved) {
+      // Bound the read: the parent-transcript fallback can be a whole session's
+      // JSONL. The verdict lives in the final work block, so the last ~2MB is
+      // ample — reading everything risks eating the hook budget on long sessions.
+      const TAIL = 2_000_000;
+      const size = statSync(resolved).size;
+      let raw: string;
+      if (size > TAIL) {
+        const fd = openSync(resolved, "r");
+        try {
+          const buf = Buffer.alloc(TAIL);
+          readSync(fd, buf, 0, TAIL, size - TAIL);
+          raw = buf.toString("utf8");
+        } finally {
+          closeSync(fd);
+        }
+      } else {
+        raw = readFileSync(resolved, "utf8");
+      }
       couldRead = true;
       verdictSeen = verdictPresent(raw);
     }
@@ -349,9 +372,10 @@ if (import.meta.main) {
   }
 
   if (verdictSeen) {
-    // Emit an explicit empty additionalContext so Claude Code replaces any stale
-    // nag that was injected by a prior invocation when the verdict wasn't yet in
-    // the transcript. Silently exiting (done()) leaves the prior context in place.
+    // Emit an explicit empty additionalContext rather than silently exiting.
+    // (Best-effort: contexts are appended per event, so this cannot be relied on
+    // to REPLACE a prior nag — it just avoids adding one and keeps the emit path
+    // uniform. Harmless either way.)
     emit({
       hookSpecificOutput: {
         hookEventName: "SubagentStop",

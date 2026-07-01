@@ -28,13 +28,18 @@ need to record?" If the decision is entangled with a larger design, suggest runn
 
 ## Phase 1 — Gather context
 
+**Recall first:** `/recall <decision topic>` (or reuse the session-start memory index if it
+already surfaced this area) — search for prior or conflicting decisions before writing a new ADR,
+and carry them into the context and options; say when a recalled note changes the approach. If
+nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+
 1. Restate the decision in one sentence. Confirm it is scoped to one choice, not a
    design doc.
 2. Spawn **`rust-scout`** (read-only) to:
    - List `docs/adr/` using Glob / `fd` and identify the highest-numbered
      `NNNN-*.md` file to determine the next sequence number.
    - Note any code, tests, or `Cargo.toml` sections that bear directly on the
-     decision area (use serena `get_symbols_overview` / `search_for_pattern` for
+     decision area (use serena `get_symbols_overview` for
      symbol-level context; `rg` for cfg-gated / macro-generated sites).
    - Collect any linked tickets, PRs, or discussions the user has already shared
      in `$ARGUMENTS`. Do not ask for more context before scouting.
@@ -58,8 +63,8 @@ need to record?" If the decision is entangled with a larger design, suggest runn
    - any gate triggered (`SAFETY-GATE`, `API-GATE`, …).
    - **Freshness (cite-or-declare-version):** when the decision depends on ecosystem behavior
      (a crate's API shape, adoption pattern, RUSTSEC posture), cite the docs.rs / release-notes /
-     source you checked via exa MCP (`web_search_exa` / `get_code_context_exa`) and cratesio /
-     context7 / rust-docs, OR state the last-verified version. Silence is a gap, not a pass.
+     source you checked via exa MCP (`web_search_exa` / `web_fetch_exa`) — or a crate-docs MCP
+     (cratesio/context7/rust-docs) if one is configured — OR state the last-verified version. Silence is a gap, not a pass.
    - For a boundary-moving / cross-crate / new-primitive decision, spawn **`harsh-critic`** by
      DEFAULT to attack the recommended option (premise, failure modes, radically different
      decomposition) and fold real findings into the options before the gate.
@@ -109,6 +114,8 @@ need to record?" If the decision is entangled with a larger design, suggest runn
 
 Summarize: the decision recorded, the path written, gates or leads to notify (e.g.
 `api-design-lead` if the decision affects the public API), and any follow-on work.
+**Persist what settled:** `/remember` the ADR's one-line decision as a vault note pointing at the
+ADR file path (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 End with **COMPLETE / NEEDS WORK / BLOCKED**.
 
 Suggest next steps if relevant: `/dev-task` to implement the decision, `/review` to

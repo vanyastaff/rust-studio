@@ -29,11 +29,24 @@ const EVIDENCE =
   "Verification: 12 passed. Result: COMPLETE.";
 
 describe("hard hits always block", () => {
-  test("permission-seeking blocks even with full evidence", () => {
+  // permission-seeking and premature-stopping are soft since the Claude 5 batch:
+  // evidence-backed strategic asks / session handoffs pass, evidence-free ones block.
+  test("permission-seeking with full evidence passes (soft)", () => {
     const d = evaluate(`${EVIDENCE} Should I continue with the next file?`, cfg());
+    expect(d.block).toBe(false);
+    expect(d.softHits.map((h) => h.category)).toContain("permission-seeking");
+  });
+
+  test("permission-seeking without evidence blocks", () => {
+    const d = evaluate("Want me to continue with the next file?", cfg());
     expect(d.block).toBe(true);
-    expect(d.reason).toBe("hard-hit");
-    expect(d.hardHits.map((h) => h.category)).toContain("permission-seeking");
+    expect(d.reason).toBe("soft-hit-without-evidence");
+  });
+
+  test("premature-stopping without evidence blocks", () => {
+    const d = evaluate("This is a good stopping point — we can continue later.", cfg());
+    expect(d.block).toBe(true);
+    expect(d.reason).toBe("soft-hit-without-evidence");
   });
 
   test("test-avoidance blocks", () => {

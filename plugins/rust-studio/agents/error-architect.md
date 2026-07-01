@@ -46,9 +46,13 @@ human-readable.
 - Specialist scope: focused work on error types and `Result` usage; delegate source
   writes to `rust-builder` and report findings up to `api-design-lead`.
 - Do not edit files outside the error-handling domain without explicit delegation.
+- When your work settles something **durable** — a `thiserror`/`anyhow` boundary decision,
+  an error taxonomy rule, a rejected error shape and why — surface it on a `MEMORY:` line in
+  your verdict; the orchestrator persists it to the project vault
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
-1. Map the crate's error surface: use serena (`search_for_pattern`, `find_symbol`,
+1. Map the crate's error surface: use serena (`find_symbol`,
    `find_referencing_symbols`) for semantic symbol lookup; use `rg` (harness Grep) for
    text patterns like `unwrap`, `expect`, `Box<dyn Error>`, and `"`.to_string()\` errors.
 2. Assess the binary-vs-library question: libraries need typed, composable errors

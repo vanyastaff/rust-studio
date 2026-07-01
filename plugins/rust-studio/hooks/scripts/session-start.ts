@@ -13,7 +13,7 @@ import { readFileSync, statSync, readdirSync } from "node:fs";
 import { join, basename, dirname, resolve } from "node:path";
 import { homedir } from "node:os";
 import { execSync } from "node:child_process";
-import { readInput, emit, watchdog, option, optionBool } from "./_lib.ts";
+import { readInput, emit, watchdog, option, optionBool, pluginRoot } from "./_lib.ts";
 
 /** Canonical main-worktree root for cwd, so a git WORKTREE recalls the real
  *  project's vault memory (the main repo), not the worktree dir name. Falls back to cwd. */
@@ -23,6 +23,7 @@ function gitMainRoot(cwd: string): string {
       cwd,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
+      timeout: 2000,
     }).trim();
     if (common) {
       const abs = resolve(cwd, common); // relative ".git" in main checkout, absolute in a worktree
@@ -34,7 +35,10 @@ function gitMainRoot(cwd: string): string {
   return cwd;
 }
 
-const disarm = watchdog();
+// Armed for the WHOLE run — buildRecall's git calls + vault walk happen after
+// stdin, so disarming after readInput would leave the slow path unguarded and
+// hand a stall to the harness's 20s kill (which loses the briefing too).
+watchdog(15_000);
 
 // --- minimal Cargo.toml field extraction (no TOML dep; only the fields used) ---
 function section(text: string, name: string): string {
@@ -124,16 +128,7 @@ function noteMeta(body: string): { title: string; note_type: string; tags: strin
   return { title, note_type, tags, hook };
 }
 
-interface Note { title: string; note_type: string; hook: string; score: number; mtime: number; group: string; path: string }
-
-// map a note's top-level folder under projects/<project>/ to a display group
-function layerGroup(rel: string): string {
-  const seg = rel.split(/[\\/]/)[0];
-  if (seg === "decisions") return "Decisions (ADRs)";
-  if (seg === "planning" || seg === "specs") return "Plans & specs";
-  return "Working memory";
-}
-const GROUP_ORDER = ["Decisions (ADRs)", "Plans & specs", "Working memory"];
+interface Note { title: string; note_type: string; hook: string; score: number; mtime: number; path: string }
 
 function buildRecall(cwd: string): string {
   try {
@@ -149,7 +144,7 @@ function buildRecall(cwd: string): string {
     // cheap git signal (every call fail-open)
     const git = (args: string): string => {
       try {
-        return execSync(`git ${args}`, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 4000 }).trim();
+        return execSync(`git ${args}`, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 2000 }).trim();
       } catch {
         return "";
       }
@@ -206,8 +201,7 @@ function buildRecall(cwd: string): string {
         } catch {
           /* keep 0 */
         }
-        const rel = p.slice(dir.length + 1);
-        notes.push({ title, note_type: meta.note_type, hook: meta.hook, score, mtime, group: layerGroup(rel), path: p.replace(/\\/g, "/") });
+        notes.push({ title, note_type: meta.note_type, hook: meta.hook, score, mtime, path: p.replace(/\\/g, "/") });
       }
     };
     walk(dir);
@@ -218,34 +212,34 @@ function buildRecall(cwd: string): string {
       `\n    Read: \`${n.path}\``;
 
     const sigList = [...sig].slice(0, 8).join(", ");
-    const matched = notes.filter((n) => n.score > 0).sort((a, b) => b.score - a.score || b.mtime - a.mtime);
-
-    const sections: string[] = [];
-    for (const g of GROUP_ORDER) {
-      const items = matched.filter((n) => n.group === g).slice(0, 4);
-      if (items.length) sections.push(`### ${g}\n` + items.map(fmtBullet).join("\n"));
-    }
+    // Flat ranked list (the vault layout is flat per docs/memory-protocol.md —
+    // notes + MEMORY.md, no subfolders): pure score/recency, top 8.
+    const matched = notes
+      .filter((n) => n.score > 0)
+      .sort((a, b) => b.score - a.score || b.mtime - a.mtime)
+      .slice(0, 8);
 
     // Orient the agent: when project memory exists, the durable design record lives in
     // the vault, not the repo — so consult/extend it instead of re-deriving from code.
     const orient =
       `**This project's durable design record lives in the Obsidian vault** ` +
-      `(\`projects/${project}/\`), not the repo — its ADRs/decisions, plans, specs, roadmap, and ` +
-      "tasks. Consult it before designing or re-deriving, and capture new decisions there with `/remember`.";
+      `(\`projects/${project}/\`), not the repo — its decisions, gotchas, conventions, and fixes. ` +
+      "Consult it before designing or re-deriving; capture what settles with `/remember` " +
+      `(contract: \`${join(pluginRoot(), "docs", "memory-protocol.md").replace(/\\/g, "/")}\`).`;
 
     let out: string;
-    if (sections.length) {
+    if (matched.length) {
       out =
         `## Recalled project memory — most relevant to this work${sigList ? ` (signal: ${sigList})` : ""}\n\n` +
         `${orient}\n\n` +
-        sections.join("\n\n");
+        matched.map(fmtBullet).join("\n");
     } else {
       const recent = notes.slice().sort((a, b) => b.mtime - a.mtime).slice(0, 4);
       out = `## Recalled project memory — most recent\n\n${orient}\n\n` + recent.map(fmtBullet).join("\n");
     }
     return (
       out +
-      `\n\n_${notes.length} notes scanned in \`projects/${project}/\` (decisions / planning / specs / agent). ` +
+      `\n\n_${notes.length} notes scanned in \`projects/${project}/\`. ` +
       "Read any above directly by its path; `/recall <topic>` for deeper semantic search across all " +
       "notes; `/remember` to capture a learning._"
     );
@@ -259,7 +253,6 @@ interface Input {
 }
 
 const data = await readInput<Input>();
-disarm();
 
 const cwd = data.cwd || process.cwd();
 const manifest = join(cwd, "Cargo.toml");

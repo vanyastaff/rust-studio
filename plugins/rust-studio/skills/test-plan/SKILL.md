@@ -16,7 +16,7 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
 ## Phase 1 — Scope
 
 1. Restate the feature and its acceptance criteria in 1–5 bullets. If criteria are missing, draft a plausible list from context and proceed — surface the draft in the Phase 4 output rather than stopping to ask.
-2. Spawn **`rust-scout`** (read-only) to locate existing tests, the module under test, and any related fixtures or helpers. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`, `search_for_pattern`) for symbol/reference navigation and `rg` for macro-generated or `cfg`-gated sites serena can't see — never Bash `grep`/`find`.
+2. Spawn **`rust-scout`** (read-only) to locate existing tests, the module under test, and any related fixtures or helpers. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`) for symbol/reference navigation and `rg` (harness Grep) for macro-generated or `cfg`-gated sites serena can't see — never Bash `grep`/`find`.
 3. Identify the owning lead from the domain (see `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md`). If the feature spans domains, note each one.
 
 ## Phase 2 — Map criteria to tests
@@ -79,6 +79,8 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
     - `/dev-task` — implement the feature under the test plan's coverage.
     - `/review` — audit an existing diff against these criteria.
     - `/perf` — if bench tests were included, run baseline measurements now.
+    - `/fuzz` — if the plan covers an untrusted-input parser/decoder, add a fuzz target.
+    - `/mutants` — once tests exist, grade that they actually check behavior.
 
 ## Error recovery
 

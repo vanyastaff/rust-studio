@@ -24,6 +24,11 @@ Use `/debug` for runtime bugs: wrong results, panics, deadlocks, async hangs, st
    chase first (timing, env, ordering). State the exact repro.
 2. **Locate.** Spawn **`rust-scout`** to map the involved types/functions/call-sites and
    what mutates the suspect state. Don't read the whole crate — get the blast radius.
+
+   **Recall first:** `/recall <bug area>` (or reuse the session-start memory index if it already
+   surfaced this area) — has this bug or area bitten us before? Carry prior gotchas and fixes into
+   the hypotheses; say when a recalled note changes the approach. If nothing surfaces, proceed
+   (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 3. **Hypothesize.** Write down 1–3 concrete, falsifiable hypotheses ("the lock is held
    across the `.await` so task B starves"). For a design-level cause, spawn **`harsh-critic`**
    to attack your assumptions.
@@ -50,5 +55,6 @@ End with **COMPLETE** (cause fixed + regression green) or **STUCK** (state the d
 hypotheses and the next experiment — never a guessed patch).
 
 A root cause is a **durable gotcha**: on `COMPLETE`, run `/remember` to capture the cause and
-the fix so the next occurrence is recognized fast — skip only if the bug was trivial/obvious.
+the fix so the next occurrence is recognized fast — skip only if the bug was trivial/obvious
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 Then `/review` the change, or `/dev-task` any follow-up the root cause exposed.

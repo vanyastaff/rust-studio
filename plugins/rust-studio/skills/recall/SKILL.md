@@ -8,11 +8,13 @@ user-invocable: true
 # /recall — retrieve project memory
 
 Pull relevant past learnings into context so work compounds instead of repeating
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). Companion to `/remember`.
+(protocol: `${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Companion to `/remember`.
 
 ## Where notes live (resolve every time)
 - **Vault root:** `$OBSIDIAN_VAULT_PATH`, default `~/memory` (cross-platform — never hardcode).
-- **Project folder:** `<vault>/projects/<project>/`, `<project>` = basename of the session cwd;
+- **Project folder:** `<vault>/projects/<project>/`, `<project>` = basename of the **main
+  worktree root** (`git rev-parse --git-common-dir` → the dir containing it; plain checkout =
+  repo root — this keeps a git-worktree session on the same folder the session-start hook reads);
   the index is `<vault>/projects/<project>/MEMORY.md`. Read through the **obsidian** MCP.
 
 ## Steps

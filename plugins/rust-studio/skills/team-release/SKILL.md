@@ -43,6 +43,10 @@ them) so they run concurrently as teammates; the lead synthesizes when all repor
 
 ## Phase 1 — Semver bump determination
 
+- **Recall first:** `/recall <crate> release` (or reuse the session-start memory index) and paste
+  what binds — prior semver calls, MSRV policy, publish gotchas — INTO the team spawn prompts
+  (teammates do not inherit session context); say when a recalled note changes the approach. If
+  nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Task owned by `release-lead` (with `rust-reviewer`) to run `/api-review` against the current
   branch (vs. the last published tag). Review the output for breaking changes, additions, and
   fixes.
@@ -153,6 +157,10 @@ git push origin v<version>
 - Summarize: version, semver bump justification, audit outcomes, changelog entry, doc
   coverage, checklist status, and any accepted exceptions with their rationale. Every
   teammate's contribution ends in **COMPLETE / NEEDS WORK / BLOCKED** with evidence.
+- **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
+  for each (it dedups); `/remember` team-level decisions (semver rationale, accepted exceptions,
+  release gotchas) too — or state "nothing durable"
+  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - End with verdict **COMPLETE / NEEDS WORK / BLOCKED** and the manual publish command(s).
 - If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`
   (no `TeamDelete` — the team is implicit).

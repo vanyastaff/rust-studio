@@ -57,7 +57,7 @@ official large-codebase guide recommends) for anything about symbols:
 | Who calls / uses it | `mcp__plugin_serena_serena__find_referencing_symbols` |
 | Who implements a trait | `mcp__plugin_serena_serena__find_implementations` |
 | Overview of a file's/module's symbols | `mcp__plugin_serena_serena__get_symbols_overview` |
-| Pattern across the project | `mcp__plugin_serena_serena__search_for_pattern` |
+| Pattern across the project | the harness **Grep** tool (ripgrep) — serena has no pattern-search tool |
 | Compiler diagnostics for a file | `mcp__plugin_serena_serena__get_diagnostics_for_file` |
 | Find a file / list a dir | `mcp__plugin_serena_serena__find_file` / `list_dir` |
 
@@ -74,7 +74,8 @@ macro-generated / `cfg`-gated sites serena can't see.
 
 ## External evidence & prior art
 Decisions want data, not opinion (`working-preferences.md`). Use the **exa** MCP:
-- `mcp__exa__get_code_context_exa` — real code examples / docs for a crate or API.
+- `mcp__exa__web_fetch_exa` — read a known page (docs.rs, release notes, a repo file) as
+  clean markdown; the follow-up to a search hit.
 - `mcp__exa__web_search_exa` — crates.io adoption, peer-project patterns, RUSTSEC advisories,
   upstream issue audits. (`gh` CLI for GitHub issues/PRs.)
 
@@ -86,7 +87,7 @@ Decisions want data, not opinion (`working-preferences.md`). Use the **exa** MCP
 | Lints / format | `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt` |
 | Security / advisories | `cargo audit`, `cargo deny check` |
 | Semver / public API | `cargo semver-checks`, `cargo public-api` |
-| Unused deps | `cargo machete` (fast) or `cargo udeps` (nightly, thorough) |
+| Unused/misplaced deps | `cargo shear` (AST-based via rust-analyzer's parser; `--fix`; `--expand` on nightly for macro-heavy code) — `cargo machete` (regex, fast) / `cargo udeps` (nightly, compiler-based) as fallbacks |
 | Feature-combo build matrix | `cargo hack` |
 | Unsafe / UB | `cargo +nightly miri test`, `cargo careful` |
 | Macro expansion | `cargo expand` |

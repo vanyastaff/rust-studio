@@ -44,7 +44,7 @@ matrix, `-Zminimal-versions`, macOS+Windows, llvm-cov→Codecov), `safety.yml` (
 | Docs | `cargo doc --no-deps --all-features --document-private-items` (RUSTDOCFLAGS=-D warnings) | should |
 | Features | `cargo hack check --feature-powerset --depth 2 --no-dev-deps` (full powerset on cron) | should |
 | MSRV | pinned-toolchain job `cargo check` at your `rust-version` (re-check on dep bumps) | should |
-| Unused deps | `cargo machete` (stable, PR) + `cargo udeps` (nightly, cron) | should/nice |
+| Unused deps | `cargo shear --deny-warnings` (stable, PR) + `cargo udeps` (nightly, cron) | should/nice |
 | Semver | `cargo semver-checks` / `obi1kenobi/cargo-semver-checks-action@v2` (release pipeline) | should |
 | Coverage | `cargo llvm-cov --lcov` → `codecov/codecov-action@v5` (one Linux run) | nice |
 | Typos | `crate-ci/typos` | nice |

@@ -69,7 +69,7 @@ Never substitute "probably safe" for checking.
    patterns `password`, `secret`, `api_key`, `token`, `-----BEGIN`, suspiciously long
    base64 literals. Verify `.env` files are in `.gitignore`; check that log/trace
    call-sites (`tracing`, `log`) don't emit sensitive fields.
-3. Locate deserialization boundaries using serena (`search_for_pattern`) or `rg`:
+3. Locate deserialization boundaries using `rg` (the Grep tool):
    `serde`, `bincode`, `rmp_serde`, `postcard`, custom `Read` impls. Verify
    `#[serde(deny_unknown_fields)]` on user-facing structs; check for unbounded `Vec`
    allocation or recursive enum depth.
@@ -112,6 +112,8 @@ RUSTSEC-XXXX-XXXX  ADVISORY: <crate@version>. <impact>. <mitigation>.
 No findings in a category → skip it (don't pad). Attach raw `cargo audit` output
 as evidence. End with verdict **COMPLETE (security sign-off granted; RELEASE-GATE
 unblocked) / NEEDS WORK (list blockers with owner — RELEASE-GATE blocked) /
-BLOCKED (name hard dependency and next step)**. Hand fixes to `rust-builder`;
+REDO-TO-BAR (correct but wrong SHAPE — reshape the touched area; see
+coordination-protocol §5) / BLOCKED (name hard dependency and next step)**.
+Hand fixes to `rust-builder`;
 coordinate dep updates with `dependency-manager`; notify `release-lead` of the
 verdict.

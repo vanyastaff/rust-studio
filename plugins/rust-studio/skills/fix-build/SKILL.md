@@ -17,6 +17,10 @@ clone/`Arc<Mutex>`-to-appease-borrowck, stale-API call — not merely satisfying
 The fix is the smallest CORRECT, idiomatic, architecture-compatible change, never the smallest diff.
 
 ## Steps
+**Recall first:** `/recall <workspace/crate>` (or reuse the session-start memory index if it
+already surfaced this area) — known build gotchas for this workspace (feature traps, MSRV,
+borrow-checker restructures) bind the fix; say when a recalled note changes the approach. If
+nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 1. Reproduce: run `cargo check --workspace --all-targets` (plus any feature set from
    `$ARGUMENTS`, e.g. `--no-default-features --features foo`). Capture the full output.
 2. If it already compiles, say so and stop. Otherwise spawn **`rust-build-resolver`** with
@@ -35,4 +39,8 @@ The fix is the smallest CORRECT, idiomatic, architecture-compatible change, neve
 ## Output
 Per root error: the error code + one-line cause, the fix applied, and why. End with the
 final `cargo check`/`clippy`/`test` summary and verdict **COMPLETE / NEEDS WORK / BLOCKED**.
+**Persist what settled:** a non-trivial root cause — a borrow-checker restructure, a feature/dep
+trap — is durable: sweep the resolver's output for `MEMORY:` lines and `/remember` each (it
+dedups), and `/remember` the root cause if non-obvious; trivial typo fixes are not durable
+(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 Hand off to `/review`, or `/dev-task` if a behavior change is needed.

@@ -24,10 +24,14 @@ disarm();
 // Opt-out: studio config `routing_nudge` (default on).
 if (!optionBool("routing_nudge", true)) process.exit(0);
 
-// Dedupe to once per session; fail-open (emit if the fs check errors).
+// Dedupe to once per session; fail-open (emit if the fs check errors). Without a
+// session_id there is no per-session key — a shared "nosession" marker would mute
+// the nudge for every later id-less session, and emitting every prompt would spam.
+// Low-value nudge → stay quiet in that (rare) case.
+if (!data.session_id) process.exit(0);
 try {
   const dir = join(tmpdir(), "rust-studio-nudge");
-  const sid = (data.session_id || "nosession").replace(/[^A-Za-z0-9]/g, "_");
+  const sid = String(data.session_id).replace(/[^A-Za-z0-9]/g, "_");
   const marker = join(dir, sid);
   if (existsSync(marker)) process.exit(0); // already nudged this session
   mkdirSync(dir, { recursive: true });

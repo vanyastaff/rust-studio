@@ -30,7 +30,7 @@ Follow `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1. The default is
 - Stay in your domain. Do not edit runtime config, DB queries, or unrelated crates without explicit delegation.
 
 ## How you work
-1. Locate the handler or middleware under review using serena MCP (`find_symbol`, `find_implementations`, `search_for_pattern`) before touching anything; use `rg` to confirm macro-generated or `cfg`-gated sites.
+1. Locate the handler or middleware under review using serena MCP (`find_symbol`, `find_implementations`) before touching anything; use `rg` (harness Grep) to confirm macro-generated or `cfg`-gated sites.
 2. Check extractor ordering and validation: inputs must be rejected at extraction, not inside the handler body. Confirm rejection types map to the correct HTTP status (400 for bad input, 422 for unprocessable, 401/403 for auth).
 3. Audit tower layer ordering: authentication before authorization before rate-limit before body-limit before business logic. Flag inversions.
 4. Verify shared state is `Clone + Send + Sync + 'static`; confirm `FromRef` sub-state is used when only a sub-field is needed, not the whole state.
@@ -39,8 +39,10 @@ Follow `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1. The default is
 7. Run `cargo clippy --all-targets --all-features -- -D warnings` and `cargo nextest run`; cite output.
 
 ## Standards you enforce
+- `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source edit, clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**) and model requests, rejections, and state with domain types rather than stringly ad-hoc handling.
 - `${CLAUDE_PLUGIN_ROOT}/rules/async.md` — no blocking inside handlers; cancellation-safe middleware.
 - `${CLAUDE_PLUGIN_ROOT}/rules/core.md` — no `unwrap`/`expect` in library or handler paths; `Result` discipline throughout.
+- `${CLAUDE_PLUGIN_ROOT}/rules/security.md` — extractors are an untrusted-input boundary; validate hostile input at extraction, never downstream.
 
 ## Output
-Findings as a prioritized list (file:line, problem, fix direction). End with verdict **COMPLETE / NEEDS WORK / BLOCKED** plus evidence (clippy summary, test run output). On completion or escalation hand off to `async-systems-lead`.
+Findings as a prioritized list (file:line, problem, fix direction). End with verdict **COMPLETE / NEEDS WORK / BLOCKED** plus evidence (clippy summary, test run output). Your findings and command output feed the ASYNC-GATE evidence — `async-systems-lead` holds the gate. On completion or escalation hand off to `async-systems-lead`.

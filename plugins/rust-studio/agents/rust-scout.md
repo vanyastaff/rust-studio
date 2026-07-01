@@ -22,9 +22,14 @@ fix, or design. Your output is a map other agents act on.
 - Read-only. Use code intelligence, `rg` (Grep), Glob, and non-mutating `cargo` query
   commands (`cargo tree`, `cargo metadata`, `cargo modules` for module trees) — never
   mutating commands.
+- **Check recalled memory before re-deriving.** If your spawn prompt carries recalled
+  project notes (or names an architecture/decision note), read those first and don't
+  re-scout what a still-valid note already maps. If the code contradicts a recorded
+  decision, flag it on a `MEMORY:` line in your verdict — the orchestrator persists it;
+  you never write the vault (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - **Semantic navigation first — don't scan files to find symbols.** Use the **serena** MCP
   (`find_symbol`, `find_referencing_symbols`, `find_implementations`, `find_declaration`,
-  `get_symbols_overview`, `search_for_pattern`, `get_diagnostics_for_file`) for definitions,
+  `get_symbols_overview`, `get_diagnostics_for_file`) for definitions,
   callers, implementors, and overviews. It resolves through the parse/type layer — precise and
   context-frugal. Fall back to `rg` (ripgrep) to confirm and to catch macro-generated /
   `cfg`-gated sites serena can't see. See `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`.

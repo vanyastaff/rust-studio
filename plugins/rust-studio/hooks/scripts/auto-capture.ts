@@ -29,7 +29,7 @@
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { readFileSync, writeFileSync } from "node:fs";
-import { readInput, watchdog, optionBool, run, which } from "./_lib.ts";
+import { readInput, watchdog, optionBool, run, which, pluginRoot } from "./_lib.ts";
 import { getEvidenceGroups, lastAssistantFromTranscript } from "./stop-guard.ts";
 
 const MIN_EVIDENCE = 2;
@@ -52,10 +52,18 @@ export function peekNudges(sessionId: string): number {
     return 0;
   }
 }
+/** Timestamp (ms) of this session's last nudge, 0 if never/unreadable. */
+export function peekLastNudgeTs(sessionId: string): number {
+  try {
+    return JSON.parse(readFileSync(nudgeCountFile(sessionId), "utf8"))?.ts ?? 0;
+  } catch {
+    return 0;
+  }
+}
 export function bumpNudges(sessionId: string): number {
   const n = peekNudges(sessionId) + 1;
   try {
-    writeFileSync(nudgeCountFile(sessionId), JSON.stringify({ count: n }));
+    writeFileSync(nudgeCountFile(sessionId), JSON.stringify({ count: n, ts: Date.now() }));
   } catch {
     /* non-fatal */
   }
@@ -140,15 +148,16 @@ export function shouldNudge(s: CaptureSignals, minEvidence = MIN_EVIDENCE): bool
 }
 
 export function buildCaptureFeedback(): string {
+  // One-line echo of the capture rule — the canonical version lives in
+  // docs/memory-protocol.md (edit there first, keep this a summary).
   return [
     "CAPTURE CHECK (Rust Code Studio): you finished a unit of work but nothing was",
     "persisted to project memory this turn.",
     "",
-    "Before stopping: decide if anything NON-OBVIOUS and DURABLE was learned — a",
-    "decision and its rationale, a gotcha that cost time, a convention the codebase",
-    "follows, or a non-trivial fix. For each, run /remember now (it writes the note to",
-    "the Obsidian vault). Skip anything the code, git history, or Cargo.toml already",
-    "makes obvious.",
+    "Before stopping: if anything NON-OBVIOUS and DURABLE was learned (decision+rationale,",
+    "gotcha, convention, non-trivial fix, or durable external reference), run /remember",
+    "now. Skip what code/git/Cargo.toml already makes obvious. Full capture rule:",
+    `${join(pluginRoot(), "docs", "memory-protocol.md").replace(/\\/g, "/")}`,
     "",
     "If there is genuinely nothing durable to capture, say 'nothing to capture' and stop.",
   ].join("\n");
@@ -195,10 +204,20 @@ if (import.meta.main) {
     process.exit(0);
   }
 
-  // Loop-breaker: if we already blocked once in this continuation, allow now.
+  // Loop-breaker: if WE blocked in this continuation (recent nudge from this
+  // session), allow now. But stop_hook_active is also true when a DIFFERENT Stop
+  // hook (stop-guard) blocked — exiting unconditionally would permanently skip
+  // the capture nudge in any turn stop-guard fired on. So only stand down when
+  // our own nudge is what plausibly caused this continuation.
+  // Session key: session_id, else transcript_path (unique per session) — never a
+  // shared constant, which would pool the nudge budget across id-less sessions.
+  const sessKey = input.session_id ?? input.transcript_path;
   if (input.stop_hook_active) {
-    disarm();
-    process.exit(0);
+    const ourRecentNudge = sessKey ? Date.now() - peekLastNudgeTs(String(sessKey)) < 120_000 : true;
+    if (ourRecentNudge) {
+      disarm();
+      process.exit(0);
+    }
   }
 
   let raw = "";
@@ -231,11 +250,17 @@ if (import.meta.main) {
   disarm();
 
   if (shouldNudge(signals)) {
-    const sessionId = String(input.session_id ?? "unknown");
-    if (nudgeBudgetExhausted(sessionId)) {
-      process.exit(0); // already nudged enough this session — don't pester
+    // No usable session key → no persistent budget. Keying on a shared constant
+    // ("unknown") would make ALL id-less sessions share one never-reset counter —
+    // permanently un-nudged after the first two. Nudge without the counter; the
+    // stop_hook_active loop-breaker still prevents any loop.
+    if (sessKey) {
+      const sessionId = String(sessKey);
+      if (nudgeBudgetExhausted(sessionId)) {
+        process.exit(0); // already nudged enough this session — don't pester
+      }
+      bumpNudges(sessionId);
     }
-    bumpNudges(sessionId);
     process.stderr.write(buildCaptureFeedback());
     process.exit(2); // block the stop; stderr becomes feedback to Claude
   }

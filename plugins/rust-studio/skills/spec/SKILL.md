@@ -40,7 +40,7 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
      responsibility still sit in the right crate? Not just a one-line trade-off.
    **Freshness (cite-or-declare-version):** when an approach depends on ecosystem behavior (a
    crate's API shape, adoption pattern, RUSTSEC posture), cite the docs.rs / release-notes / source
-   you checked (exa / cratesio / context7 / rust-docs) OR state the last-verified version. Silence
+   you checked (exa, or a crate-docs MCP if configured) OR state the last-verified version. Silence
    is a gap. **Spawn `harsh-critic` by DEFAULT** for any new-crate, cross-crate, or boundary-moving
    approach (not just hard-to-reverse ones): it attacks the recommended option (premise, failure
    modes, radically different decomposition) before the gate — no echo-chamber; fold real findings in.

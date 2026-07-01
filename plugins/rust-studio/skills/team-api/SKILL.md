@@ -33,6 +33,10 @@ Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1
 `SendMessage`; the lead synthesizes and advances the chain.
 
 ## Phase 1 — Design
+- **Recall first:** `/recall <API area>` (or reuse the session-start memory index) and paste
+  what binds — prior API decisions, semver constraints, gotchas — INTO the team spawn prompts
+  (teammates do not inherit session context); say when a recalled note changes the approach. If
+  nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Task owned by `api-design-lead` (with `api-designer` + `error-architect` as teammates) to
   draft the surface: types, traits (sealed?), method signatures, ownership/borrowing at the
   boundary, `#[non_exhaustive]` choices, and the error type.
@@ -63,6 +67,9 @@ Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1
 ## Phase 5 — Sign-off (blocked by 4)
 - Summary: the final surface, semver impact, docs status, test evidence. Every teammate's
   contribution ends in **COMPLETE / NEEDS WORK / BLOCKED** with evidence.
+- **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
+  for each (it dedups); `/remember` team-level decisions (API shape, semver call) too — or state
+  "nothing durable" (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 - Verdict **COMPLETE / NEEDS WORK / BLOCKED**. Next steps: `/api-review` before release,
   `/changelog`, `/publish`.
 - If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`

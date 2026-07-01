@@ -28,8 +28,11 @@ All commands in this phase are read-only; run them without asking first.
      version. Separate patch/minor from major bumps.
    - **`cargo tree -d`** — detect duplicate versions of the same crate. Flag any crate
      appearing at 2+ semver-incompatible versions; note which dependency paths pull each.
-   - **`cargo machete`** (or `cargo udeps` on nightly for thoroughness) — surface unused
-     direct dependencies.
+   - **`cargo shear`** — surface unused *and misplaced* (dev/build in the wrong section)
+     direct dependencies; AST-based, so far fewer false hits than `cargo machete`. Add
+     `--expand` (nightly) if the workspace is macro-heavy; suppress a true false positive
+     via `[package.metadata.cargo-shear] ignored = [..]`, never by skipping the check.
+     Fallbacks: `cargo machete` (regex, fast) or `cargo udeps` (nightly, compiler-based).
    - **Feature unification scan** — `cargo tree --edges features` on the workspace to
      surface unexpected feature unification: features enabled in one crate that activate
      unintended behaviour in a shared dependency.
