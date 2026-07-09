@@ -9,11 +9,11 @@ user-invocable: true
 
 Produce a focused, honest ADR through **question → options → decision → draft →
 approval**, honoring the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You are the orchestrator:
+(`references/collaboration.md`). You are the orchestrator:
 **you do not write files directly — delegate the final write to `rust-builder`.**
 
 **Maintainer bar applies.** Options are weighed against the maintainer-grade standard
-(`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`): reuse over reinvent, structural
+(`references/maintainer-grade-development.md`): reuse over reinvent, structural
 invariants over caller discipline, and a forward view. The Pre-code Maintainer Gate (Phase 2.5)
 runs before the decision is taken.
 
@@ -31,7 +31,7 @@ need to record?" If the decision is entangled with a larger design, suggest runn
 **Recall first:** `/recall <decision topic>` (or reuse the session-start memory index if it
 already surfaced this area) — search for prior or conflicting decisions before writing a new ADR,
 and carry them into the context and options; say when a recalled note changes the approach. If
-nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+nothing surfaces, proceed (`references/memory-protocol.md`).
 
 1. Restate the decision in one sentence. Confirm it is scoped to one choice, not a
    design doc.
@@ -69,7 +69,7 @@ nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
      DEFAULT to attack the recommended option (premise, failure modes, radically different
      decomposition) and fold real findings into the options before the gate.
 5. **Pre-code Maintainer Gate:** `chief-architect` emits a **Maintainer-grade pre-code verdict**
-   per `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — `ACCEPTABLE` /
+   per `references/maintainer-grade-development.md` — `ACCEPTABLE` /
    `RESHAPE NEEDED` / `BLOCKED`: what crate owns the concept; which sibling primitives already
    exist (reuse vs. reinvent); what a strict maintainer would reject; which breaking changes
    active dev permits. `RESHAPE NEEDED` reworks the options before the user is asked; `BLOCKED`
@@ -85,7 +85,7 @@ nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 
 ## Phase 4 — Draft
 
-8. Fill in the ADR template (`${CLAUDE_PLUGIN_ROOT}/docs/templates/adr.md`) with:
+8. Fill in the ADR template (`references/templates/adr.md`) with:
    - **Status** — `Proposed`.
    - **Context** — forces and constraints that made this decision necessary.
    - **Decision** — the chosen option, stated plainly.
@@ -115,7 +115,7 @@ nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 Summarize: the decision recorded, the path written, gates or leads to notify (e.g.
 `api-design-lead` if the decision affects the public API), and any follow-on work.
 **Persist what settled:** `/remember` the ADR's one-line decision as a vault note pointing at the
-ADR file path (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+ADR file path (`references/memory-protocol.md`).
 End with **COMPLETE / NEEDS WORK / BLOCKED**.
 
 Suggest next steps if relevant: `/dev-task` to implement the decision, `/review` to

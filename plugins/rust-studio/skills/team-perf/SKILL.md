@@ -9,11 +9,11 @@ user-invocable: true
 
 Orchestrate the systems-perf team through structured phases. **Delegate all file writes to
 sub-agents; the orchestrator never writes.**
-Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` (§8 team execution).
-Rules: `${CLAUDE_PLUGIN_ROOT}/rules/perf.md` · `${CLAUDE_PLUGIN_ROOT}/rules/unsafe.md`.
+Protocol: `references/delegation.md` (§8 team execution).
+Rules: `references/perf.md` · `references/unsafe.md`.
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8**
+Execute the phases as an agent team per **`references/delegation.md` §8**
 (implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
 shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
 single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
@@ -43,7 +43,7 @@ the baseline once all four report via `SendMessage`.
   binds — known hot paths, past optimization attempts and rejected ones, `unsafe` decisions —
   INTO the team spawn prompts (teammates do not inherit session context); say when a recalled
   note changes the approach. If nothing surfaces, proceed
-  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  (`references/memory-protocol.md`).
 - Task owned by `rust-scout` to locate the target crate(s), hot-path entry points, existing
   criterion benches, and any current `unsafe` blocks. Scout uses serena MCP for symbol
   navigation (`find_symbol`, `find_referencing_symbols`, `get_symbols_overview`) and `rg`
@@ -118,7 +118,7 @@ the baseline once all four report via `SendMessage`.
 ## Phase 5 — Sign-off (blocked by 4)
 
 - `systems-perf-lead` produces the final summary, written to `docs/benchmark-report.md` in the
-  project using `${CLAUDE_PLUGIN_ROOT}/docs/templates/benchmark-report.md` as the template. Delegate
+  project using `references/templates/benchmark-report.md` as the template. Delegate
   writing the filled-out report to `rust-builder`. Every teammate's contribution ends in
   **COMPLETE / NEEDS WORK / BLOCKED** with evidence.
 - Summary must include:
@@ -131,7 +131,7 @@ the baseline once all four report via `SendMessage`.
 - **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
   for each (it dedups); `/remember` team-level decisions (proven win + why, `unsafe` calls,
   rejected strategies) too — or state "nothing durable"
-  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  (`references/memory-protocol.md`).
 - Verdict: **COMPLETE / NEEDS WORK / BLOCKED**.
 - Suggest next steps: `/review` for a deeper audit, `/changelog` if user-facing,
   `/publish` if release-bound.

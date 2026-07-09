@@ -1,0 +1,17 @@
+name: references in sync
+
+# skills/*/references/ is generated from docs/ and rules/. If an edit to a canonical
+# doc never reaches the copies, every standalone skill install ships the stale text.
+on:
+  pull_request:
+    paths: ['plugins/rust-studio/docs/**', 'plugins/rust-studio/rules/**', 'plugins/rust-studio/skills/**']
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/sync-references.sh --check
+        working-directory: plugins/rust-studio

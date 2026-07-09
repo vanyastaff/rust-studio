@@ -10,10 +10,10 @@ allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(car
 
 Converge on green by classifying each failure and applying the smallest fix, then
 re-running. **Bounded to 3 iterations** — no infinite loops, no masking. Evidence over
-assertion (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+assertion (`references/verdicts.md`).
 
 **Maintainer bar applies.** Each fix is held to
-`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: smallest CORRECT, idiomatic,
+`references/maintainer-grade-development.md`: smallest CORRECT, idiomatic,
 allocation-aware, borrow-first change — restructure ownership/borrows before reaching for
 clone, fix at the owning crate, check the API against current docs. Smallest is textual scope,
 not a license for a junior shape.
@@ -51,7 +51,7 @@ not a license for a junior shape.
 
 - Never make it pass by deleting or `#[ignore]`-ing tests, weakening assertions, adding
   blanket `#[allow]` to silence a real lint, or masking with `unwrap`. Fix the cause. These are the
-  gaming moves the honesty bar forbids (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).
+  gaming moves the honesty bar forbids (`references/integrity-and-evidence.md`).
 - If a fix would change intended behavior or the public API, stop and ask — that is a
   decision for `/dev-task`, not a build fix.
 

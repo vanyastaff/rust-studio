@@ -6,9 +6,6 @@
   },
   "description": "vanya's Claude Code plugins.",
   "version": "0.1.0",
-  "metadata": {
-    "pluginRoot": "./plugins"
-  },
   "plugins": [
     {
       "name": "rust-studio",

@@ -9,9 +9,9 @@ user-invocable: true
 
 Drive `rust-build-resolver` to resolve compiler/cargo errors at the root, one at a time,
 until the build is clean. Evidence over assertion
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+(`references/verdicts.md`).
 
-**Maintainer bar applies.** Per `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`,
+**Maintainer bar applies.** Per `references/maintainer-grade-development.md`,
 the resolver applies the Maintainer Rejection Test while fixing — wrong-crate edit site,
 clone/`Arc<Mutex>`-to-appease-borrowck, stale-API call — not merely satisfying the type system.
 The fix is the smallest CORRECT, idiomatic, architecture-compatible change, never the smallest diff.
@@ -20,7 +20,7 @@ The fix is the smallest CORRECT, idiomatic, architecture-compatible change, neve
 **Recall first:** `/recall <workspace/crate>` (or reuse the session-start memory index if it
 already surfaced this area) — known build gotchas for this workspace (feature traps, MSRV,
 borrow-checker restructures) bind the fix; say when a recalled note changes the approach. If
-nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+nothing surfaces, proceed (`references/memory-protocol.md`).
 1. Reproduce: run `cargo check --workspace --all-targets` (plus any feature set from
    `$ARGUMENTS`, e.g. `--no-default-features --features foo`). Capture the full output.
 2. If it already compiles, say so and stop. Otherwise spawn **`rust-build-resolver`** with
@@ -42,5 +42,5 @@ final `cargo check`/`clippy`/`test` summary and verdict **COMPLETE / NEEDS WORK 
 **Persist what settled:** a non-trivial root cause — a borrow-checker restructure, a feature/dep
 trap — is durable: sweep the resolver's output for `MEMORY:` lines and `/remember` each (it
 dedups), and `/remember` the root cause if non-obvious; trivial typo fixes are not durable
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 Hand off to `/review`, or `/dev-task` if a behavior change is needed.

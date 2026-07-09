@@ -9,7 +9,7 @@ disable-model-invocation: true
 # /add-dep — vet and add a Rust dependency
 
 Run a crate through the full vetting pipeline before it touches `Cargo.toml`, honoring the
-collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You are the
+collaboration protocol (`references/collaboration.md`). You are the
 orchestrator: **you do not edit manifests or lock files yourself — you delegate writes to
 `rust-builder`.**
 
@@ -47,7 +47,7 @@ Every item below must be reported; "unknown" is valid, silence is not.
 
 ### License vs. `deny.toml`
 - Identify the SPDX license expression.
-- Check against `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` and the project's `deny.toml`.
+- Check against `references/cargo-manifest.md` and the project's `deny.toml`.
 - Flag any mismatch or dual-license complexity.
 
 ### MSRV impact
@@ -69,7 +69,7 @@ Every item below must be reported; "unknown" is valid, silence is not.
 
 ### Template record
 - Write the findings to `docs/dependency-review.md` in the project, using
-  `${CLAUDE_PLUGIN_ROOT}/docs/templates/dependency-review.md` as the template.
+  `references/templates/dependency-review.md` as the template.
   `dependency-manager` drafts the record; do not write it yourself.
 
 ## Phase 3 — Present findings (gate)

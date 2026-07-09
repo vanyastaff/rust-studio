@@ -10,7 +10,7 @@ user-invocable: true
 Persist a learning so future sessions start with it. Notes live in one Obsidian vault under a
 per-project folder, written through the **obsidian** MCP, so every session — and `/recall` —
 retrieves from the same place. Companion to `/recall` and `/session-wrap`; the when/who/what
-contract lives in `${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md` — this skill owns the mechanics.
+contract lives in `references/memory-protocol.md` — this skill owns the mechanics.
 
 ## Where notes live (resolve every time)
 - **Vault root:** `$OBSIDIAN_VAULT_PATH`, default `~/memory` (cross-platform — never hardcode a path).

@@ -14,7 +14,7 @@ orchestrator: **you do not write code or files yourself — you delegate writes 
 `rust-builder` and specialists.**
 
 **Maintainer bar applies.** The surface is held to the maintainer-grade standard
-(`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`): survey sibling crates before
+(`references/maintainer-grade-development.md`): survey sibling crates before
 inventing a new type/trait/error, encode invariants structurally (newtype / enum / typestate /
 sealed / `#[non_exhaustive]`) over caller discipline, and carry a forward view. The Pre-code
 Maintainer Gate (Phase 2.5) runs ON TOP OF `API-GATE`.
@@ -31,7 +31,7 @@ multiple crates or a major breaking change, recommend `/team-api` instead.
 **Recall first:** `/recall <API area>` (or reuse the session-start memory index if it already
 surfaced this area) — prior API decisions and semver constraints bind the shape; carry them into
 the options and say when a recalled note changes the approach. If nothing surfaces, proceed
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 
 1. Restate what is being designed in one sentence. If genuinely ambiguous (not just
    underspecified), batch all scope questions into one `AskUserQuestion`.
@@ -102,7 +102,7 @@ the options and say when a recalled note changes the approach. If nothing surfac
 ## Phase 2.5 — Pre-code Maintainer Gate
 
 9. Before the decision gate, `api-design-lead` (or `api-designer`) emits a **Maintainer-grade
-   pre-code verdict** per `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` —
+   pre-code verdict** per `references/maintainer-grade-development.md` —
    `ACCEPTABLE` / `RESHAPE NEEDED` / `BLOCKED`: what crate owns the type/error; which sibling
    primitives the survey surfaced (reused vs. reinvented); whether the shape encodes invariants
    structurally or leans on caller discipline (stringly/bool/`Box<dyn Error>` where a domain type
@@ -128,14 +128,14 @@ the options and say when a recalled note changes the approach. If nothing surfac
      (cross-crate) vs a private marker field (`_priv: ()`) for within-crate discipline; a
      sealed trait where downstream impls must be forbidden. State the choice, don't default silently.
    - Semver impact statement: **BREAKING** / **MINOR** / **PATCH**, and which items
-     trigger it (`${CLAUDE_PLUGIN_ROOT}/rules/api.md` for the semver ruleset). Call out
+     trigger it (`references/api.md` for the semver ruleset). Call out
      deceptively-additive majors — a blanket impl on a fundamental type (`&T`, `&mut T`,
      `Box<T>`, `Pin<P>`) is a MAJOR break.
    - Usage example (doc-test skeleton showing the primary call site).
    - Any items gated behind `#[cfg(feature = "...")]` and why.
    - Open questions or follow-up ADR items, if any.
 12. Delegate writing the draft to **`rust-builder`** using the template at
-    `${CLAUDE_PLUGIN_ROOT}/docs/templates/api-design-doc.md`.
+    `references/templates/api-design-doc.md`.
 
 ## Phase 5 — Approval (gate)
 
@@ -145,7 +145,7 @@ the options and say when a recalled note changes the approach. If nothing surfac
     for the earlier option fork (the Phase 3 decision gate), not for this final sign-off. If
     the user requests changes, loop back to Phase 4 (or Phase 2 if the shape itself needs to change).
 14. Once approved, confirm the **API-GATE** checklist from
-    `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` is satisfied:
+    `references/verdicts.md` is satisfied:
     - Public items have doc-comment stubs.
     - Semver impact is understood and recorded — including deceptively-additive majors
       (a blanket impl on a fundamental type `&T` / `&mut T` / `Box<T>` / `Pin<P>`).
@@ -165,7 +165,7 @@ the options and say when a recalled note changes the approach. If nothing surfac
     abstraction, MSRV implication), surface it as an ADR candidate via `/adr`.
 18. **Persist what settled:** sweep agent verdicts for `MEMORY:` lines and run `/remember` for
     each (it dedups); `/remember` the settled API shape decision + rejected alternatives — or
-    state "nothing durable" (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+    state "nothing durable" (`references/memory-protocol.md`).
 
 ## Error recovery
 

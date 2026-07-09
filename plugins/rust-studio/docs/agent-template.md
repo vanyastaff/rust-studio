@@ -49,7 +49,7 @@ Before this gate passes, verify:
 
 ## Output
 - Findings/plan as <format>. End with verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED**
-  (REDO-TO-BAR applies to agents that judge work shape — see coordination-protocol §5)
+  (REDO-TO-BAR applies to agents that judge work shape — see `docs/verdicts.md` §5)
   and evidence (command output, bench numbers). Hand off to `<skill/agent>`.
 - **Lead with the outcome and stay readable** — first line says what you found / what changed,
   detail after; drop working shorthand in the summary the caller actually reads. See

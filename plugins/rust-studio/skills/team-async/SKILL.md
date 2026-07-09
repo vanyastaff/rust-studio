@@ -9,10 +9,11 @@ user-invocable: true
 
 Orchestrate the async team through structured phases. **Delegate all file writes to
 sub-agents; the orchestrator never writes.** Gate at phase boundaries (quality gates,
-not permission loops — see `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1, §8).
+not permission loops — see `references/collaboration.md` §1 and
+`references/delegation.md` §8).
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8**
+Execute the phases as an agent team per **`references/delegation.md` §8**
 (implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
 shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
 single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
@@ -36,7 +37,7 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
 - **Recall first:** `/recall <service area>` (or reuse the session-start memory index) and paste
   what binds — prior runtime/topology decisions, async gotchas — INTO the team spawn prompts
   (teammates do not inherit session context); say when a recalled note changes the approach. If
-  nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  nothing surfaces, proceed (`references/memory-protocol.md`).
 - Restate the feature and its acceptance criteria in 1–3 bullets. If `$ARGUMENTS` is empty,
   ask: "What async service feature should we build?" and suggest `/architecture` or
   `/brainstorm` for broad explorations.
@@ -66,7 +67,7 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
   by other subsystems.
 - Record an ADR (`/adr`) for non-trivial decisions (e.g. runtime flavor, actor vs.
   direct-await, backpressure strategy).
-- Draft the async service design doc (`${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`).
+- Draft the async service design doc (`references/templates/architecture.md`).
 - **Gate:** `AskUserQuestion` — present the design doc summary; proceed once approved.
 
 ## Phase 4 — Build (blocked by 3; parallel where independent)
@@ -114,7 +115,7 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
 - **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
   for each (it dedups); `/remember` team-level decisions (runtime topology, backpressure
   strategy) too — or state "nothing durable"
-  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  (`references/memory-protocol.md`).
 - Verdict **COMPLETE / NEEDS WORK / BLOCKED**. Next steps: `/review` for a deeper audit,
   `/perf` if latency or throughput is sensitive, `/changelog` if user-facing, `/publish` if
   release-bound.

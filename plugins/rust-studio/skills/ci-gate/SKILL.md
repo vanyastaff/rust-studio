@@ -18,7 +18,7 @@ studio is in the loop; a hang reaches CI on code that bypassed it). Two failure 
 
 You are the orchestrator: **delegate file writes to `rust-builder`**; you detect, plan, and verify.
 Owners: `tooling-lead` (policy / BUILD-GATE) and `build-engineer` (implementation). Honesty bar:
-`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
+`references/integrity-and-evidence.md`.
 
 ## How each failure is caught (and why that mechanism)
 
@@ -31,10 +31,10 @@ Owners: `tooling-lead` (policy / BUILD-GATE) and `build-engineer` (implementatio
 | **Silently `#[allow]`-ing a lint** | clippy `allow_attributes_without_reason = "deny"` → a reason is mandatory and visible to review | `workspace-lints.toml` |
 | **Removing a ban / raising a timeout to pass** | `check-gate.sh` asserts the gate is intact (run in lefthook + CI) | `scripts/check-gate.sh` |
 
-Templates: `${CLAUDE_PLUGIN_ROOT}/docs/templates/` — `clippy.toml`, `workspace-lints.toml`,
+Templates: `references/templates/` — `clippy.toml`, `workspace-lints.toml`,
 `nextest.toml`, `lefthook.yml`, `scripts/check-gate.sh`, `ci-anti-hang.yml`, `deny.toml`,
 `dependabot.yml`. The full tiered reference (blessed actions, tool suite, security, pitfalls, with
-sources) is `${CLAUDE_PLUGIN_ROOT}/docs/ci-best-practices.md` — read it before installing.
+sources) is `references/ci-best-practices.md` — read it before installing.
 
 **Don't reinvent — start from the community reference.** The richest known turnkey gate is
 **`jonhoo/rust-ci-conf`** (check / test / safety / nostd / scheduled workflows, all SHA-pinned).

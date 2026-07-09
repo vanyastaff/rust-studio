@@ -11,7 +11,7 @@ allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
 
 Produce a well-formed commit, not a diff dump. A commit is irreversible and outward — confirm
 the message before running `git commit`
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md §1`).
+(`references/collaboration.md §1`).
 
 ## Steps
 1. Inspect what's staged: `git status --short` and `git diff --staged`. If nothing is staged,

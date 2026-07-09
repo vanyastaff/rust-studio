@@ -8,11 +8,11 @@ user-invocable: true
 # /architecture — design or revise the crate/module structure
 
 Drive a disciplined architecture session through **map → decide → record → approve → hand off**,
-honoring the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You
+honoring the collaboration protocol (`references/collaboration.md`). You
 are the orchestrator: **you do not write files directly — you delegate all writes to sub-agents.**
 
 **Maintainer bar applies.** Every option, boundary, and gate in this session is held to the
-maintainer-grade standard (`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`): reuse
+maintainer-grade standard (`references/maintainer-grade-development.md`): reuse
 over reinvent, structural invariants over caller discipline, and a forward-looking ownership view —
 not just a one-line trade-off. The Pre-code Maintainer Gate (Phase 2.5) runs ON TOP OF `ARCH-GATE`.
 
@@ -26,7 +26,7 @@ the key use-cases before proceeding.
 **Recall first:** `/recall <scope>` (or reuse the session-start memory index if it already
 surfaced this area) — prior ADRs and architecture decisions are binding context; carry them into
 the mapping and options, and say when a recalled note changes the approach. If nothing surfaces,
-proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+proceed (`references/memory-protocol.md`).
 1. Spawn **`rust-scout`** to produce a `file:line` map of all crate roots (`Cargo.toml`),
    `lib.rs` / `main.rs` entry points, `pub use` re-exports, and existing module boundaries in
    scope. Use **serena** (`find_symbol`, `get_symbols_overview`) for symbol
@@ -71,7 +71,7 @@ proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 
 ## Phase 2.5 — Pre-code Maintainer Gate
 7. Before the decide gate, `chief-architect` emits a **Maintainer-grade pre-code verdict** per
-   `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — `ACCEPTABLE` / `RESHAPE NEEDED` /
+   `references/maintainer-grade-development.md` — `ACCEPTABLE` / `RESHAPE NEEDED` /
    `BLOCKED`. It answers: what crate owns the concept; which sibling primitives the reuse survey
    surfaced (and which the design reuses vs. reinvents); what a strict maintainer would reject in the
    proposed decomposition; which breaking changes are allowed because the workspace is in active dev.
@@ -101,7 +101,7 @@ proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
     for the user to approve using native plan mode (on approval the user transitions into an edit
     mode). Keep `AskUserQuestion` for the earlier option forks (the Phase 3 decision gate), not
     for this final go-ahead. If approved, delegate to **`rust-builder`** to write
-    `docs/architecture.md` in the project (using `${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`
+    `docs/architecture.md` in the project (using `references/templates/architecture.md`
     as the template) from the approved draft. The builder must not add content beyond what was approved in Phase 4.
 14. Show the committed doc path and a diff summary.
 
@@ -128,7 +128,7 @@ proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
     **Persist what settled:** an architecture decision is the #1 thing to persist — sweep agent
     verdicts for `MEMORY:` lines and run `/remember` for each (it dedups), and `/remember` each
     settled decision + rationale — or state "nothing durable"
-    (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+    (`references/memory-protocol.md`).
 20. Suggest next steps: `/dev-task` for the first story, `/review` after an initial implementation,
     `/perf` if performance boundaries were a driver.
 

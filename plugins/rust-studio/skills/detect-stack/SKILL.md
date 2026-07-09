@@ -37,11 +37,11 @@ Key deps: <tokio, axum, sqlx, …>
 Tooling: deny.toml ✔ · rust-toolchain ✘ · nextest ✔ · criterion ✘ · CI ✔
 ```
 Then: **relevant leads** (e.g. `async-systems-lead`, `api-design-lead`), **specialists**
-from `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md`, and **path-scoped rules** that will
-apply (`${CLAUDE_PLUGIN_ROOT}/rules/`).
+from `references/agent-roster.md`, and **path-scoped rules** that will
+apply (`references/`).
 
 If it's a **large workspace** (many `[workspace] members`), recommend the focus-scoping
-setup from `${CLAUDE_PLUGIN_ROOT}/docs/large-workspace.md` — per-crate `CLAUDE.md`,
+setup from `references/large-workspace.md` — per-crate `CLAUDE.md`,
 `permissions.deny` on `target/`/generated, serena MCP for symbol lookup, and sparse
 worktrees — and offer to apply it via `/adopt`.
 

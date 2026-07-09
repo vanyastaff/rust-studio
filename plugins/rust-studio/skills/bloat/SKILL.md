@@ -12,8 +12,8 @@ with before/after bytes.** Runtime speed is `/perf`'s job; this skill owns the a
 CLI download size, wasm payload, embedded flash budget, and the monomorphization bloat
 that also drives compile times. You are the orchestrator: **you delegate all code and
 manifest writes to `rust-builder`.** Honor the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`); size standards live in
-`${CLAUDE_PLUGIN_ROOT}/rules/perf.md` and `${CLAUDE_PLUGIN_ROOT}/rules/wasm.md`.
+(`references/collaboration.md`); size standards live in
+`references/perf.md` and `references/wasm.md`.
 
 ## Input
 
@@ -26,7 +26,7 @@ distance to it.
 
 0. **Recall first:** `/recall binary size <target>` — a prior size budget, past cuts, and
    trade-offs already rejected bind this pass; say when a recalled note changes the plan
-   (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+   (`references/memory-protocol.md`).
 1. Build the honest artifact: `cargo build --release` (for wasm: the project's real
    pipeline including `wasm-opt`/gzip, since that is what ships). Record the size with
    `ls -l` — and for wasm also the **gzipped** size; for embedded, `cargo size` /
@@ -90,7 +90,7 @@ distance to it.
 10. Report the table: baseline → per-step → final bytes (and gzipped for wasm), with %
     delta and distance to the budget if one was set. Paste the final `cargo bloat`
     top-10 as evidence.
-11. Honesty bar (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`): sizes are
+11. Honesty bar (`references/integrity-and-evidence.md`): sizes are
     from the same profile and target, stripped state stated; never compare a stripped
     "after" against an unstripped "before". If a saving came purely from `strip`, say
     that — it is real but it is one line, not an engineering campaign.

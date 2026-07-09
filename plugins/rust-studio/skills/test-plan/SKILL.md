@@ -7,7 +7,7 @@ user-invocable: true
 
 # /test-plan — produce a test plan for a feature
 
-Run a feature through **scope → map criteria → choose types → enumerate cases → draft → approve → hand off**, honoring the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You are the orchestrator: **you do not write files directly — you delegate writes to specialists.** Gate with `AskUserQuestion` only at phase boundaries (plan approval, BLOCKED recovery) — decide tactical calls yourself, state choice + one-line rationale.
+Run a feature through **scope → map criteria → choose types → enumerate cases → draft → approve → hand off**, honoring the collaboration protocol (`references/collaboration.md`). You are the orchestrator: **you do not write files directly — you delegate writes to specialists.** Gate with `AskUserQuestion` only at phase boundaries (plan approval, BLOCKED recovery) — decide tactical calls yourself, state choice + one-line rationale.
 
 ## Input
 
@@ -17,7 +17,7 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
 
 1. Restate the feature and its acceptance criteria in 1–5 bullets. If criteria are missing, draft a plausible list from context and proceed — surface the draft in the Phase 4 output rather than stopping to ask.
 2. Spawn **`rust-scout`** (read-only) to locate existing tests, the module under test, and any related fixtures or helpers. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`) for symbol/reference navigation and `rg` (harness Grep) for macro-generated or `cfg`-gated sites serena can't see — never Bash `grep`/`find`.
-3. Identify the owning lead from the domain (see `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md`). If the feature spans domains, note each one.
+3. Identify the owning lead from the domain (see `references/agent-roster.md`). If the feature spans domains, note each one.
 
 ## Phase 2 — Map criteria to tests
 
@@ -56,13 +56,13 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
 
 ## Phase 4 — Draft plan
 
-8. Spawn **`test-engineer`** to fill the template at `${CLAUDE_PLUGIN_ROOT}/docs/templates/test-plan.md` with:
+8. Spawn **`test-engineer`** to fill the template at `references/templates/test-plan.md` with:
    - Feature name and acceptance criteria (from Phase 1; flag any that were inferred).
    - Ordered table: test ID, type, criterion covered, description, inputs, expected outcome.
    - Edge-case matrix and property-law statements.
    - Suggested file locations, module names, and helper fixtures.
    - Applicable gate: `QA-GATE` (owner: `qa-lead`); note any other gates triggered (e.g. `PERF-GATE` for benches, `SAFETY-GATE` for `unsafe`-touching paths).
-   - Relevant rules: `${CLAUDE_PLUGIN_ROOT}/rules/testing.md`; add others (e.g. `${CLAUDE_PLUGIN_ROOT}/rules/perf.md`, `${CLAUDE_PLUGIN_ROOT}/rules/unsafe.md`) as needed.
+   - Relevant rules: `references/testing.md`; add others (e.g. `references/perf.md`, `references/unsafe.md`) as needed.
 
    `test-engineer` shows the draft. **No file is written until approval.**
 

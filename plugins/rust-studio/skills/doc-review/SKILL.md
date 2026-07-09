@@ -9,9 +9,9 @@ user-invocable: true
 
 Stress-test a document's *decisions*, not its prose. Surface contradictions, unstated
 assumptions, infeasible steps, scope creep, and threat-model gaps before they become code.
-Proposals, not commands (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` — findings are
+Proposals, not commands (`references/working-preferences.md` — findings are
 input to the author's judgment; never echo-chamber-validate the existing structure).
-Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8 (team execution).
+Protocol: `references/delegation.md` §8 (team execution).
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the panel as a

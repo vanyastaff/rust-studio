@@ -10,7 +10,7 @@ user-invocable: true
 Turn a domain concept into a type model that makes illegal states unrepresentable.
 You are the orchestrator: **you do not write code yourself — you delegate all writes to
 `rust-builder`.** Run this as a **quality loop, not a permission loop**
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1): decide tactical calls
+(`references/collaboration.md` §1): decide tactical calls
 yourself (state choice + one-line rationale, proceed); gate with `AskUserQuestion` only
 at genuine strategic forks and before irreversible actions.
 
@@ -69,7 +69,7 @@ examples. For concepts that span multiple crates or public APIs, suggest running
    For each option, `api-designer` must note: what becomes a compile error, what
    remains a runtime check, ergonomics trade-offs, and semver implications (per
    `API-GATE`). Flag parse-dont-validate opportunities
-   (`${CLAUDE_PLUGIN_ROOT}/rules/core.md`).
+   (`references/core.md`).
 
 5. `AskUserQuestion` (direction-changing fork — determines all downstream work):
    present the options as a numbered list with trade-offs and a recommended default.
@@ -83,7 +83,7 @@ examples. For concepts that span multiple crates or public APIs, suggest running
    this is a draft for review.
 
    The sketch must:
-   - Apply parse-dont-validate (`${CLAUDE_PLUGIN_ROOT}/rules/core.md`): validation
+   - Apply parse-dont-validate (`references/core.md`): validation
      at the boundary; internal code operates on already-valid types.
    - Use `#[non_exhaustive]` on public enums where future variants are plausible.
    - Note any `unsafe` the design would require and flag it immediately.
