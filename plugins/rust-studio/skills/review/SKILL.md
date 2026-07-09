@@ -8,14 +8,15 @@ user-invocable: true
 # /review — audit a Rust change
 
 Review the change for real problems and produce a prioritized, severity-tagged findings
-list with a merge verdict. Evidence over opinion (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §8 team execution).
+list with a merge verdict. Evidence over opinion (`references/verdicts.md` §7;
+`references/delegation.md` §8 team execution).
 Flag correctness, soundness, security, requirement gaps — AND maintainer-bar gaps. The default
 lens is a strict crate maintainer who would reject mediocre code; compiles + clippy-clean +
-tests-green + correct is the FLOOR (`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`).
+tests-green + correct is the FLOOR (`references/maintainer-grade-development.md`).
 Non-idiomatic-but-working shape, wrong-crate placement, reinvented sibling primitives, and
 clone-instead-of-borrow ARE in scope (they fail the maintainer bar). That is distinct from
 speculative abstraction / future-proofing, which stays OUT of scope — don't push extra
-abstraction or defensive code (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` §"don't over-report").
+abstraction or defensive code (`references/working-preferences.md` §"don't over-report").
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) and you run a
@@ -38,14 +39,14 @@ If the intended story/acceptance criteria aren't in the diff, infer from context
 and proceed — ask only if the diff is genuinely ambiguous about its goal. Where an **outer
 acceptance test** exists for the change, a green outer test is the spec-compliance anchor — check
 the diff satisfies the observable criteria (nothing missing, nothing extra), not just the lines
-(`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`).
+(`references/testing-model.md`).
 
 ## How to run
 1. Get the diff. Determine scope from context; proceed without asking unless the
    change's goal is truly opaque.
 2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit — including the
    Maintainer-shape audit (Maintainer Rejection Test on the TOUCHED area:
-   `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`). That audit also covers:
+   `references/maintainer-grade-development.md`). That audit also covers:
    drop order / guard naming (`_guard`, never `_`) / `Drop` treated as best-effort with an
    explicit `close()`; `dyn`-compatibility breaks (generic methods need `where Self: Sized`,
    `async fn`/RPITIT aren't dyn-dispatchable); custom-container variance / missing `PhantomData`

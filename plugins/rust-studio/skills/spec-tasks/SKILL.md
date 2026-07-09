@@ -8,7 +8,7 @@ user-invocable: true
 # /spec-tasks — break a spec into tasks
 
 Turn `.rust-studio/specs/<slug>/spec.md` into an ordered task list and shepherd it to done.
-Orchestrate; delegate writes. Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`
+Orchestrate; delegate writes. Protocol: `references/delegation.md`
 (§8 team execution).
 
 ## Orchestration
@@ -18,7 +18,7 @@ those task rows into the shared task list — the session already has one implic
 so just `TaskCreate` one task per row (id ↔ `#`, owner lead ↔ `owner`, "Blocked by" ↔
 `addBlockedBy`) — and use it as the live coordination surface while keeping `tasks.md` in sync
 as each task lands; follow the team mechanics in
-**`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8** (`SendMessage`, teammate shutdown).
+**`references/delegation.md` §8** (`SendMessage`, teammate shutdown).
 Otherwise drive the file alone, running each task sequentially. Each task still executes through
 `/dev-task` (which itself runs as a team when the gate is set).
 
@@ -36,7 +36,7 @@ Otherwise drive the file alone, running each task sequentially. Each task still 
    and a rough size. Identify the critical path and cross-crate ripples; flag any task that
    will need `chief-architect` or `api-design-lead` sign-off.
 3. Write `.rust-studio/specs/<slug>/tasks.md` from
-   `${CLAUDE_PLUGIN_ROOT}/docs/templates/tasks.md` (delegate the write). The template's
+   `references/templates/tasks.md` (delegate the write). The template's
    columns (`#`, owner lead, "Blocked by", status) mirror the shared task-list shape, so the
    rows map cleanly to `TaskCreate` items.
    **Gate (phase boundary):** present the task list and get approval before executing any
@@ -48,7 +48,7 @@ Otherwise drive the file alone, running each task sequentially. Each task still 
    approve → build → review with the owning lead's gate), passing the **spec-level outer
    acceptance test** and the task's slice of the criteria as context: the task's inner TDD drives
    toward that one outer test, and it writes its own outer test only if it independently ships
-   externally-observable behavior (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`). Update both `tasks.md` and the
+   externally-observable behavior (`references/testing-model.md`). Update both `tasks.md` and the
    mirrored `TaskUpdate` status as each task lands — `tasks.md` is the durable record, the
    task list is the live surface. Decide execution order and parallelism yourself based on the
    dependency graph (`addBlockedBy` enforces it for teammates) — state your sequencing

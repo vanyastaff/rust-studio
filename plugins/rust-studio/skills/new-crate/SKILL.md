@@ -13,7 +13,7 @@ from the start: manifest metadata, lint config, deny policy, toolchain pin, CI s
 and a ready-to-extend source file. You are the orchestrator: **you do not write files
 yourself — you delegate all writes to `rust-builder`.**
 
-Honor the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`):
+Honor the collaboration protocol (`references/collaboration.md`):
 decide tactical calls yourself; gate only at phase boundaries and before file writes.
 
 ## Input
@@ -56,10 +56,10 @@ again. Present choices as part of the draft.
 | `cli`     | `clap` derive; `color-eyre` (optional); `tracing`                | —                             |
 | `systems` | none by default; `no_std` if requested                           | skip `forbid(unsafe_code)`    |
 
-Consult `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` for manifest conventions.
+Consult `references/cargo-manifest.md` for manifest conventions.
 Consult the domain rule for dep/feature guidance:
-`${CLAUDE_PLUGIN_ROOT}/rules/async.md`, `${CLAUDE_PLUGIN_ROOT}/rules/api.md`,
-`${CLAUDE_PLUGIN_ROOT}/rules/cli.md`, `${CLAUDE_PLUGIN_ROOT}/rules/unsafe.md`.
+`references/async.md`, `references/api.md`,
+`references/cli.md`, `references/unsafe.md`.
 
 ---
 
@@ -69,7 +69,7 @@ Produce a **draft** for user review. Show each file as a named block; do not wri
 anything yet.
 
 ### `Cargo.toml`
-Build per `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md`. Must include:
+Build per `references/cargo-manifest.md`. Must include:
 - `[package]`: `name`, `version = "0.1.0"`, `edition = "2024"`, `license`,
   `rust-version` (if MSRV given), `description`, `repository` (placeholder),
   `keywords`, `categories`.
@@ -80,13 +80,13 @@ Build per `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md`. Must include:
 ### `src/lib.rs` or `src/main.rs`
 - `lib.rs`: `#![forbid(unsafe_code)]` (omit for `systems`), `#![warn(...)]` attrs,
   module-level doc comment, empty `pub mod` stub or `// TODO` note.
-  Consult `${CLAUDE_PLUGIN_ROOT}/rules/core.md`.
+  Consult `references/core.md`.
 - `main.rs` (bin): minimal `fn main()` with `color_eyre::install()`? or plain, per domain.
-  Consult `${CLAUDE_PLUGIN_ROOT}/rules/cli.md` for CLI entry-point conventions.
+  Consult `references/cli.md` for CLI entry-point conventions.
 
 ### `deny.toml`
 Studio-standard cargo-deny config: advisories (deny), licenses (allow list includes the
-chosen license), bans (deny duplicates). See `${CLAUDE_PLUGIN_ROOT}/rules/build-scripts.md`.
+chosen license), bans (deny duplicates). See `references/build-scripts.md`.
 
 ### `rust-toolchain.toml`
 ```toml
@@ -99,10 +99,10 @@ Add `profile = "minimal"` for `systems` domain.
 ### `.github/workflows/<name>-ci.yml` (CI stub)
 Minimal GitHub Actions workflow: `cargo check`, `cargo clippy -- -D warnings`,
 `cargo nextest run`, `cargo fmt --check`.
-See `${CLAUDE_PLUGIN_ROOT}/rules/build-scripts.md` for CI conventions.
+See `references/build-scripts.md` for CI conventions.
 
 ### `README.md`
-Use `${CLAUDE_PLUGIN_ROOT}/docs/templates/crate-readme.md` as the template.
+Use `references/templates/crate-readme.md` as the template.
 Fill in crate name, one-line description, license badge, and MSRV badge if applicable.
 
 ---

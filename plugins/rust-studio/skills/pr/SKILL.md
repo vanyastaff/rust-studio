@@ -10,7 +10,7 @@ allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
 # /pr — open a pull request
 
 Ship the branch with a description a reviewer can actually use. **Outward-facing — confirm
-before pushing and before creating the PR** (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+before pushing and before creating the PR** (`references/collaboration.md`).
 
 ## Steps
 1. Preconditions:

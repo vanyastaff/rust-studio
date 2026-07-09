@@ -11,7 +11,7 @@ Determine the real MSRV, compare it to the declared `rust-version` in `Cargo.tom
 produce a concrete update recommendation. You are the orchestrator — you do not write files
 directly; all manifest edits are delegated to `rust-builder`. Decide tactical calls
 yourself; `AskUserQuestion` only at genuine forks and before outward/irreversible actions
-(see `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1).
+(see `references/collaboration.md` §1).
 
 ## Input
 
@@ -85,7 +85,7 @@ If they differ, `AskUserQuestion` with 2–4 options:
 3. **Keep current declaration and add a comment** — document the known drift.
 4. **No change** — if this is a pre-release investigation only.
 
-Apply the rule from `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` when evaluating
+Apply the rule from `references/cargo-manifest.md` when evaluating
 manifest edits.
 
 ## Phase 5 — Draft and approve (gate)

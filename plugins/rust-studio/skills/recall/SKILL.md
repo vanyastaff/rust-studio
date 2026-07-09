@@ -8,7 +8,7 @@ user-invocable: true
 # /recall — retrieve project memory
 
 Pull relevant past learnings into context so work compounds instead of repeating
-(protocol: `${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Companion to `/remember`.
+(protocol: `references/memory-protocol.md`). Companion to `/remember`.
 
 ## Where notes live (resolve every time)
 - **Vault root:** `$OBSIDIAN_VAULT_PATH`, default `~/memory` (cross-platform — never hardcode).

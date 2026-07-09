@@ -7,7 +7,7 @@ user-invocable: true
 # /deps-check — audit workspace dependencies
 
 Run a full dependency health audit through **dependency-manager**, honoring the
-collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You are
+collaboration protocol (`references/collaboration.md`). You are
 the orchestrator: **you do not modify Cargo.toml or Cargo.lock yourself — delegate all
 writes to `rust-builder`.** Decide tactical calls and proceed; escalate only at genuine
 forks and before irreversible writes (per protocol §1).
@@ -20,7 +20,7 @@ All commands in this phase are read-only; run them without asking first.
 
    - **`cargo deny check`** — advisories, bans, licenses, and sources.
      Cite every finding with its ID (e.g. `RUSTSEC-2024-XXXX`), severity, and affected
-     crate. Reference `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` for workspace-level
+     crate. Reference `references/cargo-manifest.md` for workspace-level
      deny configuration expectations.
    - **`cargo audit`** — cross-check advisories against the RustSec database directly;
      use alongside `deny` to catch anything the deny config doesn't cover.
@@ -80,7 +80,7 @@ All commands in this phase are read-only; run them without asking first.
    - **remove** — delete the dependency entry and fix any resulting compilation errors.
    - **dedupe** — add a `[patch]` entry or tighten the version range so the resolver
      collapses duplicates to a single version.
-   - Reference `${CLAUDE_PLUGIN_ROOT}/rules/cargo-manifest.md` for field ordering,
+   - Reference `references/cargo-manifest.md` for field ordering,
      workspace-inheritance patterns, and feature-gate conventions.
 
 7. Show the proposed diff (Cargo.toml changes + lock-file summary). `AskUserQuestion` for

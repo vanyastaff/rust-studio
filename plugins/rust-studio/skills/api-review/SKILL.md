@@ -11,7 +11,7 @@ Analyze the public API diff, classify every change by semver impact, flag
 accidental breaks and leaked types, and recommend the required version bump
 and any mitigations. You are the orchestrator: **you do not write code or
 files yourself — delegate all fixes to `rust-builder`** via `/dev-task`.
-Honor the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+Honor the collaboration protocol (`references/collaboration.md`).
 
 ## Input
 

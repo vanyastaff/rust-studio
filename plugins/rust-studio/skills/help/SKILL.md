@@ -6,6 +6,10 @@ user-invocable: true
 
 # /help — studio catalog
 
+> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
+> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
+> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
+
 Print a grouped catalog. If `$ARGUMENTS` names a topic (e.g. "async", "release",
 "unsafe", "memory"), show only the relevant subset and the agents/skills for it.
 
@@ -42,10 +46,10 @@ bun "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/list-skills.ts"
 **Execution:** `rust-scout` (locate) · `rust-builder` (implement) · `rust-build-resolver` (fix the build) · `rust-reviewer` (audit)
 
 ## How it fits together
-See `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md` for who-owns-what,
-`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` for the gates and the autonomy-first
-protocol, and `${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` for the operating mode
+See `references/agent-roster.md` for who-owns-what,
+`references/coordination-protocol.md` for the gates and the autonomy-first
+protocol, and `references/working-preferences.md` for the operating mode
 (decide-don't-interrogate, no quick wins, modern idioms, observability-as-DoD). Path-scoped
-standards live in `${CLAUDE_PLUGIN_ROOT}/rules/`; cross-session memory in the Obsidian vault
+standards live in `references/`; cross-session memory in the Obsidian vault
 via the `obsidian` MCP, under the memory contract in
-`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md` (recall-before / remember-after / `MEMORY:` lines).
+`references/memory-protocol.md` (recall-before / remember-after / `MEMORY:` lines).

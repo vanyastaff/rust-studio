@@ -10,12 +10,12 @@ user-invocable: true
 Think through a Rust idea end-to-end: clarify what is really being asked, surface
 constraints and unknowns, and lay out 2–4 concrete approaches with trade-offs. No APIs,
 no code, no files written. You are the facilitator per the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`): **Question → Options → Decision →
+(`references/collaboration.md`): **Question → Options → Decision →
 Draft → Approval.** Delegate concept-note capture to `product-steward`; never write files
 yourself.
 
 **Maintainer bar applies.** Even at the idea stage, approaches are weighed against the
-maintainer-grade standard (`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`): does a
+maintainer-grade standard (`references/maintainer-grade-development.md`): does a
 sibling crate already own this; which invariants must hold; does responsibility still sit right
 after a few extensions. Brainstorm writes no plan, so it emits no pre-code verdict — but the chosen
 direction carries these answers forward into the `/design-api` or `/architecture` Pre-code Gate.
@@ -31,7 +31,7 @@ cross-crate concern) before proceeding.
 **Recall first:** `/recall <idea/area>` (or reuse the session-start memory index if it already
 surfaced this area) — prior decisions and rejected alternatives shape ideation; carry them into
 the approaches and say when a recalled note changes the direction. If nothing surfaces, proceed
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 
 1. Restate the idea in one sentence. Flag immediately if it is under-specified.
 2. `AskUserQuestion` with targeted questions — no more than three at once — to surface:
@@ -53,7 +53,7 @@ the approaches and say when a recalled note changes the direction. If nothing su
 
    For ecosystem-alternative unknowns, pull data before presenting — use the **exa** MCP
    (`web_search_exa` for crates.io adoption / RUSTSEC, `web_fetch_exa` to read the
-   docs/source pages found). Evidence over opinion (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md`).
+   docs/source pages found). Evidence over opinion (`references/working-preferences.md`).
 
 5. If a `[BLOCKER]` is present, surface it immediately and `AskUserQuestion` with options
    before continuing.
@@ -75,7 +75,7 @@ the approaches and say when a recalled note changes the direction. If nothing su
    - **Key unknowns** — what you still need to know to fully evaluate it.
    - **Rough gate exposure** — which quality gates (`ARCH-GATE`, `API-GATE`, `SAFETY-GATE`,
      etc.) would this approach likely need? Reference
-     `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md §4`.
+     `references/verdicts.md §4`.
    For any new-crate / cross-crate / boundary-moving idea, run a **harsh-critic** pass by
    DEFAULT — attack the leading approach and offer a radically different decomposition before
    recommending — so the idea is not echo-chamber-validated.
@@ -100,7 +100,7 @@ the approaches and say when a recalled note changes the direction. If nothing su
     forks (Phase 1 clarify, Phase 3 direction choice), not for this final go-ahead.
 11. On approval, **delegate saving the concept note** to `product-steward` — do not write
     files directly. Instruct `product-steward` to store it at the path it deems appropriate
-    per the template `${CLAUDE_PLUGIN_ROOT}/docs/templates/concept-note.md` (if that
+    per the template `references/templates/concept-note.md` (if that
     template exists; otherwise plain text is fine).
 
 ## Handoff
