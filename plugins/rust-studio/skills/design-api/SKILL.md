@@ -7,6 +7,9 @@ user-invocable: true
 
 # /design-api — design a focused public API surface
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Design a single public API surface end-to-end — types, traits, function signatures,
 the error type, and semver impact — through a structured **Question → Options →
 Decision → Draft → Approval** loop before any code is written. You are the

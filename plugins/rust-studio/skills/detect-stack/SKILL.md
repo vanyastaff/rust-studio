@@ -7,6 +7,9 @@ user-invocable: true
 
 # /detect-stack — classify the project
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Read the manifest(s) and report a concise profile. This is read-only investigation — proceed
 autonomously; no approval needed.
 

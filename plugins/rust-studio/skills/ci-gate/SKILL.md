@@ -7,6 +7,9 @@ user-invocable: true
 
 # /ci-gate — stop code from reaching CI and hanging (and from silencing the gate)
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Build the layered mechanical gate that catches what **rules can't** (rules only apply while the
 studio is in the loop; a hang reaches CI on code that bypassed it). Two failure classes:
 

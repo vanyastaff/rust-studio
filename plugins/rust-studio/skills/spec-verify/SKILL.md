@@ -7,6 +7,9 @@ user-invocable: true
 
 # /spec-verify — verify against the spec (verify → archive)
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertion
 (`references/verdicts.md`, §7). You are the orchestrator:
 **delegate writes (the verify report) to `rust-builder`**; do not write files directly.

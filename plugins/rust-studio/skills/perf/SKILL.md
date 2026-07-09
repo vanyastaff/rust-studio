@@ -7,6 +7,9 @@ user-invocable: true
 
 # /perf — profile, bench, optimize, prove
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Performance work, end to end, with `perf-engineer`. **No change lands without numbers**
 (`references/perf.md`, `references/working-preferences.md`).
 

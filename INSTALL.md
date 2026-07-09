@@ -18,7 +18,7 @@ installed alone. What you *don't* get this way: the 33 sub-agents, the hooks (se
 briefing, path-scoped rule injection, stop-guard), the status line, and the four
 plugin-only skills (`/env-setup`, `/help`, `/progress-bar`, `/eval-agents`). Skills that
 name a sub-agent fall back to running that phase inline — see
-[`docs/delegation.md`](plugins/rust-studio/docs/delegation.md) §3.
+[`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md).
 
 For the full studio on Claude Code, install it as a plugin instead:
 

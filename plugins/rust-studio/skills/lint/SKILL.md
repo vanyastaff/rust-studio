@@ -8,6 +8,9 @@ allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(car
 
 # /lint — format + clippy, the static gate
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 One command for the two checks that always run together: `rustfmt` and `clippy -D warnings`.
 This is the static gate (BUILD-GATE-adjacent). Evidence over assertion — cite the output.
 
