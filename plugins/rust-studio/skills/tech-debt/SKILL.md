@@ -7,6 +7,9 @@ user-invocable: true
 
 # /tech-debt — audit and log technical debt
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Scan the codebase (or a scoped area) for technical debt, produce a prioritized
 debt list, and offer to file stories. Evidence over opinion
 (`references/verdicts.md`). You do not fix anything

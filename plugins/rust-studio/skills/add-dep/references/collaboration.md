@@ -36,6 +36,11 @@ The shape is **Question → Options → Decision → Draft → Approval** — bu
 **quality** loop, not a per-step permission loop. The default is **autonomy: decide and
 execute**. See `working-preferences.md` for the full operating mode.
 
+> Tools named below (`AskUserQuestion`, `EnterPlanMode`, `ExitPlanMode`) are one host's
+> names for asking the owner a structured question and for gating a plan on approval. If
+> your host calls them something else, use that; if it has no such tool, ask in prose. The
+> rule is *when* to ask, never *with which tool*.
+
 **Three behavioral norms shape every dispatch** (`working-preferences.md` → *Operating mode*):
 - **Assessment vs. action** — when the owner describes a problem, asks a question, or thinks out
   loud, the deliverable is your **assessment**: report and stop. Don't apply a fix or write files
@@ -110,7 +115,7 @@ confirmation and must not be bypassed with bash/filesystem tools (`delegation.md
 **No sub-agents in this host?** A skill that tells you to delegate a phase to a named agent
 (`rust-scout`, `rust-builder`, …) is describing a phase, not a process. Run it yourself,
 in order, under that agent's brief. A missing sub-agent is never a blocker and never a
-reason to skip the phase — `delegation.md` §3.
+reason to skip the phase — `references/sub-agents.md`.
 
 ---
 ---

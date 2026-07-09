@@ -8,6 +8,9 @@ allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(car
 
 # /verify-loop — check → fix → re-run (bounded)
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Converge on green by classifying each failure and applying the smallest fix, then
 re-running. **Bounded to 3 iterations** — no infinite loops, no masking. Evidence over
 assertion (`references/verdicts.md`).

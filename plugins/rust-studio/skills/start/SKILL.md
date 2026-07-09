@@ -7,6 +7,9 @@ user-invocable: true
 
 # /start — onboard into the studio
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Orient and route. Keep it short and concrete.
 
 ## Steps

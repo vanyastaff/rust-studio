@@ -7,6 +7,9 @@ user-invocable: true
 
 # /fix-build — make it compile
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Drive `rust-build-resolver` to resolve compiler/cargo errors at the root, one at a time,
 until the build is clean. Evidence over assertion
 (`references/verdicts.md`).

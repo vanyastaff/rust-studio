@@ -65,16 +65,9 @@ unchanged — only the coordination surface differs.
 
 ### When sub-agents are unavailable
 
-The studio's agents (`rust-scout`, `rust-builder`, `rust-reviewer`, the leads and
-specialists) ship as Claude Code sub-agent definitions. An agent host without them —
-most hosts that install these skills standalone — cannot spawn a named agent.
-
-**Play the roles yourself, sequentially, in the same session.** A phase named for an
-agent becomes a phase you execute under that agent's brief: scout before you plan, plan
-before you write, review the diff as an adversarial reader before you call it done. The
-tiers, gates (`verdicts.md` §4), and verdicts (`verdicts.md` §5) are unchanged; only the
-number of processes is. Do not treat a missing sub-agent as a blocker, and do not skip
-the phase it owned.
+A host without the studio's sub-agents runs each named phase inline, under that agent's
+brief. The tiers, gates (`verdicts.md` §4) and verdicts (`verdicts.md` §5) are unchanged.
+The full rule is `references/sub-agents.md`.
 
 ---
 ## 6. File-write protocol

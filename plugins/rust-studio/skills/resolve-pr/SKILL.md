@@ -7,6 +7,9 @@ user-invocable: true
 
 # /resolve-pr — work through PR feedback (one-shot or watch)
 
+> Hosts without the studio's sub-agents run each named phase inline, under that agent's
+> brief — see `references/sub-agents.md`.
+
 Triage review threads honestly: implement what's right, push back with reasoning on what
 isn't, leave a clear reply on each. Verification before claims
 (`references/verdicts.md`) — no "done" without the change

@@ -82,6 +82,23 @@ for skill in skills/*/; do
   unset want
 done
 
+# A skill that names a studio sub-agent must ship the fallback for hosts that have none,
+# or it deadlocks on "delegate all writes to rust-builder" where no rust-builder exists.
+agent_re="\`($(ls agents/*.md | xargs -n1 basename | sed 's/\.md$//' | paste -sd'|'))\`"
+missing=0
+for skill in skills/*/; do
+  src=$skill/SKILL.md
+  [[ -f $src ]] || continue
+  grep -qE "$agent_re" "$src" || continue
+  grep -q '^> \*\*Plugin-only\.\*\*' "$src" && continue   # plugin install always has the agents
+  [[ -f $skill/references/sub-agents.md ]] && continue
+  echo "$src names a sub-agent but does not cite references/sub-agents.md"
+  missing=1
+done
+if (( missing )); then
+  echo; echo "cite it, directly or via collaboration.md / delegation.md"; exit 1
+fi
+
 if (( check )); then
   (( stale )) && { echo; echo "run ./scripts/sync-references.sh"; exit 1; }
   echo "references/ in sync"
