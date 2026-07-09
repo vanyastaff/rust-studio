@@ -11,7 +11,7 @@ snapshot tests (optional), a nextest runner config, and a coverage path via
 `cargo-llvm-cov`. You are the orchestrator: **you do not write files yourself — you
 delegate all writes to `rust-builder`.** Gate with `AskUserQuestion` only at phase
 boundaries (scope, plan approval, BLOCKED recovery) — decide tactical calls yourself,
-state choice + one-line rationale. See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`.
+state choice + one-line rationale. See `references/collaboration.md`.
 
 ## Phase 1 — Clarify scope
 
@@ -30,7 +30,7 @@ state choice + one-line rationale. See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-
 ## Phase 2 — Plan
 
 3. Spawn **`test-engineer`** (owns this domain; Quality tier, see
-   `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md`) with the scout's map and the user's
+   `references/agent-roster.md`) with the scout's map and the user's
    answers. Instruct `test-engineer` to produce:
    - Dev-dependency additions: `proptest`, `criterion`, and optionally `insta`.
    - A nextest configuration: `[profile.default]` timeouts, thread counts, and
@@ -39,7 +39,7 @@ state choice + one-line rationale. See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-
      `--fail-under-lines <threshold>`).
    - Skeleton file list: paths for `tests/<crate>/` integration stubs and
      `benches/<crate>.rs` criterion harnesses.
-   - References to `${CLAUDE_PLUGIN_ROOT}/rules/testing.md` for the project's
+   - References to `references/testing.md` for the project's
      property-test and bench conventions.
 
 4. Decide tactical choices yourself (e.g. shared vs crate-local proptest `Strategy`
@@ -60,13 +60,13 @@ state choice + one-line rationale. See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-
      per-crate, whichever applies).
    - Write `.cargo/nextest.toml` (create if absent) with the agreed profile.
    - Write the `tests/` skeleton: one integration test stub per target crate,
-     following `${CLAUDE_PLUGIN_ROOT}/rules/testing.md`.
+     following `references/testing.md`.
    - Write the `benches/` skeleton: one criterion harness stub per target crate,
-     following `${CLAUDE_PLUGIN_ROOT}/rules/perf.md`.
+     following `references/perf.md`.
    - Add a `[profile.bench]` override in `Cargo.toml` if criterion requires it.
    - Record the `cargo-llvm-cov` invocation in a CI helper script or a `[alias]`
      in `.cargo/config.toml` — whichever the user preferred in Phase 1.
-   - Respect all conventions in `${CLAUDE_PLUGIN_ROOT}/rules/testing.md`.
+   - Respect all conventions in `references/testing.md`.
    - Run `cargo check --tests --benches`, `cargo nextest run`, and
      `cargo clippy --all-targets --all-features -- -D warnings`; fix any issues.
 

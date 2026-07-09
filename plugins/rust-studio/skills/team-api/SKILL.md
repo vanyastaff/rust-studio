@@ -10,10 +10,10 @@ user-invocable: true
 Orchestrate the API team through structured phases. **Delegate all file writes to
 sub-agents; the orchestrator never writes.** Gate at phase boundaries (quality gates,
 not permission loops) — decide tactical calls yourself with a one-line rationale.
-Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` (§8 team execution).
+Protocol: `references/delegation.md` (§8 team execution).
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8**
+Execute the phases as an agent team per **`references/delegation.md` §8**
 (implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
 shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
 single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
@@ -36,7 +36,7 @@ Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1
 - **Recall first:** `/recall <API area>` (or reuse the session-start memory index) and paste
   what binds — prior API decisions, semver constraints, gotchas — INTO the team spawn prompts
   (teammates do not inherit session context); say when a recalled note changes the approach. If
-  nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  nothing surfaces, proceed (`references/memory-protocol.md`).
 - Task owned by `api-design-lead` (with `api-designer` + `error-architect` as teammates) to
   draft the surface: types, traits (sealed?), method signatures, ownership/borrowing at the
   boundary, `#[non_exhaustive]` choices, and the error type.
@@ -47,7 +47,7 @@ Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1
 ## Phase 2 — Architecture check (blocked by 1)
 - `api-design-lead` confirms boundaries with `chief-architect` if the API spans crates or
   affects layering. Record an ADR (`/adr`) for non-trivial decisions.
-- Draft the API design doc (`${CLAUDE_PLUGIN_ROOT}/docs/templates/api-design-doc.md`).
+- Draft the API design doc (`references/templates/api-design-doc.md`).
 - **Gate:** `AskUserQuestion` — approve the design doc before build begins.
 
 ## Phase 3 — Build (blocked by 2; parallel where independent)
@@ -69,7 +69,7 @@ Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1
   contribution ends in **COMPLETE / NEEDS WORK / BLOCKED** with evidence.
 - **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
   for each (it dedups); `/remember` team-level decisions (API shape, semver call) too — or state
-  "nothing durable" (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  "nothing durable" (`references/memory-protocol.md`).
 - Verdict **COMPLETE / NEEDS WORK / BLOCKED**. Next steps: `/api-review` before release,
   `/changelog`, `/publish`.
 - If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`

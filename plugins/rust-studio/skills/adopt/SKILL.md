@@ -11,7 +11,7 @@ Bring an unfamiliar Rust crate or workspace under studio governance: map what ex
 infer the domains and standards already in use, surface the public API, catalog tech debt
 and tooling gaps, then propose and delegate the docs that capture it all. You are the
 orchestrator: **you do not write files yourself — you delegate to specialists.**
-See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` for the collaboration protocol.
+See `references/delegation.md` for the collaboration protocol.
 
 ## Input
 
@@ -25,7 +25,7 @@ ask: "Where is the crate or workspace you want to adopt?" before proceeding.
 
 **Recall first (light):** `/recall <project>` (or reuse the session-start memory index) — prior
 adoption notes exist if this was run before; carry them in. If nothing surfaces, proceed
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 
 1. Spawn **`rust-scout`** on the target root. Ask it to return:
    - workspace members (if a workspace), crate names, and `lib`/`bin`/`proc-macro` layout,
@@ -44,7 +44,7 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
    report. It owns the canonical dependency-signal table (async/web, CLI/TUI, systems/perf,
    API surface, data/storage, WASM) — don't re-derive the signals here.
 4. Identify which leads own each domain (see
-   `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md`). List them — they will be consulted in
+   `references/agent-roster.md`). List them — they will be consulted in
    Phase 4.
 5. Infer the implicit standards already in use: error handling style (`thiserror`,
    `anyhow`, custom enums), logging/tracing setup, test patterns (unit vs. integration vs.
@@ -70,7 +70,7 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
    - `tooling-lead` — missing `deny.toml`, no `rust-toolchain.toml`, no CI config or CI
      that lacks lint/test/publish stages, no `rustfmt.toml`/`clippy.toml`. **If the scout
      reported many workspace members**, also assess context-scoping per
-     `${CLAUDE_PLUGIN_ROOT}/docs/large-workspace.md`: per-crate `CLAUDE.md`, `permissions.deny`
+     `references/large-workspace.md`: per-crate `CLAUDE.md`, `permissions.deny`
      on `target/`/generated, the bundled rust-analyzer LSP for symbol lookup, sparse worktrees.
    - `qa-lead` — test coverage posture: no tests, tests that only cover happy paths,
      missing integration or doc tests, no property-based testing for data-heavy code.
@@ -91,10 +91,10 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
 9. Based on the scout map and debt catalog, propose which studio docs to create. Default
    set for a non-trivial codebase:
    - `architecture.md` — crate/module map, dependency graph narrative, key design decisions
-     already baked in (use `${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`).
+     already baked in (use `references/templates/architecture.md`).
    - One or more ADRs for each significant design choice already present (e.g. choice of
      async runtime, error strategy, storage layer) — use
-     `${CLAUDE_PLUGIN_ROOT}/docs/templates/adr.md`.
+     `references/templates/adr.md`.
    - A tech-debt register — distilled from Phase 4 findings.
 10. `AskUserQuestion`: present the proposed doc set with a short rationale for each item.
     Let the user trim, add, or defer. **This is the only write-gate for doc creation.**
@@ -108,10 +108,10 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
     docs directly from this skill**:
     - `architecture.md` → spawn **`chief-architect`** with the scout map and domain
       classification as context; instruct it to follow
-      `${CLAUDE_PLUGIN_ROOT}/docs/templates/architecture.md`.
+      `references/templates/architecture.md`.
     - Each ADR → spawn **`chief-architect`** (or the owning domain lead for narrow
       decisions) per ADR topic; instruct it to follow
-      `${CLAUDE_PLUGIN_ROOT}/docs/templates/adr.md`.
+      `references/templates/adr.md`.
     - Tech-debt register → spawn **`tooling-lead`** to assemble from the Phase 4 findings.
 12. Specialists write their approved docs and report back with the file path and a summary.
     If a specialist hits a genuine design fork not covered by the approved plan, surface it
@@ -154,16 +154,16 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
     - Unsafe without SAFETY docs → `/dev-task` scoped to the unsafe module
     - No tests → `/test-setup`
     - Large workspace not scoped for context → apply
-      `${CLAUDE_PLUGIN_ROOT}/docs/large-workspace.md` (per-crate `CLAUDE.md`, deny `target/`,
+      `references/large-workspace.md` (per-crate `CLAUDE.md`, deny `target/`,
       the bundled rust-analyzer LSP, sparse worktrees) using
-      `${CLAUDE_PLUGIN_ROOT}/docs/templates/large-workspace-settings.json`
+      `references/templates/large-workspace-settings.json`
     - Public API hygiene issues → `/review` in **full** mode
 
 15. **Seed the memory vault.** Adoption infers a project's durable facts in one pass — persist
     them so the vault starts populated: run `/remember` for the domain map decision, each
     inferred convention (error style, test patterns, MSRV posture), and the top gotchas from the
     debt catalog (it dedups). Report the note paths
-    (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+    (`references/memory-protocol.md`).
 
 ---
 

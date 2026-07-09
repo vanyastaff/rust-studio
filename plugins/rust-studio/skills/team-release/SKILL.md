@@ -9,11 +9,11 @@ user-invocable: true
 
 Orchestrate the release team through structured phases. **Delegate all file writes to
 sub-agents; the orchestrator never writes.** Gate at phase boundaries (quality gates, not
-per-step permission asks) per `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` (§8 team
-execution).
+per-step permission asks) per `references/collaboration.md` §1 and
+`references/delegation.md` §8 (team execution).
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8**
+Execute the phases as an agent team per **`references/delegation.md` §8**
 (implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
 shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
 single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
@@ -46,7 +46,7 @@ them) so they run concurrently as teammates; the lead synthesizes when all repor
 - **Recall first:** `/recall <crate> release` (or reuse the session-start memory index) and paste
   what binds — prior semver calls, MSRV policy, publish gotchas — INTO the team spawn prompts
   (teammates do not inherit session context); say when a recalled note changes the approach. If
-  nothing surfaces, proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  nothing surfaces, proceed (`references/memory-protocol.md`).
 - Task owned by `release-lead` (with `rust-reviewer`) to run `/api-review` against the current
   branch (vs. the last published tag). Review the output for breaking changes, additions, and
   fixes.
@@ -66,7 +66,7 @@ task per track (2a/2b/2c) so they run concurrently as teammates.
 ### 2a — Security audit
 - Task owned by `security-auditor` to run `/security-audit` on the crate surface being
   released. Focus on: input validation, deserialization, `unsafe` blocks, dependency
-  advisories. Rules: `${CLAUDE_PLUGIN_ROOT}/rules/security.md`.
+  advisories. Rules: `references/security.md`.
 - Output: a findings list (`CLEAN` / severity-ranked issues). Any **HIGH** or **CRITICAL**
   finding blocks Phase 4 until resolved.
 
@@ -96,7 +96,7 @@ Run both tracks in parallel after audit acceptance — create one sibling task p
 - Task owned by `docs-engineer` to run `/changelog` and produce a draft changelog entry for
   the target version: `Added` / `Changed` / `Deprecated` / `Removed` / `Fixed` / `Security`
   per Keep-a-Changelog convention.
-- Use the template at `${CLAUDE_PLUGIN_ROOT}/docs/templates/changelog-entry.md`.
+- Use the template at `references/templates/changelog-entry.md`.
 - `rust-builder` writes the entry to `CHANGELOG.md` only after the user approves the draft.
 
 ### 3b — Doc updates
@@ -160,7 +160,7 @@ git push origin v<version>
 - **Persist what settled:** sweep ALL teammate verdicts for `MEMORY:` lines and run `/remember`
   for each (it dedups); `/remember` team-level decisions (semver rationale, accepted exceptions,
   release gotchas) too — or state "nothing durable"
-  (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+  (`references/memory-protocol.md`).
 - End with verdict **COMPLETE / NEEDS WORK / BLOCKED** and the manual publish command(s).
 - If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`
   (no `TeamDelete` — the team is implicit).

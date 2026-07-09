@@ -9,14 +9,14 @@ user-invocable: true
 
 Drive one behavior at a time test-first. The discipline is the point — don't write
 implementation before a failing test exists. Protocol:
-`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`; standards: `rules/testing.md`, `rules/core.md`.
+`references/collaboration.md`; standards: `rules/testing.md`, `rules/core.md`.
 
 **This is the inner loop.** Inside `/dev-task` (Phase 4) it drives toward the **outer acceptance
 test** written in Phase 1; standalone, it's a self-contained red→green→refactor cycle. The
-double-loop model: `${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`.
+double-loop model: `references/testing-model.md`.
 
 **Maintainer bar applies.** The GREEN code is held to
-`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: the first draft is idiomatic,
+`references/maintainer-grade-development.md`: the first draft is idiomatic,
 allocation-aware, and borrow-correct — passing the test is the floor, not the bar. The GREEN
 spawn carries the pre-code verdict (`ACCEPTABLE` / `RESHAPE NEEDED` / `BLOCKED`); if the only
 way to pass is a wrong-crate or clone-to-appease shape, that is `RESHAPE NEEDED`, not later cleanup.
@@ -26,7 +26,7 @@ way to pass is a wrong-crate or clone-to-appease shape, that is `RESHAPE NEEDED`
 **Recall first (once, before the first test):** `/recall <area>` (or reuse the session-start
 memory index if it already surfaced this area) — area gotchas and conventions shape the first
 test; say when a recalled note changes the approach. If nothing surfaces, proceed
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 
 ### 🔴 RED — a failing test
 1. State the one behavior in a sentence (input → expected output / effect, incl. an edge case).
@@ -55,7 +55,7 @@ Repeat for the next behavior. Use `/verify-loop` to drive the run→fix→re-run
 ## Guardrails
 - Never weaken, `#[ignore]`, delete, or rewrite a test to go green — fix the code. The RED test
   must be **able to fail** (assert the value/effect, not `is_ok()` or a tautology); a vacuous test
-  gives a false GREEN. See `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
+  gives a false GREEN. See `references/integrity-and-evidence.md`.
 - One behavior per cycle; small steps. Keep the suite green between behaviors.
 
 ## Output

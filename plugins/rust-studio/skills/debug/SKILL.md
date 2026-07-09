@@ -8,9 +8,9 @@ user-invocable: true
 # /debug — root-cause a Rust bug
 
 Find the *cause*, not a plausible patch. Discipline over guessing
-(`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md`). No symptom-masking, no
+(`references/working-preferences.md`). No symptom-masking, no
 "probably" — every hypothesis is confirmed by evidence before you touch code.
-Observability ships with the fix (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`,
+Observability ships with the fix (`references/collaboration.md`,
 observability-as-DoD).
 
 ## When NOT this skill
@@ -28,7 +28,7 @@ Use `/debug` for runtime bugs: wrong results, panics, deadlocks, async hangs, st
    **Recall first:** `/recall <bug area>` (or reuse the session-start memory index if it already
    surfaced this area) — has this bug or area bitten us before? Carry prior gotchas and fixes into
    the hypotheses; say when a recalled note changes the approach. If nothing surfaces, proceed
-   (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+   (`references/memory-protocol.md`).
 3. **Hypothesize.** Write down 1–3 concrete, falsifiable hypotheses ("the lock is held
    across the `.await` so task B starves"). For a design-level cause, spawn **`harsh-critic`**
    to attack your assumptions.
@@ -38,7 +38,7 @@ Use `/debug` for runtime bugs: wrong results, panics, deadlocks, async hangs, st
    **`async-runtime-specialist`** (cancellation, `select!`, spawn/`Send` bounds). Prefer a
    `tokio::time::pause` deterministic test over print-debugging a race.
 5. **Fix the cause.** Change the root, not the symptom. If the type system can make the bug
-   unrepresentable, prefer that (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` —
+   unrepresentable, prefer that (`references/working-preferences.md` —
    structural fix over discipline). Hand the edit to **`rust-builder`** if non-trivial.
 6. **Prove it.** Add a regression test that fails before and passes after. Land a typed error
    and/or a `tracing` span on the path so the next occurrence is observable, not silent.
@@ -56,5 +56,5 @@ hypotheses and the next experiment — never a guessed patch).
 
 A root cause is a **durable gotcha**: on `COMPLETE`, run `/remember` to capture the cause and
 the fix so the next occurrence is recognized fast — skip only if the bug was trivial/obvious
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 Then `/review` the change, or `/dev-task` any follow-up the root cause exposed.

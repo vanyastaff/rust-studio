@@ -7,6 +7,10 @@ user-invocable: true
 
 # /env-setup — provision the machine for Rust + the studio tool suite
 
+> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
+> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
+> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
+
 Bring a machine from "has a shell" to "every studio skill's tool is on PATH": OS build
 prerequisites → rustup + latest stable → toolchain components → `cargo-binstall` →
 cargo tools as **prebuilt binaries** (compiling 20 tools from source takes an hour;
@@ -17,7 +21,7 @@ binstall takes minutes). This skill touches the **system**, not the repo — no
 
 **The script is the single source of truth** for the tool tiers, package names per
 platform, and install commands — read it before explaining, don't restate lists from
-memory. It maps to the studio canon in `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md` ("Cargo &
+memory. It maps to the studio canon in `references/tooling.md` ("Cargo &
 Rust toolchain" table). It refuses to run as root; OS packages are its one `sudo` step.
 
 ## Phase 1 — Detect (read-only, always)
@@ -91,14 +95,14 @@ suggest they run it via `! <command>` in the prompt, then re-run the script.
   prints the `claude mcp add obsidian -s user …` line; fill `OBSIDIAN_VAULT_PATH` from
   the plugin's `vault_path` setting, the `OBSIDIAN_VAULT_PATH` env var, or `~/memory`
   (that resolution order matches the session-start hook). Full contract:
-  `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md` ("obsidian memory server").
+  `references/tooling.md` ("obsidian memory server").
 - **Not on crates.io, so not binstallable:** `lefthook` (Go) — needed by `/ci-gate`;
   offer the platform package (`brew install lefthook`, `npm i -g lefthook`, or the vendor
   repo) or leave it to `/ci-gate` to prompt.
 - **Windows** is out of scope for the script — point the user at `rustup-init.exe` from
   rustup.rs plus Visual Studio Build Tools, then `cargo binstall` works the same.
 - **CI** is a different problem — use `dtolnay/rust-toolchain` + `taiki-e/install-action`
-  there (see `${CLAUDE_PLUGIN_ROOT}/docs/ci-best-practices.md`), never this script.
+  there (see `references/ci-best-practices.md`), never this script.
 
 ## Phase 4 — Verify (evidence, not assertion)
 

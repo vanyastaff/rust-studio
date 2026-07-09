@@ -11,10 +11,10 @@ Compare the actual diff (or plan) against the acceptance criteria for the story 
 a clear verdict: in-scope, over-scope, or under-scope. You are the orchestrator — you read
 diffs and surface findings; **you do not write files yourself — delegate any remediation to
 `rust-builder` via `/dev-task`.** Honor the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+(`references/collaboration.md`).
 
 **Symmetric scope clause (maintainer bar).** Per
-`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`, when the workspace is
+`references/maintainer-grade-development.md`, when the workspace is
 unpublished / active-dev, a structural improvement to weak / duplicated / wrong-crate code that
 the story actually TOUCHED is IN-SCOPE (keep — reshape), NOT scope creep. Only restructuring of
 UNTOUCHED code is creep. Apply this symmetrically: do not flag a reshape of touched-and-weak code

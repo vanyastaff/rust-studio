@@ -9,8 +9,8 @@ user-invocable: true
 
 Run a single task through **scout → plan → plan-review → approve → build → review** — or a
 **fast path** for genuinely trivial changes (Phase 0) — honoring the
-collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §8 team
-execution). You are the orchestrator: **you do not write code or tests yourself — you
+collaboration protocol (`references/collaboration.md`;
+`references/delegation.md` §8 team execution). You are the orchestrator: **you do not write code or tests yourself — you
 delegate writes to `rust-builder`.** **The plan-approval gate runs through native plan mode**
 (`EnterPlanMode` → write the plan file → `ExitPlanMode`), so the plan renders in the Desktop
 **Plan** pane and is approved natively (on CLI it's the standard plan-mode approval — no
@@ -20,7 +20,7 @@ state choice + one-line rationale.
 
 ## Orchestration & progress
 Run the phases (scout → plan → plan-review → build → review) as an agent team per
-**`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8** (implicit session team, shared task
+**`references/delegation.md` §8** (implicit session team, shared task
 list ordered with `addBlockedBy`, `SendMessage`, teammate shutdown). Gate on
 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, spawn the sub-agents sequentially and inline
 each phase's context into the spawn prompt.
@@ -31,7 +31,7 @@ phase, and the moment a phase returns surface its result in one line (scout's ed
 plan's verdict, the build's diff summary, the review's findings) and mark it `completed` before
 the next phase — intermediate results, not a final dump. Foreground the phase being waited on.
 
-(Optional status bar) If the user ran `/progress-bar`, also mirror the phase to the studio
+(Optional status bar, plugin-only) If the user ran `/progress-bar` under the plugin install, also mirror the phase to the studio
 status line at each boundary:
 `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" set --phase "<phase>" --step "<n/total>" [--tasks "<done/total>"]`,
 and `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" clear` at the end. Harmless no-op if they
@@ -45,7 +45,7 @@ build?" and, for non-trivial work, suggest running `/architecture` or `/brainsto
 Default **lean** (one crate, routine). Use **full** for public APIs, `unsafe`, releases, or
 cross-crate changes. Use **solo** for prototypes. State which mode you're using and why.
 Any non-trivial task must also apply the pre-code maintainer standard in
-`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` before code is written.
+`references/maintainer-grade-development.md` before code is written.
 
 ## Phase 0 — Right-size the ceremony (triage first)
 The most common SDD failure mode is *over-process* — turning a one-line fix into a multi-phase
@@ -68,14 +68,14 @@ with a real design decision) runs Phases 1–6 below under the chosen review mod
 quick-win escape hatch: when in doubt, take the full loop.
 
 The double-loop, observable-criteria, and full **fast-path abort protocol** are defined once in
-`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md` — abort the fast path the moment a trivial condition
+`references/testing-model.md` — abort the fast path the moment a trivial condition
 stops holding, re-enter the full loop, and reuse (don't discard) the work already done.
 
 ## Phase 1 — Scope & locate
 **Recall first:** `/recall <task area>` (or reuse the session-start memory index if it already
 surfaced this area) and carry prior decisions and gotchas into the plan; say when a recalled note
 changes the approach. If nothing surfaces, proceed
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 0. **Enter plan mode.** If you are not already in plan mode, call `EnterPlanMode` to obtain the
    plan-file path. Phases 1–2 are read-only anyway (scout + lead plan, no code until approval),
    so this fits with no workflow change — it just routes the upcoming Draft→Approval through the
@@ -84,7 +84,7 @@ changes the approach. If nothing surfaces, proceed
 1. Restate the task as **acceptance criteria in observable form** — given/when/then, or
    input → effect → edge case. Enumerate the scenarios the behavior **really** has: the happy path
    **plus** error paths, boundaries, and (for async) concurrency/cancellation — happy-path-only is
-   under-thought (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`). Don't pad with contrived cases
+   under-thought (`references/testing-model.md`). Don't pad with contrived cases
    either — that's the Phase-0 over-specification failure; cover the real cases, no more. Confirm
    with the user if fuzzy.
    Where the change has an **externally observable behavior**, write the **outer acceptance test**
@@ -96,14 +96,14 @@ changes the approach. If nothing surfaces, proceed
    layout. Scout uses serena MCP for symbol/reference navigation and `rg` for macro-generated
    or `cfg`-gated sites serena can't see — never Bash `grep`/`find`. (As a teammate, scout
    relies on the user's ambient serena — it is not bundled into the spawn.)
-3. Identify the owning lead from the domain (see `${CLAUDE_PLUGIN_ROOT}/docs/agent-roster.md`).
+3. Identify the owning lead from the domain (see `references/agent-roster.md`).
 
 ## Phase 2 — Plan (blocked by scout)
 4. Task owned by the **owning lead** (e.g. `api-design-lead`, `async-systems-lead`) — or
    `chief-architect` if the design is non-trivial — to produce a short plan: files to
    change, the approach, test strategy, risks, and which gate(s) apply.
 5. Require a **Maintainer-grade pre-code verdict** from
-   `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: `ACCEPTABLE`,
+   `references/maintainer-grade-development.md`: `ACCEPTABLE`,
    `RESHAPE NEEDED`, or `BLOCKED`. The verdict must cover crate ownership, sibling-crate
    reuse, ecosystem/current-doc checks where relevant, API/type-system shape, performance
    posture, active-dev breaking-change policy, and likely strict-maintainer rejection reasons.
@@ -193,14 +193,14 @@ advancing.
     change, `clippy`/`fmt` clean, and the 5b quality pass; there is no plan or 5a stage to run.
     That earns `COMPLETE` only if Phase-0 triage genuinely held; if the change turned out
     non-trivial and the full loop was skipped anyway, that is `NEEDS WORK`, not a shortcut earned.
-    Honesty bar: `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
+    Honesty bar: `references/integrity-and-evidence.md`.
 16. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
     and durable** this task produced — a design decision + rationale, a gotcha that cost
     time, a convention discovered, or a non-trivial fix. For each, run `/remember` directly
     (it writes the note to the Obsidian vault); report the resulting note path. Skip what
     the code, git history, or `Cargo.toml` already makes obvious. If nothing is durable, say
     so and move on. Also sweep every agent verdict for `MEMORY:` lines and run `/remember`
-    for each (it dedups) — canonical rule: `${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`.
+    for each (it dedups) — canonical rule: `references/memory-protocol.md`.
 17. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound, `/session-wrap` to close
     out the session. If running as a team,

@@ -8,7 +8,7 @@ user-invocable: true
 # /changelog — generate or update the changelog
 
 Produce a user-facing changelog entry in [Keep a Changelog](https://keepachangelog.com/) format,
-honoring the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You
+honoring the collaboration protocol (`references/collaboration.md`). You
 are the orchestrator: **you do not write to CHANGELOG.md yourself — you delegate the edit to
 `docs-engineer`.** Gate at Phase 3 (draft approval) and Phase 4 (write confirmation); decide
 everything else autonomously.
@@ -29,7 +29,7 @@ for?" If no tags exist, default to `0.1.0`.
 
 ## Phase 2 — Categorize & assess semver impact
 4. Spawn **`docs-engineer`** to analyze the commits and diff and produce a draft categorization
-   using the template at `${CLAUDE_PLUGIN_ROOT}/docs/templates/changelog-entry.md`.
+   using the template at `references/templates/changelog-entry.md`.
    The categories, per Keep a Changelog:
    - **Added** — new features, new public items, new CLI commands.
    - **Changed** — behavior changes to existing features; non-breaking API evolution.
@@ -80,5 +80,5 @@ do not proceed, and `AskUserQuestion` with options — (a) provide commit range 
 fabricated entry.
 
 If `docs-engineer` returns **BLOCKED** (e.g. the template is missing): surface the blocker,
-note that `${CLAUDE_PLUGIN_ROOT}/docs/templates/changelog-entry.md` may need to be created
+note that `references/templates/changelog-entry.md` may need to be created
 first, and stop cleanly. Do not discard the draft categorization.

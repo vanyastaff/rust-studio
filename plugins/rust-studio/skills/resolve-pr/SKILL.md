@@ -9,9 +9,9 @@ user-invocable: true
 
 Triage review threads honestly: implement what's right, push back with reasoning on what
 isn't, leave a clear reply on each. Verification before claims
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`) — no "done" without the change
+(`references/verdicts.md`) — no "done" without the change
 compiling and tested. Don't perform agreement on wrong feedback; reason it through
-(`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md`).
+(`references/working-preferences.md`).
 
 `gh` has no push stream — "listening" means streaming CI and new comments through a `Monitor`
 (a background poll loop whose stdout lines arrive as events) rather than blocking the session.
@@ -19,7 +19,7 @@ Be explicit about that.
 
 **Recall first (light):** `/recall <PR area / review conventions>` (or reuse the session-start
 memory index) — conventions reviewers enforce here inform triage. If nothing surfaces, proceed
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 
 ## Mode A — one-shot (default)
 1. Resolve the PR from `$ARGUMENTS` or the current branch:
@@ -88,5 +88,5 @@ CI: <green | red: failing job → routed to /fix-build|/debug | slow: Nm over bu
 ```
 End with the clippy/test summary and **COMPLETE** / **NEEDS WORK** (numbered) / **WATCHING**
 (monitors armed, what they're waiting on). If a reviewer convention recurred across threads,
-it's durable — `/remember` it (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Don't push,
+it's durable — `/remember` it (`references/memory-protocol.md`). Don't push,
 merge, or resolve GitHub threads without explicit go-ahead.

@@ -11,7 +11,7 @@ Find the inputs your tests never imagined. Set up `cargo-fuzz`, aim it at the co
 consumes untrusted bytes, run a bounded campaign, and turn every crash into a minimized,
 committed regression test. You are the orchestrator: **you do not write fuzz targets or
 fixes yourself — you delegate writes to `rust-builder`.** Honor the collaboration
-protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+protocol (`references/collaboration.md`).
 
 Fuzzing complements the suite, it does not replace it: `/coverage` shows what tests
 execute, `/mutants` shows what tests actually check, `/fuzz` finds the inputs nobody
@@ -35,7 +35,7 @@ candidates instead of guessing.
 
 3. **Recall first:** `/recall fuzzing <area>` — prior target choices, surfaces already
    judged low-value, and known crash history bind this pass; say when a recalled note
-   changes the ranking (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+   changes the ranking (`references/memory-protocol.md`).
 4. Spawn **`rust-scout`** to map candidate fuzz surfaces. Rank by risk:
    - **Untrusted-input parsers/decoders** — anything `fn parse(&[u8]) -> Result<..>`-shaped:
      wire formats, file formats, config, user strings.
@@ -116,13 +116,13 @@ candidates instead of guessing.
     - Crashes found → minimized → fixed → regression-tested (all four numbers; they
       should match or the gap must be explained).
     - Anything deprioritized and why.
-16. Honesty bar (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`): "no crashes in
+16. Honesty bar (`references/integrity-and-evidence.md`): "no crashes in
     5 minutes" is weak evidence, not proof of safety — say what the budget was. Never
     call a surface "fuzzed" if its target plateaued instantly or its corpus was empty.
 17. **Persist what settled:** sweep agent verdicts for `MEMORY:` lines and `/remember`
     each; a root-caused crash class, a target judged not-worth-fuzzing and why, or the
     campaign-budget decision is durable — or state "nothing durable"
-    (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+    (`references/memory-protocol.md`).
 18. End with **COMPLETE / NEEDS WORK (numbered blockers) / BLOCKED**. Suggest
     `/audit-unsafe` if fuzzing exposed UB, `/security-audit` if the surface is
     attacker-facing, `/mutants` to grade the rest of the suite.

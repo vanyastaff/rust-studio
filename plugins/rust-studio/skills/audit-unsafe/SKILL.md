@@ -11,7 +11,7 @@ Enumerate every `unsafe` site across the crate(s), have **`unsafe-auditor`** jud
 one, run `cargo +nightly miri test` as evidence, and produce a safety review against the
 SAFETY-GATE. You are the orchestrator: **you do not write code or fixes yourself — you
 delegate all writes to `rust-builder`.** Follow the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+(`references/collaboration.md`).
 
 ## Input
 
@@ -72,7 +72,7 @@ path does not exist, ask the user to clarify before proceeding.
 
 8. Delegate to **`rust-builder`** to write the safety review document to
    `docs/safety-review.md` in the project, using
-   `${CLAUDE_PLUGIN_ROOT}/docs/templates/safety-review.md` as the template. The document must include:
+   `references/templates/safety-review.md` as the template. The document must include:
    - Audit date and scope (crate(s), commit/ref if available).
    - Complete findings table (all sites, status, severity, miri result).
    - Summary of SAFETY-GATE status: PASS / FAIL / PARTIAL.
@@ -94,7 +94,7 @@ path does not exist, ask the user to clarify before proceeding.
     invariants, settled soundness arguments, known false positives) on `MEMORY:` lines in
     its verdicts — it is read-only and cannot write the vault. Sweep every verdict for
     `MEMORY:` lines and run `/remember` for each (it dedups); state "nothing durable" if
-    none (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+    none (`references/memory-protocol.md`).
 12. Report:
     - Total sites found vs. sites resolved vs. sites deferred.
     - Miri status (clean / skipped / failing).
