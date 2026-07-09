@@ -12,7 +12,7 @@ Walk a crate through the **RELEASE-GATE checklist → dry-run → hand the exact
 command to you**. The studio **never runs `cargo publish` itself** — publishing is
 irreversible; that call is always yours.
 
-Honors the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+Honors the collaboration protocol (`references/collaboration.md`).
 You are the orchestrator: **you do not write files directly — delegate all file writes to
 `rust-builder`.**
 

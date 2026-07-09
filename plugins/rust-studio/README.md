@@ -28,7 +28,15 @@ studio: specialists who own a domain, leads who hold quality gates, and one rule
 > decide tactical calls and proceed; escalate only on strategic, irreversible, or outward steps.
 
 See [`docs/coordination-protocol.md`](docs/coordination-protocol.md) for the full contract
-and [`docs/agent-roster.md`](docs/agent-roster.md) for who owns what.
+— split into [`collaboration.md`](docs/collaboration.md) (autonomy, when to ask),
+[`delegation.md`](docs/delegation.md) (tiers, teams, file writes) and
+[`verdicts.md`](docs/verdicts.md) (gates, verdicts, evidence) — and
+[`docs/agent-roster.md`](docs/agent-roster.md) for who owns what.
+
+`docs/` and `rules/` are the single source of truth. Each skill carries a copy of what it
+cites under `skills/<name>/references/`, so it stays self-contained when installed via
+`npx skills add`. Regenerate with `./scripts/sync-references.sh` after editing either;
+CI runs `--check`.
 
 ## The team
 

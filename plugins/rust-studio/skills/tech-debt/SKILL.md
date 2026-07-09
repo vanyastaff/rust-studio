@@ -9,7 +9,7 @@ user-invocable: true
 
 Scan the codebase (or a scoped area) for technical debt, produce a prioritized
 debt list, and offer to file stories. Evidence over opinion
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You do not fix anything
+(`references/verdicts.md`). You do not fix anything
 here unless the user explicitly asks — that goes through `/dev-task`.
 
 ## Input
@@ -102,7 +102,7 @@ Once the list is approved, offer to file stories:
 
 If the user agrees, spawn **`product-steward`** with the approved debt list and
 the user's grouping preference. `product-steward` will turn the debt items into
-stories/tasks (see `/spec-tasks` and `${CLAUDE_PLUGIN_ROOT}/docs/templates/tasks.md`).
+stories/tasks (see `/spec-tasks` and `references/templates/tasks.md`).
 
 Do **not** write story files directly — delegate to `product-steward`.
 

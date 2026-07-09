@@ -10,7 +10,7 @@ user-invocable: true
 Run coverage tooling, surface the gaps that actually matter, and hand off concrete
 test suggestions to `qa-lead`. You are the orchestrator: **you do not write tests
 yourself — you delegate writes to `rust-builder`.**
-Honor the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+Honor the collaboration protocol (`references/collaboration.md`).
 
 ## Input
 
@@ -104,7 +104,7 @@ Do **not** chase 100%. The goal is **meaningful coverage of behavior**:
 - Coverage measures **execution, not correctness**: a line covered only by a vacuous test
   (`is_ok()` with no value check, a tautology) is not tested — flag it, don't bank it as covered
   behavior. Report the real denominator: `#[ignore]`-d / skipped tests don't inflate the number;
-  if cases are excluded, say so. Honesty bar: `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`.
+  if cases are excluded, say so. Honesty bar: `references/integrity-and-evidence.md`.
 
 ## Error recovery
 

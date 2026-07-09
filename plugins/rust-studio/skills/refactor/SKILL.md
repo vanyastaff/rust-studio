@@ -9,13 +9,13 @@ user-invocable: true
 
 Run a scoped refactor through **confirm scope → clippy signals → plan → refactor steps →
 verify → review**, honoring the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You are the orchestrator: **you do
+(`references/collaboration.md`). You are the orchestrator: **you do
 not write code yourself — you delegate all writes to `rust-builder`.** Gate with
 `AskUserQuestion` only at phase boundaries (scope confirmation, plan approval, BLOCKED
 recovery) — decide tactical calls yourself, state choice + one-line rationale.
 
 **Maintainer bar applies.** This skill is where weak structure is brought up to
-`${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`: behavior-preserving reshaping of
+`references/maintainer-grade-development.md`: behavior-preserving reshaping of
 weak structure (extract, move-to-owning-crate, borrow-instead-of-clone, replace stringly/bool
 with domain types) IS the job here, not a while-I'm-here cleanup to suppress.
 
@@ -54,7 +54,7 @@ The line is observable behavior, not the shape of the code.
 **Recall first:** `/recall <target area>` (or reuse the session-start memory index if it already
 surfaced this area) and carry prior boundary decisions and gotchas into the plan — prior boundary
 decisions bind refactors; say when a recalled note changes the approach. If nothing surfaces,
-proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+proceed (`references/memory-protocol.md`).
 
 1. Restate the scope in one sentence and list 2–3 explicit "must not change" invariants
    (e.g. public API surface, observable behavior, performance characteristics).
@@ -79,19 +79,19 @@ proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 
    Capture the output. These are the primary refactor targets. Categorize findings by the
    relevant rule file:
-   - naming / idiom lint → `${CLAUDE_PLUGIN_ROOT}/rules/core.md`
-   - API surface lint → `${CLAUDE_PLUGIN_ROOT}/rules/api.md`
-   - async lint → `${CLAUDE_PLUGIN_ROOT}/rules/async.md`
-   - performance lint → `${CLAUDE_PLUGIN_ROOT}/rules/perf.md`
-   - unsafe lint → `${CLAUDE_PLUGIN_ROOT}/rules/unsafe.md`
-   - test lint → `${CLAUDE_PLUGIN_ROOT}/rules/testing.md`
+   - naming / idiom lint → `references/core.md`
+   - API surface lint → `references/api.md`
+   - async lint → `references/async.md`
+   - performance lint → `references/perf.md`
+   - unsafe lint → `references/unsafe.md`
+   - test lint → `references/testing.md`
 
 6. Also note structural issues visible to `rust-scout` that **clippy does not catch** — these are
    first-class refactor targets, not afterthoughts:
    - duplicated logic, over-long functions, misplaced modules;
    - **intent-hiding names** — bindings/fields/fns/types left as `x`, `tmp`, `data`, `res`, `mgr`,
      unit-ambiguous (`timeout` not `timeout_secs`), or synonym-colliding (`fetch`/`get`/`load` for
-     one concept), per `${CLAUDE_PLUGIN_ROOT}/rules/core.md` *Naming*. Clippy is silent on these, so
+     one concept), per `references/core.md` *Naming*. Clippy is silent on these, so
      if the scope is "make this self-documenting", naming IS the primary target — list each weak
      name with the better one. Use `ast-grep`/`sg` (via `rust-builder`) for the safe structural
      rename across the tree.
@@ -182,7 +182,7 @@ proceed (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
 
 19. If the refactor revealed a **durable** convention or structural pattern worth keeping
     (e.g. the boundary that finally made the code compose), run `/remember` to capture it
-    (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+    (`references/memory-protocol.md`).
 
 20. Suggest next steps as appropriate: `/review` for a deeper audit, `/dev-task` for any
     behavioral improvements that surfaced during the refactor, `/perf` if any hot paths

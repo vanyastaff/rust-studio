@@ -3,6 +3,25 @@
 The plugin lives in this repo, which is itself a Claude Code **marketplace** named `vanya`.
 Install it globally (applies to all your projects) either from GitHub or from a local clone.
 
+## Just the skills, on any agent
+
+The 55 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
+Codex, Cursor, OpenCode, Zed and ~70 other hosts — no npm publish, no clone:
+
+```text
+npx skills add vanyastaff/rust-studio                 # pick skills + agents interactively
+npx skills add vanyastaff/rust-studio --skill dev-task --agent codex
+```
+
+Each skill bundles the standards it cites under its own `references/`, so it works
+installed alone. What you *don't* get this way: the 33 sub-agents, the hooks (session
+briefing, path-scoped rule injection, stop-guard), the status line, and the four
+plugin-only skills (`/env-setup`, `/help`, `/progress-bar`, `/eval-agents`). Skills that
+name a sub-agent fall back to running that phase inline — see
+[`docs/delegation.md`](plugins/rust-studio/docs/delegation.md) §3.
+
+For the full studio on Claude Code, install it as a plugin instead:
+
 ## 1. Add the marketplace (one time)
 
 ### From GitHub (anyone)

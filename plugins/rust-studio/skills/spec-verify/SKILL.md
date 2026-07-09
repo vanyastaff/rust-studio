@@ -8,7 +8,7 @@ user-invocable: true
 # /spec-verify — verify against the spec (verify → archive)
 
 Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertion
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`, §7). You are the orchestrator:
+(`references/verdicts.md`, §7). You are the orchestrator:
 **delegate writes (the verify report) to `rust-builder`**; do not write files directly.
 
 ## Progress visibility
@@ -25,7 +25,7 @@ When off, run the steps without the task-list narration.
 ## Steps
 1. Read the spec's **acceptance criteria** (`$ARGUMENTS` = slug or path).
 2. **First, run the spec-level outer acceptance test** — a green outer test is the primary
-   executable proof the feature is met (`${CLAUDE_PLUGIN_ROOT}/docs/testing-model.md`). Then, for
+   executable proof the feature is met (`references/testing-model.md`). Then, for
    each remaining criterion, find and run the evidence:
    - Use serena MCP (`find_symbol`) and the harness Grep (ripgrep) to locate test functions
      and impl sites relevant to each criterion — never Bash `grep` for symbols.
@@ -38,7 +38,7 @@ When off, run the steps without the task-list narration.
    SAFETY/RELEASE as the spec touched them). Spawn `rust-reviewer` for a final diff
    audit. Gate owners report pass/fail — don't ask the user about tactical gate details.
 4. Delegate to `rust-builder`: write `.rust-studio/specs/<slug>/verify-report.md` from
-   `${CLAUDE_PLUGIN_ROOT}/docs/templates/verify-report.md` — each criterion → pass/fail
+   `references/templates/verify-report.md` — each criterion → pass/fail
    + evidence, commands run, gates cleared, follow-ups.
 5. **On pass**: mark the spec `Status: Done` (delegate write). For each durable learning the
    work produced (a decision + rationale, a gotcha, a convention discovered), run `/remember`
@@ -53,4 +53,4 @@ executable oracle where one exists; for the remaining criteria, prove each again
 acceptance **text** — not merely "a test I added passes". Report pass-rate with the
 **full denominator** — list skipped/ignored tests with a reason, never drop them from the count.
 A vacuous test, a weakened assertion, or a skipped gate is `NEEDS WORK`, not a pass
-(`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).
+(`references/integrity-and-evidence.md`).

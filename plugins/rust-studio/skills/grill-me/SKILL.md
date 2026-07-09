@@ -11,7 +11,7 @@ The job is to reach **shared understanding** of a plan or decision by interviewi
 **small, concrete questions asked one at a time, each with a recommended default** — the inverse
 of dropping a single multidimensional "what should we do long-term about X?" question the user has
 to study to answer. You facilitate per the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1, *Never offload your own analysis as a
+(`references/collaboration.md` §1, *Never offload your own analysis as a
 question* + *ask grill-me-style*). Adapted from the grill-me productivity skill: relentless but
 cheap; the agent does the analysis, the user supplies only what's genuinely theirs.
 
@@ -90,7 +90,7 @@ After approval, suggest and offer to invoke the natural next step (confirm befor
 - **No files written by this skill**, and no source edits — this is pure elicitation. Capture, if
   any, goes through the downstream skill (`/spec`, `/architecture`) after approval.
 - Never present a quality menu — option sets vary by **scope or approach**, never by quality
-  (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1). The Recommended option clears the bar.
+  (`references/collaboration.md` §1). The Recommended option clears the bar.
 - If `$ARGUMENTS` is already well-understood or trivial, say so and skip to the decision rather
   than manufacturing an interview — over-processing a clear call is its own failure.
 - Don't ask the user to do your analysis. If a question would make them reconstruct what you

@@ -9,7 +9,7 @@ user-invocable: true
 
 Drive a systematic campaign against nondeterministic test failures through
 **reproduce → diagnose → fix → quarantine**, honoring the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). You are the orchestrator:
+(`references/collaboration.md`). You are the orchestrator:
 **you do not write code or tests yourself — you delegate all writes to `rust-builder`.**
 Gate with `AskUserQuestion` only at phase boundaries and genuine forks — decide
 tactical calls yourself, state choice + one-line rationale.
@@ -25,7 +25,7 @@ restate the target and confirm with the user before proceeding.
 **Recall first:** `/recall <test/area>` (or reuse the session-start memory index if it already
 surfaced this area) — was this test flaky before? Known flake sources bind the diagnosis; say
 when a recalled note changes the approach. If nothing surfaces, proceed
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 
 1. Spawn **`rust-scout`** to locate the test(s) and any setup/teardown fixtures that
    might be implicated. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`)
@@ -80,7 +80,7 @@ when a recalled note changes the approach. If nothing surfaces, proceed
      a regression case.
 8. `AskUserQuestion`: show the diagnosis, the options, and the recommended fix; get
    explicit approval before any code is written. Reference
-   `${CLAUDE_PLUGIN_ROOT}/rules/testing.md` for studio testing standards.
+   `references/testing.md` for studio testing standards.
 
 ## Phase 4 — Fix
 
@@ -127,7 +127,7 @@ quarantine the test rather than leaving it silently broken:
     End with **COMPLETE / NEEDS WORK / BLOCKED**.
     **Persist what settled:** a root-caused flake is a canonical durable gotcha — sweep agent
     verdicts for `MEMORY:` lines and `/remember` each (it dedups); `/remember` the flake class +
-    cure too — or state "nothing durable" (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+    cure too — or state "nothing durable" (`references/memory-protocol.md`).
 17. Suggest next steps: `/review` to audit the full diff, `/dev-task` if the fix requires
     a larger refactor (e.g. introducing a `Clock` abstraction across many callers), or
     `/perf` if the isolation change touches hot paths.

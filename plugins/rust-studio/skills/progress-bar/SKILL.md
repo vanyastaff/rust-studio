@@ -7,6 +7,10 @@ user-invocable: true
 
 # /progress-bar — manage the live status line
 
+> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
+> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
+> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
+
 The studio already customizes **per-sub-agent rows** in the agent panel automatically (shipped in
 the plugin `settings.json` as `subagentStatusLine`), and the **main status bar** (`statusLine`) is
 **auto-installed into your `~/.claude/settings.json` on the first session** (the `statusline`

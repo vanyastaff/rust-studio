@@ -12,7 +12,7 @@ Run `cargo-mutants`, treat every missed mutant as a concrete "this bug would shi
 finding, and close the ones that matter with targeted assertions. You are the
 orchestrator: **you do not write tests yourself — you delegate writes to
 `rust-builder`.** Honor the collaboration protocol
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+(`references/collaboration.md`).
 
 Sibling skills: `/coverage` finds code no test executes; `/mutants` finds code tests
 execute but don't check; `/fuzz` finds inputs nobody wrote a test for.
@@ -54,7 +54,7 @@ and **say which scope you chose**; do not silently mutate the world.
 
 6. **Recall first:** `/recall mutation testing <scope>` — previously accepted misses
    (owned risks) must not be re-litigated every run; say when a recalled note changes
-   the triage (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+   the triage (`references/memory-protocol.md`).
 7. Rank missed mutants by behavioral risk, not by count:
    - **High**: mutations in error handling (`Ok`↔`Err` swaps, deleted `?`), boundary
      arithmetic (`<`↔`<=`, `+`↔`-`), match-arm deletions in state machines, anything in
@@ -100,7 +100,7 @@ and **say which scope you chose**; do not silently mutate the world.
       before/after for the chosen scope.
     - Findings closed vs. explicitly accepted (with reasons).
     - Evidence: paste the final `cargo mutants` summary line.
-13. Honesty bar (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`): report the
+13. Honesty bar (`references/integrity-and-evidence.md`): report the
     score **for the scope actually mutated** — a 95% score on one file is not "95%
     mutation coverage". Do not chase 100%: killing formatting-mutants is vanity;
     killing error-path mutants is the job.

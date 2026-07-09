@@ -8,7 +8,7 @@ user-invocable: true
 # /security-audit — run a security audit
 
 Run the full security audit pipeline through **scope → scan → review → report → fix**,
-honoring the collaboration protocol (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`).
+honoring the collaboration protocol (`references/collaboration.md`).
 You are the orchestrator: **you do not write fixes yourself — you delegate writes to
 `rust-builder`.** Gate with `AskUserQuestion` only at phase boundaries (triage, fix
 authorization, BLOCKED recovery) — decide tactical calls yourself, state choice + one-line
@@ -118,7 +118,7 @@ this explicitly. `release-lead` must acknowledge before shipping.
 positives) on `MEMORY:` lines in its verdicts — it is read-only and cannot write the
 vault. Sweep every verdict for `MEMORY:` lines and run `/remember` for each (it
 dedups); state "nothing durable" if none
-(`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
+(`references/memory-protocol.md`).
 
 End with **COMPLETE / NEEDS WORK / BLOCKED**:
 

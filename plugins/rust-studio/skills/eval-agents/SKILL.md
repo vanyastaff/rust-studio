@@ -7,10 +7,14 @@ user-invocable: true
 
 # /eval-agents — does the studio actually catch bugs?
 
+> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
+> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
+> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
+
 Run the studio's review agents against the planted-defect fixtures in
 `${CLAUDE_PLUGIN_ROOT}/benchmarks/` and score recall against ground truth. This tests the
 *studio itself* — quality assurance for the plugin, not the user's code.
-Protocol: `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §8 (team execution).
+Protocol: `references/delegation.md` §8 (team execution).
 
 ## Orchestration
 When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the fixtures as a
