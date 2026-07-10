@@ -1,8 +1,6 @@
 ---
 name: coverage
-description: "coverage report gaps llvm-cov tarpaulin — measure test coverage, surface meaningful uncovered paths, and close them with targeted tests."
-argument-hint: "[optional package]"
-user-invocable: true
+description: "Use when measuring Rust coverage with llvm-cov or tarpaulin, finding meaningful gaps, and adding targeted tests."
 ---
 
 # /coverage — measure coverage and close meaningful gaps
@@ -14,7 +12,7 @@ Honor the collaboration protocol (`references/collaboration.md`).
 
 ## Input
 
-`$ARGUMENTS` may be a package name (`-p my-crate`) or empty (whole workspace). If
+`input` may be a package name (`-p my-crate`) or empty (whole workspace). If
 empty, run coverage on the full workspace; if the workspace is large (>10 crates),
 default to `--all` but note the scope and proceed — do not stop to ask.
 
@@ -65,7 +63,7 @@ default to `--all` but note the scope and proceed — do not stop to ask.
 
 ## Phase 4 — Decision gate
 
-8. `AskUserQuestion`: show the ranked gaps and `qa-lead`'s proposed test stubs. Ask:
+8. Prompt the user: show the ranked gaps and `qa-lead`'s proposed test stubs. Ask:
    - Which gaps to address in this session?
    - Accept the default priority order, or reprioritize?
    - Any gaps to explicitly skip (e.g. "we own this risk")?

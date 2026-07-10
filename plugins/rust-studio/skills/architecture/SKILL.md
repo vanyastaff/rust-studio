@@ -1,8 +1,6 @@
 ---
 name: architecture
-description: "Design or revise module/crate architecture — boundaries, dependency direction, key types, and an architecture doc. Drives map → decide → record → hand off via chief-architect."
-argument-hint: "[scope/goal]"
-user-invocable: true
+description: "Use when designing Rust crate or module boundaries, dependency direction, key types, and architecture docs."
 ---
 
 # /architecture — design or revise the crate/module structure
@@ -17,7 +15,7 @@ over reinvent, structural invariants over caller discipline, and a forward-looki
 not just a one-line trade-off. The Pre-code Maintainer Gate (Phase 2.5) runs ON TOP OF `ARCH-GATE`.
 
 ## Input
-`$ARGUMENTS` is the scope or goal. If it names a crate, module, or feature, start there. If it
+`input` is the scope or goal. If it names a crate, module, or feature, start there. If it
 names a path, read that file as the brief. If empty, ask: "What are we designing — a new crate,
 a module reorganization, or a specific subsystem?" and, for greenfield work, suggest describing
 the key use-cases before proceeding.
@@ -79,7 +77,7 @@ proceed (`references/memory-protocol.md`).
    missing decision/evidence. Only an `ACCEPTABLE` (or knowingly-accepted-tradeoff) verdict proceeds.
 
 ## Phase 3 — Decide (gate)
-8. `AskUserQuestion`: show the decision list and options; get explicit choices before any draft
+8. Prompt the user: show the decision list and options; get explicit choices before any draft
    is produced. Batch all open decisions into one ask. If the user defers a decision, record it
    as `OPEN` and proceed only with the settled ones.
 9. If a decision requires an Architecture Decision Record, note it here — it will be written in
@@ -98,9 +96,9 @@ proceed (`references/memory-protocol.md`).
 12. For each decision marked for an ADR in Phase 3, spawn `/adr` with the decision context,
     options, and chosen outcome. Do not write ADRs inline — delegate to the `/adr` skill.
 13. Present the finished architecture draft as the terminal "here's the plan — build it?" gate
-    for the user to approve using native plan mode (on approval the user transitions into an edit
-    mode). Keep `AskUserQuestion` for the earlier option forks (the Phase 3 decision gate), not
-    for this final go-ahead. If approved, delegate to **`rust-builder`** to write
+    for the user to approve through the host's plan surface when available, or in the conversation
+    otherwise. Reserve user prompts for the earlier option forks (the Phase 3 decision gate). If
+    approved, delegate to **`rust-builder`** to write
     `docs/architecture.md` in the project (using `references/templates/architecture.md`
     as the template) from the approved draft. The builder must not add content beyond what was approved in Phase 4.
 14. Show the committed doc path and a diff summary.
@@ -115,7 +113,7 @@ proceed (`references/memory-protocol.md`).
 16. If `ARCH-GATE` returns **NEEDS WORK**, list the specific gaps, hand them back to
     `chief-architect` for revision (loop to Phase 4), and re-run the gate.
 17. If `ARCH-GATE` returns **BLOCKED** (e.g. an open external dependency), surface the blocker,
-    do not proceed, and `AskUserQuestion` with options: (a) defer and document the gap, (b) scope
+    do not proceed, and prompt the user with options: (a) defer and document the gap, (b) scope
     down to what is unblocked, (c) resolve the dependency first.
 
 ## Phase 7 — Hand off
@@ -134,6 +132,6 @@ proceed (`references/memory-protocol.md`).
 
 ## Error recovery
 If any sub-agent returns **BLOCKED** (missing context, unresolved dependency, conflicting
-constraints): surface it immediately, do not proceed past the blocked item, and `AskUserQuestion`
+constraints): surface it immediately, do not proceed past the blocked item, and prompt the user
 with options — (a) narrow scope and continue, (b) gather missing context and retry, (c) stop and
 resolve the prerequisite. Never discard completed phases.

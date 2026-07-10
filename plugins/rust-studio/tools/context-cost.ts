@@ -213,11 +213,19 @@ function scanTranscript(path: string): { stats: HookStat[]; turns: number } {
 }
 
 function autoTranscript(): string | null {
-  const dir = join(homedir(), ".claude", "projects", "C--Users-vanya-rust-studio");
+  const projectsDir = join(homedir(), ".claude", "projects");
   try {
-    const files = readdirSync(dir)
-      .filter((f) => f.endsWith(".jsonl"))
-      .map((f) => ({ f: join(dir, f), s: statSync(join(dir, f)).size }))
+    const files = readdirSync(projectsDir)
+      .flatMap((project) => {
+        const dir = join(projectsDir, project);
+        try {
+          return readdirSync(dir)
+            .filter((file) => file.endsWith(".jsonl"))
+            .map((file) => ({ f: join(dir, file), s: statSync(join(dir, file)).size }));
+        } catch {
+          return [];
+        }
+      })
       .sort((a, b) => b.s - a.s);
     return files.length ? files[0].f : null;
   } catch {

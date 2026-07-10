@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Perf"
+  short_description: "Hardening Rust performance, concurrency, or unsafe code from"
+  default_prompt: "Use $team-perf when hardening Rust performance, concurrency, or unsafe code from baseline through validated sign-off."

@@ -1,8 +1,6 @@
 ---
 name: team-api
-description: "api design ship public surface — design and ship a public Rust API end-to-end with the API team: api-design-lead, api-designer, error-architect, docs-engineer, and test-engineer — through design, build, docs, and a semver/API review. Use to add or change a crate's public surface."
-argument-hint: "[the API/feature to design, e.g. 'a streaming Decoder type']"
-user-invocable: true
+description: "Use when designing and shipping a Rust public API with implementation, docs, tests, and semver review."
 ---
 
 # /team-api — design & ship a public API
@@ -13,24 +11,17 @@ not permission loops) — decide tactical calls yourself with a one-line rationa
 Protocol: `references/delegation.md` (§8 team execution).
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`references/delegation.md` §8**
-(implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
-shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
-single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
-into the spawn prompt.
-
-Keep the **task list live** when `progress_tracking` is on (`${user_config.progress_tracking}`,
-default on): one `TaskCreate` per phase up front, flip to `in_progress` before each phase and
-`completed` the moment it yields a result (surfaced in one line) so the user sees intermediate
-progress, not a final dump. Foreground the phase being waited on. Off → no task-list narration.
+Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
+Use workers and a native task surface when available; otherwise run each named role inline and
+keep a concise checklist. Surface every phase result in one line before advancing.
 
 ## Team composition
 `api-design-lead` (owns API-GATE) · `api-designer` · `error-architect` · `docs-engineer`
 · `test-engineer` · `rust-builder` (writes) · `rust-reviewer` (audit).
 
-Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1 → 2 → 3 → 4
-→ 5); assign each to its owning agent with `TaskUpdate owner`. Teammates report results via
-`SendMessage`; the lead synthesizes and advances the chain.
+Represent phases 1 → 2 → 3 → 4 → 5 in the host's task surface when available and assign each to
+its owning role. Collect worker results through the host's result channel; the lead synthesizes
+and advances the chain.
 
 ## Phase 1 — Design
 - **Recall first:** `/recall <API area>` (or reuse the session-start memory index) and paste
@@ -41,14 +32,14 @@ Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1
   draft the surface: types, traits (sealed?), method signatures, ownership/borrowing at the
   boundary, `#[non_exhaustive]` choices, and the error type.
 - Present **2–4 API options** with trade-offs (ergonomics vs. flexibility vs. semver cost).
-- **Gate:** `AskUserQuestion` — choose the shape before anything is written. This is a
+- **Gate:** prompt the user — choose the shape before anything is written. This is a
   genuine direction-changing fork; batch all design questions into one ask.
 
 ## Phase 2 — Architecture check (blocked by 1)
 - `api-design-lead` confirms boundaries with `chief-architect` if the API spans crates or
   affects layering. Record an ADR (`/adr`) for non-trivial decisions.
 - Draft the API design doc (`references/templates/api-design-doc.md`).
-- **Gate:** `AskUserQuestion` — approve the design doc before build begins.
+- **Gate:** prompt the user — approve the design doc before build begins.
 
 ## Phase 3 — Build (blocked by 2; parallel where independent)
 - `rust-builder` implements the surface + the error type (all writes go through it). Public
@@ -72,10 +63,9 @@ Create one task per phase via `TaskCreate` and chain them with `addBlockedBy` (1
   "nothing durable" (`references/memory-protocol.md`).
 - Verdict **COMPLETE / NEEDS WORK / BLOCKED**. Next steps: `/api-review` before release,
   `/changelog`, `/publish`.
-- If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`
-  (no `TeamDelete` — the team is implicit).
+- Close workers through the host's lifecycle API when one exists.
 
 ## Error recovery
 Any agent returns **BLOCKED** → surface it, don't proceed past it (its dependent tasks stay
-blocked), `AskUserQuestion` (skip & note / retry narrower / stop and run the prerequisite).
+blocked), prompt the user (skip & note / retry narrower / stop and run the prerequisite).
 Keep completed work.

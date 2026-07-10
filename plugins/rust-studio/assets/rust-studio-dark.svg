@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Rust Code Studio</title>
+  <desc id="desc">An orange letter R built as a precise engineering mark, transparent for dark surfaces.</desc>
+  <path d="M124 112h164c72 0 116 38 116 98 0 43-23 75-65 90l72 100h-92l-59-78h-54v78h-82V112Zm82 66v74h76c26 0 40-13 40-37s-14-37-40-37h-76Z" fill="#F46623"/>
+</svg>

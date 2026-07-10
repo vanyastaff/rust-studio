@@ -1,7 +1,6 @@
 ---
 name: test-setup
-description: Wire up the test toolchain with test-engineer — proptest, criterion, nextest, and coverage.
-user-invocable: true
+description: "Use when setting up a Rust test toolchain with proptest, Criterion, nextest, and coverage."
 ---
 
 # /test-setup — wire up the test toolchain
@@ -9,13 +8,13 @@ user-invocable: true
 Bootstrap the project's testing infrastructure end-to-end: property tests, benchmarks,
 snapshot tests (optional), a nextest runner config, and a coverage path via
 `cargo-llvm-cov`. You are the orchestrator: **you do not write files yourself — you
-delegate all writes to `rust-builder`.** Gate with `AskUserQuestion` only at phase
+delegate all writes to `rust-builder`.** Gate with a user prompt only at phase
 boundaries (scope, plan approval, BLOCKED recovery) — decide tactical calls yourself,
 state choice + one-line rationale. See `references/collaboration.md`.
 
 ## Phase 1 — Clarify scope
 
-1. `AskUserQuestion` (batch in one ask):
+1. Prompt the user (batch in one ask):
    - Which crates/workspace members need test infrastructure?
    - Is `insta` (snapshot testing) wanted, or proptest + criterion only?
    - What coverage threshold should CI enforce (e.g. 80 %)?
@@ -49,7 +48,7 @@ state choice + one-line rationale. See `references/collaboration.md`.
 
 ## Phase 3 — Approve (gate)
 
-5. `AskUserQuestion`: show `test-engineer`'s plan as a structured list (deps to add,
+5. Prompt the user: show `test-engineer`'s plan as a structured list (deps to add,
    files to create, config to write). Get explicit sign-off before any file is touched.
    If the user requests changes, loop back to Phase 2.
 
@@ -100,6 +99,6 @@ state choice + one-line rationale. See `references/collaboration.md`.
 
 If **`rust-builder`** is BLOCKED (e.g. a workspace feature flag prevents `criterion`
 from building, or `cargo-llvm-cov` is not installed), surface the blocker immediately.
-Do not proceed past it. `AskUserQuestion` with options: (a) resolve the prerequisite
+Do not proceed past it. Prompt the user with options: (a) resolve the prerequisite
 (`cargo install cargo-llvm-cov`), (b) skip that tool and note the gap, or (c) stop.
 Never discard work that already landed cleanly.

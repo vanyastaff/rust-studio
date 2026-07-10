@@ -1,8 +1,6 @@
 ---
 name: flaky-hunt
-description: "flaky test hunt fix nondeterministic — reproduce, diagnose, fix or quarantine a flaky test. Use for any intermittent/nondeterministic test failure."
-argument-hint: "[optional test filter]"
-user-invocable: true
+description: "Use when reproducing, diagnosing, and fixing or quarantining an intermittent Rust test failure."
 ---
 
 # /flaky-hunt — hunt and fix flaky tests
@@ -11,12 +9,12 @@ Drive a systematic campaign against nondeterministic test failures through
 **reproduce → diagnose → fix → quarantine**, honoring the collaboration protocol
 (`references/collaboration.md`). You are the orchestrator:
 **you do not write code or tests yourself — you delegate all writes to `rust-builder`.**
-Gate with `AskUserQuestion` only at phase boundaries and genuine forks — decide
+Gate with a user prompt only at phase boundaries and genuine forks — decide
 tactical calls yourself, state choice + one-line rationale.
 
 ## Input
 
-`$ARGUMENTS` is an optional test filter (e.g. `my_module::my_test`, a path, or a
+`input` is an optional test filter (e.g. `my_module::my_test`, a path, or a
 `#[test]` name). If empty, hunt across the whole suite. If the scope looks ambiguous,
 restate the target and confirm with the user before proceeding.
 
@@ -41,7 +39,7 @@ when a recalled note changes the approach. If nothing surfaces, proceed
    PROPTEST_CASES=500 cargo nextest run [filter]
    ```
 4. Record: failure rate, error message, stack trace, and any seed printed.
-   If the test never fails within 10 runs, `AskUserQuestion`: report the failure rate and
+   If the test never fails within 10 runs, prompt the user: report the failure rate and
    ask whether to stop or continue with a higher iteration count (CI-only or load-sensitive
    flakiness is common; the user's call is load-bearing).
 
@@ -61,7 +59,7 @@ when a recalled note changes the approach. If nothing surfaces, proceed
 
 6. `test-engineer` emits a diagnosis: the nondeterminism class, the exact
    expression(s) responsible, and a confidence level (HIGH / MEDIUM / LOW).
-   If confidence is LOW, `AskUserQuestion`: share the hypothesis and ask whether to
+   If confidence is LOW, prompt the user: share the hypothesis and ask whether to
    proceed with the proposed fix or investigate further — a LOW-confidence fix that
    fails to eliminate the flakiness wastes a full verify cycle.
 
@@ -78,7 +76,7 @@ when a recalled note changes the approach. If nothing surfaces, proceed
    - **Proper tempdir** — replace hard-coded paths with `tempfile::TempDir`.
    - **Pin proptest seed** — add `#[proptest(cases = 256)]` and record the failing seed as
      a regression case.
-8. `AskUserQuestion`: show the diagnosis, the options, and the recommended fix; get
+8. Prompt the user: show the diagnosis, the options, and the recommended fix; get
    explicit approval before any code is written. Reference
    `references/testing.md` for studio testing standards.
 
@@ -111,7 +109,7 @@ when a recalled note changes the approach. If nothing surfaces, proceed
 If the fix is blocked (e.g. requires upstream change, wide refactor, or design decision),
 quarantine the test rather than leaving it silently broken:
 
-13. `AskUserQuestion`: confirm the quarantine plan — this is an intentional deferral that
+13. Prompt the user: confirm the quarantine plan — this is an intentional deferral that
     should be tracked, not an automatic fallback.
 14. Delegate to **`rust-builder`** to add `#[ignore = "<issue-url>: <reason>"]` to the
     test and emit a `// TODO(flaky):` comment with the diagnosis.
@@ -135,6 +133,6 @@ quarantine the test rather than leaving it silently broken:
 ## Error recovery
 
 If any sub-agent returns **BLOCKED**: surface it immediately, do not proceed, and
-`AskUserQuestion` with options — (a) quarantine the test and track with an issue,
+Prompt the user with options — (a) quarantine the test and track with an issue,
 (b) retry with a narrower scope, (c) escalate to `/dev-task` for the prerequisite
 refactor. Never discard completed reproduction evidence.

@@ -1,8 +1,6 @@
 ---
 name: scope-check
-description: "scope check creep guard — compare diff or plan against acceptance criteria, flag over-scope / under-scope, and surface a verdict via product-steward."
-argument-hint: "[story/plan]"
-user-invocable: true
+description: "Use when comparing a Rust diff or plan with acceptance criteria to flag over-scope, under-scope, or creep."
 ---
 
 # /scope-check — guard a change against its stated scope
@@ -22,12 +20,12 @@ as over-scope, and do not let a junior shim survive just because it was "minimal
 
 ## Input
 
-`$ARGUMENTS` is the story, plan text, or a path to a story/plan file. If empty, or if a git
-ref is also needed, batch both into a single `AskUserQuestion` before proceeding.
+`input` is the story, plan text, or a path to a story/plan file. If empty, or if a git
+ref is also needed, batch both into a single user prompt before proceeding.
 
 ## Phase 1 — Gather context
 
-1. Resolve the acceptance criteria. If `$ARGUMENTS` is a path, read that file and extract
+1. Resolve the acceptance criteria. If `input` is a path, read that file and extract
    the criteria. If it is inline text, parse them as a bulleted list. If criteria are absent
    or ambiguous, surface what you found and ask the user to confirm or supply them — this is
    a genuine fork; do not guess.
@@ -61,12 +59,12 @@ ref is also needed, batch both into a single `AskUserQuestion` before proceeding
    - **split** — worth doing but belongs in a separate story; `product-steward` drafts the
      new story shell (title + criteria stub) for the user to confirm.
    - **revert** — noise or risk; hand to `rust-builder` via `/dev-task` to remove.
-7. `AskUserQuestion`: batch all ADDED items into one ask; get an explicit decision for each
+7. Prompt the user: batch all ADDED items into one ask; get an explicit decision for each
    before any action is taken. This is a direction-changing fork — do not auto-decide.
 
 ## Phase 4 — Handle missing coverage
 
-8. For MISSING items, batch all dispositions into one `AskUserQuestion`: for each, should it be:
+8. For MISSING items, batch all dispositions into one user prompt: for each, should it be:
    - **addressed in this PR** — hand to `rust-builder` via `/dev-task` with the approved
      acceptance criterion as the task; run `/review` afterward.
    - **deferred** — note it as a known gap; `product-steward` may add a follow-on story
@@ -104,7 +102,7 @@ Skip any section with zero items. No padding, no praise.
 ## Error recovery
 
 If `product-steward` returns **BLOCKED** (criteria unreadable, diff unavailable, story
-missing), surface the blocker immediately and `AskUserQuestion` with options:
+missing), surface the blocker immediately and prompt the user with options:
 - (a) supply the missing artifact and retry,
 - (b) proceed with the partial information it does have,
 - (c) stop.

@@ -1,8 +1,6 @@
 ---
 name: recall
-description: "recall memory decision gotcha convention fix — surface prior project learnings: search the shared Obsidian vault (obsidian MCP) for decisions, gotchas, conventions, and fixes on a topic. Use before implementing in an area or making a decision."
-argument-hint: "[topic or area]"
-user-invocable: true
+description: "Use when starting related work to recall project decisions, gotchas, conventions, and fixes from Obsidian."
 ---
 
 # /recall — retrieve project memory
@@ -18,7 +16,7 @@ Pull relevant past learnings into context so work compounds instead of repeating
   the index is `<vault>/projects/<project>/MEMORY.md`. Read through the **obsidian** MCP.
 
 ## Steps
-1. If `$ARGUMENTS` is empty, `note_read` the project index `<vault>/projects/<project>/MEMORY.md`
+1. If `input` is empty, `note_read` the project index `<vault>/projects/<project>/MEMORY.md`
    and summarize what's there (most-relevant first).
 2. Otherwise **rank-search the project folder**, semantic-first, and fuse the signals:
    - **`search_semantic`** (PRIMARY) — meaning-based, finds the note even when wording differs.

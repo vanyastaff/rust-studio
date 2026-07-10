@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flaky Hunt"
+  short_description: "Reproducing, diagnosing, and fixing or quarantining an"
+  default_prompt: "Use $flaky-hunt when reproducing, diagnosing, and fixing or quarantining an intermittent Rust test failure."

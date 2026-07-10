@@ -1,17 +1,16 @@
 ---
 name: help
-description: "List the studio's agents and skills grouped by purpose — the catalog. Use when you want the full list or aren't sure which skill or agent fits a task."
-user-invocable: true
+description: "Use when choosing a Rust Code Studio workflow or specialist; list the available skills and agents by purpose."
 ---
 
 # /help — studio catalog
 
-> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
-> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
-> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
-
-Print a grouped catalog. If `$ARGUMENTS` names a topic (e.g. "async", "release",
+Print a grouped catalog. If `input` names a topic (e.g. "async", "release",
 "unsafe", "memory"), show only the relevant subset and the agents/skills for it.
+
+Treat the host's available-skills list as the live source of truth. Use the curated map below for
+grouping, omit unavailable entries, and mention that named studio agents run inline when the host
+does not provide them.
 
 ## Skills — by purpose
 
@@ -32,12 +31,6 @@ list of every installed skill is generated below it.
 **Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback)
 **Teams (multi-agent presets):** `/team-api` · `/team-async` · `/team-perf` · `/team-release`
 
-### Every installed skill (generated, can't drift)
-
-```!
-bun "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/list-skills.ts"
-```
-
 ## Agents
 
 **Directors:** `chief-architect` (ARCH-GATE) · `product-steward`
@@ -47,6 +40,7 @@ bun "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/list-skills.ts"
 
 ## How it fits together
 See `references/agent-roster.md` for who-owns-what,
+`references/sub-agents.md` for the inline fallback on hosts without named studio agents,
 `references/coordination-protocol.md` for the gates and the autonomy-first
 protocol, and `references/working-preferences.md` for the operating mode
 (decide-don't-interrogate, no quick wins, modern idioms, observability-as-DoD). Path-scoped

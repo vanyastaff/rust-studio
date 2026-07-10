@@ -1,8 +1,6 @@
 ---
 name: msrv-check
-description: "msrv rust-version minimum supported Rust version verify pin check — determine the real MSRV, compare to declared rust-version in Cargo.toml, flag deps that raise it, feed the RELEASE-GATE. Use before a release or whenever a dependency changes."
-argument-hint: "[optional version]"
-user-invocable: true
+description: "Use when verifying a crate's real MSRV, declared rust-version, or dependencies that raise it."
 ---
 
 # /msrv-check — verify and pin the minimum supported Rust version
@@ -10,12 +8,12 @@ user-invocable: true
 Determine the real MSRV, compare it to the declared `rust-version` in `Cargo.toml`, and
 produce a concrete update recommendation. You are the orchestrator — you do not write files
 directly; all manifest edits are delegated to `rust-builder`. Decide tactical calls
-yourself; `AskUserQuestion` only at genuine forks and before outward/irreversible actions
+yourself; use a user prompt only at genuine forks and before outward/irreversible actions
 (see `references/collaboration.md` §1).
 
 ## Input
 
-`$ARGUMENTS` may be an explicit Rust version (e.g. `1.75`). If provided, use it as the
+`input` may be an explicit Rust version (e.g. `1.75`). If provided, use it as the
 target floor instead of auto-detecting. If empty, proceed with auto-detection.
 
 ## Phase 1 — Locate and read the manifest
@@ -78,7 +76,7 @@ Present the findings:
 
 If declared == effective, state so and stop — no changes needed.
 
-If they differ, `AskUserQuestion` with 2–4 options:
+If they differ, prompt the user with 2–4 options:
 
 1. **Update `rust-version` to `<effective>`** (recommended) — keeps the manifest honest.
 2. **Pin or downgrade the offending dep(s)** — if you need a lower floor.
@@ -130,8 +128,8 @@ If any check failed, end with **NEEDS WORK** and list the blockers. If all passe
 ## Error recovery
 
 - If `cargo-msrv` is not installed and no toolchains are available for bisection,
-  `AskUserQuestion`: (a) install `cargo-msrv` (`cargo install cargo-msrv`), (b) install a
-  specific toolchain via `rustup`, or (c) accept a manually supplied version as `$ARGUMENTS`.
+  Prompt the user: (a) install `cargo-msrv` (`cargo install cargo-msrv`), (b) install a
+  specific toolchain via `rustup`, or (c) accept a manually supplied version as `input`.
 - If `rust-builder` returns **BLOCKED** (e.g. a workspace dep lacks a compatible release),
   surface the blocker and offer to run `/dev-task` to address the dependency upgrade
   separately. Never discard the MSRV-check findings.

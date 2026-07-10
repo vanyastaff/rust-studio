@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Plan"
+  short_description: "Producing a Rust feature test plan covering test types, cases,"
+  default_prompt: "Use $test-plan when producing a Rust feature test plan covering test types, cases, edge cases, and property laws."

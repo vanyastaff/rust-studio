@@ -1,15 +1,12 @@
 ---
 name: env-setup
-description: "env setup bootstrap machine install rust rustup toolchain binstall cargo tools OS packages — provision a development machine for the studio: OS build prerequisites, latest stable Rust via rustup (+ components), cargo-binstall, and the studio's cargo tool suite installed from prebuilt binaries. Use on a fresh machine, after a distro reinstall, or when a studio skill reports a missing tool."
-argument-hint: "[check | core | full]  (default: check, then offer to install)"
-user-invocable: true
+description: "Use when provisioning a Rust machine with OS prerequisites, rustup, components, cargo-binstall, and studio tools."
 ---
 
 # /env-setup — provision the machine for Rust + the studio tool suite
 
-> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
-> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
-> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
+> **Portable.** The provisioning script ships inside this skill. Resolve paths relative to this
+> skill directory; do not assume a plugin root or a particular agent host.
 
 Bring a machine from "has a shell" to "every studio skill's tool is on PATH": OS build
 prerequisites → rustup + latest stable → toolchain components → `cargo-binstall` →
@@ -17,7 +14,9 @@ cargo tools as **prebuilt binaries** (compiling 20 tools from source takes an ho
 binstall takes minutes). This skill touches the **system**, not the repo — no
 `rust-builder`. The mechanical work lives in one idempotent script:
 
-    bash "${CLAUDE_PLUGIN_ROOT}/scripts/env-setup.sh" --help
+If the host has no studio subagents, follow `references/sub-agents.md` and run each role inline.
+
+    bash "scripts/env-setup.sh" --help
 
 **The script is the single source of truth** for the tool tiers, package names per
 platform, and install commands — read it before explaining, don't restate lists from
@@ -26,19 +25,19 @@ Rust toolchain" table). It refuses to run as root; OS packages are its one `sudo
 
 ## Phase 1 — Detect (read-only, always)
 
-1. Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/env-setup.sh" --check` — prints the platform,
+1. Run `bash "scripts/env-setup.sh" --check` from the skill directory — prints the platform,
    rustup/rustc/binstall state, and an installed/missing table for all three tiers
    (core / deep-quality+perf / QoL). Mutates nothing.
 2. Flag a **distro-packaged Rust** if the report warns about it (`rustc` without rustup):
    it lags stable. rustup puts `~/.cargo/bin` first on PATH, which normally shadows it —
    prefer shadowing; recommend removing the distro package only if it still wins after
    install (removal can cascade to dependents).
-3. Show the table. If `$ARGUMENTS` is `check` or empty, stop after offering: install
+3. Show the table. If `input` is `check` or empty, stop after offering: install
    `core`, `full`, or nothing.
 
 ## Phase 2 — Scope (gate)
 
-`AskUserQuestion` (skip what `$ARGUMENTS` already decided; batch the rest in one ask):
+Prompt the user (skip what `input` already decided; batch the rest in one ask):
 - **Tier:** `core` (what the everyday skills need: `/verify-loop`, `/coverage`,
   `/deps-check`, `/security-audit`, `/msrv-check`, `/api-review`) or `full` (adds the
   deep-quality/perf tier: `/mutants`, `/fuzz`, `/bloat`, `/perf`).
@@ -53,7 +52,7 @@ Rust toolchain" table). It refuses to run as root; OS packages are its one `sudo
 
 Run the script once with the chosen flags, e.g.:
 
-    bash "${CLAUDE_PLUGIN_ROOT}/scripts/env-setup.sh" --full --qol --nightly --os-deps --yes
+    bash "scripts/env-setup.sh" --full --qol --nightly --os-deps --yes
 
 `--yes` is appropriate because Phase 2 already was the consent; without it the script
 prompts on its own stdin, which does not work inside the harness. It prints every

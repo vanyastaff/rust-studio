@@ -1,0 +1,49 @@
+{
+  "name": "rust-studio",
+  "version": "0.30.0",
+  "description": "A maintainer-grade Rust engineering studio with 55 focused skills for architecture, implementation, review, testing, performance, security, and release work.",
+  "author": {
+    "name": "Rust Studio contributors",
+    "url": "https://github.com/vanyastaff/rust-studio"
+  },
+  "homepage": "https://github.com/vanyastaff/rust-studio",
+  "repository": "https://github.com/vanyastaff/rust-studio",
+  "license": "MIT",
+  "keywords": [
+    "rust",
+    "cargo",
+    "code-review",
+    "architecture",
+    "testing",
+    "security",
+    "performance",
+    "release"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json",
+  "interface": {
+    "displayName": "Rust Code Studio",
+    "shortDescription": "Maintainer-grade Rust workflows from design through release",
+    "longDescription": "Use Rust Code Studio to design, implement, debug, review, test, optimize, secure, and release Rust crates and workspaces through focused, evidence-driven workflows.",
+    "developerName": "Rust Studio contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/vanyastaff/rust-studio",
+    "privacyPolicyURL": "https://github.com/vanyastaff/rust-studio/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/vanyastaff/rust-studio/blob/main/TERMS.md",
+    "defaultPrompt": [
+      "Use Rust Code Studio to review this Rust change.",
+      "Use Rust Code Studio to implement this Rust task.",
+      "Use Rust Code Studio to prepare this crate for release."
+    ],
+    "brandColor": "#F46623",
+    "composerIcon": "./assets/rust-studio-small.svg",
+    "logo": "./assets/rust-studio.svg",
+    "logoDark": "./assets/rust-studio-dark.svg",
+    "screenshots": []
+  }
+}

@@ -1,8 +1,6 @@
 ---
 name: team-release
-description: "release publish semver bump — orchestrate the full release pipeline: security audit, dependency check, MSRV, changelog, RELEASE-GATE checklist, and a publish dry-run. Use before any crates.io publish."
-argument-hint: "[version]"
-user-invocable: true
+description: "Use when preparing a Rust release: run security, dependency, MSRV, changelog, gate, and publish dry-run checks."
 ---
 
 # /team-release — audit, document, and gate a crate release
@@ -13,33 +11,24 @@ per-step permission asks) per `references/collaboration.md` §1 and
 `references/delegation.md` §8 (team execution).
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`references/delegation.md` §8**
-(implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
-shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
-single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
-into the spawn prompt.
-
-Keep the **task list live** when `progress_tracking` is on (`${user_config.progress_tracking}`,
-default on): one `TaskCreate` per phase up front, flip to `in_progress` before each phase and
-`completed` the moment it yields a result (surfaced in one line) so the user sees intermediate
-progress, not a final dump. Foreground the phase being waited on. Off → no task-list narration.
+Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
+Use workers and a native task surface when available; otherwise run each named role inline and
+keep a concise checklist. Surface every phase result in one line before advancing.
 
 ## Team composition
 `release-lead` (owns RELEASE-GATE) · `security-auditor` · `dependency-manager` ·
 `docs-engineer` · `rust-reviewer` (audit) · `rust-builder` (writes).
 
 ## Input
-`$ARGUMENTS` is the target version (e.g. `1.2.0`). If empty, `AskUserQuestion`: "What
+`input` is the target version (e.g. `1.2.0`). If empty, prompt the user: "What
 version are you releasing? (If you don't know yet, answer 'determine' and we'll derive it
 from the API review.)"
 
 ---
 
-Create one task per phase via `TaskCreate`; chain them with `addBlockedBy` (1 → 2 → 3 → 4 →
-5) and assign each to its owning agent with `TaskUpdate owner`. Phases 2 and 3 each fan out
-into independent tracks — create them as sibling tasks (same blocker, no dependency between
-them) so they run concurrently as teammates; the lead synthesizes when all report via
-`SendMessage`.
+Represent phases 1 → 2 → 3 → 4 → 5 in the host's task surface when available and assign each to
+its owning role. Phases 2 and 3 fan out into independent tracks: run them concurrently when
+workers are available, otherwise sequentially. The lead synthesizes all results.
 
 ## Phase 1 — Semver bump determination
 
@@ -51,9 +40,9 @@ them) so they run concurrently as teammates; the lead synthesizes when all repor
   branch (vs. the last published tag). Review the output for breaking changes, additions, and
   fixes.
 - Derive the correct semver bump: **patch / minor / major** with a one-sentence rationale.
-- If `$ARGUMENTS` was supplied, confirm it matches the derived bump; flag any mismatch.
+- If `input` was supplied, confirm it matches the derived bump; flag any mismatch.
 - Present the determined version and bump type.
-- **Gate:** `AskUserQuestion` — confirm the target version before any files are touched.
+- **Gate:** prompt the user — confirm the target version before any files are touched.
   If the user disagrees, discuss the delta until aligned.
 
 ---
@@ -81,7 +70,7 @@ task per track (2a/2b/2c) so they run concurrently as teammates.
   `Cargo.toml` compiles clean on that toolchain.
 - If MSRV is absent, derive the minimum from the edition and async/feature use (state rationale); `rust-builder` adds it — no separate approval needed for a new field.
 
-- **Gate:** `AskUserQuestion` — show a combined audit summary (security / deps / MSRV).
+- **Gate:** prompt the user — show a combined audit summary (security / deps / MSRV).
   The user must explicitly accept, request fixes, or choose to proceed with noted
   exceptions. Do not advance to Phase 3 with unacknowledged HIGH/CRITICAL findings.
 
@@ -106,7 +95,7 @@ Run both tracks in parallel after audit acceptance — create one sibling task p
 - Update the crate-level `//!` doc and `README.md` version badge / feature table if
   affected.
 
-- **Gate:** `AskUserQuestion` — show the changelog draft + doc-coverage report for
+- **Gate:** prompt the user — show the changelog draft + doc-coverage report for
   approval. `rust-builder` does not write until you approve.
 
 ---
@@ -133,7 +122,7 @@ Run both tracks in parallel after audit acceptance — create one sibling task p
 - Run `cargo publish --dry-run` and paste the complete output. If it errors, diagnose and
   delegate the fix to `rust-builder` before looping.
 - `rust-reviewer` performs a final diff audit; any new findings are surfaced before Go/No-Go.
-- **Gate:** `AskUserQuestion` — show the completed checklist with evidence. Any failing row
+- **Gate:** prompt the user — show the completed checklist with evidence. Any failing row
   is a NEEDS WORK item that must be resolved or explicitly waived before proceeding.
 
 ---
@@ -162,8 +151,7 @@ git push origin v<version>
   release gotchas) too — or state "nothing durable"
   (`references/memory-protocol.md`).
 - End with verdict **COMPLETE / NEEDS WORK / BLOCKED** and the manual publish command(s).
-- If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`
-  (no `TeamDelete` — the team is implicit).
+- Close workers through the host's lifecycle API when one exists.
 
 **If NO-GO:** list every blocking issue (owner, severity, suggested fix). Completed
 work (changelog draft, doc updates) is preserved. State which phase to re-enter after
@@ -174,7 +162,7 @@ fixes.
 ## Error recovery
 
 Any agent returns **BLOCKED** → surface it immediately, do not proceed past the blocker,
-`AskUserQuestion` with options:
+Prompt the user with options:
 
 - **(a) Skip and note** — record the gap as an accepted exception; continue with reduced
   confidence.

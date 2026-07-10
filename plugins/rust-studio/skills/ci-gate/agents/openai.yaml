@@ -1,0 +1,4 @@
+interface:
+  display_name: "CI Gate"
+  short_description: "Auditing or installing Rust CI anti-hang and lint gates with"
+  default_prompt: "Use $ci-gate when auditing or installing Rust CI anti-hang and lint gates with clippy, nextest, lefthook, and timeouts."

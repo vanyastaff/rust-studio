@@ -1,9 +1,6 @@
 ---
 name: new-crate
-description: "new crate workspace member scaffold — create a crate with studio conventions: Cargo.toml metadata, lints, deny.toml, rust-toolchain, CI stub, lib.rs/main.rs."
-argument-hint: "[name] [lib|bin]"
-user-invocable: true
-disable-model-invocation: true
+description: "Use when scaffolding a Rust crate or workspace member with studio metadata, lints, policy, toolchain, and CI."
 ---
 
 # /new-crate — scaffold a workspace member
@@ -18,8 +15,8 @@ decide tactical calls yourself; gate only at phase boundaries and before file wr
 
 ## Input
 
-`$ARGUMENTS` may be `[name]`, `[name] lib`, or `[name] bin`. Parse what is given.
-Pre-fill known answers from `$ARGUMENTS`; ask only for what's genuinely missing.
+`input` may be `[name]`, `[name] lib`, or `[name] bin`. Parse what is given.
+Pre-fill known answers from `input`; ask only for what's genuinely missing.
 
 ---
 
@@ -27,9 +24,9 @@ Pre-fill known answers from `$ARGUMENTS`; ask only for what's genuinely missing.
 
 If name and crate type are both supplied, proceed directly to Phase 2 with sensible
 defaults for the remaining fields. Otherwise, batch all missing answers into **one**
-`AskUserQuestion` with clearly labeled fields:
+Prompt the user with clearly labeled fields:
 
-1. **Name** — snake_case crate name (pre-filled from `$ARGUMENTS` if provided).
+1. **Name** — snake_case crate name (pre-filled from `input` if provided).
 2. **Type** — `lib` (default) or `bin`.
 3. **Domain** — pick one; it determines deps and source shape:
    - `library` — pure API crate, no async runtime.
@@ -109,7 +106,7 @@ Fill in crate name, one-line description, license badge, and MSRV badge if appli
 
 ## Phase 4 — Approve (gate)
 
-`AskUserQuestion`: present the draft file set and ask the user to confirm or adjust.
+Prompt the user: present the draft file set and ask the user to confirm or adjust.
 Include workspace membership status. Revise and re-present if the user requests changes.
 **Do not delegate to `rust-builder` until the user gives explicit approval** — writing
 files is irreversible.
@@ -146,6 +143,6 @@ Suggest follow-on skills as appropriate:
 
 If `rust-builder` returns **BLOCKED** or a compile error:
 - Surface the error immediately.
-- `AskUserQuestion` with options: (a) fix the specific file and retry, (b) narrow scope
+- Prompt the user with options: (a) fix the specific file and retry, (b) narrow scope
   (e.g. skip the CI stub), (c) stop and diagnose manually.
 - Never discard files that were already written successfully.

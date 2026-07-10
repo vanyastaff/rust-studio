@@ -1,0 +1,6 @@
+interface:
+  display_name: "Commit"
+  short_description: "Committing one logical Rust change: run fmt and clippy, then"
+  default_prompt: "Use $commit when committing one logical Rust change: run fmt and clippy, then create a Conventional Commit."
+policy:
+  allow_implicit_invocation: false

@@ -1,8 +1,6 @@
 ---
 name: design-api
-description: "Design / api design — single public API surface (lighter than /team-api): types, traits, signatures, error type, semver impact, via api-designer and error-architect."
-argument-hint: "[type/feature]"
-user-invocable: true
+description: "Use when designing one Rust public API surface: types, traits, signatures, errors, and semver impact."
 ---
 
 # /design-api — design a focused public API surface
@@ -24,7 +22,7 @@ Maintainer Gate (Phase 2.5) runs ON TOP OF `API-GATE`.
 
 ## Input
 
-`$ARGUMENTS` is the type or feature to design. If empty, ask: "What API surface are
+`input` is the type or feature to design. If empty, ask: "What API surface are
 we designing?" and suggest running `/architecture` or `/brainstorm` first for
 non-trivial or cross-crate work (those warrant `/team-api`). If the feature involves
 multiple crates or a major breaking change, recommend `/team-api` instead.
@@ -37,7 +35,7 @@ the options and say when a recalled note changes the approach. If nothing surfac
 (`references/memory-protocol.md`).
 
 1. Restate what is being designed in one sentence. If genuinely ambiguous (not just
-   underspecified), batch all scope questions into one `AskUserQuestion`.
+   underspecified), batch all scope questions into one user prompt.
 2. Identify the consumer: internal crate, external downstream, or public crates.io
    surface — this drives semver and stability strictness. Resolve from context if
    obvious; otherwise include in the batched ask.
@@ -115,7 +113,7 @@ the options and say when a recalled note changes the approach. If nothing surfac
 
 ## Phase 3 — Decision (gate)
 
-10. `AskUserQuestion`: present the options with their trade-offs and ask the user to
+10. Prompt the user: present the options with their trade-offs and ask the user to
     choose one (or a hybrid). Do not proceed past this gate without an explicit choice.
 
 ## Phase 4 — Draft (API design doc)
@@ -143,9 +141,9 @@ the options and say when a recalled note changes the approach. If nothing surfac
 ## Phase 5 — Approval (gate)
 
 13. Present the complete draft and the semver impact statement as the terminal "here's the
-    plan — build it?" gate for the user to approve using native plan mode (on approval the
-    user transitions into an edit mode and implementation begins). Keep `AskUserQuestion`
-    for the earlier option fork (the Phase 3 decision gate), not for this final sign-off. If
+    plan — build it?" gate for the user to approve through the host's plan surface when available,
+    or in the conversation otherwise. Reserve user prompts for the earlier option fork (the Phase
+    3 decision gate). If
     the user requests changes, loop back to Phase 4 (or Phase 2 if the shape itself needs to change).
 14. Once approved, confirm the **API-GATE** checklist from
     `references/verdicts.md` is satisfied:
@@ -174,7 +172,7 @@ the options and say when a recalled note changes the approach. If nothing surfac
 
 If **`api-designer`** or **`error-architect`** returns **BLOCKED** (missing context,
 conflicting existing types, unresolved ADR), surface the blocker immediately and
-`AskUserQuestion` with options:
+Prompt the user with options:
 - (a) Resolve the blocker first (suggest `/adr` or `/architecture`).
 - (b) Narrow the scope and design a subset of the surface.
 - (c) Proceed with explicit assumptions noted in the design doc.

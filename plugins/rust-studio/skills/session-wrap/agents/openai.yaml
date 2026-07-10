@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Wrap"
+  short_description: "Closing a Rust work session: recap changes, capture durable"
+  default_prompt: "Use $session-wrap when closing a Rust work session: recap changes, capture durable learnings, and record the next step."

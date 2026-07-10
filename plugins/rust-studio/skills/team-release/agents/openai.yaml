@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Release"
+  short_description: "Preparing a Rust release: run security, dependency, MSRV,"
+  default_prompt: "Use $team-release when preparing a Rust release: run security, dependency, MSRV, changelog, gate, and publish dry-run checks."

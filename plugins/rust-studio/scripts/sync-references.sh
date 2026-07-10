@@ -82,6 +82,22 @@ for skill in skills/*/; do
   unset want
 done
 
+# Keep deterministic helper code inside the portable skill package. The plugin-level copy is the
+# source so existing plugin automation and release paths remain stable.
+asset_src=scripts/env-setup.sh
+asset_dest=skills/env-setup/scripts/env-setup.sh
+if (( check )); then
+  if ! cmp -s "$asset_src" "$asset_dest"; then
+    echo "stale: $asset_dest"
+    stale=1
+  fi
+else
+  mkdir -p "$(dirname "$asset_dest")"
+  cp "$asset_src" "$asset_dest"
+  chmod +x "$asset_dest"
+  echo "env-setup: bundled script"
+fi
+
 # A skill that names a studio sub-agent must ship the fallback for hosts that have none,
 # or it deadlocks on "delegate all writes to rust-builder" where no rust-builder exists.
 agent_re="\`($(ls agents/*.md | xargs -n1 basename | sed 's/\.md$//' | paste -sd'|'))\`"

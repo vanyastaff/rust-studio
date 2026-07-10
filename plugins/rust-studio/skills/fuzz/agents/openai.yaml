@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fuzz"
+  short_description: "Fuzzing Rust parsers, decoders, or unsafe boundaries; minimize"
+  default_prompt: "Use $fuzz when fuzzing Rust parsers, decoders, or unsafe boundaries; minimize crashes into regression tests."

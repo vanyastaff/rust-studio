@@ -1,0 +1,6 @@
+interface:
+  display_name: "PR"
+  short_description: "Pushing committed Rust work and opening a pull request with a"
+  default_prompt: "Use $pr when pushing committed Rust work and opening a pull request with a value-first description via gh."
+policy:
+  allow_implicit_invocation: false

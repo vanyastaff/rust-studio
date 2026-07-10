@@ -1,8 +1,6 @@
 ---
 name: security-audit
-description: "security audit, vulnerability, injection, secrets, RUSTSEC — review CODE for attacker-facing risk (untrusted input, injection, deserialization, auth, secret leaks) plus supply-chain advisories (cargo-audit). For dependency version/feature/license hygiene use /deps-check instead."
-argument-hint: "[optional scope: crate name, path, or focus area]"
-user-invocable: true
+description: "Use when auditing Rust code for injection, unsafe input, auth flaws, secret leaks, and RUSTSEC advisories."
 ---
 
 # /security-audit — run a security audit
@@ -10,14 +8,14 @@ user-invocable: true
 Run the full security audit pipeline through **scope → scan → review → report → fix**,
 honoring the collaboration protocol (`references/collaboration.md`).
 You are the orchestrator: **you do not write fixes yourself — you delegate writes to
-`rust-builder`.** Gate with `AskUserQuestion` only at phase boundaries (triage, fix
+`rust-builder`.** Gate with a user prompt only at phase boundaries (triage, fix
 authorization, BLOCKED recovery) — decide tactical calls yourself, state choice + one-line
 rationale.
 
 ## Input
-`$ARGUMENTS` is an optional scope — a crate name, path, or focus area (e.g. `"auth"`,
+`input` is an optional scope — a crate name, path, or focus area (e.g. `"auth"`,
 `"crates/api"`). If empty, audit the entire workspace. State the scope before starting.
-If `$ARGUMENTS` is ambiguous, ask: "Should I audit the whole workspace or a specific
+If `input` is ambiguous, ask: "Should I audit the whole workspace or a specific
 crate/area?" then proceed.
 
 ## Phase 1 — Scope & locate
@@ -76,7 +74,7 @@ path:line  🔵 INFO:     <observation — no fix required>.
 
 Skip empty severity levels — no padding, no praise.
 
-`AskUserQuestion`: show the full findings list and ask:
+Prompt the user: show the full findings list and ask:
 - Which findings should be fixed now vs. deferred?
 - Are any findings false positives to suppress?
 - Should CRITICAL/HIGH blockers hold the RELEASE-GATE?
@@ -141,5 +139,5 @@ an incomplete scan and silently declare it clean.
 
 If `security-auditor` returns **BLOCKED** (e.g. a design decision is needed about a
 vulnerable dependency), surface it immediately, do not skip the blocker, and
-`AskUserQuestion` with options — (a) defer and note the gap, (b) replace the dependency,
+Prompt the user with options — (a) defer and note the gap, (b) replace the dependency,
 (c) stop and open an ADR. Never mark the audit COMPLETE while a BLOCKED finding is live.

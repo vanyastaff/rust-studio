@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scope Check"
+  short_description: "Comparing a Rust diff or plan with acceptance criteria to flag"
+  default_prompt: "Use $scope-check when comparing a Rust diff or plan with acceptance criteria to flag over-scope, under-scope, or creep."

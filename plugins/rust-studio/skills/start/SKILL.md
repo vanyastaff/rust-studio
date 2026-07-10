@@ -1,8 +1,6 @@
 ---
 name: start
-description: "start, onboard, begin — orient into the Rust Code Studio: detect the project stack, explain the team and protocol, and route to the right next skill."
-argument-hint: "[optional: what you want to do]"
-user-invocable: true
+description: "Use when starting Rust Code Studio work: detect the project stack and route to the right workflow or specialist."
 ---
 
 # /start — onboard into the studio
@@ -20,9 +18,9 @@ Orient and route. Keep it short and concrete.
    whether to scaffold one with `/new-crate`.
 2. **Brief the user** in a few lines: the detected stack, which leads/specialists are
    relevant, and how the studio works — **autonomy-first quality loop**: tactical calls
-   are decided and executed; `AskUserQuestion` is reserved for direction forks,
+   are decided and executed; a user prompt is reserved for direction forks,
    irreversible actions, and outward steps (push, PR, publish).
-3. **Find out the goal.** `AskUserQuestion` with options matched to the detected domain:
+3. **Find out the goal.** Prompt the user with options matched to the detected domain:
    - "Design / change a public API" → `/team-api` or `/design-api`
    - "Build an async service feature" → `/team-async`
    - "Make it faster / safer" → `/team-perf`

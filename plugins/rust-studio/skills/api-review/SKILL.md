@@ -1,8 +1,6 @@
 ---
 name: api-review
-description: "Detect semver hazards, accidental-pub leaks, and required version bump in a public API change — runs cargo public-api / cargo semver-checks, classifies every change with api-design-lead, and drafts mitigations."
-argument-hint: "[optional baseline ref]"
-user-invocable: true
+description: "Use when reviewing Rust public API changes for semver hazards, accidental exports, version bumps, and mitigations."
 ---
 
 # /api-review — audit a public API change for semver hazards
@@ -15,7 +13,7 @@ Honor the collaboration protocol (`references/collaboration.md`).
 
 ## Input
 
-`$ARGUMENTS` is an optional baseline git ref (tag, branch, or commit SHA).
+`input` is an optional baseline git ref (tag, branch, or commit SHA).
 If omitted, default to the most recent published tag (`git describe --tags
 --abbrev=0`). State what you're diffing against before proceeding.
 
@@ -24,7 +22,7 @@ If no baseline can be determined, ask: "What ref should I compare against?"
 ## Phase 1 — Scope
 
 1. Confirm the baseline ref and the crate(s) under review. For a workspace,
-   ask which crates are in scope if it's not obvious from `$ARGUMENTS`.
+   ask which crates are in scope if it's not obvious from `input`.
 2. State the review scope in one sentence before proceeding.
 
 ## Phase 2 — Gather evidence (read-only; no approval needed)
@@ -86,7 +84,7 @@ independently documented).
    - (c) Add `#[non_exhaustive]` to enum/struct to absorb future variants.
    - (d) Introduce a compatibility shim (only if it adds no ongoing debt).
 
-   Batch all decisions into a single `AskUserQuestion` before drafting changes.
+   Batch all decisions into a single user prompt before drafting changes.
 
 ## Phase 5 — Draft recommendations
 
@@ -156,5 +154,5 @@ inspection or to stop and install the tools first. Never silently skip the
 evidence step.
 
 If `api-design-lead` returns **BLOCKED** on a design decision, surface it
-immediately with `AskUserQuestion` — options: (a) decide now, (b) defer and
+immediately with a user prompt — options: (a) decide now, (b) defer and
 mark the item as provisional in the report, (c) escalate to `chief-architect`.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Debug"
+  short_description: "Debugging a Rust failure, panic, deadlock, hang, or wrong"
+  default_prompt: "Use $debug when debugging a Rust failure, panic, deadlock, hang, or wrong output; fix the cause and add a regression test."

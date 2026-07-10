@@ -1,8 +1,6 @@
 ---
 name: adopt
-description: "Adopt / onboard an existing Rust crate or workspace into studio governance — reverse-engineer structure, infer domains and standards, summarize the public API, catalog debt/gaps, then delegate the docs."
-argument-hint: "[optional path]"
-user-invocable: true
+description: "Use when onboarding a Rust crate or workspace: map structure and public API, infer standards, and catalog debt."
 ---
 
 # /adopt — onboard an existing Rust codebase
@@ -15,7 +13,7 @@ See `references/delegation.md` for the collaboration protocol.
 
 ## Input
 
-`$ARGUMENTS` is an optional path to the crate or workspace root. If empty, default to the
+`input` is an optional path to the crate or workspace root. If empty, default to the
 current working directory. If the path does not look like a Rust project (no `Cargo.toml`),
 ask: "Where is the crate or workspace you want to adopt?" before proceeding.
 
@@ -96,7 +94,7 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
      async runtime, error strategy, storage layer) — use
      `references/templates/adr.md`.
    - A tech-debt register — distilled from Phase 4 findings.
-10. `AskUserQuestion`: present the proposed doc set with a short rationale for each item.
+10. Prompt the user: present the proposed doc set with a short rationale for each item.
     Let the user trim, add, or defer. **This is the only write-gate for doc creation.**
     Once approved, proceed directly to Phase 6 without re-asking.
 
@@ -115,7 +113,7 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
     - Tech-debt register → spawn **`tooling-lead`** to assemble from the Phase 4 findings.
 12. Specialists write their approved docs and report back with the file path and a summary.
     If a specialist hits a genuine design fork not covered by the approved plan, surface it
-    and `AskUserQuestion` at that point — otherwise proceed.
+    and prompt the user at that point — otherwise proceed.
 
 ---
 
@@ -180,7 +178,7 @@ At the end of the session, offer to hand off directly:
 
 ## Error recovery
 
-If **`rust-scout`** cannot find a `Cargo.toml`, stop immediately and `AskUserQuestion`:
+If **`rust-scout`** cannot find a `Cargo.toml`, stop immediately and prompt the user:
 "I couldn't find a Cargo.toml at that path. Please provide the correct path, or confirm
 this is the right directory."
 

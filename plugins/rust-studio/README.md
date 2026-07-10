@@ -1,17 +1,17 @@
 # Rust Code Studio
 
-**Turn a single Claude Code session into a full Rust engineering studio.**
-A tiered agent team, path-scoped Rust standards, quality gates, and cargo-aware hooks —
-for libraries, async/web services, CLIs, and systems/embedded code.
+**Turn an agent session into a maintainer-grade Rust engineering studio.**
+The portable skills install on Codex, Claude Code, and other Agent Skills hosts. Claude Code also
+gets the tiered agent team, path-scoped standards, quality gates, and cargo-aware hooks.
 
 > Inspired by the studio model of
 > [Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios),
-> rebuilt from the ground up for Rust and packaged as a Claude Code plugin.
+> rebuilt from the ground up for Rust and packaged for Claude Code and Codex.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **49 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
-- **17 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
-- **8 hooks** — stack detection **+ memory recall** at session start, path-scoped rule pointers, a lint nudge, session-lifecycle aids (a `/recall`-before-work nudge, a sub-agent verdict check, and compaction / session-end reminders), and an opt-in **stop-guard** that blocks an undisciplined turn ending (ownership-dodging, permission-seeking, test avoidance, "done" without evidence)
+- **55 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
+- **20 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
+- **10 Claude hook handlers across 7 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
 - **Configurable + a terse review style** — set a house MSRV, preferred test runner, and default gate intensity per the `/plugin` config dialog; opt into a one-finding-per-line reviewer output style via `/config`
 - **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
@@ -35,8 +35,9 @@ See [`docs/coordination-protocol.md`](docs/coordination-protocol.md) for the ful
 
 `docs/` and `rules/` are the single source of truth. Each skill carries a copy of what it
 cites under `skills/<name>/references/`, so it stays self-contained when installed via
-`npx skills add`. Regenerate with `./scripts/sync-references.sh` after editing either;
-CI runs `--check`.
+`npx skills add`. After editing canonical docs, helpers, or skill descriptions, run
+`./scripts/sync-references.sh`, `node scripts/generate-openai-metadata.mjs`, and
+`./scripts/validate-distribution.sh`; CI runs the validation plus the Bun test suite.
 
 ## The team
 
@@ -176,7 +177,8 @@ also fills the MSRV line when a `Cargo.toml` doesn't declare one:
 
 **Toggles** — turn off ambient behaviors that run automatically. Each is honored by its hook
 (off = the hook no-ops); core behavior (stack briefing, path-scoped rule injection, sub-agent
-verdict check) is always on, and the whole plugin disables with `/plugin disable rust-studio@vanya`:
+verdict check) is always on, and the whole plugin disables with
+`/plugin disable rust-studio@rust-studio`:
 
 | Option | Default | Effect when off |
 |--------|---------|-----------------|

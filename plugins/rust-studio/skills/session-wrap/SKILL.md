@@ -1,8 +1,6 @@
 ---
 name: session-wrap
-description: "session wrap summary commit PR memory — close a work session: recap what changed, capture durable learnings into project memory, and hand off a clear next step so context compounds instead of evaporating."
-argument-hint: "[optional: focus note]"
-user-invocable: true
+description: "Use when closing a Rust work session: recap changes, capture durable learnings, and record the next step."
 ---
 
 # /session-wrap — close the session cleanly

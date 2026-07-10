@@ -1,8 +1,6 @@
 ---
 name: adr
-description: "ADR / architecture decision record — write, number, and file a decision record using the studio template: context, options, decision, consequences, alternatives."
-argument-hint: "[decision title]"
-user-invocable: true
+description: "Use when recording an architecture decision (ADR): capture context, options, decision, and consequences."
 ---
 
 # /adr — write an Architecture Decision Record
@@ -22,7 +20,7 @@ forks (option selection) and before the irreversible write.
 
 ## Input
 
-`$ARGUMENTS` is the decision title or topic. If empty, ask: "What decision do we
+`input` is the decision title or topic. If empty, ask: "What decision do we
 need to record?" If the decision is entangled with a larger design, suggest running
 `/architecture` or `/brainstorm` first.
 
@@ -42,7 +40,7 @@ nothing surfaces, proceed (`references/memory-protocol.md`).
      decision area (use serena `get_symbols_overview` for
      symbol-level context; `rg` for cfg-gated / macro-generated sites).
    - Collect any linked tickets, PRs, or discussions the user has already shared
-     in `$ARGUMENTS`. Do not ask for more context before scouting.
+     in `input`. Do not ask for more context before scouting.
 3. Spawn **`chief-architect`** to surface key forces — constraints, non-negotiables,
    quality attributes — and flag any related ADRs or `ARCH-GATE` concerns.
 
@@ -74,7 +72,7 @@ nothing surfaces, proceed (`references/memory-protocol.md`).
    exist (reuse vs. reinvent); what a strict maintainer would reject; which breaking changes
    active dev permits. `RESHAPE NEEDED` reworks the options before the user is asked; `BLOCKED`
    surfaces the missing prerequisite. Record the verdict in the ADR's Context.
-6. **`AskUserQuestion`**: present the options table and ask which to proceed with.
+6. **Prompt the user**: present the options table and ask which to proceed with.
    If the user is undecided, ask `chief-architect` for a recommendation with
    rationale — but **the user makes the final call**.
 
@@ -96,9 +94,9 @@ nothing surfaces, proceed (`references/memory-protocol.md`).
 ## Phase 5 — Approve and write
 
 9. Terminal "here's the plan — file it?" gate: present the complete ADR draft for the
-   user to approve using native plan mode (on approval the user transitions into an edit
-   mode and the write proceeds). Keep `AskUserQuestion` for the earlier option fork (the
-   Phase 2 option selection), not for this final approval. Loop back to Phase 4 for any
+   user to approve through the host's plan surface when available, or in the conversation
+   otherwise. Reserve user prompts for the earlier option fork (the Phase 2 option selection).
+   Loop back to Phase 4 for any
    requested changes.
 10. On approval, resolve the output path:
     - Sequence number = highest existing `docs/adr/NNNN-*.md` + 1, zero-padded to
@@ -126,6 +124,6 @@ audit code that motivated the ADR, or `/architecture` for broader structural que
 If `rust-scout` finds no `docs/adr/` directory, start the sequence at `0001` and
 note that the directory will be created. If `chief-architect` returns **BLOCKED** on
 a missing prerequisite (e.g. an upstream decision not yet made), surface it with
-`AskUserQuestion` and offer: (a) proceed with explicit assumptions documented in the
+Prompt the user and offer: (a) proceed with explicit assumptions documented in the
 ADR, (b) defer until the blocker is resolved, or (c) split into two ADRs. Never
 discard a draft in progress.

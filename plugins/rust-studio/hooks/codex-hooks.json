@@ -1,0 +1,50 @@
+{
+  "_comment": "Codex lifecycle hooks — the host-neutral subset of claude-hooks.json. Excluded on purpose: statusline-install (writes ~/.claude/settings.json), inject-rules (matches Claude tool names), stop-guard/auto-capture/subagent-stop (parse the Claude transcript format), session-end (Codex has no SessionEnd event). Requires bun, like every studio hook.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${PLUGIN_ROOT}/hooks/scripts/session-start.ts\"",
+            "statusMessage": "Rust Code Studio: detecting stack...",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${PLUGIN_ROOT}/hooks/scripts/user-prompt-submit.ts\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${PLUGIN_ROOT}/hooks/scripts/fmt-check.ts\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"${PLUGIN_ROOT}/hooks/scripts/pre-compact.ts\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

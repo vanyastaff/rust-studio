@@ -1,8 +1,6 @@
 ---
 name: tdd
-description: "Implement a behavior test-first through RED -> GREEN -> REFACTOR — write the smallest failing test, the minimal code to pass, then refactor with tests green. Use to build a feature or fix a bug with a test driving each step."
-argument-hint: "[behavior / bug to implement]"
-user-invocable: true
+description: "Use when implementing a Rust behavior or bug fix test-first through RED, GREEN, and REFACTOR."
 ---
 
 # /tdd — RED → GREEN → REFACTOR

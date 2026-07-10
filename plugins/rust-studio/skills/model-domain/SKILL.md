@@ -1,8 +1,6 @@
 ---
 name: model-domain
-description: "model domain type newtype enum type-state phantom illegal-states-unrepresentable — encode ONE domain concept in the type system to make illegal states unrepresentable (newtype/enum/typestate), via api-designer. Narrower than /design-api: no full public surface, no error type, no semver pass — use /design-api for a whole API."
-argument-hint: "[domain concept]"
-user-invocable: true
+description: "Use when modeling one Rust domain concept with newtypes, enums, or typestate to prevent illegal states."
 ---
 
 # /model-domain — encode a domain concept in the type system
@@ -11,12 +9,12 @@ Turn a domain concept into a type model that makes illegal states unrepresentabl
 You are the orchestrator: **you do not write code yourself — you delegate all writes to
 `rust-builder`.** Run this as a **quality loop, not a permission loop**
 (`references/collaboration.md` §1): decide tactical calls
-yourself (state choice + one-line rationale, proceed); gate with `AskUserQuestion` only
+yourself (state choice + one-line rationale, proceed); gate with a user prompt only
 at genuine strategic forks and before irreversible actions.
 
 ## Input
 
-`$ARGUMENTS` is the domain concept to model (e.g. "email address", "order lifecycle",
+`input` is the domain concept to model (e.g. "email address", "order lifecycle",
 "connection state"). If empty, ask: "What domain concept should we model?" and offer
 examples. For concepts that span multiple crates or public APIs, suggest running
 `/architecture` first.
@@ -29,7 +27,7 @@ examples. For concepts that span multiple crates or public APIs, suggest running
    this concept. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`,
    `get_symbols_overview`) for semantic navigation; fall back to `rg` for
    macro-generated or `cfg`-gated sites serena can't see. Never Bash `grep`/`find`.
-3. `AskUserQuestion` (genuine fork — only the user knows the domain): present what
+3. Prompt the user (genuine fork — only the user knows the domain): present what
    scout found and ask the user to enumerate:
    - **States** — what distinct situations can the concept be in?
    - **Invariants** — what must always be true? What transitions are legal?
@@ -71,7 +69,7 @@ examples. For concepts that span multiple crates or public APIs, suggest running
    `API-GATE`). Flag parse-dont-validate opportunities
    (`references/core.md`).
 
-5. `AskUserQuestion` (direction-changing fork — determines all downstream work):
+5. Prompt the user (direction-changing fork — determines all downstream work):
    present the options as a numbered list with trade-offs and a recommended default.
    Ask the user to pick one (or describe a hybrid).
 
@@ -90,9 +88,9 @@ examples. For concepts that span multiple crates or public APIs, suggest running
    - Reference the module location identified by `rust-scout` (or propose one).
 
 7. Terminal "here's the plan — build it?" gate: present the type sketch for the user to
-   approve using native plan mode (on approval the user transitions into an edit mode and
-   the build begins). Keep `AskUserQuestion` for the earlier option fork (the Phase 2
-   direction choice), not for this final go-ahead. Loop back to Phase 2 if the user wants a
+   approve through the host's plan surface when available, or in the conversation otherwise.
+   Reserve user prompts for the earlier option fork (the Phase 2 direction choice). Loop back to
+   Phase 2 if the user wants a
    different approach.
 
 ## Phase 4 — Implement
@@ -127,7 +125,7 @@ examples. For concepts that span multiple crates or public APIs, suggest running
 ## Error recovery
 
 If `rust-scout` finds a conflicting existing type, surface the conflict immediately and
-`AskUserQuestion` — options: (a) refine the existing type, (b) replace it, (c) introduce
+Prompt the user — options: (a) refine the existing type, (b) replace it, (c) introduce
 a wrapper, (d) stop and raise with `chief-architect`. Never silently shadow existing types.
 
 If `api-designer` returns **BLOCKED** (e.g. ambiguous domain invariants, missing ADR for

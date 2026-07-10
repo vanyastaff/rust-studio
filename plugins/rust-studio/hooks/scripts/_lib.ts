@@ -78,11 +78,11 @@ export function which(bin: string): boolean {
   return Bun.which(bin) != null;
 }
 
-/** Plugin root: CLAUDE_PLUGIN_ROOT if set, else two dirs up from scripts/.
- *  fileURLToPath (not .pathname) so %-encoded chars — e.g. a space in the
- *  install path — decode correctly on every platform. */
+/** Plugin root: CLAUDE_PLUGIN_ROOT (Claude Code) or PLUGIN_ROOT (Codex) if set,
+ *  else two dirs up from scripts/. fileURLToPath (not .pathname) so %-encoded
+ *  chars — e.g. a space in the install path — decode correctly on every platform. */
 export function pluginRoot(): string {
-  const env = process.env.CLAUDE_PLUGIN_ROOT;
+  const env = process.env.CLAUDE_PLUGIN_ROOT ?? process.env.PLUGIN_ROOT;
   if (env) return env;
   return fileURLToPath(new URL("../..", import.meta.url));
 }

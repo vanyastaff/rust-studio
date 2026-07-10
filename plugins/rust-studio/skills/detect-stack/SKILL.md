@@ -1,8 +1,6 @@
 ---
 name: detect-stack
-description: "Classify / detect a Rust project's stack — reads Cargo.toml and workspace to identify domain(s) (library, async/web, CLI, systems/embedded) and report the relevant leads, specialists, and rules. Use before working on an unfamiliar project."
-argument-hint: "[optional path to crate/workspace root]"
-user-invocable: true
+description: "Use when classifying an unfamiliar Rust crate or workspace as library, async/web, CLI, systems, or embedded."
 ---
 
 # /detect-stack — classify the project
@@ -14,7 +12,7 @@ Read the manifest(s) and report a concise profile. This is read-only investigati
 autonomously; no approval needed.
 
 ## Steps
-1. **Locate the root `Cargo.toml`** — use `$ARGUMENTS` if given, else cwd. Use Glob or `fd`
+1. **Locate the root `Cargo.toml`** — use `input` if given, else cwd. Use Glob or `fd`
    to find it; do not shell out to `find`. If it contains `[workspace]`, list members and read
    each member's `Cargo.toml`.
 2. **Extract** package/workspace name, `edition`, `rust-version` (MSRV), and the full

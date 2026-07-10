@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team API"
+  short_description: "Designing and shipping a Rust public API with implementation,"
+  default_prompt: "Use $team-api when designing and shipping a Rust public API with implementation, docs, tests, and semver review."

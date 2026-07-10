@@ -1,8 +1,6 @@
 ---
 name: team-async
-description: "async service feature design ship build — orchestrate the async team (async-systems-lead, async-runtime-specialist, web-framework-specialist, database-specialist, observability-engineer) through design, build, and review end-to-end."
-argument-hint: "[feature]"
-user-invocable: true
+description: "Use when shipping an async Rust service feature across runtime, web, database, observability, and review."
 ---
 
 # /team-async — design & ship an async service feature
@@ -13,32 +11,24 @@ not permission loops — see `references/collaboration.md` §1 and
 `references/delegation.md` §8).
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`references/delegation.md` §8**
-(implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
-shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
-single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
-into the spawn prompt.
-
-Keep the **task list live** when `progress_tracking` is on (`${user_config.progress_tracking}`,
-default on): one `TaskCreate` per phase up front, flip to `in_progress` before each phase and
-`completed` the moment it yields a result (surfaced in one line) so the user sees intermediate
-progress, not a final dump. Foreground the phase being waited on. Off → no task-list narration.
+Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
+Use workers and a native task surface when available; otherwise run each named role inline and
+keep a concise checklist. Surface every phase result in one line before advancing.
 
 ## Team composition
 `async-systems-lead` (owns ASYNC-GATE) · `async-runtime-specialist` · `web-framework-specialist`
 · `database-specialist` · `observability-engineer` · `rust-scout` (locates) · `rust-builder` (writes) · `rust-reviewer` (audits).
 
-Create one task per phase via `TaskCreate`; chain them with `addBlockedBy` (1 → 2 → 3 → 4 →
-5 → 6) and assign each to its owning agent with `TaskUpdate owner`. Where a phase fans out
-across specialists, create sibling tasks (same blocker, no dependency between them) so they
-run concurrently as teammates; the lead synthesizes when all report via `SendMessage`.
+Represent phases 1 → 2 → 3 → 4 → 5 → 6 in the host's task surface when available and assign
+each to its owning role. Where a phase fans out, keep sibling work independent so workers can
+run concurrently; the lead synthesizes all results.
 
 ## Phase 1 — Scope & scout
 - **Recall first:** `/recall <service area>` (or reuse the session-start memory index) and paste
   what binds — prior runtime/topology decisions, async gotchas — INTO the team spawn prompts
   (teammates do not inherit session context); say when a recalled note changes the approach. If
   nothing surfaces, proceed (`references/memory-protocol.md`).
-- Restate the feature and its acceptance criteria in 1–3 bullets. If `$ARGUMENTS` is empty,
+- Restate the feature and its acceptance criteria in 1–3 bullets. If `input` is empty,
   ask: "What async service feature should we build?" and suggest `/architecture` or
   `/brainstorm` for broad explorations.
 - Task owned by **`rust-scout`** to map existing async infrastructure: entry-points, runtime
@@ -57,7 +47,7 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
   query patterns, and transaction boundaries at the async boundary.
 - Present **2–4 design approaches** with trade-offs (simplicity vs. scalability, monolithic
   handler vs. actor model, connection-per-request vs. pooled, etc.).
-- **Gate:** `AskUserQuestion` — show options, get direction on runtime topology and endpoint
+- **Gate:** prompt the user — show options, get direction on runtime topology and endpoint
   approach. Decide tactical details (channel sizes, field names, error variants) yourself;
   state choice + one-line rationale and proceed.
 
@@ -68,7 +58,7 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
 - Record an ADR (`/adr`) for non-trivial decisions (e.g. runtime flavor, actor vs.
   direct-await, backpressure strategy).
 - Draft the async service design doc (`references/templates/architecture.md`).
-- **Gate:** `AskUserQuestion` — present the design doc summary; proceed once approved.
+- **Gate:** prompt the user — present the design doc summary; proceed once approved.
 
 ## Phase 4 — Build (blocked by 3; parallel where independent)
 - `rust-builder` implements all components under direction of `async-systems-lead` — all
@@ -85,9 +75,9 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
     functions, pool initialization, and transaction wrappers.
   - **Instrumentation** — `observability-engineer` drives; `rust-builder` writes tracing
     spans, structured log fields, and metric counters/histograms.
-- Each stream reports a diff summary via `SendMessage` when complete. Hold all diffs until the
+- Each stream reports a diff summary through the host's worker-result channel. Hold all diffs until the
   parallel streams finish, then present them together.
-- **Gate:** `AskUserQuestion` — show the combined draft diff before proceeding to validation.
+- **Gate:** prompt the user — show the combined draft diff before proceeding to validation.
 
 ## Phase 5 — Validate (blocked by 4)
 - `rust-reviewer` audits the full diff.
@@ -119,10 +109,9 @@ run concurrently as teammates; the lead synthesizes when all report via `SendMes
 - Verdict **COMPLETE / NEEDS WORK / BLOCKED**. Next steps: `/review` for a deeper audit,
   `/perf` if latency or throughput is sensitive, `/changelog` if user-facing, `/publish` if
   release-bound.
-- If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`
-  (no `TeamDelete` — the team is implicit).
+- Close workers through the host's lifecycle API when one exists.
 
 ## Error recovery
 Any agent returns **BLOCKED** → surface it, don't proceed past it (its dependent tasks stay
-blocked), `AskUserQuestion` (skip & note / retry narrower / stop and run the prerequisite).
+blocked), prompt the user (skip & note / retry narrower / stop and run the prerequisite).
 Keep completed work.

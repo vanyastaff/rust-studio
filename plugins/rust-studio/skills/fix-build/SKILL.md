@@ -1,8 +1,6 @@
 ---
 name: fix-build
-description: "Get a failing Rust build green. Runs cargo check, then drives rust-build-resolver to fix the root error (borrow checker, trait bounds, lifetimes, type mismatch, missing feature/dep) and re-checks in a loop until it compiles. Use when cargo build/check fails."
-argument-hint: "[optional: package, --features ..., or target]"
-user-invocable: true
+description: "Use when fixing Rust build or cargo check failures involving borrows, lifetimes, traits, types, features, or deps."
 ---
 
 # /fix-build — make it compile
@@ -25,7 +23,7 @@ already surfaced this area) — known build gotchas for this workspace (feature 
 borrow-checker restructures) bind the fix; say when a recalled note changes the approach. If
 nothing surfaces, proceed (`references/memory-protocol.md`).
 1. Reproduce: run `cargo check --workspace --all-targets` (plus any feature set from
-   `$ARGUMENTS`, e.g. `--no-default-features --features foo`). Capture the full output.
+   `input`, e.g. `--no-default-features --features foo`). Capture the full output.
 2. If it already compiles, say so and stop. Otherwise spawn **`rust-build-resolver`** with
    the error output and the failing command.
 3. The resolver fixes the **first root error** (not the cascade), re-runs `cargo check`, and

@@ -1,7 +1,7 @@
 # Coordination Protocol — Collaboration
 
 How the studio decides, asks, and remembers. Part of the
-[Coordination Protocol](coordination-protocol.md); see also `delegation.md` (team, tiers,
+Coordination Protocol (`coordination-protocol.md`); see also `delegation.md` (team, tiers,
 team execution) and `verdicts.md` (gates, verdicts, evidence).
 
 ---

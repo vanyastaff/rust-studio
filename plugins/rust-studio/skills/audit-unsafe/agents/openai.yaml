@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Unsafe"
+  short_description: "Auditing Rust unsafe blocks or FFI boundaries for invariants,"
+  default_prompt: "Use $audit-unsafe when auditing Rust unsafe blocks or FFI boundaries for invariants, soundness, and Miri evidence."

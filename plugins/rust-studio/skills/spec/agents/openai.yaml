@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec"
+  short_description: "Planning a non-trivial Rust feature or cross-crate change to"
+  default_prompt: "Use $spec when planning a non-trivial Rust feature or cross-crate change to compare approaches and write a spec."

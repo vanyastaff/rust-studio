@@ -1,8 +1,6 @@
 ---
 name: tech-debt
-description: "audit scan log technical debt — TODO/FIXME, #[allow], unwrap in lib paths, oversized units, missing tests — produce a prioritized debt list and optionally file stories."
-argument-hint: "[optional area]"
-user-invocable: true
+description: "Use when auditing Rust technical debt: TODOs, lint suppressions, unwraps, oversized units, and missing tests."
 ---
 
 # /tech-debt — audit and log technical debt
@@ -17,7 +15,7 @@ here unless the user explicitly asks — that goes through `/dev-task`.
 
 ## Input
 
-`$ARGUMENTS` is an optional path, crate name, or keyword (e.g. `src/api`,
+`input` is an optional path, crate name, or keyword (e.g. `src/api`,
 `my-crate`, `async`). If empty, scan the whole workspace. State what you're
 scanning.
 
@@ -90,7 +88,7 @@ Only spawn leads whose domain overlaps with the findings.
 
 ## Phase 4 — Approval gate
 
-`AskUserQuestion`: show the prioritized debt table. Ask the user:
+Prompt the user: show the prioritized debt table. Ask the user:
 
 > "Here is the debt inventory. Would you like to (a) accept it as-is, (b) add or
 > remove items, or (c) adjust priorities before we decide next steps?"

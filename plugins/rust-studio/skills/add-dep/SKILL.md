@@ -1,9 +1,6 @@
 ---
 name: add-dep
-description: "Add a Rust dependency / add-dep / vet a crate — run the full vetting pipeline (RUSTSEC, license, MSRV, features) before touching Cargo.toml."
-argument-hint: "[crate name]"
-user-invocable: true
-disable-model-invocation: true
+description: "Use when adding a Rust dependency: check RUSTSEC, license, MSRV, and features before changing Cargo.toml."
 ---
 
 # /add-dep — vet and add a Rust dependency
@@ -15,7 +12,7 @@ orchestrator: **you do not edit manifests or lock files yourself — you delegat
 
 ## Input
 
-`$ARGUMENTS` is the crate name. If empty, ask: "Which crate do you want to add?" If the
+`input` is the crate name. If empty, ask: "Which crate do you want to add?" If the
 caller also specifies a version constraint or feature list, record it for validation in Phase 2.
 
 ## Phase 1 — Scope check (autonomous)
@@ -25,7 +22,7 @@ Before vetting, decide tactical questions yourself and state the rationale:
 - Could a stdlib type or a small local helper replace it? State your conclusion and proceed.
 - Record any caller-supplied version, feature, or target constraints (WASM, `no_std`, MSRV).
 
-If the intended use is genuinely ambiguous (no $ARGUMENTS, no context), ask once: "What
+If the intended use is genuinely ambiguous (no input, no context), ask once: "What
 problem does this crate solve?" Then proceed.
 
 ## Phase 2 — Vet (spawn dependency-manager)
@@ -88,7 +85,7 @@ Soft concerns (unmaintained, heavy feature pull) are presented as risks for the 
 
 ## Phase 4 — Approve (gate)
 
-`AskUserQuestion`: present the recommended `cargo add` invocation (crate, version constraint,
+Prompt the user: present the recommended `cargo add` invocation (crate, version constraint,
 `--no-default-features`, `--features <list>`) and the completed review record. Get explicit
 approval before any manifest is touched.
 - If the user prefers an alternative, loop back to Phase 2 with the new name.
@@ -122,6 +119,6 @@ surface of a published crate.
 
 If `dependency-manager` returns **BLOCKED** (cannot resolve advisory, `deny.toml` conflict,
 MSRV hard stop): surface the blocker immediately, do not add the crate, and
-`AskUserQuestion` with options — (a) pick an alternative, (b) accept the risk explicitly,
+Prompt the user with options — (a) pick an alternative, (b) accept the risk explicitly,
 (c) stop and resolve the prerequisite (e.g. update `deny.toml`, bump MSRV after `/dev-task`
 confirms compatibility). Never discard a completed review record.

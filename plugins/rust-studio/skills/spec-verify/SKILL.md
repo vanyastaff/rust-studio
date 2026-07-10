@@ -1,8 +1,6 @@
 ---
 name: spec-verify
-description: "spec verify archive — prove a Rust implementation meets its spec's acceptance criteria; runs tests, clippy, fmt, and gates, then archives the spec on pass. Use when all tasks for a spec are done."
-argument-hint: "[spec slug or path]"
-user-invocable: true
+description: "Use when verifying Rust implementation against a spec with tests, clippy, fmt, and gates before archiving."
 ---
 
 # /spec-verify — verify against the spec (verify → archive)
@@ -15,18 +13,13 @@ Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertio
 **delegate writes (the verify report) to `rust-builder`**; do not write files directly.
 
 ## Progress visibility
-The user follows the **task list** to know where things stand — keep it live, do not go silent
-until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on):
-1. At the start, `TaskCreate` one task per step below so the whole verification is visible up front.
-2. `TaskUpdate` each task to `in_progress` before you start it.
-3. The moment a step produces its result (a criterion's evidence, a gate's pass/fail), surface it
-   in one line and `TaskUpdate` the task to `completed` — **before** the next step. The user sees
-   intermediate results, not a final dump.
-4. Keep steps the user is waiting on in the **foreground** — a backgrounded step reads as a hang.
-When off, run the steps without the task-list narration.
+Use the host's task or plan surface when available; otherwise keep a concise in-message checklist.
+Create one item per step, mark the active step, and surface each result in one line before moving
+on. Keep blocking steps in the foreground so the user sees intermediate evidence instead of a
+final dump.
 
 ## Steps
-1. Read the spec's **acceptance criteria** (`$ARGUMENTS` = slug or path).
+1. Read the spec's **acceptance criteria** (`input` = slug or path).
 2. **First, run the spec-level outer acceptance test** — a green outer test is the primary
    executable proof the feature is met (`references/testing-model.md`). Then, for
    each remaining criterion, find and run the evidence:
