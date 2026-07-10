@@ -1,8 +1,6 @@
 ---
 name: spec-tasks
-description: "spec tasks break decompose — turn an approved spec into an ordered task list with acceptance criteria, then drive each task through implementation. Use after /spec, before building."
-argument-hint: "[spec slug or path]"
-user-invocable: true
+description: "Use when an approved spec needs ordered Rust implementation tasks, acceptance criteria, and delivery."
 ---
 
 # /spec-tasks — break a spec into tasks
@@ -13,21 +11,17 @@ Orchestrate; delegate writes. Protocol: `references/delegation.md`
 
 ## Orchestration
 The durable `.rust-studio/specs/<slug>/tasks.md` file is the human-readable record and source
-of truth. When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), **mirror**
-those task rows into the shared task list — the session already has one implicit shared team,
-so just `TaskCreate` one task per row (id ↔ `#`, owner lead ↔ `owner`, "Blocked by" ↔
-`addBlockedBy`) — and use it as the live coordination surface while keeping `tasks.md` in sync
-as each task lands; follow the team mechanics in
-**`references/delegation.md` §8** (`SendMessage`, teammate shutdown).
-Otherwise drive the file alone, running each task sequentially. Each task still executes through
-`/dev-task` (which itself runs as a team when the gate is set).
+of truth. Mirror its rows into the host's task surface when one exists (id ↔ `#`, owner role ↔
+`owner`, dependency ↔ "Blocked by") and keep both views in sync. If the host has no task surface,
+drive the file directly. Run independent ready tasks concurrently only when workers are available;
+otherwise run them sequentially. Follow **`references/delegation.md` §8**.
 
 ## Input
-`$ARGUMENTS` is a spec slug or path. If empty, list available specs under
+`input` is a spec slug or path. If empty, list available specs under
 `.rust-studio/specs/` and ask which to run.
 
 ## Phase 1 — Validate spec
-1. Read the spec (`$ARGUMENTS`). If it has no approved acceptance criteria, stop and
+1. Read the spec (`input`). If it has no approved acceptance criteria, stop and
    direct the user to `/spec` first.
 
 ## Phase 2 — Decompose (gate)
@@ -38,22 +32,22 @@ Otherwise drive the file alone, running each task sequentially. Each task still 
 3. Write `.rust-studio/specs/<slug>/tasks.md` from
    `references/templates/tasks.md` (delegate the write). The template's
    columns (`#`, owner lead, "Blocked by", status) mirror the shared task-list shape, so the
-   rows map cleanly to `TaskCreate` items.
+   rows map cleanly to host-native task items.
    **Gate (phase boundary):** present the task list and get approval before executing any
    task. If the user wants changes, loop back to step 2.
 
 ## Phase 3 — Execute
-4. Once approved, mirror the rows into the shared task list with `TaskCreate` (when teams are
-   active — see Orchestration). Run each ready task through **`/dev-task`** (scout → plan →
+4. Once approved, mirror the rows into the host task surface when available. Run each ready task
+   through **`/dev-task`** (scout → plan →
    approve → build → review with the owning lead's gate), passing the **spec-level outer
    acceptance test** and the task's slice of the criteria as context: the task's inner TDD drives
    toward that one outer test, and it writes its own outer test only if it independently ships
    externally-observable behavior (`references/testing-model.md`). Update both `tasks.md` and the
-   mirrored `TaskUpdate` status as each task lands — `tasks.md` is the durable record, the
-   task list is the live surface. Decide execution order and parallelism yourself based on the
-   dependency graph (`addBlockedBy` enforces it for teammates) — state your sequencing
-   rationale, don't ask for it.
-5. When a task returns **BLOCKED**, surface it, mark it in `tasks.md` (and `TaskUpdate`), and
+   mirrored host task status as each task lands — `tasks.md` is the durable record, the task
+   surface is live. Decide execution order and parallelism from the dependency graph; state the
+   sequencing rationale instead of asking for it.
+5. When a task returns **BLOCKED**, surface it, mark it in `tasks.md` and the host task surface,
+   and
    continue with unblocked tasks where the dependency graph permits. See error recovery below.
 
 ## Phase 4 — Verdict
@@ -63,6 +57,6 @@ Otherwise drive the file alone, running each task sequentially. Each task still 
 
 ## Error recovery
 If a task returns **BLOCKED** (missing ADR, undecided design, absent dependency):
-mark it in `tasks.md` and surface the blocker immediately. `AskUserQuestion` with options —
+mark it in `tasks.md` and surface the blocker immediately. Prompt the user with options —
 (a) skip and note the gap, (b) retry with narrower scope, (c) stop and run the prerequisite
 skill (e.g. `/adr`, `/architecture`). Never discard completed work.

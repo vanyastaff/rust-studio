@@ -1,8 +1,6 @@
 ---
 name: perf
-description: "perf profile benchmark optimize flamegraph criterion hot-path — measure first, optimize second: profile to find the real bottleneck, benchmark it with criterion, optimize, then prove the win with before/after numbers. Use for any performance work."
-argument-hint: "[target / workload to optimize]"
-user-invocable: true
+description: "Use when profiling and optimizing Rust performance with flamegraphs, Criterion, and before/after measurements."
 ---
 
 # /perf — profile, bench, optimize, prove

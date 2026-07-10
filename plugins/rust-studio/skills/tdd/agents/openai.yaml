@@ -1,0 +1,4 @@
+interface:
+  display_name: "TDD"
+  short_description: "Implementing a Rust behavior or bug fix test-first through RED,"
+  default_prompt: "Use $tdd when implementing a Rust behavior or bug fix test-first through RED, GREEN, and REFACTOR."

@@ -1,8 +1,6 @@
 ---
 name: verify-loop
-description: "Run the Rust checks and auto-fix in a bounded loop until green — cargo fmt/clippy/nextest, then fix the cause of each failure (build errors, lints, failing tests) and re-run, up to 3 iterations. Use to drive a change to a clean, passing state without babysitting."
-argument-hint: "[optional: test filter, package, or feature set]"
-user-invocable: true
+description: "Use when driving a Rust change green with cargo fmt, clippy, and tests in a bounded auto-fix loop."
 allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(cargo test*) Bash(cargo nextest*)"
 ---
 
@@ -23,7 +21,7 @@ not a license for a junior shape.
 
 ## The loop (max 3 passes)
 
-1. **Run** (scope from `$ARGUMENTS` — package, feature set, or test filter):
+1. **Run** (scope from `input` — package, feature set, or test filter):
    - `cargo fmt --all --check`
    - `cargo clippy --all-targets --all-features -- -D warnings`
    - `cargo nextest run` for unit/integration tests; `cargo test --doc` for doc-tests.

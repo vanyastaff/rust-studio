@@ -1,0 +1,7 @@
+interface:
+  display_name: "Rust Code Studio"
+  short_description: "Maintainer-grade Rust workflows"
+  icon_small: "./assets/rust-studio-small.svg"
+  icon_large: "./assets/rust-studio.svg"
+  brand_color: "#F46623"
+  default_prompt: "Use Rust Code Studio to take a Rust task from diagnosis or design through verified completion."

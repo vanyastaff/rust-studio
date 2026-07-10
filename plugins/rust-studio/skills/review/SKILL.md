@@ -1,8 +1,6 @@
 ---
 name: review
-description: "Rust maintainer-grade diff/path review (audit, check) — correctness bugs, soundness, scope creep, missing tests, and studio standards violations, with clippy + tests run as evidence. Prefer over the generic /code-review for Rust work. Use before committing or merging."
-argument-hint: "[optional path or git ref] [--full for parallel multi-lens]"
-user-invocable: true
+description: "Use when reviewing a Rust diff or path for correctness, soundness, scope creep, tests, and standards violations."
 ---
 
 # /review — audit a Rust change
@@ -19,21 +17,14 @@ speculative abstraction / future-proofing, which stays OUT of scope — don't pu
 abstraction or defensive code (`references/working-preferences.md` §"don't over-report").
 
 ## Orchestration
-When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) and you run a
-`--full` multi-lens pass, run it as a real team (the session already has one implicit shared
-team — no `TeamCreate`): create one `TaskCreate` task per lens (these are independent and
-read-only — no `addBlockedBy` between them) and spawn
-each lens as a teammate so they run concurrently, reporting via `SendMessage`; the lead merges
-and de-duplicates. The lighter alternative for these read-only lenses is to spawn each as a
-**background subagent** (`background: true`) without forming a team. Otherwise (no teams, or a
-single-reviewer pass) fall back to single-orchestrator delegation: spawn the lenses
-sequentially and inline the diff + scope into each spawn prompt. Teammates don't inherit this
-context (pass the diff/scope in the spawn prompt) and don't get bundled MCP (they rely on the
-user's ambient serena/exa). Shut teammates down at the end with `SendMessage
-{type:"shutdown_request"}` — there is no team to delete; idle teammates auto-hide.
+For a `--full` pass, run independent read-only lenses concurrently when the host exposes workers;
+otherwise run them sequentially. Mirror lenses in the host's task surface when available. Give
+every worker the complete diff and scope because workers may not inherit conversation context or
+tool configuration. The lead merges and de-duplicates results. Follow
+`references/delegation.md` §8 for host capability detection and cleanup.
 
 ## Scope
-`$ARGUMENTS` may be a path or a git ref. Default to the working-tree diff
+`input` may be a path or a git ref. Default to the working-tree diff
 (`git diff` + staged + untracked `.rs`). State what you're reviewing.
 If the intended story/acceptance criteria aren't in the diff, infer from context
 and proceed — ask only if the diff is genuinely ambiguous about its goal. Where an **outer

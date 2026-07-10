@@ -1,0 +1,4 @@
+interface:
+  display_name: "MSRV Check"
+  short_description: "Verifying a crate's real MSRV, declared rust-version, or"
+  default_prompt: "Use $msrv-check when verifying a crate's real MSRV, declared rust-version, or dependencies that raise it."

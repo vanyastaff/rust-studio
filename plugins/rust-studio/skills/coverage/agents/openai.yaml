@@ -1,0 +1,4 @@
+interface:
+  display_name: "Coverage"
+  short_description: "Measuring Rust coverage with llvm-cov or tarpaulin, finding"
+  default_prompt: "Use $coverage when measuring Rust coverage with llvm-cov or tarpaulin, finding meaningful gaps, and adding targeted tests."

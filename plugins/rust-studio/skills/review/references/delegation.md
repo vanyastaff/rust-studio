@@ -1,7 +1,7 @@
 # Coordination Protocol — Delegation
 
 Who does the work, who they report to, and how writes happen. Part of the
-[Coordination Protocol](coordination-protocol.md); see also `collaboration.md` (autonomy,
+Coordination Protocol (`coordination-protocol.md`); see also `collaboration.md` (autonomy,
 when to ask) and `verdicts.md` (gates, verdicts, evidence).
 
 ---
@@ -58,10 +58,9 @@ Agents follow a structured delegation model:
 5. **Domain boundaries** — agents do not modify files outside their domain without
    explicit delegation. A specialist proposes; the owning lead approves.
 
-When agent teams are enabled (§8), this same model runs over a shared task list and a
-mailbox instead of sequential prose spawns: the lead encodes phases as tasks with
-dependencies and teammates report via `SendMessage`. The tiers, gates, and verdicts are
-unchanged — only the coordination surface differs.
+When a host exposes sub-agents (§8), this same model runs over its native task and messaging
+surfaces instead of sequential inline phases. The tiers, gates, and verdicts are unchanged —
+only the coordination surface differs.
 
 ### When sub-agents are unavailable
 
@@ -83,46 +82,42 @@ The full rule is `references/sub-agents.md`.
   running the scout and plan phases it would otherwise have delegated.
 
 ---
----
 
-## 8. Team execution (agent teams)
+## 8. Team execution (host-capability based)
 
 The multi-agent skills (`team-*`, `dev-task`, `review`, `doc-review`, `eval-agents`,
-`spec-tasks`) run their phases as a real **agent team** when that capability is available,
-and fall back to single-orchestrator prose delegation otherwise. The team model is the
-documented default path; the fallback is one short paragraph in each skill.
+`spec-tasks`) use parallel workers only when the current host exposes that capability. They do
+not require a particular vendor, environment variable, or tool name. If no worker API exists,
+run the named roles inline in the same dependency order, following
+`references/sub-agents.md`.
 
-**Capability gate.** Agent teams are gated by `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (OFF
-by default). As of Claude Code v2.1.178 the model is **one implicit team per session**: there
-is no longer a `TeamCreate`/`TeamDelete` step (those tools were removed) — when the gate is
-set, the session already has a single shared team and task list, and you just spawn teammates
-into it. A published plugin must not assume teams exist, so every orchestrator skill carries a
-one-line guard: if the gate is set, run as a team; otherwise spawn sub-agents sequentially and
-inline each phase's context into the spawn prompt. The structured task tools (`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet`) are
-a separate, more reliable gate (`CLAUDE_CODE_ENABLE_TASKS`, default ON as of v2.1.142) — but
-still version-gate them.
+**Capability gate.** Inspect the tools available in the current session:
+- worker/sub-agent API available → delegate independent work and parallelize read-only lenses;
+- task/plan surface available → mirror phases there for progress and dependencies;
+- messaging/result channel available → use it to collect worker results;
+- a capability absent → keep a concise in-message checklist and execute that part inline.
 
-**Roles.** One session is the **team lead** (the orchestrator skill). The session's single
-implicit team and its shared task list already exist; the lead spawns **teammates** directly
-via the `Agent` tool with `name` (+ `subagent_type` = a studio agent such as `rust-builder`),
-assigns work, synthesizes results, and drives cleanup. (`team_name` is still accepted but
-ignored — don't pass it.) Teammates do the focused work and report back.
+Do not call a tool merely because an example host exposes it. Never fail the workflow because a
+team feature flag, task UI, mailbox, or background mode is missing.
 
-**Shared task list.** The lead encodes each skill's **phases / work-items as tasks**:
-`TaskCreate` (subject, description, optional `activeForm`/`metadata`; tasks start pending with
-no owner) one per phase or lens; express phase ordering with `addBlockedBy` so a task can't be
-claimed until its blockers complete; assign with `TaskUpdate owner`; move tasks
-pending → in_progress → completed. Use `TaskList` / `TaskGet` to track. For read-only fan-out
-panels (`/review --full` lenses, `/doc-review` personas, `/eval-agents` fixtures) create one
-independent task per lens/persona/fixture so they run concurrently; the lighter alternative is
-to spawn each as a **background subagent** (`background: true`) since they only read.
+**Roles.** The current session is the orchestrator. A worker receives the complete brief: scope,
+relevant files or diff, acceptance criteria, constraints, expected evidence, and required verdict.
+Workers do focused work; the orchestrator owns synthesis, user-facing gates, and cleanup.
 
-**Mailbox.** Teammates communicate **only** via `SendMessage` — plain text in a turn is
-invisible to other agents. Messages auto-deliver as turns; there is no polling.
+**Task graph.** Represent phases as tasks when the host supports it. Express dependencies in the
+native task surface; keep read-only lenses independent so they can run concurrently. Otherwise
+keep the same graph as an ordered checklist in working context. Durable files such as
+`tasks.md` remain the source of truth regardless of UI support.
 
-**Cleanup.** There is no `TeamDelete` (the team is implicit and lives for the session). Shut
-teammates down at the end by sending each a `SendMessage` `{type:"shutdown_request"}`; idle
-teammates also auto-hide after ~30s.
+**Results and cleanup.** Collect results through the host's worker-result or messaging channel.
+Wait only on workers whose output blocks the next phase. When the host supports explicit worker
+shutdown, close workers after their result is integrated; otherwise let the host manage their
+lifecycle.
+
+**Host adapters.** Claude Code may expose background subagents (spawned directly through its
+agent tool), task-list tools, and a mailbox; Codex may expose collaboration workers, custom
+agents, and a plan surface. Treat those as adapters for the neutral model above, not
+prerequisites and not instructions to call unavailable tools.
 
 **Gotchas (load-bearing).**
 - **No plan inheritance** — teammates do *not* inherit the lead's conversation or plan; *all*
@@ -131,17 +126,16 @@ teammates also auto-hide after ~30s.
   `skills`/`mcpServers`; they load skills and MCP from the user's own project + user settings.
   The studio's serena/exa reliance works only because the **user** has them configured ambient
   — state that assumption when scouting depends on them.
-- **Status can lag** — remind teammates to mark their task `completed`; don't infer completion
-  from silence.
-- **One team at a time**, no nested teams; teammates inherit the lead's permission mode.
+- **Status can lag** — update the host task surface after integrating a result; don't infer
+  completion from silence.
+- **Nesting depth is host-specific** — check before a worker spawns workers (Claude Code
+  allows several levels; Codex custom agents default to depth 1, so its orchestrator calls
+  every role directly). Workers inherit only the permissions and context the host documents.
 
 **Verdicts and gates are unchanged.** Every teammate still ends in **COMPLETE / NEEDS WORK /
 REDO-TO-BAR / BLOCKED** with evidence (`verdicts.md` §5); the owning lead still runs its gate (`verdicts.md` §4); a
 `REDO-TO-BAR` reshapes the touched area before the work is accepted, and a `BLOCKED` task halts
 its dependents until the blocker clears.
 
-**Lifecycle hooks (cross-reference, not added here).** The `TaskCreated` / `TaskCompleted` /
-`TeammateIdle` lifecycle hooks exist (a hook may exit 2 to block with feedback), so gate
-enforcement can hang off them in principle. Those hooks are owned by the hooks work — this
-protocol only notes the seam; none are wired in this pass.
-
+**Lifecycle hooks are optional.** A host may expose task or worker lifecycle events, but the
+portable workflow never depends on them. Host-specific hooks belong in that host's plugin layer.

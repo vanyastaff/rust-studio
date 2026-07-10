@@ -1,17 +1,15 @@
 ---
 name: test-plan
-description: "Produce a test plan for a feature with qa-lead/test-engineer — test types, cases, edge cases, and property laws."
-argument-hint: "[feature]"
-user-invocable: true
+description: "Use when producing a Rust feature test plan covering test types, cases, edge cases, and property laws."
 ---
 
 # /test-plan — produce a test plan for a feature
 
-Run a feature through **scope → map criteria → choose types → enumerate cases → draft → approve → hand off**, honoring the collaboration protocol (`references/collaboration.md`). You are the orchestrator: **you do not write files directly — you delegate writes to specialists.** Gate with `AskUserQuestion` only at phase boundaries (plan approval, BLOCKED recovery) — decide tactical calls yourself, state choice + one-line rationale.
+Run a feature through **scope → map criteria → choose types → enumerate cases → draft → approve → hand off**, honoring the collaboration protocol (`references/collaboration.md`). You are the orchestrator: **you do not write files directly — you delegate writes to specialists.** Gate with a user prompt only at phase boundaries (plan approval, BLOCKED recovery) — decide tactical calls yourself, state choice + one-line rationale.
 
 ## Input
 
-`$ARGUMENTS` is the feature. If it is a path, read that file. If empty, ask: "What feature should we plan tests for?" and suggest running `/architecture` or `/dev-task` first if the feature is not yet defined.
+`input` is the feature. If it is a path, read that file. If empty, ask: "What feature should we plan tests for?" and suggest running `/architecture` or `/dev-task` first if the feature is not yet defined.
 
 ## Phase 1 — Scope
 
@@ -68,7 +66,11 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
 
 ## Phase 5 — Approve (gate)
 
-9. Terminal "here's the plan — build it?" gate: present the draft plan — criterion count, test count by type, edge-case categories, property laws — for the user to approve using native plan mode (on approval the user transitions into an edit mode and the file is written). Reserve `AskUserQuestion` for genuine option forks (e.g. a real proptest-vs-no-proptest trade-off in Phase 2), not for this final approval. If the user wants edits, loop back to Phase 2 or 3 and re-draft.
+9. Terminal "here's the plan — build it?" gate: present the draft plan — criterion count, test
+   count by type, edge-case categories, property laws — through the host's plan/approval surface
+   when available, or in the conversation otherwise. Obtain explicit approval before writing.
+   Reserve user prompts for genuine option forks. If the user wants edits, loop back to Phase 2
+   or 3 and re-draft.
 10. On approval, `test-engineer` writes the plan to a feature-specific path (e.g. `docs/test-plans/<feature>.md`), or to a path the user names.
 
 ## Phase 6 — Hand off
@@ -86,4 +88,4 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
 
 If `rust-scout` finds no related tests and the module does not exist yet, note it and proceed with the plan against the feature spec alone. Flag the gap in the plan.
 
-If `qa-lead` or `test-engineer` returns **BLOCKED** (e.g. acceptance criteria missing, ambiguous behavior, upstream design unresolved), surface the blocker immediately and `AskUserQuestion` with options: (a) supply the missing criteria now, (b) narrow scope to what is defined, (c) stop and run `/architecture` or `/adr` first. Never discard work completed before the block.
+If `qa-lead` or `test-engineer` returns **BLOCKED** (e.g. acceptance criteria missing, ambiguous behavior, upstream design unresolved), surface the blocker immediately and prompt the user with options: (a) supply the missing criteria now, (b) narrow scope to what is defined, (c) stop and run `/architecture` or `/adr` first. Never discard work completed before the block.

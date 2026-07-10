@@ -1,8 +1,6 @@
 ---
 name: mutants
-description: "mutants mutation testing cargo-mutants missed caught test strength — grade the test suite by mutating the code and seeing what the tests miss, then close the real gaps. Use when coverage looks fine but you don't trust the tests, before relying on a suite for a refactor, or to gate critical modules."
-argument-hint: "[optional package or path]"
-user-invocable: true
+description: "Use when assessing Rust test strength with cargo-mutants, triaging survivors, and closing meaningful gaps."
 ---
 
 # /mutants — prove the tests actually check something
@@ -19,7 +17,7 @@ execute but don't check; `/fuzz` finds inputs nobody wrote a test for.
 
 ## Input
 
-`$ARGUMENTS` may be a package (`-p my-crate`), a path filter (`-f src/parser.rs`), or
+`input` may be a package (`-p my-crate`), a path filter (`-f src/parser.rs`), or
 empty. Mutation testing is expensive (it rebuilds and retests per mutant) — for a
 workspace with more than a handful of crates, default to the crate(s) with the highest
 behavioral risk (parsers, money/time math, state machines, anything feeding `unsafe`)

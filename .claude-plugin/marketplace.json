@@ -1,10 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
-  "name": "vanya",
+  "name": "rust-studio",
   "owner": {
-    "name": "vanya"
+    "name": "Rust Studio contributors"
   },
-  "description": "vanya's Claude Code plugins.",
+  "description": "Portable Rust engineering workflows for coding agents.",
   "version": "0.1.0",
   "plugins": [
     {
@@ -15,7 +15,7 @@
       "category": "development",
       "keywords": ["rust", "cargo", "code-review", "agents", "studio"],
       "author": {
-        "name": "vanya"
+        "name": "Rust Studio contributors"
       },
       "license": "MIT"
     }

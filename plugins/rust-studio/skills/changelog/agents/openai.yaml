@@ -1,0 +1,4 @@
+interface:
+  display_name: "Changelog"
+  short_description: "Generating a Keep a Changelog release entry from commits, diffs,"
+  default_prompt: "Use $changelog when generating a Keep a Changelog release entry from commits, diffs, and semver impact."

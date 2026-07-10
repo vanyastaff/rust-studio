@@ -1,0 +1,6 @@
+interface:
+  display_name: "Eval Agents"
+  short_description: "Running Claude Code benchmarks for the studio's Rust reviewer"
+  default_prompt: "Use $eval-agents when running Claude Code benchmarks for the studio's Rust reviewer and auditors against planted defects."
+policy:
+  allow_implicit_invocation: false

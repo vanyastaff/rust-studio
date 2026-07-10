@@ -1,8 +1,6 @@
 ---
 name: doc-review
-description: "doc review, review spec, review plan, review ADR, review design — audit a requirements/spec/plan/ADR/design document (not code) with a parallel persona panel (coherence, feasibility, scope, security, adversarial critic). Use before committing to a non-trivial design or after a spec/plan is drafted."
-argument-hint: "[path to the doc, or the spec/ADR id]"
-user-invocable: true
+description: "Use when reviewing a requirements, spec, plan, ADR, or design document for coherence, feasibility, scope, and security."
 ---
 
 # /doc-review — audit a design document
@@ -14,17 +12,11 @@ input to the author's judgment; never echo-chamber-validate the existing structu
 Protocol: `references/delegation.md` §8 (team execution).
 
 ## Orchestration
-When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the panel as a
-real team (the session already has one implicit shared team — no `TeamCreate`): create one
-`TaskCreate` task per persona (the personas are independent and read-only — no `addBlockedBy`
-between them) and spawn each as a teammate so
-they run concurrently, reporting via `SendMessage`; the lead merges and de-duplicates. The
-lighter alternative for these read-only personas is to spawn each as a **background subagent**
-(`background: true`) without forming a team. Otherwise fall back to single-orchestrator
-delegation: spawn the personas sequentially and inline the document text into each spawn
-prompt. Teammates don't inherit this context (pass the doc in the spawn prompt) and don't get
-bundled MCP (they rely on the user's ambient serena/exa). Shut teammates down at the end with
-`SendMessage {type:"shutdown_request"}` — there is no team to delete; idle teammates auto-hide.
+Run independent read-only personas concurrently when the host exposes workers; otherwise run
+them sequentially. Mirror personas in the host's task surface when available. Give each worker
+the complete document and scope because workers may not inherit conversation context or tool
+configuration. The lead merges and de-duplicates results. Follow
+`references/delegation.md` §8 for host capability detection and cleanup.
 
 ## When NOT this skill
 - Reviewing a code diff → `/review`.
@@ -32,7 +24,7 @@ bundled MCP (they rely on the user's ambient serena/exa). Shut teammates down at
 Use `/doc-review` for specs, plans, ADRs, RFCs, and design docs.
 
 ## How to run
-1. Read the doc named in `$ARGUMENTS` (default: the most recently changed file under
+1. Read the doc named in `input` (default: the most recently changed file under
    `.rust-studio/specs/`, `docs/adr/`, or `docs/`). State what you're reviewing.
 2. Fan out the relevant lenses **in parallel** (one task per persona, or background subagents
    — see Orchestration; skip the ones the doc doesn't touch), each returning severity-tagged

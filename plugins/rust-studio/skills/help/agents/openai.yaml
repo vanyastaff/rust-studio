@@ -1,0 +1,4 @@
+interface:
+  display_name: "Help"
+  short_description: "Choosing a Rust Code Studio workflow or specialist; list the"
+  default_prompt: "Use $help when choosing a Rust Code Studio workflow or specialist; list the available skills and agents by purpose."

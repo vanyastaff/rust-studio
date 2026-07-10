@@ -1,7 +1,7 @@
 # Coordination Protocol — Gates, Verdicts, Evidence
 
 How work is checked and how it reports. Part of the
-[Coordination Protocol](coordination-protocol.md); see also `collaboration.md` (autonomy,
+Coordination Protocol (`coordination-protocol.md`); see also `collaboration.md` (autonomy,
 when to ask) and `delegation.md` (team, tiers, team execution).
 
 ---

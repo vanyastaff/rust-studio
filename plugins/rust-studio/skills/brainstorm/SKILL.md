@@ -1,8 +1,6 @@
 ---
 name: brainstorm
-description: "Brainstorm / explore / ideate a crate or feature idea before any design — clarify intent, surface constraints, lay out 2–4 approaches with trade-offs. Pure thinking, no code."
-argument-hint: "[idea or problem]"
-user-invocable: true
+description: "Use when exploring a Rust crate or feature before design: clarify constraints and compare 2–4 approaches. No code."
 ---
 
 # /brainstorm — explore an idea before committing to a design
@@ -22,7 +20,7 @@ direction carries these answers forward into the `/design-api` or `/architecture
 
 ## Input
 
-`$ARGUMENTS` is the raw idea or problem. If empty, ask: "What are you thinking about
+`input` is the raw idea or problem. If empty, ask: "What are you thinking about
 building or changing?" If very broad, probe domain (new crate, feature in existing crate,
 cross-crate concern) before proceeding.
 
@@ -34,7 +32,7 @@ the approaches and say when a recalled note changes the direction. If nothing su
 (`references/memory-protocol.md`).
 
 1. Restate the idea in one sentence. Flag immediately if it is under-specified.
-2. `AskUserQuestion` with targeted questions — no more than three at once — to surface:
+2. Prompt the user with targeted questions — no more than three at once — to surface:
    - **Goal**: what problem does this solve for users of the crate/binary?
    - **Scope**: new crate, new module, extension to an existing API, or cross-workspace?
    - **Constraints**: MSRV floor, `no_std` requirement, async vs. sync, compile-time vs.
@@ -55,7 +53,7 @@ the approaches and say when a recalled note changes the direction. If nothing su
    (`web_search_exa` for crates.io adoption / RUSTSEC, `web_fetch_exa` to read the
    docs/source pages found). Evidence over opinion (`references/working-preferences.md`).
 
-5. If a `[BLOCKER]` is present, surface it immediately and `AskUserQuestion` with options
+5. If a `[BLOCKER]` is present, surface it immediately and prompt the user with options
    before continuing.
 
 ## Phase 3 — Present approaches
@@ -84,7 +82,7 @@ the approaches and say when a recalled note changes the direction. If nothing su
    last-verified version; silence is a gap, not a pass.
 7. State a **default recommendation** and the reason; make clear it is a starting point,
    not a decision.
-8. `AskUserQuestion`: "Which direction do you want to explore, or should we mix elements?"
+8. Prompt the user: "Which direction do you want to explore, or should we mix elements?"
 
 ## Phase 4 — Concept note
 
@@ -95,9 +93,9 @@ the approaches and say when a recalled note changes the direction. If nothing su
    - Open risks and assumptions.
    - Suggested next skill to invoke.
 10. Present the finished concept note as the terminal approval gate — "here's the idea —
-    capture it?" — for the user to approve using native plan mode (on approval the user
-    transitions into an edit mode). Keep `AskUserQuestion` only for the earlier option
-    forks (Phase 1 clarify, Phase 3 direction choice), not for this final go-ahead.
+    capture it?" — for the user to approve through the host's plan surface when available, or in
+    the conversation otherwise. Reserve user prompts for the earlier option forks (Phase 1
+    clarify, Phase 3 direction choice).
 11. On approval, **delegate saving the concept note** to `product-steward` — do not write
     files directly. Instruct `product-steward` to store it at the path it deems appropriate
     per the template `references/templates/concept-note.md` (if that
@@ -123,5 +121,5 @@ After the concept note is approved, suggest the natural next step and offer to i
 - If the user pushes for implementation details, acknowledge the instinct and redirect:
   "Let's lock down the approach first — implementation details will be cleaner once we
   know the direction."
-- If `$ARGUMENTS` describes something already well-understood (a trivial bug fix, a
+- If `input` describes something already well-understood (a trivial bug fix, a
   one-line change), say so and suggest `/dev-task` directly rather than over-process.

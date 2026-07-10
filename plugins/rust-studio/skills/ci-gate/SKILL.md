@@ -1,8 +1,6 @@
 ---
 name: ci-gate
-description: "ci gate hang deadlock timeout clippy disallowed lefthook nextest — install or audit the anti-hang / anti-silencing gate so code can't reach CI and hang (deadlock, huge Duration, SystemTime) or silence a lint instead of fixing it. Sets up clippy disallowed_methods, nextest terminate-after, a quiet lefthook pre-push, and a CI timeout backstop."
-argument-hint: "[install | audit]  (default: audit, then offer to install)"
-user-invocable: true
+description: "Use when auditing or installing Rust CI anti-hang and lint gates with clippy, nextest, lefthook, and timeouts."
 ---
 
 # /ci-gate — stop code from reaching CI and hanging (and from silencing the gate)
@@ -62,7 +60,7 @@ modern (0.16+) schema — pre-0.14 keys hard-error.
    `cargo install` (compiles); fall back to `cargo install` only when no prebuilt exists. In CI use
    **`taiki-e/install-action`** (prebuilt, no bootstrap), not `cargo install`.
 
-2. **Audit** (`$ARGUMENTS` empty or `audit`): report which of the six mechanisms are present vs
+2. **Audit** (`input` empty or `audit`): report which of the six mechanisms are present vs
    missing, and — critically — whether any are **weakened** (a `[lints]` table in a member crate
    that re-opens a workspace deny; `#[allow]` without a reason; a missing/removed ban; a raised or
    absent `terminate-after`). List each gap as a finding. Stop here if the user only asked to audit.
@@ -71,7 +69,7 @@ modern (0.16+) schema — pre-0.14 keys hard-error.
    `clippy.toml`/CI — add the bans/steps into it). Show the diff before writing. State the threshold
    choices (timeout periods, sleep-literal threshold) and that they are tunable.
 
-4. **Approve** (`AskUserQuestion` at this fork): confirm the plan and any threshold choices.
+4. **Approve** (a user prompt at this fork): confirm the plan and any threshold choices.
 
 5. **Install** (delegate to `rust-builder`): write/merge `clippy.toml`, the `[workspace.lints]`
    block (+ `lints.workspace = true` in each member), `.config/nextest.toml`, `lefthook.yml`,

@@ -265,6 +265,7 @@ try {
 }
 
 let briefing: string;
+let title = ""; // Claude Code >= 2.1.183 names the session from hookSpecificOutput.sessionTitle
 
 if (!manifestExists) {
   briefing =
@@ -282,6 +283,7 @@ if (!manifestExists) {
 
   const pkg = section(text, "package");
   const name = field(pkg, "name") || "?";
+  if (name !== "?") title = `🦀 ${name}`;
   const edition = field(pkg, "edition") || "?";
   const msrvDefault = option("default_msrv");
   const msrv = field(pkg, "rust-version") || (msrvDefault ? `${msrvDefault} (studio default)` : "(unset)");
@@ -344,5 +346,6 @@ emit({
   hookSpecificOutput: {
     hookEventName: "SessionStart",
     additionalContext: briefing + (recall ? "\n\n" + recall : ""),
+    ...(title ? { sessionTitle: title } : {}),
   },
 });

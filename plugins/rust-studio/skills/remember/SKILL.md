@@ -1,8 +1,6 @@
 ---
 name: remember
-description: "remember save capture learning — persist a project learning (architecture decision, gotcha, convention, or non-trivial fix) so the studio recalls it across sessions. Writes an Obsidian-idiomatic note to the shared vault (obsidian MCP) and links it from the project index."
-argument-hint: "[what to remember]"
-user-invocable: true
+description: "Use when saving a durable project decision, gotcha, convention, or non-trivial fix to Obsidian."
 ---
 
 # /remember — capture a project learning
@@ -30,7 +28,7 @@ time, a convention the codebase follows, a non-trivial fix, or a durable externa
 specific to one session.
 
 ## Steps
-1. **Distil** `$ARGUMENTS` (and recent context) into ONE atomic learning — a short plain-English
+1. **Distil** `input` (and recent context) into ONE atomic learning — a short plain-English
    title and a body of one or two factual paragraphs. Pick a `note_type`:
    `decision` | `gotcha` | `convention` | `fix` | `reference` | `concept`.
 2. **Dedup-check before writing.** Search the project folder for the same topic — **`search_semantic`

@@ -1,8 +1,6 @@
 ---
 name: dev-task
-description: "implement feature story task build — run one unit of Rust work end-to-end: scout → plan → plan-review → approve → build → review. Use for any scoped change that needs discipline: new feature, story, or multi-file edit."
-argument-hint: "[task/story description, or path to a story file]"
-user-invocable: true
+description: "Use when implementing one scoped Rust feature or multi-file task end to end: scout, plan, build, test, and review."
 ---
 
 # /dev-task — implement one unit of work
@@ -10,35 +8,26 @@ user-invocable: true
 Run a single task through **scout → plan → plan-review → approve → build → review** — or a
 **fast path** for genuinely trivial changes (Phase 0) — honoring the
 collaboration protocol (`references/collaboration.md`;
-`references/delegation.md` §8 team execution). You are the orchestrator: **you do not write code or tests yourself — you
-delegate writes to `rust-builder`.** **The plan-approval gate runs through native plan mode**
-(`EnterPlanMode` → write the plan file → `ExitPlanMode`), so the plan renders in the Desktop
-**Plan** pane and is approved natively (on CLI it's the standard plan-mode approval — no
-regression). Use `AskUserQuestion` only for genuine design forks and BLOCKED recovery, **not**
-for "approve the plan?" — that's what `ExitPlanMode` is for. Decide tactical calls yourself,
-state choice + one-line rationale.
+`references/delegation.md` §8 team execution). You are the orchestrator: **you do not write code
+or tests yourself — you delegate writes to `rust-builder` when workers are available, or run that
+role inline otherwise.** Use the host's native plan/approval surface when available; otherwise
+present the same plan in the conversation and obtain explicit approval. Use a user prompt only
+for genuine design forks and BLOCKED recovery. Decide tactical calls yourself and state choice +
+one-line rationale.
 
 ## Orchestration & progress
-Run the phases (scout → plan → plan-review → build → review) as an agent team per
-**`references/delegation.md` §8** (implicit session team, shared task
-list ordered with `addBlockedBy`, `SendMessage`, teammate shutdown). Gate on
-`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, spawn the sub-agents sequentially and inline
-each phase's context into the spawn prompt.
+Run the phases (scout → plan → plan-review → build → review) using the capabilities described in
+**`references/delegation.md` §8**. Parallelize independent read-only work when workers are
+available; otherwise execute each named role inline and pass its result to the next phase.
 
-Keep the task list live when `progress_tracking` is on (`${user_config.progress_tracking}`,
-default on): `TaskCreate` one task per phase up front, flip each to `in_progress` before its
-phase, and the moment a phase returns surface its result in one line (scout's edit-site map, the
-plan's verdict, the build's diff summary, the review's findings) and mark it `completed` before
-the next phase — intermediate results, not a final dump. Foreground the phase being waited on.
-
-(Optional status bar, plugin-only) If the user ran `/progress-bar` under the plugin install, also mirror the phase to the studio
-status line at each boundary:
-`bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" set --phase "<phase>" --step "<n/total>" [--tasks "<done/total>"]`,
-and `bun "${CLAUDE_PLUGIN_ROOT}/scripts/progress.ts" clear` at the end. Harmless no-op if they
-never enabled the status line. When off, run the phases without the task-list narration.
+When the host has a task or plan surface, keep one item per phase live and update it as results
+arrive. Otherwise maintain a concise in-message checklist. At every boundary surface the result
+in one line (edit-site map, plan verdict, diff summary, review findings) before moving on. The
+portable skill never invokes a host-specific status-line script; a full host plugin may mirror
+these phase updates separately.
 
 ## Input
-`$ARGUMENTS` is the task. If it's a path, read that file. If empty, ask: "What should we
+`input` is the task. If it's a path, read that file. If empty, ask: "What should we
 build?" and, for non-trivial work, suggest running `/architecture` or `/brainstorm` first.
 
 ## Pick the review mode
@@ -55,7 +44,7 @@ fast path skips planning *overhead*, not tests, idiom, or review.
 **Fast path** — take it only when ALL hold: a single obvious edit site (or a few mechanical
 ones), no design fork, no new/changed public API, no `unsafe`, no cross-crate ripple, no new
 dependency (a typo/doc fix, a localized bug with a clear cause, a serena-drivable rename). Then:
-- Skip Phases 1–3 — no scout sweep, no plan file, no `ExitPlanMode` gate. State one line:
+- Skip Phases 1–3 — no scout sweep or formal plan-approval gate. State one line:
   *"Fast path: <change> — <why it qualifies>."*
 - Still **red→green for any behavior change**, still `clippy -D warnings` + `fmt` clean, still a
   quick `rust-reviewer` pass (Phase 5b) and a Phase 6 verdict. Quality is never on the chopping block.
@@ -76,11 +65,10 @@ stops holding, re-enter the full loop, and reuse (don't discard) the work alread
 surfaced this area) and carry prior decisions and gotchas into the plan; say when a recalled note
 changes the approach. If nothing surfaces, proceed
 (`references/memory-protocol.md`).
-0. **Enter plan mode.** If you are not already in plan mode, call `EnterPlanMode` to obtain the
-   plan-file path. Phases 1–2 are read-only anyway (scout + lead plan, no code until approval),
-   so this fits with no workflow change — it just routes the upcoming Draft→Approval through the
-   native Plan pane. `AskUserQuestion` is still allowed *inside* plan mode for genuine design
-   forks (Phase 2 step 7); only the approval gate moves to `ExitPlanMode`.
+0. **Open the planning surface when available.** Use the host's native plan UI/file for the
+   read-only scout and planning phases. If none exists, keep the draft in the conversation. A
+   user prompt is allowed for genuine design forks (Phase 2 step 7); no code is written before
+   the Phase 3 approval gate.
 1. Restate the task as **acceptance criteria in observable form** — given/when/then, or
    input → effect → edge case. Enumerate the scenarios the behavior **really** has: the happy path
    **plus** error paths, boundaries, and (for async) concurrency/cancellation — happy-path-only is
@@ -111,8 +99,8 @@ changes the approach. If nothing surfaces, proceed
    the junior local patch and rely on review to fix it afterward. If the reshape changes
    product scope or creates an irreversible/outward action, surface the fork for approval.
 7. If the plan reveals a real design decision, present 2–4 options with trade-offs.
-8. **Write the plan into the plan file** (the one from `EnterPlanMode`), building it
-   incrementally — this is what renders in the Desktop **Plan** pane. Consolidate the lead's
+8. **Write the plan into the host's plan surface, or present it in the conversation**, building it
+   incrementally. Consolidate the lead's
    plan (files to change, approach, test strategy, risks, applicable gates) **and** the
    `ACCEPTABLE / RESHAPE NEEDED / BLOCKED` maintainer verdict into it. Keep mirroring each
    phase's one-line result to the task list as before (progress visibility is unchanged).
@@ -121,7 +109,7 @@ changes the approach. If nothing surfaces, proceed
 The lead's maintainer verdict in Phase 2 is a *self*-check; this gate adds an **independent**
 adversarial pass so a flawed plan is caught **before any code is written**, not after. Reviewers
 are read-only — they attack the PLAN, never edit. Scale the depth to the **review mode** chosen
-above (which defaults from `${user_config.gate_intensity}`):
+above (default to **lean** when the host or user has not configured an intensity):
 - **solo** — run it only when the plan is boundary-moving (public API, `unsafe`, cross-crate, a
   new dependency, or data/migration). Then spawn `harsh-critic` to attack the plan; otherwise
   state *"solo: plan-review skipped — localized change, no boundary"* and proceed.
@@ -136,15 +124,14 @@ Reviewers target the plan, not code: wrong or oversized decomposition, a simpler
 missed, an unhandled failure/edge case, a boundary/semver hazard, an ownership/sibling-reuse
 miss. Each returns **ACCEPTABLE / RESHAPE NEEDED / BLOCKED** with concrete reasons (no praise).
 **Gate:** any `RESHAPE NEEDED` → fold the findings in and loop back to Phase 2 to rewrite the
-plan file before approval; any `BLOCKED` → stop and surface the blocker. Only a plan that
+plan before approval; any `BLOCKED` → stop and surface the blocker. Only a plan that
 survives this pass reaches Phase 3 — the user approves a design that has already been reviewed.
 
 ## Phase 3 — Approve (gate)
-9. **`ExitPlanMode`** to request approval — it reads the plan from the plan file (do not pass
-   the plan as an argument, and do not use `AskUserQuestion` to ask "approve?"). Pass
-   `allowedPrompts` for the build commands the plan needs (e.g. `run tests`, `run clippy`,
-   `cargo fmt`). If the user rejects or asks for changes, loop back to Phase 2 and **rewrite the
-   plan file** — same loop, native surface.
+9. **Request explicit approval through the host's plan surface.** If the host has no plan UI,
+   present the complete plan in chat and ask for approval there. Include the build commands the
+   plan needs (for example tests, clippy, and fmt). If the user rejects or requests changes,
+   loop back to Phase 2 and rewrite the plan in the same surface.
 
 ## Phase 4 — Build (blocked by approval)
 **Inner loop drives toward the outer acceptance test.** Each unit-level red→green cycle moves the
@@ -204,10 +191,10 @@ advancing.
 17. Suggest next steps: `/review` for a deeper audit, `/perf` if perf-sensitive,
     `/changelog` if user-facing, `/publish` if it's release-bound, `/session-wrap` to close
     out the session. If running as a team,
-    shut each teammate down with `SendMessage {type:"shutdown_request"}` (no `TeamDelete`).
+    close any workers through the host's lifecycle API when one exists.
 
 ## Error recovery
 If any sub-agent returns **BLOCKED** (missing ADR, undecided design, absent dependency):
-surface it immediately, do not proceed past the blocked dependency, and `AskUserQuestion`
+surface it immediately, do not proceed past the blocked dependency, and prompt the user
 with options — (a) skip and note the gap, (b) retry with narrower scope, (c) stop and run
 the prerequisite skill (e.g. `/adr`, `/architecture`). Never discard completed work.

@@ -1,9 +1,6 @@
 ---
 name: publish
-description: "crates.io publish release prepare — run RELEASE-GATE checklist, dry-run, and hand the exact publish command to you. Never publishes automatically."
-argument-hint: "[crate]"
-user-invocable: true
-disable-model-invocation: true
+description: "Use when preparing a crate for crates.io with release gates and a publish dry-run. Never auto-publish."
 ---
 
 # /publish — prepare a crates.io release
@@ -18,8 +15,8 @@ You are the orchestrator: **you do not write files directly — delegate all fil
 
 ## Input
 
-`$ARGUMENTS` is the crate name (or path). If the workspace has multiple publishable crates,
-derive the order automatically (see Phase 1). If `$ARGUMENTS` is empty, ask: "Which crate
+`input` is the crate name (or path). If the workspace has multiple publishable crates,
+derive the order automatically (see Phase 1). If `input` is empty, ask: "Which crate
 should we prepare for publish?" before proceeding.
 
 ## Phase 1 — Scope & publish order
@@ -76,7 +73,7 @@ each fix and show the updated output.
 
 ## Phase 4 — Surface blockers & approve
 
-`AskUserQuestion`: present the RELEASE-GATE checklist results and the dry-run output.
+Prompt the user: present the RELEASE-GATE checklist results and the dry-run output.
 List any unresolved warnings. Ask for explicit go-ahead before presenting the final
 command — publishing is irreversible and outward.
 
@@ -112,6 +109,6 @@ End with verdict **COMPLETE / NEEDS WORK (numbered blockers) / BLOCKED**.
 ## Error recovery
 
 If any sub-agent returns **BLOCKED** (missing ADR, unresolved dependency, absent token):
-surface it immediately with `AskUserQuestion`, options — (a) resolve the blocker and retry,
+surface it immediately with a user prompt, options — (a) resolve the blocker and retry,
 (b) narrow scope (e.g. publish a subset of crates), (c) stop. Never discard completed
 checklist work.

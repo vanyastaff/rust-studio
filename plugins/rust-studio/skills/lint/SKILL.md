@@ -1,8 +1,6 @@
 ---
 name: lint
-description: "lint format clippy fmt static-gate — run rustfmt and clippy together as the zero-warning static gate. Checks by default; pass --fix to apply formatting and machine-applicable clippy fixes. Use before committing or as a pre-PR gate."
-argument-hint: "[--fix to apply; default: check only]"
-user-invocable: true
+description: "Use when running rustfmt and clippy as a zero-warning Rust gate or applying safe automatic fixes."
 allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(cargo test*) Bash(cargo nextest*)"
 ---
 

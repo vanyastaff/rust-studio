@@ -1,8 +1,6 @@
 ---
 name: audit-unsafe
-description: "audit unsafe blocks, review invariants, run miri — safety audit of all unsafe code in the project"
-argument-hint: "[optional path]"
-user-invocable: true
+description: "Use when auditing Rust unsafe blocks or FFI boundaries for invariants, soundness, and Miri evidence."
 ---
 
 # /audit-unsafe — safety audit of all unsafe code
@@ -15,7 +13,7 @@ delegate all writes to `rust-builder`.** Follow the collaboration protocol
 
 ## Input
 
-`$ARGUMENTS` may be a crate path or workspace root. Default to the workspace root. If the
+`input` may be a crate path or workspace root. Default to the workspace root. If the
 path does not exist, ask the user to clarify before proceeding.
 
 ## Phase 1 — Enumerate
@@ -65,7 +63,7 @@ path does not exist, ask the user to clarify before proceeding.
 7. For UNSOUND or structurally significant findings, present 2–4 remediation options with
    trade-offs and state a default recommendation. This is a tactical decision — state the
    recommended path and proceed to Phase 4 unless the user explicitly wants to choose
-   differently. Use `AskUserQuestion` only if the remediation involves a real design fork
+   differently. Use a user prompt only if the remediation involves a real design fork
    (e.g. removing `unsafe` entirely vs. introducing a new abstraction with API implications).
 
 ## Phase 4 — Record
@@ -110,6 +108,6 @@ path does not exist, ask the user to clarify before proceeding.
 
 If `unsafe-auditor` returns **BLOCKED** (e.g. missing context, cannot determine
 invariants without a design decision): surface it immediately with a clear description,
-do not silently skip the site, and `AskUserQuestion` with options — (a) skip and record
+do not silently skip the site, and prompt the user with options — (a) skip and record
 as DEFERRED, (b) provide the missing context and retry, (c) escalate to
 `systems-perf-lead`. Never discard completed findings.

@@ -1,8 +1,6 @@
 ---
 name: debug
-description: "debug, root-cause, why is this failing, trace, panic, deadlock, hang, wrong output — find the ROOT cause of a Rust bug methodically: reproduce, isolate, hypothesize, instrument, fix the cause not the symptom, add a regression test. Use for runtime bugs, logic errors, panics, deadlocks, async hangs, or flaky behavior."
-argument-hint: "[symptom, error text, or failing test]"
-user-invocable: true
+description: "Use when debugging a Rust failure, panic, deadlock, hang, or wrong output; fix the cause and add a regression test."
 ---
 
 # /debug — root-cause a Rust bug
@@ -19,7 +17,7 @@ observability-as-DoD).
 Use `/debug` for runtime bugs: wrong results, panics, deadlocks, async hangs, state corruption.
 
 ## Method (do not skip steps)
-1. **Reproduce.** Turn `$ARGUMENTS` into a deterministic repro — the smallest command,
+1. **Reproduce.** Turn `input` into a deterministic repro — the smallest command,
    input, or `#[test]` that fails every time. If you can't reproduce it, that is the bug to
    chase first (timing, env, ordering). State the exact repro.
 2. **Locate.** Spawn **`rust-scout`** to map the involved types/functions/call-sites and

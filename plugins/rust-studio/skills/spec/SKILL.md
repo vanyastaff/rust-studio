@@ -1,15 +1,13 @@
 ---
 name: spec
-description: "spec design write plan — turn a non-trivial feature or change into an approved spec before building: explore the code, weigh 2-4 approaches, persist a spec doc in .rust-studio/specs/. Use before large features, cross-crate changes, or anything needing a durable record."
-argument-hint: "[feature / change description]"
-user-invocable: true
+description: "Use when planning a non-trivial Rust feature or cross-crate change to compare approaches and write a spec."
 ---
 
 # /spec — write an approved spec (explore → propose → spec)
 
 The front of the spec-driven flow: **`/spec` → `/spec-tasks` → `/dev-task` (per task) →
-`/spec-verify`**. You orchestrate; **delegate all writes to sub-agents**; `AskUserQuestion`
-at each gate. Protocol: `references/delegation.md`.
+`/spec-verify`**. You orchestrate; **delegate writes to workers when available** and prompt the
+user at each gate. Protocol: `references/delegation.md`.
 
 **Maintainer bar applies.** The spec is shaped to the maintainer-grade standard
 (`references/maintainer-grade-development.md`): survey sibling crates before
@@ -54,7 +52,7 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
    asked to choose; `BLOCKED` surfaces the missing evidence. Record the verdict in the spec.
 
 ## Phase 3 — Approach gate
-6. **Gate:** `AskUserQuestion` — pick the approach. For a hard, costly decision, record an
+6. **Gate:** prompt the user — pick the approach. For a hard, costly decision, record an
    ADR (`/adr`).
 
 ## Phase 4 — Spec
@@ -68,9 +66,9 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
    it green), risks, and links (ADR, recalled memory). Testing model:
    `references/testing-model.md`.
 8. **Terminal gate ("here's the plan — build it?"):** present the spec draft for the user to
-   approve using native plan mode (on approval the user transitions into an edit mode and the
-   write proceeds — delegate the write to a sub-agent). Keep `AskUserQuestion` for the earlier
-   option fork (the Phase 3 approach pick), not for this final go-ahead.
+   approve through the host's plan surface when available, or in the conversation otherwise.
+   On approval, delegate the write to a worker when available. Reserve user prompts for the
+   earlier option fork (the Phase 3 approach pick).
 
 ## Output
 Confirm the spec path and summarize the approach + acceptance criteria. Verdict

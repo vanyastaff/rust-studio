@@ -1,9 +1,6 @@
 ---
 name: pr
-description: "pull request pr open push — ship the current branch as a PR with a value-first description via gh. Use when work is committed and ready for review."
-argument-hint: "[optional: PR title or base branch]"
-user-invocable: true
-disable-model-invocation: true
+description: "Use when pushing committed Rust work and opening a pull request with a value-first description via gh."
 allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
 ---
 
@@ -25,7 +22,7 @@ before pushing and before creating the PR** (`references/collaboration.md`).
    - **Testing/evidence** (the `cargo nextest run` / `cargo clippy` summary; bench numbers if perf-relevant).
    - **Semver / changelog** note if the public API changed (`cargo semver-checks`; link `/api-review`, `/changelog`).
    - Link the spec (`.rust-studio/specs/<slug>/`) or issues it closes.
-4. `AskUserQuestion` (outward action): show the draft title + body; get approval, then:
+4. Prompt the user (outward action): show the draft title + body; get approval, then:
    `git push -u origin HEAD` and `gh pr create --base <base> --title … --body …`.
    Never force-push and never `--no-verify`.
 

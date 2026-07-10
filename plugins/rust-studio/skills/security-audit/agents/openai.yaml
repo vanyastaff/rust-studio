@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Audit"
+  short_description: "Auditing Rust code for injection, unsafe input, auth flaws,"
+  default_prompt: "Use $security-audit when auditing Rust code for injection, unsafe input, auth flaws, secret leaks, and RUSTSEC advisories."

@@ -1,8 +1,6 @@
 ---
 name: refactor
-description: "refactor restructure rename clean up — behavior-preserving refactor pass driven by clippy and studio standards; no functional change."
-argument-hint: "[target/scope]"
-user-invocable: true
+description: "Use when refactoring Rust code without behavior changes, with clippy, tests, and studio standards as gates."
 ---
 
 # /refactor — behavior-preserving refactor pass
@@ -11,7 +9,7 @@ Run a scoped refactor through **confirm scope → clippy signals → plan → re
 verify → review**, honoring the collaboration protocol
 (`references/collaboration.md`). You are the orchestrator: **you do
 not write code yourself — you delegate all writes to `rust-builder`.** Gate with
-`AskUserQuestion` only at phase boundaries (scope confirmation, plan approval, BLOCKED
+Prompt the user only at phase boundaries (scope confirmation, plan approval, BLOCKED
 recovery) — decide tactical calls yourself, state choice + one-line rationale.
 
 **Maintainer bar applies.** This skill is where weak structure is brought up to
@@ -20,19 +18,13 @@ weak structure (extract, move-to-owning-crate, borrow-instead-of-clone, replace 
 with domain types) IS the job here, not a while-I'm-here cleanup to suppress.
 
 ## Progress visibility
-The user follows the **task list** to know where things stand — keep it live, do not go silent
-until the end. When `progress_tracking` is on (`${user_config.progress_tracking}`, default on):
-1. At the start, `TaskCreate` one task per phase (scope → clippy signals → plan → refactor →
-   verify → review) so the whole plan is visible up front.
-2. `TaskUpdate` each task to `in_progress` before you start its phase.
-3. The moment a phase produces its result, surface it in one line and `TaskUpdate` the task to
-   `completed` — **before** starting the next phase. The user sees intermediate results, not a
-   final dump.
-4. Keep phases the user is waiting on in the **foreground** — a backgrounded phase reads as a hang.
-When off, run the phases without the task-list narration.
+Use the host's task or plan surface when available; otherwise keep a concise in-message checklist.
+Create one item per phase (scope → clippy signals → plan → refactor → verify → review), mark the
+active phase, and surface each result in one line before moving on. Keep blocking phases in the
+foreground so the user sees intermediate evidence instead of a final dump.
 
 ## Input
-`$ARGUMENTS` is the target scope (a crate, module path, file, or free-text description). If
+`input` is the target scope (a crate, module path, file, or free-text description). If
 empty, ask: "What should we refactor, and what's the scope boundary?" Refuse to proceed
 without an explicit scope — an unbounded refactor is drift by another name.
 
@@ -58,7 +50,7 @@ proceed (`references/memory-protocol.md`).
 
 1. Restate the scope in one sentence and list 2–3 explicit "must not change" invariants
    (e.g. public API surface, observable behavior, performance characteristics).
-2. `AskUserQuestion`: confirm the scope and invariants before touching anything. If the user
+2. Prompt the user: confirm the scope and invariants before touching anything. If the user
    wants to widen scope or allow behavior changes, treat the difference as a separate task.
 3. Spawn **`rust-scout`** to map the files and symbols in scope. Scout uses **serena MCP**
    (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) for semantic navigation
@@ -114,7 +106,7 @@ proceed (`references/memory-protocol.md`).
    If it touches `unsafe`, flag `SAFETY-GATE` (owner: `systems-perf-lead` +
    `unsafe-auditor`). Present 2–4 options when there is a real design choice.
 
-9. `AskUserQuestion`: show the full plan and get explicit approval. If the user wants
+9. Prompt the user: show the full plan and get explicit approval. If the user wants
    changes, loop back to step 7. Nothing is written until this is approved.
 
 ---
@@ -135,7 +127,7 @@ proceed (`references/memory-protocol.md`).
     - if `unsafe` is in scope: also run `cargo +nightly miri test` where feasible.
 
 11. **`rust-builder` reports the diff and command output for each step.** Show it to the
-    user. If tests go red or clippy regresses, stop immediately and `AskUserQuestion` —
+    user. If tests go red or clippy regresses, stop immediately and prompt the user —
     do not proceed to the next step until the current one is green.
 
 12. After all steps complete, run a final:
@@ -194,7 +186,7 @@ proceed (`references/memory-protocol.md`).
 
 If any sub-agent returns **BLOCKED** (e.g. an ambiguous ownership boundary, a missing ADR
 for a non-trivial structural decision, or an `unsafe` invariant that cannot be verified):
-surface it immediately, do not proceed past the blocked step, and `AskUserQuestion` with
+surface it immediately, do not proceed past the blocked step, and prompt the user with
 options — (a) skip the blocked step and note the gap, (b) narrow the scope and retry,
 (c) stop and run the prerequisite skill (e.g. `/adr`, `/architecture`). Never discard
 completed steps.

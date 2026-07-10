@@ -1,0 +1,4 @@
+interface:
+  display_name: "ADR"
+  short_description: "Recording an architecture decision (ADR): capture context,"
+  default_prompt: "Use $adr when recording an architecture decision (ADR): capture context, options, decision, and consequences."

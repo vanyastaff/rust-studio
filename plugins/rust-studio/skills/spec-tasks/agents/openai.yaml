@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Tasks"
+  short_description: "An approved spec needs ordered Rust implementation tasks,"
+  default_prompt: "Use $spec-tasks when an approved spec needs ordered Rust implementation tasks, acceptance criteria, and delivery."

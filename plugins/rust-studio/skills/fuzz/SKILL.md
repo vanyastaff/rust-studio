@@ -1,8 +1,6 @@
 ---
 name: fuzz
-description: "fuzz cargo-fuzz libfuzzer crash corpus arbitrary — set up and run coverage-guided fuzzing on parsers, decoders, and unsafe boundaries; triage every crash into a minimized regression test. Use when code consumes untrusted bytes, wraps unsafe, or before a release of an input-handling crate."
-argument-hint: "[function/module to fuzz, or empty to pick targets]"
-user-invocable: true
+description: "Use when fuzzing Rust parsers, decoders, or unsafe boundaries; minimize crashes into regression tests."
 ---
 
 # /fuzz — coverage-guided fuzzing, crash to regression test
@@ -19,7 +17,7 @@ wrote a test for.
 
 ## Input
 
-`$ARGUMENTS` may name a function, module, or crate to fuzz, or be empty. If empty,
+`input` may name a function, module, or crate to fuzz, or be empty. If empty,
 Phase 1 selects targets. If the named item does not exist, say so and list the nearest
 candidates instead of guessing.
 
@@ -45,9 +43,9 @@ candidates instead of guessing.
    - Deprioritize: pure business logic on already-validated types, code behind a
      validated boundary, generated code.
 5. Present the ranked target list (top 5 max) with one line of why per target. If
-   `$ARGUMENTS` named a target, put it first and note anything riskier you found anyway.
+   `input` named a target, put it first and note anything riskier you found anyway.
 6. This is a tactical choice: state which targets you will fuzz (default: top 2) and
-   proceed. Use `AskUserQuestion` only if fuzzing requires a real design decision (e.g.
+   proceed. Use a user prompt only if fuzzing requires a real design decision (e.g.
    the API needs a new constructor to be fuzzable at all).
 
 ## Phase 2 — Write targets

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Publish"
+  short_description: "Preparing a crate for crates.io with release gates and a publish"
+  default_prompt: "Use $publish when preparing a crate for crates.io with release gates and a publish dry-run."
+policy:
+  allow_implicit_invocation: false

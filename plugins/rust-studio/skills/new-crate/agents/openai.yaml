@@ -1,0 +1,6 @@
+interface:
+  display_name: "New Crate"
+  short_description: "Scaffolding a Rust crate or workspace member with studio"
+  default_prompt: "Use $new-crate when scaffolding a Rust crate or workspace member with studio metadata, lints, policy, toolchain, and CI."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Async"
+  short_description: "Shipping an async Rust service feature across runtime, web,"
+  default_prompt: "Use $team-async when shipping an async Rust service feature across runtime, web, database, observability, and review."

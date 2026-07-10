@@ -1,9 +1,6 @@
 ---
 name: commit
-description: "commit, stage, Conventional Commit — write a clean commit for the current Rust changes, groups one logical unit, derives type/scope from diff, runs fmt/clippy first. Never bypasses git hooks."
-argument-hint: "[optional: scope hint or message]"
-user-invocable: true
-disable-model-invocation: true
+description: "Use when committing one logical Rust change: run fmt and clippy, then create a Conventional Commit."
 allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
 ---
 

@@ -1,8 +1,6 @@
 ---
 name: team-perf
-description: "measure optimize performance benchmark unsafe — harden performance and safety with the systems team (systems-perf-lead, perf-engineer, concurrency-specialist, unsafe-auditor): baseline → plan → build → validate → sign-off."
-argument-hint: "[target]"
-user-invocable: true
+description: "Use when hardening Rust performance, concurrency, or unsafe code from baseline through validated sign-off."
 ---
 
 # /team-perf — measure, optimize, and prove the win
@@ -13,16 +11,9 @@ Protocol: `references/delegation.md` (§8 team execution).
 Rules: `references/perf.md` · `references/unsafe.md`.
 
 ## Orchestration & progress
-Execute the phases as an agent team per **`references/delegation.md` §8**
-(implicit session team, shared task list with `addBlockedBy` ordering, `SendMessage`, teammate
-shutdown). Gate on `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`: if unset, fall back to
-single-orchestrator delegation — spawn sub-agents sequentially and inline each phase's context
-into the spawn prompt.
-
-Keep the **task list live** when `progress_tracking` is on (`${user_config.progress_tracking}`,
-default on): one `TaskCreate` per phase up front, flip to `in_progress` before each phase and
-`completed` the moment it yields a result (surfaced in one line) so the user sees intermediate
-progress, not a final dump. Foreground the phase being waited on. Off → no task-list narration.
+Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
+Use workers and a native task surface when available; otherwise run each named role inline and
+keep a concise checklist. Surface every phase result in one line before advancing.
 
 ## Team composition
 
@@ -30,12 +21,9 @@ progress, not a final dump. Foreground the phase being waited on. Off → no tas
 · `unsafe-auditor` (inherit; any `unsafe` touched) · `rust-builder` (writes code + tests)
 · `rust-reviewer` (diff audit).
 
-Create one task per phase via `TaskCreate`; chain them with `addBlockedBy` (1 → 2 → 3 → 4 →
-5) and assign each to its owning agent with `TaskUpdate owner`. Phase 1's four
-inventory streams are independent and read-only — create them as sibling tasks (same blocker,
-no dependency between them) so they run concurrently as teammates, or spawn each as a
-**background subagent** (`background: true`) since none of them write. The lead synthesizes
-the baseline once all four report via `SendMessage`.
+Represent phases 1 → 2 → 3 → 4 → 5 in the host's task surface when available and assign each to
+its owning role. Phase 1's four inventory streams are independent and read-only: run them as
+concurrent workers when supported, otherwise sequentially. The lead synthesizes all results.
 
 ## Phase 1 — Measure (baseline only; no optimization yet)
 
@@ -58,7 +46,7 @@ the baseline once all four report via `SendMessage`.
   whether a `// SAFETY:` comment is present.
 - Present the baseline report: wall-clock numbers, allocation profile (if `dhat`, `heaptrack`,
   `samply`, or `flamegraph` is available), and the `unsafe` inventory. No optimization yet.
-- **Gate:** `AskUserQuestion` — confirm the target(s) and accept the baseline before any
+- **Gate:** prompt the user — confirm the target(s) and accept the baseline before any
   optimization work begins.
 
 ## Phase 2 — Plan (blocked by 1)
@@ -71,7 +59,7 @@ the baseline once all four report via `SendMessage`.
   - Identify which gate(s) apply: **PERF-GATE**, **SAFETY-GATE**, or both.
 - Present **2–4 optimization strategies** with trade-offs (speed vs. maintainability vs.
   `unsafe` surface) and a recommended default.
-- **Gate:** `AskUserQuestion` — this is a strategic fork; get explicit approval of the chosen
+- **Gate:** prompt the user — this is a strategic fork; get explicit approval of the chosen
   strategy before any code is written.
 
 ## Phase 3 — Build (blocked by 2)
@@ -92,7 +80,7 @@ the baseline once all four report via `SendMessage`.
   - If `unsafe-auditor` raises concerns, hand them back to `rust-builder` (loop) until
     the auditor is satisfied or the approach is reconsidered.
 - `rust-builder` reports a diff summary and command output after each increment.
-- **Gate:** review the draft diff; `AskUserQuestion` for approval before Phase 4.
+- **Gate:** review the draft diff; prompt the user for approval before Phase 4.
 
 ## Phase 4 — Validate (blocked by 3)
 
@@ -135,13 +123,12 @@ the baseline once all four report via `SendMessage`.
 - Verdict: **COMPLETE / NEEDS WORK / BLOCKED**.
 - Suggest next steps: `/review` for a deeper audit, `/changelog` if user-facing,
   `/publish` if release-bound.
-- If running as a team, shut each teammate down with `SendMessage {type:"shutdown_request"}`
-  (no `TeamDelete` — the team is implicit).
+- Close workers through the host's lifecycle API when one exists.
 
 ## Error recovery
 
 Any agent returns **BLOCKED** → surface it immediately, do not proceed past the blocker,
-and `AskUserQuestion` with options: (a) skip and note the gap, (b) retry with narrower
+and prompt the user with options: (a) skip and note the gap, (b) retry with narrower
 scope, (c) stop and run the prerequisite skill (e.g. `/adr`, `/architecture`,
 `/dev-task` to add missing benches). Never discard completed work or baseline numbers.
 

@@ -1,8 +1,6 @@
 ---
 name: changelog
-description: "Generate or update CHANGELOG.md (Keep a Changelog) for a release — from commits, diff, and semver assessment, via docs-engineer."
-argument-hint: "[version]"
-user-invocable: true
+description: "Use when generating a Keep a Changelog release entry from commits, diffs, and semver impact."
 ---
 
 # /changelog — generate or update the changelog
@@ -14,7 +12,7 @@ are the orchestrator: **you do not write to CHANGELOG.md yourself — you delega
 everything else autonomously.
 
 ## Input
-`$ARGUMENTS` is the target version (e.g. `0.4.0`). If omitted, inspect the latest git tag and
+`input` is the target version (e.g. `0.4.0`). If omitted, inspect the latest git tag and
 propose a semver bump based on what you find, then ask: "Which version are we writing this entry
 for?" If no tags exist, default to `0.1.0`.
 
@@ -49,7 +47,7 @@ for?" If no tags exist, default to `0.1.0`.
 7. Show the user the categorized draft entry — plain prose, user-facing language, **not** a
    commit dump. Each bullet should say what changed and why it matters to users, not how it was
    implemented.
-8. `AskUserQuestion`: present the draft and the recommended semver bump. Ask:
+8. Prompt the user: present the draft and the recommended semver bump. Ask:
    - Are any entries missing, mislabeled, or too implementation-focused?
    - Is the version bump correct?
    - Should any entries be omitted (internal-only, not user-facing)?
@@ -57,7 +55,7 @@ for?" If no tags exist, default to `0.1.0`.
    Loop back to Phase 2 if the user requests significant rework.
 
 ## Phase 4 — Approve & write (gate)
-9. Once the user approves the content and version, `AskUserQuestion` one final time: "Ready to
+9. Once the user approves the content and version, prompt the user one final time: "Ready to
    write this to CHANGELOG.md?" — do not write without explicit confirmation (irreversible
    file edit).
 10. Delegate the file edit to **`docs-engineer`**:
@@ -75,7 +73,7 @@ for?" If no tags exist, default to `0.1.0`.
 
 ## Error recovery
 If `git log` or `git diff` fails (e.g. no commits, shallow clone, no tags): surface the error,
-do not proceed, and `AskUserQuestion` with options — (a) provide commit range manually,
+do not proceed, and prompt the user with options — (a) provide commit range manually,
 (b) write from a description the user supplies, (c) stop. Never write a placeholder or
 fabricated entry.
 

@@ -11,35 +11,52 @@ A Rust engineering studio for coding agents: 55 skills that carry the standards 
 maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
-The skills are [Agent Skills](https://agentskills.io) and run on any skill-capable host. The
-agents, hooks and status line are a Claude Code plugin.
+The skills are [Agent Skills](https://agentskills.io) and run on any skill-capable host. The repo
+also ships native plugin manifests for Claude Code and Codex. Claude Code gets the full ambient
+studio (33 named agents, hooks, LSP, and status line); Codex gets the portable skills, the
+host-neutral hooks (session stack briefing, routing and rustfmt nudges), and the 33 agents as
+generated Codex custom agents — never Claude-specific lifecycle code.
 
 ## Install
 
-**One command. Finds the agents on your machine, asks which skills you want.**
+**One command. Detects the agents on your machine and installs the right shape for each** —
+full studio on Claude Code, native plugin on Codex, portable skills anywhere else:
 
 ```bash
-npx skills add vanyastaff/rust-studio
+./install.sh            # from a clone; --dry-run to preview
 ```
 
-Claude Code, Codex, Cursor, OpenCode, Zed, Copilot and ~70 other hosts. No npm publish, no
-clone — the [skills CLI](https://github.com/vercel-labs/skills) reads this repo straight from
-GitHub. Safe to re-run.
+Or pick the skills interactively with the skills CLI:
 
-Each skill bundles the standards it cites under its own `references/`, so it works installed
-alone.
+```bash
+npx skills add .
+```
+
+Claude Code, Codex, Cursor, OpenCode, Zed, Copilot and ~70 other hosts. No npm publish is needed:
+the [skills CLI](https://github.com/vercel-labs/skills) reads a local clone or Git repository
+directly. For a remote install, use `npx skills add <owner>/rust-studio`. Safe to re-run.
+
+The 53 host-neutral workflows bundle their standards and deterministic helpers, so they work
+installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
 
 <details>
-<summary><strong>The full studio on Claude Code, or one skill on one agent</strong></summary>
+<summary><strong>Install the plugin on Codex or Claude Code, or one skill on one agent</strong></summary>
 
 <br>
 
-The plugin adds the 33 agents, the hooks (session briefing, path-scoped rule injection, format
-check, stop-guard) and the status line on top of the skills:
+Codex (repo marketplace + native `.codex-plugin` manifest):
 
 ```text
-/plugin marketplace add vanyastaff/rust-studio
-/plugin install rust-studio@vanya
+codex plugin marketplace add <owner>/rust-studio
+codex plugin add rust-studio@rust-studio
+```
+
+Claude Code adds the 33 agents, hooks (session briefing, path-scoped rule injection, format
+check, stop-guard), LSP, and status line on top of the skills:
+
+```text
+/plugin marketplace add <owner>/rust-studio
+/plugin install rust-studio@rust-studio
 ```
 
 The desktop app has no `/plugin` command — add the marketplace from Customize → personal
@@ -49,25 +66,25 @@ Bun/rust-analyzer prerequisites live in **[INSTALL.md](INSTALL.md)**.
 Narrower, without the prompts:
 
 ```bash
-npx skills add vanyastaff/rust-studio --skill dev-task --agent codex -y
-npx skills add vanyastaff/rust-studio --skill '*' --agent '*' -y
+npx skills add . --skill dev-task --agent codex -y
+npx skills add . --skill '*' --agent '*' -y
 ```
 
 </details>
 
 > [!NOTE]
-> Four skills need the plugin and will say so when installed standalone: `/env-setup`,
-> `/help`, `/progress-bar`, `/eval-agents`. They drive scripts that ship with the plugin.
+> `/progress-bar` and `/eval-agents` are Claude Code-only utilities and explicit-invocation-only
+> in Codex. The other 53 skills, including `/env-setup` and `/help`, are standalone.
 
 ## What you get, where
 
-| | skills via `npx` | plugin on Claude Code |
-|---|---|---|
-| 55 skills | yes | yes |
-| Standards the skills cite | bundled per skill | shared, plus injected by hook |
-| 33 sub-agents | no — phases run inline | yes, spawned per phase |
-| Session briefing, rule injection, stop-guard | no | yes |
-| Status line, background monitors | no | yes |
+| | skills via `npx` | Codex plugin | Claude Code plugin |
+|---|---|---|---|
+| 55 skills | yes | yes | yes |
+| Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
+| 33 named studio agents | no — phases run inline | no — phases run inline | yes, spawned per phase |
+| Session briefing, rule injection, stop-guard | no | no | yes |
+| LSP, status line, background monitors | no | no | yes |
 
 > [!TIP]
 > A skill that says "delegate the build to `rust-builder`" runs that phase itself on a host
@@ -99,19 +116,19 @@ Regenerate after editing either:
 
 ```bash
 cd plugins/rust-studio
-./scripts/sync-references.sh          # rebuild the copies
-./scripts/sync-references.sh --check  # what CI runs
+./scripts/sync-references.sh           # rebuild references + portable helpers
+node scripts/generate-openai-metadata.mjs
+./scripts/validate-distribution.sh     # what CI runs before Bun tests
 ```
 
-`--check` fails on two things: a stale copy, and a skill that names a sub-agent without shipping
-the fallback for hosts that have none.
+Validation catches manifest/marketplace drift, non-standard skill frontmatter, description-budget
+regressions, stale metadata or references, missing inline fallbacks, and vendor-only APIs leaking
+into the 53 portable skills.
 
 ## Releasing
 
-The marketplace and plugin manifests validate clean (`claude plugin validate . --strict`). Bump
-`version` in
-[`plugins/rust-studio/.claude-plugin/plugin.json`](plugins/rust-studio/.claude-plugin/plugin.json)
-— the single source of truth; the marketplace entry intentionally omits it — then tag and push:
+The Claude and Codex manifests, marketplace entry, skill metadata, bundled references, and hook
+tests are checked in CI. Keep the version in both plugin manifests identical, then tag and push:
 
 ```bash
 cd plugins/rust-studio
@@ -123,16 +140,20 @@ Full checklist: [`plugins/rust-studio/docs/releasing.md`](plugins/rust-studio/do
 ## Layout
 
 ```
-rust-studio/                         (this repo = the "vanya" marketplace)
+rust-studio/                         (repo + neutral "rust-studio" marketplace)
+├── .agents/plugins/
+│   └── marketplace.json             # Codex marketplace
 ├── .claude-plugin/
-│   └── marketplace.json             # lists the plugins
+│   └── marketplace.json             # Claude Code marketplace
 ├── plugins/
 │   └── rust-studio/                 # the plugin
 │       ├── .claude-plugin/plugin.json
+│       ├── .codex-plugin/plugin.json
 │       ├── .lsp.json                # bundled rust-analyzer LSP
-│       ├── agents/                  # 33 agent definitions        (plugin only)
-│       ├── skills/                  # 55 skills + bundled references/
-│       ├── hooks/                   # hooks.json + Bun/TypeScript (plugin only)
+│       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
+│       ├── assets/                  # Codex install-surface artwork
+│       ├── skills/                  # 55 skills + references + OpenAI metadata
+│       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 20 path-scoped Rust standards
 │       ├── output-styles/           # opt-in terse review style   (plugin only)
 │       ├── monitors/                # background monitors         (plugin only)

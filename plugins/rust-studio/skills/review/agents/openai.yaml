@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review"
+  short_description: "Reviewing a Rust diff or path for correctness, soundness, scope"
+  default_prompt: "Use $review when reviewing a Rust diff or path for correctness, soundness, scope creep, tests, and standards violations."

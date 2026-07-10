@@ -1,18 +1,16 @@
 ---
 name: eval-agents
-description: "eval-agents evaluate benchmark fixtures — run rust-reviewer / unsafe-auditor / security-auditor against planted-defect fixtures and score recall. Use to quality-assure the studio's review agents before publishing or after editing an agent prompt."
-argument-hint: "[optional: fixture name or agent name; default: all]"
-user-invocable: true
+description: "Use when running Claude Code benchmarks for the studio's Rust reviewer and auditors against planted defects."
 ---
 
 # /eval-agents — does the studio actually catch bugs?
 
-> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
-> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
-> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
+> **Claude Code plugin only.** This evaluates the plugin's named Claude subagents and fixtures;
+> it is not a generic Codex plugin evaluator. Resolve `<plugin-root>` as the directory two levels
+> above this `SKILL.md` (or use `CLAUDE_PLUGIN_ROOT` when Claude provides it).
 
 Run the studio's review agents against the planted-defect fixtures in
-`${CLAUDE_PLUGIN_ROOT}/benchmarks/` and score recall against ground truth. This tests the
+`<plugin-root>/benchmarks/` and score recall against ground truth. This tests the
 *studio itself* — quality assurance for the plugin, not the user's code.
 Protocol: `references/delegation.md` §8 (team execution).
 
@@ -61,7 +59,7 @@ Agent folder → agent mapping:
 
 ## Steps
 1. Resolve fixtures: use **Glob** (`benchmarks/fixtures/**/{input.rs,ground-truth.md}`) to
-   enumerate cases. Filter by `$ARGUMENTS` if a case name or agent folder was given; otherwise
+   enumerate cases. Filter by `input` if a case name or agent folder was given; otherwise
    run all. List what you'll evaluate before proceeding.
 2. For each fixture, spawn the mapped agent (one task per fixture, or a background subagent —
    see Orchestration) on **only** `input.rs` — do not give it the ground truth. Ask it for

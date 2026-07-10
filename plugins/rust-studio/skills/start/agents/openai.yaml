@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start"
+  short_description: "Starting Rust Code Studio work: detect the project stack and"
+  default_prompt: "Use $start when starting Rust Code Studio work: detect the project stack and route to the right workflow or specialist."

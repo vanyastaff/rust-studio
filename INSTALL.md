@@ -1,7 +1,19 @@
 # Installing Rust Code Studio
 
-The plugin lives in this repo, which is itself a Claude Code **marketplace** named `vanya`.
-Install it globally (applies to all your projects) either from GitHub or from a local clone.
+The plugin lives in this repo, which exposes a neutral `rust-studio` marketplace for both Codex
+and Claude Code. Install only the portable skills, the Codex skill bundle, or the full Claude
+studio.
+
+## One command, every host
+
+`install.sh` detects the agent CLIs on your machine and runs each host's native install:
+the full studio on Claude Code, the native plugin on Codex, and the portable skills via the
+skills registry when neither CLI is found. From a clone it installs offline from the local
+path. Safe to re-run; `--dry-run` prints the commands without running them.
+
+```bash
+./install.sh
+```
 
 ## Just the skills, on any agent
 
@@ -9,83 +21,114 @@ The 55 skills are [Agent Skills](https://agentskills.io) and install into Claude
 Codex, Cursor, OpenCode, Zed and ~70 other hosts — no npm publish, no clone:
 
 ```text
-npx skills add vanyastaff/rust-studio                 # pick skills + agents interactively
-npx skills add vanyastaff/rust-studio --skill dev-task --agent codex
+npx skills add .                                      # from a local clone
+npx skills add <owner>/rust-studio --skill dev-task --agent codex
 ```
 
-Each skill bundles the standards it cites under its own `references/`, so it works
-installed alone. What you *don't* get this way: the 33 sub-agents, the hooks (session
-briefing, path-scoped rule injection, stop-guard), the status line, and the four
-plugin-only skills (`/env-setup`, `/help`, `/progress-bar`, `/eval-agents`). Skills that
-name a sub-agent fall back to running that phase inline — see
+The 53 host-neutral workflows bundle the standards and deterministic helpers they need. What you
+*don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
+stop-guard), the status line, and working versions of the two clearly labeled Claude-only
+utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
+that phase inline — see
 [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md).
 
-For the full studio on Claude Code, install it as a plugin instead:
+## Codex plugin
 
-## 1. Add the marketplace (one time)
+The Codex plugin installs the portable Rust workflows with native install-surface metadata,
+plus the host-neutral lifecycle hooks (session stack briefing, routing nudge, rustfmt nudge,
+pre-compaction warning — they need [Bun](#hooks-need-bun) on PATH). It does not run the
+Claude-specific pieces: status line, LSP, or transcript-reading hooks.
+
+Hooks are trust-gated: Codex does not run a plugin's hooks until you approve them once —
+accept the trust prompt in your first interactive session and the session briefing appears
+from then on (trust is persisted per hook in `~/.codex/config.toml`).
+
+Codex plugins cannot bundle agent definitions, so `./install.sh` (from a clone, with node)
+also generates the 33 studio agents into `~/.codex/agents/` as Codex custom agents. Manual
+equivalent:
+
+```text
+node plugins/rust-studio/scripts/generate-codex-agents.mjs            # ~/.codex/agents
+node plugins/rust-studio/scripts/generate-codex-agents.mjs .codex/agents   # per-project
+```
+
+```text
+codex plugin marketplace add <owner>/rust-studio
+codex plugin add rust-studio@rust-studio
+codex plugin list
+```
+
+For a local clone, replace the GitHub shorthand in the first command with the absolute repository
+path. Restart the ChatGPT desktop app after adding the marketplace; start a new Codex task after
+installing so the complete skill catalog is loaded.
+
+## Full Claude Code studio
+
+### 1. Add the marketplace (one time)
 
 ### From GitHub (anyone)
 
 ```text
-/plugin marketplace add vanyastaff/rust-studio
+/plugin marketplace add <owner>/rust-studio
 ```
 
 or from the CLI:
 
 ```powershell
-claude plugin marketplace add vanyastaff/rust-studio
+claude plugin marketplace add <owner>/rust-studio
 ```
 
 Claude Code clones the repo, so the relative `./plugins/rust-studio` source resolves correctly.
-Pin to a tag with `@ref`, e.g. `vanyastaff/rust-studio@rust-studio--v0.5.0`.
+Replace `<owner>` with the repository owner. Pin to a tag with `@ref`, for example
+`<owner>/rust-studio@rust-studio--v0.30.0`.
 
 ### From a local clone (no GitHub needed)
 
 ```text
-/plugin marketplace add C:\Users\vanya\rust-studio
+/plugin marketplace add C:\path\to\rust-studio
 ```
 
 or:
 
 ```powershell
-claude plugin marketplace add C:\Users\vanya\rust-studio
+claude plugin marketplace add C:\path\to\rust-studio
 ```
 
 Either way registers the marketplace in `~/.claude/plugins/known_marketplaces.json`.
 
-## 2. Install the plugin
+### 2. Install the plugin
 
 ```text
-/plugin install rust-studio@vanya
+/plugin install rust-studio@rust-studio
 ```
 
 or:
 
 ```powershell
-claude plugin install rust-studio@vanya
+claude plugin install rust-studio@rust-studio
 ```
 
 Installing globally (user scope) makes the agents, skills, hooks, and rules available in
 **every** project you open.
 
-## Alternative: declare it in settings.json
+### Alternative: declare it in settings.json
 
-Edit `C:\Users\vanya\.claude\settings.json`:
+Edit your `~/.claude/settings.json` (on Windows, `%USERPROFILE%\.claude\settings.json`):
 
 ```json
 {
   "extraKnownMarketplaces": {
-    "vanya": {
-      "source": { "source": "directory", "path": "C:\\Users\\vanya\\rust-studio" }
+    "rust-studio": {
+      "source": { "source": "directory", "path": "C:\\path\\to\\rust-studio" }
     }
   },
   "enabledPlugins": {
-    "rust-studio@vanya": true
+    "rust-studio@rust-studio": true
   }
 }
 ```
 
-## 3. Verify
+### 3. Verify
 
 ```text
 /help                 # should show the Rust Code Studio catalog
@@ -155,12 +198,26 @@ Edit files under `plugins/rust-studio/` and they take effect on the next session
 marketplace reads from disk). If you installed a pinned copy, run:
 
 ```text
-/plugin marketplace update vanya
+/plugin marketplace update rust-studio
+```
+
+For Codex, refresh the configured Git marketplace and reinstall the plugin:
+
+```text
+codex plugin marketplace upgrade rust-studio
+codex plugin add rust-studio@rust-studio
 ```
 
 ## Uninstall
 
 ```text
-/plugin uninstall rust-studio@vanya
-/plugin marketplace remove vanya
+/plugin uninstall rust-studio@rust-studio
+/plugin marketplace remove rust-studio
+```
+
+Codex:
+
+```text
+codex plugin remove rust-studio@rust-studio
+codex plugin marketplace remove rust-studio
 ```

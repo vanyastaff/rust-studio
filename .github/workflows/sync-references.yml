@@ -1,10 +1,13 @@
-name: references in sync
+name: plugin quality
 
 # skills/*/references/ is generated from docs/ and rules/. If an edit to a canonical
 # doc never reaches the copies, every standalone skill install ships the stale text.
 on:
   pull_request:
-    paths: ['plugins/rust-studio/docs/**', 'plugins/rust-studio/rules/**', 'plugins/rust-studio/skills/**']
+    paths:
+      - '.agents/**'
+      - '.github/workflows/sync-references.yml'
+      - 'plugins/rust-studio/**'
   push:
     branches: [main]
 
@@ -13,5 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: ./scripts/sync-references.sh --check
+      - uses: oven-sh/setup-bun@v2
+      - name: Validate manifests, skills, metadata, and references
+        run: ./scripts/validate-distribution.sh
+        working-directory: plugins/rust-studio
+      - name: Test hooks and status-line scripts
+        run: bun test
         working-directory: plugins/rust-studio

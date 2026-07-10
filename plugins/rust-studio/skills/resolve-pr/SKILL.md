@@ -1,8 +1,6 @@
 ---
 name: resolve-pr
-description: "resolve PR feedback, address review comments, fix review threads, watch a PR, shepherd a pull request, watch CI — triage and fix review comments (a reply per thread); with --watch, continuously fix new reviewer/bot comments and CI failures and propose CI speedups. Use when a PR has feedback or needs shepherding to merge-ready."
-argument-hint: "[PR number or url] [--watch] [--ci-budget=<minutes>]"
-user-invocable: true
+description: "Use when addressing pull-request review threads or CI failures, or watching a PR until merge-ready."
 ---
 
 # /resolve-pr — work through PR feedback (one-shot or watch)
@@ -25,7 +23,7 @@ memory index) — conventions reviewers enforce here inform triage. If nothing s
 (`references/memory-protocol.md`).
 
 ## Mode A — one-shot (default)
-1. Resolve the PR from `$ARGUMENTS` or the current branch:
+1. Resolve the PR from `input` or the current branch:
    `gh pr view --json number,title,headRefName,reviewDecision`, then fetch unresolved review
    threads (`gh api repos/{owner}/{repo}/pulls/{n}/comments` + `.../reviews`). State the PR and
    open-thread count.

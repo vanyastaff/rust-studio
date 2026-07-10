@@ -1,15 +1,13 @@
 ---
 name: progress-bar
-description: "progress bar statusline live visibility icons theme — manage the studio status line (the rich Tokyo Night powerline bar). Auto-installed by default; use this to switch icon style (nerd / emoji / symbols / text), refresh after a plugin update, or remove it (off)."
-argument-hint: "[nerd | emoji | symbols | text | ascii | off]"
-user-invocable: true
+description: "Use when running Claude Code and configuring, refreshing, or removing the Rust Code Studio status line."
 ---
 
 # /progress-bar — manage the live status line
 
-> **Plugin-only.** This skill drives assets that ship with the Rust Studio *plugin*
-> (`${CLAUDE_PLUGIN_ROOT}`). Installed standalone via `npx skills add`, those assets are
-> absent — install the plugin instead: `/plugin marketplace add vanyastaff/rust-studio`.
+> **Claude Code plugin only.** This manages Claude's `statusLine` setting and has no Codex
+> equivalent. Resolve `<plugin-root>` as the directory two levels above this `SKILL.md` (or use
+> `CLAUDE_PLUGIN_ROOT` when Claude provides it). Installed standalone, the script is absent.
 
 The studio already customizes **per-sub-agent rows** in the agent panel automatically (shipped in
 the plugin `settings.json` as `subagentStatusLine`), and the **main status bar** (`statusLine`) is
@@ -27,14 +25,14 @@ with `progress_tracking` on — they write `.rust-studio/progress.json`, which t
 
 ## Why a stable copy (read first)
 
-`${CLAUDE_PLUGIN_ROOT}` is **not** substituted inside user `settings.json`, and the plugin install
+`CLAUDE_PLUGIN_ROOT` is **not** substituted inside user `settings.json`, and the plugin install
 path is version-pinned (it changes on every plugin update). So this skill **copies** the status-line
 script to a stable path and points `settings.json` there. After you update the plugin, **re-run
 `/progress-bar`** to refresh the copied script with any improvements.
 
 ## Steps
 
-1. **Argument routing.** Inspect `$ARGUMENTS`:
+1. **Argument routing.** Inspect `input`:
    - `off` → remove the `statusLine` key from `~/.claude/settings.json` (leave everything else and
      the plugin's `subagentStatusLine` untouched), confirm, and stop.
    - `nerd` | `emoji` | `symbols` | `text` | `ascii` → this is an **icon-style switch**. Resolve the
@@ -49,7 +47,7 @@ script to a stable path and points `settings.json` there. After you update the p
    - empty / anything else → (re)install / refresh, per the steps below.
 
 2. **Resolve paths.** Home dir = `$HOME` (or `%USERPROFILE%` on Windows). Stable dir =
-   `<home>/.claude/rust-studio/`. Plugin script = `${CLAUDE_PLUGIN_ROOT}/scripts/statusline.ts`.
+   `<home>/.claude/rust-studio/`. Plugin script = `<plugin-root>/scripts/statusline.ts`.
 
 3. **Copy the script.** Create `<home>/.claude/rust-studio/` and copy `statusline.ts` there
    (`<home>/.claude/rust-studio/statusline.ts`). It is a single self-contained `bun` file.

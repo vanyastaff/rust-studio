@@ -1,8 +1,6 @@
 ---
 name: bloat
-description: "bloat binary size cargo-bloat llvm-lines strip lto monomorphization — measure what makes the binary big, cut it with profile settings and code changes, and prove the delta in bytes. Use when a CLI/wasm/embedded binary is too large, before shipping a size-sensitive artifact, or when compile times explode from monomorphization."
-argument-hint: "[optional binary/package, or a size budget like '5MB']"
-user-invocable: true
+description: "Use when reducing Rust binary size or monomorphization with cargo-bloat and llvm-lines."
 ---
 
 # /bloat — measure binary size, cut it, prove the delta
@@ -17,7 +15,7 @@ manifest writes to `rust-builder`.** Honor the collaboration protocol
 
 ## Input
 
-`$ARGUMENTS` may name a binary/package, state a budget ("under 5MB", "wasm < 300KB
+`input` may name a binary/package, state a budget ("under 5MB", "wasm < 300KB
 gzipped"), or be empty. If empty, pick the primary `[[bin]]` target (or the wasm/cdylib
 artifact for wasm projects) and say so. If a budget was given, every phase reports
 distance to it.
@@ -70,7 +68,7 @@ distance to it.
    then code changes (e.g. `fn inner(&str)` behind a generic `AsRef<str>` shim to cut
    monomorphization — the classic `impl Trait`-to-inner-fn pattern), last API-visible
    changes (need `api-design-lead`).
-7. State the plan and proceed. `AskUserQuestion` only for genuine forks: dropping a
+7. State the plan and proceed. Prompt the user only for genuine forks: dropping a
    user-visible feature, `panic = "abort"` on a library-consumed binary, or replacing a
    dependency with different behavior.
 

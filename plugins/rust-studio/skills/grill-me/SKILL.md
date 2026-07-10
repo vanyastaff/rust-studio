@@ -1,8 +1,6 @@
 ---
 name: grill-me
-description: "grill me, interview me, pull my input, stress-test the plan, extract requirements — when a decision genuinely needs YOUR input, the agent interviews you in cheap one-at-a-time questions (each with a recommended default) instead of dropping one heavy future-deciding fork. Sources from the code first; asks only what truly lives in you."
-argument-hint: "[plan, decision, or area to pull your input on]"
-user-invocable: true
+description: "Use when requirements or a consequential decision need user input; interview one focused question at a time."
 ---
 
 # /grill-me — extract the user's input in cheap increments, not one heavy fork
@@ -52,7 +50,7 @@ Use this when:
 
 ## Phase 2 — Interview (one question at a time)
 
-4. Walk the ASK list in dependency order. For **each**, make **one** `AskUserQuestion` call with:
+4. Walk the ASK list in dependency order. For **each**, make **one** user-input call with:
    - a single focused question (one axis — never bundle unrelated forks into one screen);
    - 2–4 **concrete** options, the **first marked `(Recommended)`** — your default with a
      one-line reason;
@@ -75,7 +73,7 @@ Use this when:
    - any remaining assumptions/risks, labeled,
    - the maintainer-bar implications carried forward (gate exposure, breaking-change posture).
 9. Present the synthesis as the approval gate: "here's the shared understanding — proceed?" Use
-   native plan mode for this final go-ahead, not another `AskUserQuestion`.
+   the host's plan surface when available, or request explicit approval in the conversation.
 
 ## Handoff
 
@@ -91,7 +89,7 @@ After approval, suggest and offer to invoke the natural next step (confirm befor
   any, goes through the downstream skill (`/spec`, `/architecture`) after approval.
 - Never present a quality menu — option sets vary by **scope or approach**, never by quality
   (`references/collaboration.md` §1). The Recommended option clears the bar.
-- If `$ARGUMENTS` is already well-understood or trivial, say so and skip to the decision rather
+- If `input` is already well-understood or trivial, say so and skip to the decision rather
   than manufacturing an interview — over-processing a clear call is its own failure.
 - Don't ask the user to do your analysis. If a question would make them reconstruct what you
   already worked out, you've inverted the skill — decide it and state it instead.

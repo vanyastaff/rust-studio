@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Task"
+  short_description: "Implementing one scoped Rust feature or multi-file task end to"
+  default_prompt: "Use $dev-task when implementing one scoped Rust feature or multi-file task end to end: scout, plan, build, test, and review."

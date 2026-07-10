@@ -1,7 +1,6 @@
 ---
 name: deps-check
-description: "dependency check, cargo-deny, outdated, duplicates, features, MSRV, licenses — dependency-hygiene pass: bans/licenses/sources (cargo-deny), duplicate/outdated versions, feature unification, MSRV. For code-level attacker-facing security review use /security-audit instead."
-user-invocable: true
+description: "Use when auditing Rust dependencies for advisories, licenses, sources, duplicates, versions, features, and MSRV."
 ---
 
 # /deps-check — audit workspace dependencies
@@ -65,7 +64,7 @@ All commands in this phase are read-only; run them without asking first.
    remove a crate with an advisory), present **2–4 options with trade-offs and a
    recommended default** before proceeding.
 
-5. `AskUserQuestion`: show the full findings table and proposed action plan. Get explicit
+5. Prompt the user: show the full findings table and proposed action plan. Get explicit
    approval before drafting changes. If the user wants to adjust scope or defer items,
    revise the plan and ask again.
 
@@ -83,7 +82,7 @@ All commands in this phase are read-only; run them without asking first.
    - Reference `references/cargo-manifest.md` for field ordering,
      workspace-inheritance patterns, and feature-gate conventions.
 
-7. Show the proposed diff (Cargo.toml changes + lock-file summary). `AskUserQuestion` for
+7. Show the proposed diff (Cargo.toml changes + lock-file summary). Prompt the user for
    sign-off before any file is written (irreversible action per protocol §1).
 
 ## Phase 4 — Apply and verify
@@ -115,7 +114,7 @@ All commands in this phase are read-only; run them without asking first.
 If **`dependency-manager`** returns **BLOCKED** (conflicting version requirements with no
 satisfying resolution, or a license that cannot be waived):
 - Surface the blocker immediately with the full conflict graph.
-- `AskUserQuestion` with options — (a) pin at the last acceptable version and track the
+- Prompt the user with options — (a) pin at the last acceptable version and track the
   issue, (b) replace the dependency with an alternative, (c) stop and open a separate
   `/dev-task` to refactor the dependency boundary.
 - Never discard completed findings — keep already-resolved items in the summary.
