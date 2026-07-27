@@ -46,7 +46,11 @@ See `references/integrity-and-evidence.md`.
 
 ## Tooling
 - Prefer `cargo nextest` for speed + isolation. Keep tests fast; mark slow ones.
-- Assertions: `assert_eq!` with helpful messages, or `pretty_assertions` for diffs.
+- Assertions: `assert_eq!` with helpful messages, or `pretty_assertions` for diffs. For a value
+  you match rather than compare, `assert_matches!` (std, stable **1.96**) beats
+  `assert!(matches!(..))` — it prints the actual value on failure instead of just `false`, and it
+  binds pattern captures so you can assert on the inner fields in the same step. Below 1.96 MSRV,
+  `assert!(matches!(..))` with a message stays the fallback.
 - Run `miri` against **every** `unsafe` path — it catches UB (aliasing, uninit reads,
   out-of-bounds, invalid layout) that normal tests never see. Non-negotiable for unsafe.
 - `loom` for lock-free / atomic synchronization: it exhaustively explores thread

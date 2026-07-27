@@ -17,8 +17,9 @@ does not provide them.
 This is the curated map (which family to reach for); the exhaustive, always-current
 list of every installed skill is generated below it.
 
-**Onboarding:** `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt`
-**Design & architecture:** `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
+**Onboarding:** `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt` · `/progress-bar` (the live status line)
+**Design & architecture:** `/brainstorm` · `/grill-me` (interview me to pull my input) · `/prototype` (throwaway code that settles a design question) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
+**Find out:** `/research` (settle a question against crate source and docs.rs, cited) · `/recall` (what the studio already learned)
 **Build:** `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 **Spec-driven:** `/spec` · `/spec-tasks` · `/spec-verify`
 **TDD & verify:** `/tdd` · `/verify-loop`
@@ -28,7 +29,7 @@ list of every installed skill is generated below it.
 **Testing:** `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
 **Memory (cross-session):** `/remember` · `/recall` · `/session-wrap`
 **Release:** `/publish` · `/changelog` · `/msrv-check`
-**Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback)
+**Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback) · `/merge-conflicts` (resolve a stopped merge or rebase)
 **Teams (multi-agent presets):** `/team-api` · `/team-async` · `/team-perf` · `/team-release`
 
 ## Agents

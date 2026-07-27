@@ -5,6 +5,157 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.31.0] - 2026-07-27
+
+### Added
+- `/prototype` — throwaway Rust code that settles one design question. Fills the gap between
+  `/brainstorm` (reasoning, no code) and `/dev-task` (code meant to survive): write the call
+  site first and let `cargo check` judge the API shape. Explicitly suspends the maintainer bar
+  inside the prototype, and requires the code be captured then deleted.
+- `/research` — settle a question against primary sources (crate source under
+  `~/.cargo/registry`, version-pinned docs.rs, the Reference, RFCs) and write a cited note to
+  `.rust-studio/research/<slug>.md`. Answers are pinned to the versions in `Cargo.lock`;
+  blog posts are leads, never citations. Complements `/recall`, which reads what the studio
+  already knows.
+- `/merge-conflicts` — resolve a stopped merge or rebase by recovering both sides' intent,
+  with Rust-specific rules for `Cargo.lock` (regenerate, never hand-merge), `Cargo.toml`
+  feature unions, `use` blocks, match arms, and generated files. Stages and proves the tree,
+  then stops for the human to commit.
+- `docs/writing-skills.md` — the editorial standard for authoring skills: invocation
+  economics, description budget, information hierarchy, completion criteria, leading words,
+  positive steering, and the four ways a skill rots (duplication, sediment, no-op, sprawl).
+  Referenced from `CONTRIBUTING.md`. Vocabulary adapted from
+  [mattpocock/skills](https://github.com/mattpocock/skills).
+- **Irreversible-action guard** (`PreToolUse` on `Bash`, config `git_guard`, default on). The
+  studio had no `Bash` guard at all while being explicitly autonomy-first. It blocks work
+  destruction (`git reset --hard`, `clean -f`, `checkout .`, `branch -D`, `stash drop/clear`,
+  plain force-push, `reflog expire`, `gc --prune=now`) and permanent publication (a real
+  `cargo publish`, `cargo yank`) — the latter giving `/publish`'s "never auto-publish" prose
+  mechanical teeth. Plain `git push`, `--force-with-lease`, and `cargo publish --dry-run` stay
+  allowed so `/pr` and `/publish` still work. Fails open if anything stalls. 49 tests.
+- **The Cheat Catalog now covers analysis, not just execution.** It named the ways an agent fakes
+  a *result* (stub, vacuous test, weakened oracle) but nothing about how it fakes *knowledge*.
+  Three moves added: **Unread assertion** (claiming a property of code from a grep hit, symbol
+  name, or heading rather than the body), **Inference dressed as verification** (reporting what
+  you reasoned to in the voice of what you checked), and **Silent retraction** (learning your
+  earlier claim was wrong and moving on without withdrawing it). All three join the Integrity
+  Rejection Test.
+- Evidence rules gain **cite what you read at the range you read it**, **state the bound of what
+  you looked at**, and a **duty to withdraw your own claim out loud** the moment you find it
+  wrong — the correction is one sentence; an uncorrected claim costs the report's credibility.
+- `rust-reviewer` and `harsh-critic` carry the read-before-you-judge obligation explicitly: a
+  symbol name is a lead, its body is the evidence, findings cite the range actually read, and a
+  sampled claim is labeled as a lead rather than a conclusion.
+- **Verified observation, invented mechanism** joins the Cheat Catalog, and "a mechanism needs its
+  own evidence" joins the Evidence Rules. Both come from a live eval, not speculation: two
+  reviewers independently found that `unused_assignments` does not fire on `delay *= 2` and gave
+  mutually exclusive reasons — the early `return` dominating the back-edge, versus the overloaded
+  `MulAssign` counting as a use. A three-line probe (same control flow, `u32` instead of
+  `Duration`, lint fires) proves only the second. Both had checked the observation; one presented
+  an unchecked mechanism at the same confidence, and a wrong mechanism aims the fix at the wrong
+  thing.
+- `rules/core.md` gains two compiler diagnostics as security signals, surfaced by the eval agents
+  themselves: an `unused variable` warning on a **predicate's or validator's own inputs** is a
+  suspected check bypass, and `#[allow(unreachable_code)]`/`#[allow(dead_code)]` on a security
+  path is presumed to mask an early `return`.
+- New eval fixture `benchmarks/fixtures/reviewer/audit-at-scale` — the first **multi-file**
+  fixture (14 files, ~194 lines), built because `name-vs-body` could not measure what it was
+  designed for: handing over one 72-line file removes the sampling pressure that makes an agent
+  trust a grep instead of a body. Here every planted defect sits in a file that *does* contain the
+  string a sweep searches for, so the sweep reads clean. `rg validate_len` hits all five ingest
+  paths — but `body.rs:6` discards the `Result` with `let _ =`. Every `validate_depth` call site is
+  correct — but the validator returns `Ok(())` on its over-limit branch and can never fail. `rg
+  decode_checked` shows it defined, called, and covered by two tests — but the production entry
+  point calls `decode_unchecked`. The crate compiles with zero warnings, so neither rustc nor
+  clippy offers a shortcut. A report concluding the house rule holds scores zero.
+- `/eval-agents` supports multi-file fixtures: a case now carries `ground-truth.md` plus either
+  `input.rs` or a `src/` tree, fixture discovery globs `ground-truth.md` (the one file every case
+  has), and a multi-file case supplies the audit prompt it is calibrated for — a fixture measuring
+  whether an agent samples instead of reading is void if you hand it one file and say "read this".
+- New eval fixture `benchmarks/fixtures/integrity/name-vs-body` — six items whose names and doc
+  comments read correctly and whose bodies lie (a `validate_utf8` that calls
+  `from_utf8_unchecked`, an `is_authorized` that returns `true` before its own check, a
+  `// SAFETY:` comment asserting an invariant nothing upholds, a `retry_with_backoff` that never
+  retries, a 30-second timeout defined as zero, and a test asserting the opposite of its name).
+  Scoring requires reading bodies; a name-sampling review scores zero. Ground truth extended to
+  nine rows after a live run surfaced three real defects it had missed — most importantly that
+  deleting the `return true` does **not** fix the bypass, because the store stub underneath is
+  also unconditionally true. `gamed-green`'s ground truth likewise records the four genuine
+  correctness bugs a run found beyond its planted gaming, so they are not scored against
+  precision.
+- **Eval result, recorded honestly:** both arms scored 6/6 on the original rows — with and
+  without the explicit read-the-body instruction added to `rust-reviewer` this release. The
+  instruction did not change *recall*; it changed *reporting form* (line ranges rather than
+  single lines, an explicit statement of what was read, a labeled retraction). The fixture also
+  cannot measure what the rule targets: handing over one 72-line file removes the sampling
+  pressure that produces an unread assertion in the first place. That limitation is now written
+  into the fixture rather than left implied.
+- `disable-model-invocation` is now an accepted skill frontmatter key.
+
+### Changed
+- **`gate_intensity` now does something.** It was read by exactly one hook, printed into the
+  session briefing, and branched on by zero skills — a lean/solo knob with no mechanical
+  effect. `docs/verdicts.md` now defines the two axes it sits on: intensity scales **how many
+  lenses** review a change; the **integrity floor** (evidence rules, honest denominators, the
+  Cheat Catalog) never scales. `/review` branches on it, and `/dev-task` starts from the
+  configured intensity instead of hardcoding `lean`. `unsafe`, public-API, and release changes
+  run full regardless.
+- **Fewer reviewers now means stricter automatic enforcement.** `stop_guard` defaults to on at
+  `lean`/`solo` and stays opt-in at `full`. Dropping ceremony removes the independent readers
+  that catch a stub, a vacuous test, or a claimed-but-unrun check, so the mechanical floor
+  rises to meet it. An explicit `stop_guard` setting still wins in either direction.
+- The seven side-effecting skills (`add-dep`, `commit`, `eval-agents`, `new-crate`, `pr`,
+  `progress-bar`, `publish`) are user-invoked on Claude as well as Codex. They previously
+  set `allow_implicit_invocation: false` for Codex only, so Claude could still fire them
+  implicitly — a commit, PR, or crate scaffold could start without a human asking. Their
+  descriptions also leave the Claude context window, freeing attention for the 48 skills
+  the agent is meant to route to.
+- `/review` states its shape checklist once as a named **Shape audit** instead of spelling
+  the same list out in both the `rust-reviewer` and `harsh-critic` steps.
+- `/help` lists `/progress-bar`, which it had never mentioned, alongside the three new skills.
+  A router that omits a skill is a router that lies.
+- `/spec-tasks` now sizes each task to **one context window** as a vertical slice that ships on
+  its own, runs **one task per fresh context** (its own worker, or a cleared context where the
+  host has none), parallelizes only across **disjoint file sets** rather than the dependency
+  graph alone, and commits each task as it lands so every task is a rollback point. Previously
+  it asked for "small, ordered tasks" and ran them all in one context — the accumulated detail
+  is what makes a long run start circling and breaking what already worked. A mechanical
+  failure now gets exactly one retry in a fresh context with the error attached.
+
+### Fixed
+- **A hole in the studio's own lint gate**, found by running `rust-reviewer` against the new
+  `audit-at-scale` fixture and then verified directly: `cargo clippy --all-targets -- -D warnings`
+  — the exact command this plugin prescribes everywhere — passes `let _ = validate(n);` clean when
+  `validate` returns `Result<(), E>`. `let_underscore_must_use` is **restriction**-tier, so
+  neither `pedantic` nor `nursery` enables it, and a discarded validation is invisible to the
+  zero-warning bar. `rules/cargo-manifest.md` now requires it explicitly in
+  `[workspace.lints.clippy]` for any crate that validates by returning `Result`.
+- `rules/types.md` records the shape behind it, which the eval agent identified and this fixture
+  had not planted: a validator returning bare `Result<(), E>` is a remember-to-call-me contract —
+  nothing binds the check to the value it guards, so the unchecked path stays reachable through a
+  dropped result, a missing `?`, or a `pub` unchecked helper. Return a `Checked` proof the
+  consumer must accept as its parameter, so the unchecked path fails to typecheck. In the
+  fixture, three independent entry points each lost the check a different way, all downstream of
+  one bare-`Result` validator.
+- **Standards refreshed against Rust 1.97.1** (stable 2026-07-16), verified against
+  `rust-lang/rust` `RELEASES.md` rather than recollection. `rules/core.md` gains `if let` guards
+  and the `push_mut`/`insert_mut` family (1.95) plus the integer bit helpers (1.97);
+  `rules/testing.md` gains `assert_matches!` (1.96), which prints the actual value on failure
+  where `assert!(matches!(..))` prints only `false`; `rules/perf.md` gains `core::hint::cold_path`
+  (1.95) and a warning that **v0 symbol mangling is the 1.97 default**, so an old profiler will
+  suddenly show mangled frames. Every item is tagged with the version that stabilized it, so a
+  crate with an older MSRV knows to skip it.
+- `docs/ci-best-practices.md` records Cargo 1.97's stabilized **`build.warnings`**, which the
+  release notes name as the replacement for a global `-D warnings`: it denies warnings for local
+  packages only, without invalidating the build cache on change or denying inside path/git
+  dependencies you do not own. `RUSTDOCFLAGS` still has to be set separately.
+- `docs/maintainer-grade-development.md` pointed at the Rust 1.96.0 announcement as its
+  "current toolchain freshness" source — a link that goes stale every six weeks by construction.
+  It now points at the full changelog, which does not.
+- `validate-distribution.sh` now checks the invocation axis in both harnesses against the
+  side-effecting roster, so Claude and Codex can no longer drift apart — in either
+  direction.
+
 ## [0.30.0] - 2026-07-10
 
 ### Added

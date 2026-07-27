@@ -253,9 +253,22 @@ function envFlag(name: string): boolean {
   return v === "1" || v === "true";
 }
 
+/** The studio's two axes are independent: `gate_intensity` scales how many reviewing
+ *  lenses run (cost), while the integrity floor — evidence, honest denominators, no
+ *  vacuous tests — never scales at all. Dropping to `lean`/`solo` removes the independent
+ *  eyes that would otherwise catch a gamed green, so the mechanical floor has to rise to
+ *  meet it: the guard defaults ON there, and stays opt-in at `full` where the extra lenses
+ *  already do that job. An explicit `stop_guard` setting always wins over this default. */
+export function guardDefault(gateIntensity: string | null | undefined): boolean {
+  const gates = (gateIntensity ?? "full").trim().toLowerCase();
+  return gates === "lean" || gates === "solo";
+}
+
 /** Resolve guard config from plugin userConfig (primary) + STOP_GUARD_* env (power knobs). */
 export function loadConfig(): GuardConfig {
-  const enabled = optionBool("stop_guard", false) && !envFlag("STOP_GUARD_DISABLED");
+  const enabled =
+    optionBool("stop_guard", guardDefault(option("gate_intensity"))) &&
+    !envFlag("STOP_GUARD_DISABLED");
   return {
     enabled,
     strict: optionBool("stop_guard_strict", false) || envFlag("STOP_GUARD_STRICT"),
