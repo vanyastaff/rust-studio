@@ -32,6 +32,11 @@ matrix, `-Zminimal-versions`, macOS+Windows, llvm-cov→Codecov), `safety.yml` (
 - **`timeout-minutes`** on **every** job (default is 360 min / 6 h — a hung job burns the budget).
 - **SHA-pin third-party actions** (`org/x@<40-char-sha> # vX`) after the March-2025 `tj-actions/changed-files` tag-mutation attack. Bump via Dependabot (`github-actions` ecosystem).
 - **`env: RUSTFLAGS: "-D warnings"`** (not `#![deny(warnings)]` in source) **and** **`RUSTDOCFLAGS: "-D warnings"`** (RUSTFLAGS does not cover rustdoc).
+  On **Cargo 1.97+** the stabilized `build.warnings = "deny"` config does the same job for
+  *local* packages without the blunt instrument of a global `RUSTFLAGS`, which invalidates the
+  build cache whenever it changes and also denies warnings in path/git dependencies you do not
+  own. Set it in `.cargo/config.toml` (or `CARGO_BUILD_WARNINGS=deny` in the CI env) once the
+  MSRV allows; keep `RUSTDOCFLAGS` regardless, since `build.warnings` does not cover rustdoc.
 - **`--locked`** on cargo invocations (fail on a stale lockfile).
 
 ## The quality gate (job split: fmt → clippy / test / doc)

@@ -1,6 +1,7 @@
 ---
 name: new-crate
 description: "Use when scaffolding a Rust crate or workspace member with studio metadata, lints, policy, toolchain, and CI."
+disable-model-invocation: true
 ---
 
 # /new-crate — scaffold a workspace member

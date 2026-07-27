@@ -31,8 +31,14 @@ these phase updates separately.
 build?" and, for non-trivial work, suggest running `/architecture` or `/brainstorm` first.
 
 ## Pick the review mode
-Default **lean** (one crate, routine). Use **full** for public APIs, `unsafe`, releases, or
-cross-crate changes. Use **solo** for prototypes. State which mode you're using and why.
+Start from the intensity the session briefing names (default **full**), then adjust to the
+change: **lean** for a routine change inside one crate, **full** for public APIs, `unsafe`,
+releases, or cross-crate ripples, **solo** for prototypes. Escalate freely; drop below the
+configured intensity only with a stated reason. State which mode you're using and why.
+
+Mode scales *reviewers*, never evidence — `references/verdicts.md` §"Review modes". At
+`lean`/`solo` the independent lenses that would catch a gamed green are gone, so the
+`stop-guard` hook defaults on there; the honesty bar below is identical in every mode.
 Any non-trivial task must also apply the pre-code maintainer standard in
 `references/maintainer-grade-development.md` before code is written.
 

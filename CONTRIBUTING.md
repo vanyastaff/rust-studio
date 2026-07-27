@@ -19,16 +19,22 @@ everything that skill cites. So:
 
 ## Skill conventions
 
+`plugins/rust-studio/docs/writing-skills.md` is the editorial standard — invocation,
+descriptions, information hierarchy, completion criteria, and the pruning failure modes.
+Read it before adding or reshaping a skill. The mechanics below are what CI enforces.
+
 - Frontmatter keys: only `name`, `description`, `license`, `compatibility`, `metadata`,
-  `allowed-tools`. `name` must match the directory.
+  `allowed-tools`, `disable-model-invocation`. `name` must match the directory.
 - No host-specific APIs in portable skills (`CLAUDE_PLUGIN_ROOT`, `$ARGUMENTS`, task/team
   tool names, …) — describe capabilities instead; `validate-distribution.sh` enforces the
   exact list. `eval-agents` and `progress-bar` are the labeled Claude-only exceptions.
 - `SKILL.md` under 500 lines; all 55 descriptions share a 6,500-character budget (Codex
   bounds the initial skill catalog).
-- A side-effecting skill (publishes, commits, scaffolds) sets
-  `allow_implicit_invocation: false` in `skills/<name>/agents/openai.yaml`; regenerate
-  metadata with `node plugins/rust-studio/scripts/generate-openai-metadata.mjs`.
+- A side-effecting skill (publishes, commits, scaffolds, rewrites machine config) is
+  user-invoked in **both** harnesses: `disable-model-invocation: true` in the frontmatter
+  *and* `allow_implicit_invocation: false` in `skills/<name>/agents/openai.yaml`.
+  `validate-distribution.sh` fails when the two disagree. Regenerate metadata with
+  `node plugins/rust-studio/scripts/generate-openai-metadata.mjs`.
 - A skill that names a studio sub-agent must cite `references/sub-agents.md` (directly or
   via `delegation.md`) so hosts without sub-agents get the inline fallback.
 

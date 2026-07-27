@@ -14,6 +14,12 @@ Applies to benchmarks and performance-critical paths.
   defeat the optimizer. Report variance, not just the mean.
 - Profile (flamegraph / `perf` / `samply`) to find the hot path before optimizing it.
   Optimize the measured bottleneck, not the guessed one.
+- Since **1.97** rustc emits **v0 symbol mangling by default**. Old profilers, debuggers, and
+  `addr2line` builds may show mangled frames or garbled backtraces — update the tool rather than
+  reading around it, and suspect this first when a familiar profile suddenly turns unreadable.
+- Mark genuinely rare branches with `core::hint::cold_path()` (**1.95**) so the optimizer keeps
+  them off the hot path. It is a hint about *frequency*, not a substitute for a measurement —
+  the ordering above still holds: profile first.
 
 ## Allocation & copies
 - Hot paths avoid per-iteration allocation: reuse buffers, `Vec::with_capacity`,

@@ -13,6 +13,14 @@ Applies to domain models, protocols, parsers, config, and error types.
   over bool flags, stringly protocols, unstructured `Option`, or caller discipline.
 - Parse once into a stronger type; downstream code should receive valid data, not repeat
   validation checks.
+- **A validator that returns `Result<(), E>` is a remember-to-call-me contract.** Nothing links
+  the check to the value it guards, so the guarded path stays reachable when a caller writes
+  `let _ = validate(x);`, forgets the `?`, or reaches a `pub` unchecked helper — and the default
+  clippy gate does not see any of it (`let_underscore_must_use` is restriction-tier;
+  see cargo-manifest.md). Return the proof instead: `fn checked(raw: &[u8]) -> Result<Checked<'_>, E>`,
+  and have the consumer take `Checked`. The unchecked path then does not typecheck rather than
+  relying on discipline. An eval on a 14-file crate produced exactly this: three independent
+  entry points each lost the check a different way, all downstream of one bare-`Result` validator.
 - A witness / typestate proof (`Validated<T>`, a `*Checked` newtype with a private field) must
   bind to *what* it proves. If it was checked against external state (a registry, schema version,
   config), record that binding (version/epoch/snapshot) or scope its lifetime to that state —
