@@ -34,7 +34,8 @@ Checked on 2026-06-14:
   https://doc.rust-lang.org/cargo/reference/workspaces.html
 - Rust std docs and release blog for current toolchain freshness:
   https://doc.rust-lang.org/stable/std/
-  https://blog.rust-lang.org/2026/05/28/Rust-1.96.0/
+  https://doc.rust-lang.org/nightly/releases.html
+  (the full changelog — always current; do not pin a single release announcement here)
 - Rust Design Patterns:
   https://rust-unofficial.github.io/patterns/
 - Team Topologies key concepts:

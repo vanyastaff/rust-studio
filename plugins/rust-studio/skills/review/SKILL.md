@@ -16,6 +16,23 @@ clone-instead-of-borrow ARE in scope (they fail the maintainer bar). That is dis
 speculative abstraction / future-proofing, which stays OUT of scope — don't push extra
 abstraction or defensive code (`references/working-preferences.md` §"don't over-report").
 
+## Intensity
+Match the number of lenses to the blast radius, at the intensity the session briefing names
+(default **full**) — `references/verdicts.md` §"Review modes":
+
+- **full** — steps 2–4 as written: `rust-reviewer`, `harsh-critic`, and every relevant gate lens.
+- **lean** — `rust-reviewer` only; add `harsh-critic` just when the diff embeds a design call.
+  Skip the step-4 fan-out unless the diff touches `unsafe`, the public surface, or auth.
+- **solo** — one `rust-reviewer` pass; gate lenses are advisory.
+
+A change that touches `unsafe`, the public API, or a release is **full** whatever the setting —
+those are the cases where a missed finding is unrecoverable.
+
+**The evidence in step 5 does not scale.** Fewer lenses means fewer readers, never a lower bar:
+every claim still carries its command output, denominators stay honest, and `🚩 INTEGRITY`
+findings (`references/integrity-and-evidence.md`) outrank intensity. At `lean`/`solo` the
+`stop-guard` hook is on by default precisely because the extra readers are gone.
+
 ## Orchestration
 For a `--full` pass, run independent read-only lenses concurrently when the host exposes workers;
 otherwise run them sequentially. Mirror lenses in the host's task surface when available. Give
@@ -32,25 +49,30 @@ acceptance test** exists for the change, a green outer test is the spec-complian
 the diff satisfies the observable criteria (nothing missing, nothing extra), not just the lines
 (`references/testing-model.md`).
 
+## Shape audit
+The checklist both reviewing lenses below apply to the TOUCHED area (Maintainer Rejection
+Test: `references/maintainer-grade-development.md`):
+
+- Drop order; guards bound to a named `_guard` rather than a bare `_`; `Drop` treated as
+  best-effort with an explicit `close()`.
+- `dyn`-compatibility breaks — generic methods need `where Self: Sized`; `async fn`/RPITIT
+  are not dyn-dispatchable.
+- Custom-container variance; `PhantomData` on owned-`T`.
+- `repr` / FFI layout — `#[repr(C)]`, `transparent`, packed via `&raw`.
+- `Box<dyn Error>` in a library surface — return a typed error.
+- Stale-idiom modernization — `LazyLock`/`OnceLock`, `cfg_select!`, `&raw const/mut`,
+  atomic `update`/`try_update`.
+
 ## How to run
 1. Get the diff. Determine scope from context; proceed without asking unless the
    change's goal is truly opaque.
-2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit — including the
-   Maintainer-shape audit (Maintainer Rejection Test on the TOUCHED area:
-   `references/maintainer-grade-development.md`). That audit also covers:
-   drop order / guard naming (`_guard`, never `_`) / `Drop` treated as best-effort with an
-   explicit `close()`; `dyn`-compatibility breaks (generic methods need `where Self: Sized`,
-   `async fn`/RPITIT aren't dyn-dispatchable); custom-container variance / missing `PhantomData`
-   on owned-`T`; `repr` / FFI layout (`#[repr(C)]`, `transparent`, packed via `&raw`); `Box<dyn
-   Error>` in a library surface (return a typed error); and stale-idiom modernization
-   (`LazyLock`/`OnceLock`, `cfg_select!`, `&raw const/mut`, atomic `update`/`try_update`).
+2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit, applying the
+   Shape audit above.
 3. **`harsh-critic` is a DEFAULT lens** — spawn it (not only under `--full`) whenever the
    change embeds a non-trivial design/approach decision, to attack the SHAPE (wrong crate,
-   reinvented sibling primitive, stale idiom, clone-to-appease, stringly/`bool` API), not just
-   the lines. Stale-idiom and shape coverage matches the rust-reviewer audit above (drop order /
-   guard naming / best-effort `Drop`, `dyn`-compat breaks, custom-container variance/`PhantomData`,
-   `repr`/FFI layout, `Box<dyn Error>` in a lib, and `LazyLock`/`cfg_select!`/`&raw`/atomic-`update`
-   modernization). Skip it only for genuinely mechanical diffs with no design call.
+   reinvented sibling primitive, stale idiom, clone-to-appease, stringly/`bool` API) rather
+   than the lines, over the same Shape audit. Skip it only for genuinely mechanical diffs
+   with no design call.
 4. **Full review** (`--full`, or for breaking / public-API / large diffs): fan out the
    remaining relevant lenses **in parallel** (one task per lens, or background subagents — see
    Orchestration), then merge and de-duplicate findings. This is the multi-lens pass — it

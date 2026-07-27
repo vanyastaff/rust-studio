@@ -4,6 +4,7 @@
 import { test, expect, describe } from "bun:test";
 import {
   evaluate,
+  guardDefault,
   shouldBlock,
   scan,
   buildRules,
@@ -243,5 +244,33 @@ describe("phrase collisions removed (studio's own approved wording)", () => {
   });
   test("'edge case' is no longer flagged", () => {
     expect(evaluate("Handled the empty edge case.", cfg3()).block).toBe(false);
+  });
+});
+
+describe("guard default is coupled to gate intensity", () => {
+  // The two axes are independent, but they are not unrelated: `lean`/`solo` remove the
+  // independent lenses that would otherwise catch a stub or a gamed green, so the
+  // mechanical floor has to come up to meet them. `full` keeps the guard opt-in because
+  // the extra reviewers already do that job.
+  test("full keeps the guard opt-in", () => {
+    expect(guardDefault("full")).toBe(false);
+  });
+  test("lean turns the guard on", () => {
+    expect(guardDefault("lean")).toBe(true);
+  });
+  test("solo turns the guard on", () => {
+    expect(guardDefault("solo")).toBe(true);
+  });
+  test("an unset intensity behaves like full", () => {
+    expect(guardDefault(undefined)).toBe(false);
+    expect(guardDefault(null)).toBe(false);
+  });
+  test("casing and stray whitespace do not flip the default", () => {
+    expect(guardDefault(" SOLO ")).toBe(true);
+    expect(guardDefault("Lean")).toBe(true);
+    expect(guardDefault(" Full ")).toBe(false);
+  });
+  test("an unrecognized value falls back to the safe (opt-in) side", () => {
+    expect(guardDefault("aggressive")).toBe(false);
   });
 });

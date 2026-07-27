@@ -2,6 +2,7 @@
 name: commit
 description: "Use when committing one logical Rust change: run fmt and clippy, then create a Conventional Commit."
 allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
+disable-model-invocation: true
 ---
 
 # /commit — Conventional Commit for Rust changes

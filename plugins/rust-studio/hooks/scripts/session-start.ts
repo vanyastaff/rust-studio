@@ -320,6 +320,10 @@ if (!manifestExists) {
       (msrvDefault ? ` · MSRV-default **${msrvDefault}**` : "") +
       " (change via `/plugin` → Rust Code Studio → configure). " +
       "rust-analyzer LSP is bundled — diagnostics surface after each edit when the binary is on PATH.",
+    `**Gate intensity ${gates}** scales how many lenses review a change, never the evidence ` +
+      "behind a claim. `unsafe`, public-API, and release changes run **full** regardless. " +
+      "Every mode keeps the same bar: command output behind each claim, honest denominators, " +
+      '"unverified" as a valid state. See docs/verdicts.md §"Review modes".',
     `**Start here${domains.some((d) => d.startsWith("(undetermined")) ? "" : ` (${domains.join(", ")})`}:** ` +
       routeByDomain(domains),
     "**Always available:** `/dev-task` to implement one unit of work, `/review` to audit a diff, " +

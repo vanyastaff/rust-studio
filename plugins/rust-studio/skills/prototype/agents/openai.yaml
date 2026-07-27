@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prototype"
+  short_description: "A Rust design question needs running code to settle — an API"
+  default_prompt: "Use $prototype when a Rust design question needs running code to settle — an API shape, a state machine, a lifetime or trait doubt."

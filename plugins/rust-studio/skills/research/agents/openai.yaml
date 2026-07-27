@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research"
+  short_description: "A Rust question needs primary sources — crate source, docs.rs,"
+  default_prompt: "Use $research when a Rust question needs primary sources — crate source, docs.rs, the Reference, an RFC — investigated and cited."
