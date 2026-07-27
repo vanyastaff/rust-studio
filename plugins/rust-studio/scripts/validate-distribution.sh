@@ -86,12 +86,26 @@ for skill_dir in skills/*/; do
   [[ -f $skill_dir/agents/openai.yaml ]] || fail "$skill: missing agents/openai.yaml"
   grep -Fq "\$$skill" "$skill_dir/agents/openai.yaml" || fail "$skill: default prompt does not mention \$$skill"
 
+  # A side-effecting skill (publishes, commits, scaffolds, rewrites machine config) is
+  # user-invoked: only a human starts it. Both harnesses must agree, or the skill fires
+  # implicitly on one host and not the other. Claude drops the description from context
+  # entirely, so these also cost nothing in the catalog budget there.
+  claude_user_invoked=0
+  codex_user_invoked=0
+  awk '/^---$/ { yaml = !yaml; next } yaml' "$skill_dir/SKILL.md" |
+    grep -q '^disable-model-invocation:[[:space:]]*true' && claude_user_invoked=1
+  grep -q '^  allow_implicit_invocation:[[:space:]]*false' "$skill_dir/agents/openai.yaml" &&
+    codex_user_invoked=1
+
   case $skill in
-    add-dep|commit|eval-agents|new-crate|pr|progress-bar|publish)
-      grep -q '^  allow_implicit_invocation:[[:space:]]*false' "$skill_dir/agents/openai.yaml" ||
-        fail "$skill: Codex invocation policy is not side-effect safe"
-      ;;
+    add-dep|commit|eval-agents|new-crate|pr|progress-bar|publish) expected=1 ;;
+    *) expected=0 ;;
   esac
+
+  (( claude_user_invoked == expected )) ||
+    fail "$skill: Claude invocation axis disagrees with the side-effecting roster (expected disable-model-invocation: $expected)"
+  (( codex_user_invoked == expected )) ||
+    fail "$skill: Codex invocation axis disagrees with the side-effecting roster (expected allow_implicit_invocation false: $expected)"
 done
 
 (( skill_count > 0 )) || fail "no skills found"
@@ -108,7 +122,7 @@ unknown_keys=$(awk '
   yaml && /^[A-Za-z0-9_-]+:/ {
     key = $1
     sub(/:.*/, "", key)
-    if (key !~ /^(name|description|license|compatibility|metadata|allowed-tools)$/) {
+    if (key !~ /^(name|description|license|compatibility|metadata|allowed-tools|disable-model-invocation)$/) {
       print FILENAME ":" FNR ":" key
     }
   }

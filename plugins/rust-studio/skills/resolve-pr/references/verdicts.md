@@ -28,14 +28,33 @@ gate has an ID so it can be referenced in stories and reviews.
 
 ### Review modes
 
-Pick intensity to match the work (set in your project notes or per-invocation):
+Intensity moves **one** axis — how many independent lenses read the change. It never moves
+the other. Keeping these apart is the whole design:
 
-- **full** — all relevant gates run by their owning leads. Default for public APIs,
-  `unsafe`, releases, and anything touching many crates.
-- **lean** — only the directly-relevant gate(s) run; one reviewer pass. Default for
-  routine features inside one crate.
-- **solo** — gates are advisory; `rust-reviewer` does a single pass. For prototypes
-  and throwaway spikes.
+| | **Ceremony** (scales with intensity) | **Integrity floor** (never scales) |
+|---|---|---|
+| What it is | How many reviewers, phases, and gates run | The evidence rules and the Cheat Catalog (`integrity-and-evidence.md`) |
+| Why it exists | Cost and latency should match blast radius | A green that was not earned is a defect at any speed |
+
+The session briefing names the active intensity (default **full**). Pick it to match the
+work, and say which one you are running under:
+
+- **full** — every relevant gate runs by its owning lead; `/review` fans out its multi-lens
+  pass. For public APIs, `unsafe`, releases, and anything crossing crates.
+- **lean** — only the directly-relevant gate(s) run, one reviewer pass, no `harsh-critic`
+  unless the change embeds a design call. For routine features inside one crate.
+- **solo** — gates are advisory and `rust-reviewer` does a single pass. For prototypes and
+  throwaway spikes.
+
+**Turning ceremony down turns the mechanical floor up.** At `full`, several independent
+lenses would catch a stub, a vacuous test, or a claimed-but-unrun check. At `lean` and
+`solo` those lenses are gone, so the `stop-guard` hook defaults **on** there to hold the
+evidence line mechanically — an explicit `stop_guard` setting still wins. Fewer eyes is a
+reason for stricter automatic enforcement, not looser.
+
+What **never** changes with intensity: the command output behind every claim, the honest
+denominator, "unverified" as a valid state, and the `🚩 INTEGRITY` verdict. `solo` buys
+fewer reviewers — never permission to report a green you did not earn.
 
 ---
 ## 5. Verdicts

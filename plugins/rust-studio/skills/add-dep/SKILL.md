@@ -1,6 +1,7 @@
 ---
 name: add-dep
 description: "Use when adding a Rust dependency: check RUSTSEC, license, MSRV, and features before changing Cargo.toml."
+disable-model-invocation: true
 ---
 
 # /add-dep — vet and add a Rust dependency

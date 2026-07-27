@@ -1,6 +1,7 @@
 ---
 name: eval-agents
 description: "Use when running Claude Code benchmarks for the studio's Rust reviewer and auditors against planted defects."
+disable-model-invocation: true
 ---
 
 # /eval-agents — does the studio actually catch bugs?
@@ -29,9 +30,17 @@ teammates down at the end with `SendMessage {type:"shutdown_request"}` — there
 delete; idle teammates auto-hide.
 
 ## Fixture layout
-Each fixture lives at `benchmarks/fixtures/<agent>/<case>/` with:
-- `input.rs` — Rust source with one or more **planted defects**.
+Each fixture lives at `benchmarks/fixtures/<agent>/<case>/` and always carries:
 - `ground-truth.md` — the defects that must be caught (id, line, type, severity).
+
+The source comes in one of two shapes:
+- **Single-file** — `input.rs`, Rust source with one or more **planted defects**. The default.
+- **Multi-file** — a `src/` tree instead of `input.rs`, for defects that only appear at scale
+  (a grep sweep that reads clean across many files, a broken primitive under correct call
+  sites). Point the agent at the directory. Its `ground-truth.md` carries the audit prompt the
+  fixture is calibrated for — use that prompt rather than the diff-review framing, because a
+  fixture measuring whether an agent samples instead of reading is void if you hand it one file
+  and tell it to read that file.
 
 Agent folder → agent mapping:
 
@@ -58,11 +67,13 @@ Agent folder → agent mapping:
   and the per-row recall.
 
 ## Steps
-1. Resolve fixtures: use **Glob** (`benchmarks/fixtures/**/{input.rs,ground-truth.md}`) to
-   enumerate cases. Filter by `input` if a case name or agent folder was given; otherwise
-   run all. List what you'll evaluate before proceeding.
+1. Resolve fixtures: use **Glob** (`benchmarks/fixtures/**/ground-truth.md`) to enumerate cases —
+   every fixture has one, where `input.rs` exists only for single-file cases. Filter by `input`
+   if a case name or agent folder was given; otherwise run all. List what you'll evaluate before
+   proceeding.
 2. For each fixture, spawn the mapped agent (one task per fixture, or a background subagent —
-   see Orchestration) on **only** `input.rs` — do not give it the ground truth. Ask it for
+   see Orchestration) on **only** the source — `input.rs`, or the `src/` tree for a multi-file
+   fixture, using the audit prompt its ground truth names. Never pass the ground truth itself. Ask it for
    ITS native output, not a custom format (so its own verification ritual fires). For
    **first-pass bar** fixtures, ask for the reject verdict in the agent's own vocabulary:
    **RESHAPE NEEDED** for a pre-code lead/specialist (`chief-architect`, `api-design-lead`,

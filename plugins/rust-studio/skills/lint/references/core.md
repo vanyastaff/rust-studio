@@ -85,6 +85,15 @@ Applies to every `.rs` file.
 - Zero `cargo clippy --all-targets --all-features -- -D warnings`.
 - `cargo fmt` clean. No commented-out code, no stray `dbg!`/`println!` debugging.
 - No `#[allow(...)]` without a one-line justification comment.
+- Two compiler diagnostics are security signals, not lint nits, and both surfaced from a real
+  review of a planted auth bypass:
+  - **`unused variable` on a predicate's or validator's own inputs.** A `fn is_authorized(token,
+    store)` whose `token` and `store` are unused is the compiler reporting that the check ignores
+    what it is supposed to check. Treat it as a suspected bypass and read the body before
+    silencing it.
+  - **`#[allow(unreachable_code)]` or `#[allow(dead_code)]` on a security or validation path.**
+    Presume it masks an early `return` that short-circuits the check. Remove the allow, read what
+    the warning was hiding, and only then decide.
 - `TODO`/`FIXME` include an owner or issue reference, else they are not allowed.
 - No plan/task IDs or phase markers (`TODO(A-5)`, "Phase B") in committed code — write the
   invariant a future change enforces, not the plan id that schedules it.
@@ -93,6 +102,13 @@ Applies to every `.rs` file.
 - Verify idioms against the **current** toolchain (edition 2024; check official Rust
   release notes/std docs for the current stable version) — prefer native async-fn-in-trait /
   RPITIT over `async-trait`, `OnceLock`/`LazyLock`, `let-else`/`let-chains`.
+- Recent stabilizations worth reaching for, each gated on the crate's MSRV: **`if let` guards**
+  on match arms (**1.95**) — `Foo(a) if let Some(b) = lookup(a) => …` collapses the
+  match-then-nested-if shape; **`Vec::push_mut` / `insert_mut`** and the `VecDeque`/`LinkedList
+  push_*_mut` family (**1.95**), which hand back `&mut T` instead of the push-then-`last_mut()
+  .unwrap()` dance; **`assert_matches!`** (**1.96**, see testing.md); and the integer bit helpers
+  `bit_width` / `highest_one` / `isolate_lowest_one` (**1.97**) in place of hand-rolled
+  `leading_zeros` arithmetic.
   Don't default to `Arc<Mutex<_>>` / `Rc<RefCell<_>>`. Prefer making the wrong path
   *syntactically absent* (visibility, scoped borrows, newtypes) over a "remember to call me" helper.
 - `map.entry(k).or_default()` — one lookup, not `get(&k)` then `entry()` on miss.

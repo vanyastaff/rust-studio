@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Turn a single Claude Code session into a full Rust engineering studio. Tiered agent team (architect -> leads -> specialists), path-scoped Rust standards, quality gates, and cargo-aware hooks across libraries, async/web services, CLIs, and systems/embedded code.",
-  "version": "0.30.0",
+  "version": "0.31.0",
   "author": {
     "name": "Rust Studio contributors"
   },
@@ -36,7 +36,7 @@
     "gate_intensity": {
       "type": "string",
       "title": "Default gate intensity",
-      "description": "Default rigor for quality gates and reviews: full, lean, or solo. Surfaced in the session briefing.",
+      "description": "How many independent lenses review a change: full (every relevant gate + the multi-lens pass), lean (one reviewer, the directly-relevant gate), or solo (a single advisory pass). This scales reviewers and cost only — the evidence bar never moves, and unsafe / public-API / release changes run full whatever this says. Because lean and solo remove the readers that would otherwise catch a gamed green, stop_guard defaults ON under them unless you set it explicitly.",
       "default": "full"
     },
     "default_msrv": {
@@ -73,6 +73,12 @@
       "description": "When on, orchestrating skills like /dev-task keep a live task list (one task per phase, ticking scout → plan → plan-review → build → review) and surface each phase's result as it completes — so you follow progress on the task list instead of waiting in silence until the end. Turn off for terse runs.",
       "default": true
     },
+    "git_guard": {
+      "type": "boolean",
+      "title": "Irreversible-action guard",
+      "description": "Block Bash commands that destroy work with no way back (git reset --hard, clean -f, checkout ., branch -D, stash drop, force-push, reflog expire) or that publish permanently (a real cargo publish / cargo yank). Plain git push, --force-with-lease, and cargo publish --dry-run stay allowed. The studio decides tactical calls on its own, so this is the line where autonomy stops. Turn off to run unguarded.",
+      "default": true
+    },
     "routing_nudge": {
       "type": "boolean",
       "title": "Routing nudge",
@@ -94,7 +100,7 @@
     "stop_guard": {
       "type": "boolean",
       "title": "Stop-guard (block undisciplined turn endings)",
-      "description": "When on, block the turn from ending if the final message dodges ownership, seeks permission, stops early, avoids tests, leaves stubs, hands the work back to you, or claims done without evidence. The feedback is fed back to the model so it continues. Aggressive (it can block legitimate stops) — off by default; the mechanical teeth for docs/integrity-and-evidence.md.",
+      "description": "Block the turn from ending if the final message dodges ownership, seeks permission, stops early, avoids tests, leaves stubs, hands the work back to you, or claims done without evidence. The feedback is fed back to the model so it continues — the mechanical teeth for docs/integrity-and-evidence.md. Defaults to OFF at gate_intensity full (the extra review lenses already catch this) and ON at lean/solo (they don't). Set it explicitly to override that coupling in either direction.",
       "default": false
     },
     "stop_guard_strict": {

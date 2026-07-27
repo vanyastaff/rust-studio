@@ -44,5 +44,11 @@ Applies to every `Cargo.toml`.
   `pedantic = { level = "warn", priority = -1 }`,
   `nursery = { level = "warn", priority = -1 }` — then `allow` the noisy lints
   deliberately (e.g. `module_name_repetitions = "allow"`), each with a reason.
+- Add `let_underscore_must_use = "warn"` explicitly. It is **restriction**-tier, so neither
+  `pedantic` nor `nursery` turns it on, and `cargo clippy --all-targets -- -D warnings` passes
+  a discarded validation clean — verified: `let _ = validate(n);` where `validate` returns
+  `Result<(), E>` produces no diagnostic under the default gate, and is caught only once this
+  lint is enabled. Any crate that validates by returning `Result` needs it, or the gate cannot
+  see the one mistake that silently disables a check.
 - Multi-crate workspaces: set `lto = "thin"` in the release profile (no cross-crate
   LTO by default). At 20+ crates, run `cargo hakari` to unify features and cut rebuilds.

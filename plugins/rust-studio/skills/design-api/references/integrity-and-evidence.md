@@ -35,6 +35,10 @@ Three corollaries, each a hard rule:
 | **Denominator gaming** | Reported "N% pass" / "X% coverage" with skipped, ignored, timed-out, or out-of-scope cases silently removed from the denominator. |
 | **Gate disabling** | `#[allow(...)]` with no one-line justification; a crate-level `[lints]` table that redefines a lint and thereby **replaces** (not merges) the inherited `[workspace.lints]` — silently re-opening a workspace `forbid`/`deny`; or editing the gate config itself (`clippy.toml`, `.config/nextest.toml`, CI, `lefthook.yml`) to drop a ban or raise a timeout so failing code passes — fixing the gate instead of the code. |
 | **Skipped discipline** | Wrote the implementation with no failing test first for a behavior change; shipped a non-trivial change with no pre-code shape verdict and no pre-merge review; claimed success without running the check. |
+| **Unread assertion** | Asserted a property of code from a *proxy* for reading it — a grep hit, a symbol name, a section heading, a search snippet, a file listing, a doc comment — rather than the body itself. The tell: asked "which lines did you read?", you cannot answer. Reading a file's headings and describing what it does is this move. |
+| **Inference dressed as verification** | Reported a conclusion you *reasoned to* in the voice of one you *checked*. "It handles the empty case" because the function is called `handle_empty`; "the caller guards this" because it would be odd not to. The reasoning may even be right — presenting it as a finding is the defect. |
+| **Verified observation, invented mechanism** | Checked *that* something happens, then explained *why* from plausibility and reported both at the same confidence. Observed in a live eval: two reviewers each correctly found that `unused_assignments` does not fire on `delay *= 2`, and gave mutually exclusive reasons — one blamed the early `return` dominating the loop's back-edge, the other the overloaded `MulAssign` counting as a use. A three-line probe settles it (swap `Duration` for `u32`, same control flow, and the lint fires), so only the second is true. The observation was earned; the mechanism was not, and a wrong mechanism sends the next reader to fix the wrong thing. |
+| **Silent retraction** | Discovered that something asserted earlier was wrong and moved on without withdrawing it. The correction lives in your head; the record still carries the false claim, and whoever reads it inherits the error. |
 
 ## The Evidence Rules (how results are reported)
 
@@ -47,6 +51,20 @@ Three corollaries, each a hard rule:
   behavior / the round-trip law" — not "the test I added passes".
 - **"Unverified" / "couldn't run X" is a valid and required state.** Substituting *probably* /
   *should pass* for *checked* is itself a gaming move.
+- **Cite what you read, at the range you read it.** A claim about code carries `path:line`, the
+  same as a finding. Where you sampled rather than read — a grep sweep, a symbol map, headings —
+  say so and label the claim as a lead to confirm, not a conclusion.
+- **A mechanism needs its own evidence.** Checking *that* something happens does not license an
+  explanation of *why*. When the mechanism matters — it decides the fix — isolate it with a probe
+  that changes one variable, or say "observed; cause not established". A confident wrong mechanism
+  is more expensive than an honest gap, because it aims the fix at the wrong thing.
+- **State the bound of what you looked at.** "I read the four call sites in `net/`, not the two
+  in `bench/`" is a senior report. An unbounded claim over code you partially read is not, and
+  the size of the gap is exactly what the reader needs to judge your finding.
+- **Withdraw your own claim out loud, the moment you find it wrong.** Say which claim, that it
+  was wrong, and what is true instead. Correcting yourself unprompted costs one sentence and is
+  the cheapest trust you will ever buy; being corrected by the user costs the whole report's
+  credibility. This duty outranks looking consistent.
 
 ## Integrity Rejection Test (mirror of the Maintainer Rejection Test)
 
@@ -62,7 +80,9 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
 - offers a self-written test as the correctness proof with no spec/oracle/law behind it;
 - skipped the disciplined path (no failing-test-first for a behavior change, no pre-code verdict,
   no pre-merge review) and cannot say so explicitly;
-- claims success it did not verify (no command output, "should pass").
+- claims success it did not verify (no command output, "should pass");
+- asserts a property of code the author did not read, or reports an inference as a check;
+- leaves an earlier claim standing after learning it was wrong.
 
 ## Who Enforces It
 
@@ -81,7 +101,9 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
 
 ## Kept Honest By Eval Fixtures
 
-`${CLAUDE_PLUGIN_ROOT}/benchmarks/fixtures/integrity/*` plant gaming defects (a vacuous test, an
-`#[ignore]`-to-skip, a canned-return stub, a lint-disabling `#[allow]`). `/eval-agents` runs
-`rust-reviewer` against them; a missed gaming defect is a gap in the agent's prompt — fix the
-agent, never relax the fixture.
+`${CLAUDE_PLUGIN_ROOT}/benchmarks/fixtures/integrity/*` plant gaming defects. `gamed-green`
+carries the execution-side moves (a vacuous test, an `#[ignore]`-to-skip, a canned-return stub, a
+lint-disabling `#[allow]`). `name-vs-body` carries the analysis-side pair: every item in it reads
+correctly from its name and doc comment and lies in its body, so the only way to score is to read
+the code. `/eval-agents` runs `rust-reviewer` against them; a missed gaming defect is a gap in the
+agent's prompt — fix the agent, never relax the fixture.
