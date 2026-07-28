@@ -1,4 +1,4 @@
 interface:
   display_name: "Model Domain"
-  short_description: "Modeling one Rust domain concept with newtypes, enums, or"
+  short_description: "Modeling one Rust domain concept with newtypes, enums"
   default_prompt: "Use $model-domain when modeling one Rust domain concept with newtypes, enums, or typestate to prevent illegal states."

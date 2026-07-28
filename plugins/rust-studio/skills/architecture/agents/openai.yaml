@@ -1,4 +1,4 @@
 interface:
   display_name: "Architecture"
-  short_description: "Designing Rust crate or module boundaries, dependency direction,"
+  short_description: "Designing Rust crate or module boundaries, dependency direction"
   default_prompt: "Use $architecture when designing Rust crate or module boundaries, dependency direction, key types, and architecture docs."

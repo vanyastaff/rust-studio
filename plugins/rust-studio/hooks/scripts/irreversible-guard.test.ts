@@ -8,7 +8,7 @@
 // nothing. Both directions are locked below.
 
 import { test, expect, describe } from "bun:test";
-import { check, RULES } from "./irreversible-guard.ts";
+import { check, shellCommand, RULES, type Input } from "./irreversible-guard.ts";
 
 describe("blocks irreversible work destruction", () => {
   const blocked: [string, string][] = [
@@ -103,4 +103,40 @@ test("every rule carries an id and a reason", () => {
     expect(rule.reason.length).toBeGreaterThan(20);
   }
   expect(new Set(RULES.map((r) => r.id)).size).toBe(RULES.length);
+});
+
+describe("extracts the command from either host's payload shape", () => {
+  // The two hosts name the shell tool and its argument differently. A guard
+  // keyed on `Bash`/`command` is a silent no-op on Codex — it never blocks and
+  // never says why. These lock the shape-based extraction instead.
+  const shells: [string, Input][] = [
+    ["Claude Code", { tool_name: "Bash", tool_input: { command: "git reset --hard" } }],
+    ["Codex exec_command", { tool_name: "exec_command", tool_input: { cmd: "git reset --hard" } }],
+    ["argv array", { tool_name: "exec", tool_input: { command: ["git", "reset", "--hard"] } }],
+    ["renamed tool", { tool_name: "some_future_shell", tool_input: { cmd: "git reset --hard" } }],
+  ];
+
+  for (const [label, payload] of shells) {
+    test(label, () => {
+      const cmd = shellCommand(payload);
+      expect(cmd).not.toBeNull();
+      expect(check(cmd!)?.id).toBe("reset-hard");
+    });
+  }
+});
+
+describe("ignores tool calls that carry no shell command", () => {
+  const passthrough: Input[] = [
+    { tool_name: "Read", tool_input: { file_path: "/tmp/x.rs" } },
+    { tool_name: "apply_patch", tool_input: { input: "*** Begin Patch" } },
+    { tool_name: "Bash", tool_input: {} },
+    { tool_name: "exec_command", tool_input: { cmd: 42 } },
+    {},
+  ];
+
+  for (const [i, payload] of passthrough.entries()) {
+    test(`payload ${i}`, () => {
+      expect(shellCommand(payload)).toBeNull();
+    });
+  }
 });

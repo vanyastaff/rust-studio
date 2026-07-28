@@ -1,4 +1,4 @@
 interface:
   display_name: "Detect Stack"
-  short_description: "Classifying an unfamiliar Rust crate or workspace as library,"
+  short_description: "Classifying an unfamiliar Rust crate or workspace as library"
   default_prompt: "Use $detect-stack when classifying an unfamiliar Rust crate or workspace as library, async/web, CLI, systems, or embedded."

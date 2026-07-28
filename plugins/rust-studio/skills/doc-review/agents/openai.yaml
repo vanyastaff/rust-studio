@@ -1,4 +1,4 @@
 interface:
   display_name: "Doc Review"
-  short_description: "Reviewing a requirements, spec, plan, ADR, or design document"
+  short_description: "Reviewing a requirements, spec, plan, ADR"
   default_prompt: "Use $doc-review when reviewing a requirements, spec, plan, ADR, or design document for coherence, feasibility, scope, and security."

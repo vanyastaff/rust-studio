@@ -1,4 +1,4 @@
 interface:
   display_name: "Refactor"
-  short_description: "Refactoring Rust code without behavior changes, with clippy,"
+  short_description: "Refactoring Rust code without behavior changes, with clippy"
   default_prompt: "Use $refactor when refactoring Rust code without behavior changes, with clippy, tests, and studio standards as gates."

@@ -96,6 +96,13 @@ run the named roles inline in the same dependency order, following
 - task/plan surface available → mirror phases there for progress and dependencies;
 - messaging/result channel available → use it to collect worker results;
 - a capability absent → keep a concise in-message checklist and execute that part inline.
+- **availability is not permission** — a host may ship a worker API alongside a standing
+  instruction not to use it. Codex's default mode carries "Do not spawn sub-agents unless the
+  user or applicable AGENTS.md/skill instructions explicitly ask for sub-agents, delegation, or
+  parallel agent work" (its proactive mode lifts exactly that prior). So a skill must *name* the
+  spawn — "spawn `rust-reviewer`", "run these lenses in parallel" — because intent-only phrasing
+  does not clear the gate. Where a spawn is declined, fall back to the inline path above; gates
+  and verdicts are unchanged.
 
 Do not call a tool merely because an example host exposes it. Never fail the workflow because a
 team feature flag, task UI, mailbox, or background mode is missing.
@@ -128,9 +135,14 @@ prerequisites and not instructions to call unavailable tools.
   — state that assumption when scouting depends on them.
 - **Status can lag** — update the host task surface after integrating a result; don't infer
   completion from silence.
-- **Nesting depth is host-specific** — check before a worker spawns workers (Claude Code
-  allows several levels; Codex custom agents default to depth 1, so its orchestrator calls
-  every role directly). Workers inherit only the permissions and context the host documents.
+- **Nesting depth is host-specific, and it moves** — check before a worker spawns workers.
+  Claude Code went depth 1 → 3 by default in 2.1.220 (2.1.217 had turned nesting off entirely),
+  so a lead may now spawn its own specialists; `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1` disables
+  it, and a per-session cap of 200 spawns applies (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`,
+  since 2.1.212). Codex custom agents default to depth 1 unless `[agents] max_depth` is raised,
+  so its orchestrator calls every role directly. Write skills against the floor — one level of
+  delegation — and treat deeper nesting as an optimization the host may or may not permit.
+  Workers inherit only the permissions and context the host documents.
 
 **Verdicts and gates are unchanged.** Every teammate still ends in **COMPLETE / NEEDS WORK /
 REDO-TO-BAR / BLOCKED** with evidence (`verdicts.md` §5); the owning lead still runs its gate (`verdicts.md` §4); a

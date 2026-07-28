@@ -66,6 +66,14 @@ follows it — sharpen weak wording before pulling material back inline.
 Once a piece has its rung, **co-locate** it: keep a concept's rule, caveats, and example
 under one heading instead of scattered, so reading one part brings its neighbours along.
 
+**An example teaches a pattern and forecloses the rest.** Worked examples were how you got a
+weaker model to use a tool correctly; on a current model they narrow the exploration space to
+what you demonstrated. Spend the tokens on an expressive *interface* instead — a well-named
+parameter, an enumerated state (`pending / in_progress / completed`), a verdict vocabulary —
+which implies correct use without bounding it. Keep an example only where the shape is
+genuinely unguessable from the interface, and prefer one that disambiguates over one that
+demonstrates.
+
 ---
 ## 4. Completion criteria
 
@@ -114,6 +122,8 @@ Then hunt the four ways a skill rots:
 | Failure | What it looks like | Cure |
 |---|---|---|
 | **Duplication** | The same meaning in two places — a checklist written out in two steps. | Name it once, reference it by name. |
+| **Restatement across layers** | The same instruction in the skill body *and* the tool description *and* an injected reminder. Repetition was how you made a weaker model attend; now it reads as conflicting emphasis and dilutes both copies. | Pick the layer closest to the decision — usually the tool/interface — and delete the others. |
+| **Re-announcement** | The same pointer injected turn after turn. The studio shipped this: rule injection keyed its dedupe by file, so `core.md` was announced once per file touched — 70% of all rule-pointer tokens in a 12-file session (`bun tools/context-cost.ts`). | Say it once per context, and re-arm only when the context that held it is actually gone (PreCompact), not on a fixed schedule. |
 | **Sediment** | Stale layers nobody removed, because adding feels safe. | Check each line still bears on what the skill does. |
 | **No-op** | A line the model already obeys by default. Test: does it change behaviour versus no instruction? | Delete it, or replace a weak word with one strong enough to beat the default. |
 | **Sprawl** | Simply too long, even when every line is live and unique. | Disclose reference to `references/`, split by branch. |
