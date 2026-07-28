@@ -1,4 +1,4 @@
 interface:
   display_name: "Lint"
-  short_description: "Running rustfmt and clippy as a zero-warning Rust gate or"
+  short_description: "Running rustfmt and clippy as a zero-warning Rust gate"
   default_prompt: "Use $lint when running rustfmt and clippy as a zero-warning Rust gate or applying safe automatic fixes."

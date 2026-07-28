@@ -1,4 +1,4 @@
 interface:
   display_name: "Remember"
-  short_description: "Saving a durable project decision, gotcha, convention, or"
+  short_description: "Saving a durable project decision, gotcha, convention"
   default_prompt: "Use $remember when saving a durable project decision, gotcha, convention, or non-trivial fix to Obsidian."

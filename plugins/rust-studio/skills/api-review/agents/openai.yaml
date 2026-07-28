@@ -1,4 +1,4 @@
 interface:
   display_name: "API Review"
-  short_description: "Reviewing Rust public API changes for semver hazards, accidental"
+  short_description: "Reviewing Rust public API changes for semver hazards"
   default_prompt: "Use $api-review when reviewing Rust public API changes for semver hazards, accidental exports, version bumps, and mitigations."

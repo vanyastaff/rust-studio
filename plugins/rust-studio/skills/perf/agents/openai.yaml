@@ -1,4 +1,4 @@
 interface:
   display_name: "Perf"
-  short_description: "Profiling and optimizing Rust performance with flamegraphs,"
+  short_description: "Profiling and optimizing Rust performance with flamegraphs"
   default_prompt: "Use $perf when profiling and optimizing Rust performance with flamegraphs, Criterion, and before/after measurements."

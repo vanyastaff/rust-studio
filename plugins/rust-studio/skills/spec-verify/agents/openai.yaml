@@ -1,4 +1,4 @@
 interface:
   display_name: "Spec Verify"
-  short_description: "Verifying Rust implementation against a spec with tests, clippy,"
+  short_description: "Verifying Rust implementation against a spec with tests, clippy"
   default_prompt: "Use $spec-verify when verifying Rust implementation against a spec with tests, clippy, fmt, and gates before archiving."

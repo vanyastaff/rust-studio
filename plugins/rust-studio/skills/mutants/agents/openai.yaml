@@ -1,4 +1,4 @@
 interface:
   display_name: "Mutants"
-  short_description: "Assessing Rust test strength with cargo-mutants, triaging"
+  short_description: "Assessing Rust test strength with cargo-mutants"
   default_prompt: "Use $mutants when assessing Rust test strength with cargo-mutants, triaging survivors, and closing meaningful gaps."

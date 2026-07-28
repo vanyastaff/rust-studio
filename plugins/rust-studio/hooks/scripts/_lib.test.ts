@@ -8,7 +8,7 @@
 //      vocabulary, so the hook nagged that agent on every run.
 
 import { describe, expect, test } from "bun:test";
-import { run } from "./_lib.ts";
+import { run, option, optionBool } from "./_lib.ts";
 import { pathMatches } from "./inject-rules.ts";
 import { hasVerdict } from "./subagent-stop.ts";
 
@@ -64,5 +64,46 @@ describe("VERDICT vocabulary", () => {
     expect(hasVerdict("**COMPLETE**")).toBe(true);
     expect(hasVerdict("REDO-TO-BAR")).toBe(true);
     expect(hasVerdict("no verdict here")).toBe(false);
+  });
+});
+
+describe("option() precedence across hosts", () => {
+  // Codex has no userConfig channel. Without the RUST_STUDIO_ fallback every
+  // studio setting is frozen at its default there — including git_guard, which
+  // the guard's own block message tells the user to flip.
+  const KEY = "CLAUDE_PLUGIN_OPTION_GIT_GUARD";
+  const ALT = "RUST_STUDIO_GIT_GUARD";
+  const restore = () => {
+    delete process.env[KEY];
+    delete process.env[ALT];
+  };
+
+  test("unset everywhere -> null, so the caller's default stands", () => {
+    restore();
+    expect(option("git_guard")).toBeNull();
+    expect(optionBool("git_guard", true)).toBe(true);
+  });
+
+  test("the host-neutral variable is honored", () => {
+    restore();
+    process.env[ALT] = "off";
+    expect(option("git_guard")).toBe("off");
+    expect(optionBool("git_guard", true)).toBe(false);
+    restore();
+  });
+
+  test("Claude userConfig still wins over the fallback", () => {
+    restore();
+    process.env[KEY] = "on";
+    process.env[ALT] = "off";
+    expect(optionBool("git_guard", true)).toBe(true);
+    restore();
+  });
+
+  test("blank is treated as unset, not as false", () => {
+    restore();
+    process.env[ALT] = "   ";
+    expect(option("git_guard")).toBeNull();
+    restore();
   });
 });
