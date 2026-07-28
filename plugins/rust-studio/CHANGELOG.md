@@ -5,6 +5,121 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.0] - 2026-07-28
+
+### Fixed
+- **Every studio doc pointer in the 33 Codex agents was an unopenable literal** — 159
+  `${CLAUDE_PLUGIN_ROOT}/…` paths that no host resolved. The placeholder is correct on Claude
+  Code, which expands it when loading an agent brief (verified by spawning an agent: it reports
+  a literal absolute path and reads the file). Codex cannot, and the reason is structural rather
+  than a missing feature — it does not bundle agent definitions, so these TOMLs install to
+  `~/.codex/agents/` outside any plugin and there is no plugin context to resolve against. The
+  generator now substitutes the source tree it read the briefs from, which is by construction
+  where the cited `docs/` and `rules/` live, and records that tree in a header comment so a
+  moved checkout is diagnosable. It refuses to emit a surviving `${CLAUDE_…}`; the distribution
+  validator generates into a throwaway directory and asserts the same. Both fail on an injected
+  regression (verified). This class of defect is silent by nature: the agent reads the path,
+  cannot open it, and proceeds without the standard it was told to follow.
+- **The shipped lint template left both of the studio's own planted-defect classes invisible.**
+  `docs/templates/workspace-lints.toml` — what `/new-crate` and `/ci-gate` paste into real
+  projects — carried no `pedantic`, no `nursery` and no `let_underscore_must_use`, although
+  `rules/cargo-manifest.md` recommends all three. Clippy 1.97 moved `overly_complex_bool_expr`
+  correctness → pedantic and `nonminimal_bool` complexity → pedantic, so both are now
+  allow-by-default and outside `clippy::all`. Verified on clippy 0.1.97: a probe crate built from
+  the old template verbatim, containing `x && !x` and `let _ = validate(n);`, passed
+  `cargo clippy --all-targets -- -D warnings` with **exit 0 and no output**; with the corrected
+  template both are errors. `docs/ci-best-practices.md` now states once that `-D warnings` only
+  denies what is already on — the manifest decides what the gate can see.
+- `docs/tooling.md` printed serena tool names with a plugin-bundled prefix
+  (`mcp__plugin_serena_serena__…`) in the same file that says the studio deliberately does not
+  bundle MCP servers. Names are now given bare, with the prefix explained as install-dependent.
+- `docs/tooling.md` claimed "serena has no pattern-search tool". `search_for_pattern` exists;
+  it — along with `find_file`, `list_dir` and `read_file` — is *disabled by default* inside
+  Claude Code and Codex because the harness already provides them. The advice was right for the
+  wrong reason, and two table rows recommended tools that will not resolve.
+- `hooks/codex-hooks.json` declared a 15s SessionEnd timeout. Codex clamps that event to 3s
+  ("clamping SessionEnd hook timeout to" is in the 0.145.0 binary), so `session-end.ts` was
+  budgeted for time it never gets: its watchdog is now 2.2s and the git dirty-check 1s, both
+  already fail-open. `validate-distribution.sh` gates the declared value.
+- **All 58 Codex `short_description` values were truncated mid-clause** ("…with tests, clippy,",
+  "…semver hazards, accidental") — the one string Codex shows in its skill catalog.
+  `generate-openai-metadata.mjs` cut on whitespace; it now cuts at a clause boundary and strips
+  dangling function words. Genuinely dangling endings: 16 → 0, every value inside the 25-64
+  spec. The generator now throws on an out-of-spec length instead of shipping one, so the fix
+  belongs at the source description rather than in padding here.
+- `skills/msrv-check/SKILL.md` shipped a fabricated worked example — "serde 1.0.197 → MSRV 1.70".
+  serde declares `rust-version = "1.56"` (verified against 1.0.228 and 1.0.229 in the local
+  registry) and never declared 1.70. Replaced with placeholders: the one skill whose deliverable
+  *is* an MSRV number should not teach from an invented one.
+- `rules/architecture.md` recommended `#[non_exhaustive]` unqualified, while `rules/api.md` and
+  `rules/types.md` both carry the caveat that it suppresses exhaustiveness checking and is wrong
+  for an enum the workspace must handle completely. `architecture.md` is the only one of the
+  three that fires on `mod.rs`, so an agent editing a module got the lossy version as the only
+  version.
+- `skills/dev-task/SKILL.md` told the agent to "default to **lean** when the host or user has not
+  configured an intensity", but `session-start.ts` defaults `gate_intensity` to `full`, so the
+  condition could never fire — dead prose contradicting `docs/verdicts.md`.
+- `docs/delegation.md` hedged that "Claude Code allows several levels" of subagent nesting. The
+  number moved twice: 2.1.217 turned nesting off, 2.1.220 set the default to depth 3
+  (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`), and 2.1.212 added a 200-spawn per-session cap. Now
+  stated with the version each fact belongs to, plus the instruction to write skills against the
+  floor of one level.
+- **Every Codex hook was dead.** `hooks/codex-hooks.json` opened with a `_comment` key; Codex
+  parses that file strictly, so one unknown key rejected the whole config and all six hooks went
+  silent behind a single startup warning. Renamed to `description`, the key Codex accepts. Shipped
+  broken in 0.30.0 and 0.31.0.
+- **The irreversible-action guard never fired on Codex.** It keyed on `tool_name == "Bash"` and
+  read `tool_input.command`; Codex's shell tool is `exec_command` and carries `cmd`. The guard now
+  identifies a shell call by payload shape, so it also survives a host renaming its shell tool —
+  the failure mode a safety hook can least afford is being a silent no-op. Now registered on
+  Codex `PreToolUse`.
+- Advertised skill counts were stale at 55 (and 53 portable) against 58 shipped.
+
+### Added
+- **Path-scoped rule injection now works on Codex.** `inject-rules` extracts the edited files and
+  added lines from an `apply_patch` blob, in addition to Claude's `file_path`, and unions the
+  matching standards over every file one patch touches. Format pinned by tests.
+- `session-end` runs on Codex — the event exists there; the previous exclusion note was wrong.
+- **`stop-guard` runs on Codex.** It was listed as transcript-dependent, but
+  `getLastAssistantText()` reads `last_assistant_message` first and only falls back to a
+  transcript. Verified end-to-end against a Codex-shaped Stop payload with no `transcript_path`:
+  a clean turn passes, a hand-off phrase blocks with exit 2 and the full guidance text.
+  `auto-capture` stays Claude-only for a real reason — its captured-signal check needs the raw
+  turn JSONL, which `last_assistant_message` does not carry.
+- **`RUST_STUDIO_<OPTION>` environment fallback for every studio setting.** Codex has no plugin
+  userConfig channel, so settings were frozen at their defaults there — including `git_guard`,
+  which the guard's own block message tells the user to flip. A Claude-configured value still wins.
+- `docs/delegation.md`: **availability is not permission.** Codex's default mode carries a
+  standing prior — "Do not spawn sub-agents unless the user or applicable AGENTS.md/skill
+  instructions explicitly ask" (verbatim in the 0.145.0 binary; its proactive mode lifts exactly
+  that). The capability gate tested only for tool availability, so a skill phrasing delegation
+  as intent rather than naming the spawn silently ran inline on Codex.
+- `docs/claude-5-compat.md`: records that no agent pinning `effort` is a decision, not an
+  oversight — subagent frontmatter accepts it, and inheriting is what keeps "effort is the
+  user's dial" true for the roster. Previously a maintainer could only infer this.
+- Documented `git_guard` in the settings table (it shipped undocumented in 0.31.0) and documented
+  the one-command Codex sub-agent setup (`generate-codex-agents.mjs`, 33 agents), which was
+  implemented but undiscoverable.
+
+### Changed
+- **Rule injection announces each standard once per context, not once per file.** The dedupe
+  key was the file path, so `core.md`'s pointer was re-announced for every `.rs` file touched —
+  measured at 12 re-announcements and 70% of all rule-pointer tokens in a 12-file session. A
+  session's injected context drops from ~3,714 to ~2,058 tokens with **zero** repeats (was 35%
+  repeats); `inject-rules` itself falls 2,515 → 858 tokens. `PreCompact` now clears the markers,
+  so a standard is re-announced exactly when the context holding it was discarded rather than on
+  a file-count schedule. Follows Anthropic's
+  [context-engineering guidance for Claude 5](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models).
+- `tools/context-cost.ts` gave each file a fresh `session_id`, which bypassed the dedupe it was
+  meant to measure — it would have reported the pre-fix number forever. The walk now shares one
+  session, so the meter observes real behavior.
+- `docs/writing-skills.md`: worked examples narrow the exploration space on current models —
+  spend the tokens on an expressive interface instead; and two new rot modes, restatement across
+  layers and re-announcement across turns.
+- `validate-distribution.sh` now gates what actually breaks Codex: unknown top-level keys in the
+  hooks file, unrecognized event names, drift in the set of hooks deliberately kept Claude-only,
+  and stale advertised skill counts. Each new gate was verified to fail on an injected defect.
+
 ## [0.31.0] - 2026-07-27
 
 ### Added

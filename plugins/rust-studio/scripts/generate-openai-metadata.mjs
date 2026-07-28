@@ -65,11 +65,29 @@ function firstSentence(description) {
   return description.split(/(?<=[.!?])\s+/u, 1)[0].replace(/[.!?]+$/u, "");
 }
 
+// Cut at the last CLAUSE boundary at or before `max`, falling back to a word
+// boundary, then strip trailing punctuation and dangling function words. Cutting
+// on whitespace alone left every one of the 58 blurbs ending mid-clause
+// ("...with tests, clippy," / "...semver hazards, accidental"), which reads as a
+// truncation bug in the one string Codex shows in its skill catalog.
+const DANGLING = /\s+(a|an|the|and|or|with|for|to|then|in|of|from|by|on|at|into|as)$/iu;
+
 function truncateAtWord(text, max) {
   if (text.length <= max) return text;
   const prefix = text.slice(0, max + 1);
-  const cut = prefix.lastIndexOf(" ");
-  return `${prefix.slice(0, cut > 24 ? cut : max).trimEnd()}`;
+  let cut = Math.max(
+    prefix.lastIndexOf(", "),
+    prefix.lastIndexOf("; "),
+    prefix.lastIndexOf(": "),
+    prefix.lastIndexOf(" — "),
+  );
+  if (cut < 25) cut = prefix.lastIndexOf(" ");
+  let out = prefix
+    .slice(0, cut > 24 ? cut : max)
+    .trimEnd()
+    .replace(/[\s,;:—-]+$/u, "");
+  while (DANGLING.test(out)) out = out.replace(DANGLING, "").replace(/[\s,;:—-]+$/u, "");
+  return out;
 }
 
 function shortSummary(description) {
@@ -91,6 +109,15 @@ function render(name, fields) {
 
   let shortDescription = truncateAtWord(shortSummary(description), 64);
   if (shortDescription.length < 25) shortDescription += " for Rust projects";
+  // The Codex catalog bound. Trimming dangling words can only shorten, so a skill
+  // whose description shrinks past the floor must be reworded at the source rather
+  // than padded here — fail loudly instead of shipping an out-of-spec blurb.
+  if (shortDescription.length < 25 || shortDescription.length > 64) {
+    throw new Error(
+      `${name}: short_description is ${shortDescription.length} chars (Codex spec: 25-64) — ` +
+        `reword the SKILL.md description`,
+    );
+  }
 
   const sentence = firstSentence(description);
   const defaultPrompt = sentence.replace(/^Use\b/u, `Use $${name}`);

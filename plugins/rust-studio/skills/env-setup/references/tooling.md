@@ -22,9 +22,13 @@ servers are loaded from the *user's* project/user settings, not from a plugin �
 **teammates** in particular only see the MCP you have configured ambiently, never a plugin's
 bundled servers. So configure them once for yourself and every agent in the studio inherits them.
 
-Install via Claude Code's MCP setup (e.g. `claude mcp add …`) or by adding them to your
-`~/.claude.json` / project `.mcp.json`; see each project's README — serena
-(`github.com/oraios/serena`) and exa (`github.com/exa-labs/exa-mcp-server`). serena/exa are
+Install serena itself with `uv tool install -p 3.13 serena-agent`, then `serena init` (its README
+is the source of truth for client wiring; it configures a launch command per client rather than
+one universal setup command). Register servers with the host: `claude mcp add …` or your
+`~/.claude.json` / project `.mcp.json` on Claude Code, `codex mcp add …` or `[mcp_servers.*]` in
+`~/.codex/config.toml` on Codex — the studio ships neither, so both hosts need this once. See each
+project's README — serena (`github.com/oraios/serena`) and exa
+(`github.com/exa-labs/exa-mcp-server`). serena/exa are
 *prefer-if-available*: every workflow falls back cleanly to `rg`/Glob for navigation and `gh`/web
 for evidence, just less precisely.
 
@@ -51,15 +55,27 @@ tool names above works — this is the reference server the skills are written a
 Prefer the **serena** MCP (a language server under the hood — the "code intelligence" the
 official large-codebase guide recommends) for anything about symbols:
 
+Tool names below are given **bare**. The harness prefixes them with the server name at load time
+(`mcp__serena__find_symbol` for the `claude mcp add` path above); a differently-installed server
+carries a different prefix, so match on the tool name, not the prefix.
+
 | Need | Tool |
 |------|------|
-| Where is a type/trait/fn defined | `mcp__plugin_serena_serena__find_symbol` / `find_declaration` |
-| Who calls / uses it | `mcp__plugin_serena_serena__find_referencing_symbols` |
-| Who implements a trait | `mcp__plugin_serena_serena__find_implementations` |
-| Overview of a file's/module's symbols | `mcp__plugin_serena_serena__get_symbols_overview` |
-| Pattern across the project | the harness **Grep** tool (ripgrep) — serena has no pattern-search tool |
-| Compiler diagnostics for a file | `mcp__plugin_serena_serena__get_diagnostics_for_file` |
-| Find a file / list a dir | `mcp__plugin_serena_serena__find_file` / `list_dir` |
+| Where is a type/trait/fn defined | `find_symbol` / `find_declaration` |
+| Who calls / uses it | `find_referencing_symbols` |
+| Who implements a trait | `find_implementations` |
+| Overview of a file's/module's symbols | `get_symbols_overview` |
+| Type hierarchy | `type_hierarchy` |
+| Compiler diagnostics for a file | serena's diagnostics/inspections tool |
+| Pattern across the project | the harness **Grep** tool (ripgrep) |
+| Find a file / list a dir | the harness **Glob** / **Read** tools |
+
+The last two rows are not a serena capability gap — `search_for_pattern`, `find_file`, `list_dir`
+and `read_file` all exist. Serena's own README: "When Serena is used inside an agentic harness such
+as Claude Code or Codex, these tools are typically disabled by default, since the surrounding
+harness already provides overlapping file, search, and shell capabilities." So in *this* setting
+they are usually absent — reach for the harness tool and do not wait on a serena call that will
+not resolve.
 
 Serena resolves through the parse/type layer, so it finds real defs/refs that text search
 misses and skips the false hits text search invents. Use **`rg`** to confirm and to catch

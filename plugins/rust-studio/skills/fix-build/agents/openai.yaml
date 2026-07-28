@@ -1,4 +1,4 @@
 interface:
   display_name: "Fix Build"
-  short_description: "Fixing Rust build or cargo check failures involving borrows,"
+  short_description: "Fixing Rust build or cargo check failures involving borrows"
   default_prompt: "Use $fix-build when fixing Rust build or cargo check failures involving borrows, lifetimes, traits, types, features, or deps."

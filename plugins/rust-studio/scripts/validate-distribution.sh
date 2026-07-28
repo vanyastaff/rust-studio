@@ -31,6 +31,37 @@ done < <(grep -oE '\$\{PLUGIN_ROOT\}/[a-z/._-]+\.ts' hooks/codex-hooks.json | se
 jq -e '.hooks == "./hooks/codex-hooks.json"' .codex-plugin/plugin.json >/dev/null ||
   fail "Codex manifest does not wire hooks/codex-hooks.json"
 
+# Codex parses this file strictly: one unknown top-level key rejects the WHOLE
+# config, so every hook goes silent with a single startup warning. A `_comment`
+# key shipped in 0.30.0 and 0.31.0 exactly this way. Only `description` and
+# `hooks` are accepted.
+bad_keys=$(jq -r 'keys[] | select(. != "description" and . != "hooks")' hooks/codex-hooks.json)
+[[ -z $bad_keys ]] ||
+  fail "codex-hooks.json has top-level keys Codex rejects (whole file is dropped): $(echo "$bad_keys" | tr '\n' ' ')"
+
+# Codex clamps a SessionEnd hook to 3s whatever the file declares. Declaring more
+# is not a bigger budget — it is a script written for time it will never get, and
+# the mismatch only surfaces as a startup warning nobody reads.
+session_end_timeout=$(jq -r '.hooks.SessionEnd[0].hooks[0].timeout // 0' hooks/codex-hooks.json)
+(( session_end_timeout <= 3 )) ||
+  fail "codex-hooks.json declares SessionEnd timeout ${session_end_timeout}s; Codex clamps it to 3s"
+
+# Event names Codex recognizes. A typo here is silent too — the hook simply never
+# fires. Verified against the Codex binary's hook dispatcher.
+codex_events="PreToolUse PostToolUse PermissionRequest PreCompact PostCompact SessionStart SessionEnd SubagentStart SubagentStop Stop UserPromptSubmit Notification"
+while IFS= read -r event; do
+  [[ " $codex_events " == *" $event "* ]] || fail "codex-hooks.json declares unknown event $event"
+done < <(jq -r '.hooks | keys[]' hooks/codex-hooks.json)
+
+# Every hook the Codex file omits should be omitted because it cannot work there,
+# not because nobody revisited it. Keep the two files' script sets diffable.
+claude_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/claude-hooks.json | sort -u)
+codex_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/codex-hooks.json | sort -u)
+expected_claude_only=$'/auto-capture.ts\n/statusline-install.ts\n/subagent-stop.ts'
+actual_claude_only=$(comm -23 <(echo "$claude_scripts") <(echo "$codex_scripts"))
+[[ $actual_claude_only == "$expected_claude_only" ]] ||
+  fail "Claude-only hook set changed — port it to Codex or update the expected list. Got: $(echo "$actual_claude_only" | tr '\n' ' ')"
+
 [[ -x skills/env-setup/scripts/env-setup.sh ]] || fail "env-setup portable script is missing or not executable"
 
 # hooks/hooks.json is auto-discovered by both hosts. Keep the Claude-only lifecycle file
@@ -149,6 +180,46 @@ if grep -R -n -F '[TODO:' \
   --exclude-dir=references; then
   fail "scaffold placeholder text remains"
 fi
+
+# Advertised skill counts drift every time a skill lands: the Codex manifest and
+# both READMEs claimed 55 at 58 skills. `portable` is the total minus the skills
+# whose SKILL.md declares itself Claude-only.
+claude_only=$(grep -lF 'Claude Code plugin only' skills/*/SKILL.md | wc -l)
+portable=$(( skill_count - claude_only ))
+# Each entry is `count<TAB>file<TAB>phrase`, where N stands in for the number.
+# Phrases are matched literally, so "58 skills" (total) and "56 skills" (portable)
+# stay distinguishable even though both end in the same word.
+while IFS=$'\t' read -r want file phrase; do
+  [[ -n $want ]] || continue
+  literal=${phrase//N/$want}
+  if ! grep -qF "$literal" "$file"; then
+    # Quote the phrase's literal half before turning N into a number class, so
+    # the failure names what IS there instead of an empty string.
+    escaped=$(printf '%s' "$phrase" | sed 's/[][\.*^$(){}?+|\\/]/\\&/g')
+    found=$(grep -oE "${escaped//N/[0-9]+}" "$file" | sort -u | tr '\n' ' ')
+    fail "$file advertises a stale count: expected \"$literal\", found \"${found:-nothing matching}\""
+  fi
+done <<EOF
+$skill_count	.codex-plugin/plugin.json	N focused skills
+$skill_count	README.md	**N skills**
+$skill_count	../../README.md	skills-N-111111
+$skill_count	../../README.md	coding agents: N skills
+$skill_count	../../README.md	| N skills |
+$portable	../../README.md	The other N skills
+$portable	../../README.md	The N host-neutral workflows
+EOF
+
+# Codex agents install OUTSIDE the plugin (~/.codex/agents/), so the ${CLAUDE_PLUGIN_ROOT}
+# form Claude Code expands has nothing to resolve against there. Generate into a
+# throwaway dir and assert nothing unresolved ships: a placeholder in a prompt fails
+# silently — the agent treats it as a path, cannot open it, and proceeds regardless.
+codex_agent_probe=$(mktemp -d)
+node scripts/generate-codex-agents.mjs "$codex_agent_probe" >/dev/null ||
+  fail "generate-codex-agents.mjs failed — a malformed brief would vanish from a user's Codex install"
+if grep -rlE '\$\{CLAUDE_[A-Z_]*\}' "$codex_agent_probe" >/dev/null 2>&1; then
+  fail "generated Codex agents still carry an unresolved \${CLAUDE_…} placeholder"
+fi
+rm -rf "$codex_agent_probe"
 
 node scripts/generate-openai-metadata.mjs --check
 ./scripts/sync-references.sh --check

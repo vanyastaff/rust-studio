@@ -1,13 +1,13 @@
 # Rust Code Studio
 
 <p>
-  <img src="https://img.shields.io/badge/skills-55-111111?style=flat-square" alt="55 skills">
+  <img src="https://img.shields.io/badge/skills-58-111111?style=flat-square" alt="58 skills">
   <img src="https://img.shields.io/badge/agents-33-111111?style=flat-square" alt="33 agents">
   <img src="https://img.shields.io/badge/works%20with-70%2B%20hosts-111111?style=flat-square" alt="Works with 70+ hosts">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
-A Rust engineering studio for coding agents: 55 skills that carry the standards a strict crate
+A Rust engineering studio for coding agents: 58 skills that carry the standards a strict crate
 maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
@@ -36,7 +36,7 @@ Claude Code, Codex, Cursor, OpenCode, Zed, Copilot and ~70 other hosts. No npm p
 the [skills CLI](https://github.com/vercel-labs/skills) reads a local clone or Git repository
 directly. For a remote install, use `npx skills add <owner>/rust-studio`. Safe to re-run.
 
-The 53 host-neutral workflows bundle their standards and deterministic helpers, so they work
+The 56 host-neutral workflows bundle their standards and deterministic helpers, so they work
 installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
 
 <details>
@@ -74,17 +74,26 @@ npx skills add . --skill '*' --agent '*' -y
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities and explicit-invocation-only
-> in Codex. The other 53 skills, including `/env-setup` and `/help`, are standalone.
+> in Codex. The other 56 skills, including `/env-setup` and `/help`, are standalone.
 
 ## What you get, where
 
 | | skills via `npx` | Codex plugin | Claude Code plugin |
 |---|---|---|---|
-| 55 skills | yes | yes | yes |
+| 58 skills | yes | yes | yes |
 | Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
-| 33 named studio agents | no — phases run inline | no — phases run inline | yes, spawned per phase |
-| Session briefing, rule injection, stop-guard | no | no | yes |
+| 33 named studio agents | no — phases run inline | yes, after one generator step | yes, spawned per phase |
+| Session briefing + path-scoped rule injection | no | yes | yes |
+| Irreversible-action guard | no | yes | yes |
+| Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
 | LSP, status line, background monitors | no | no | yes |
+
+> [!TIP]
+> **Codex sub-agents take one command.** The plugin ships the agent briefs as Markdown; Codex
+> wants TOML, so generate them once — `node plugins/rust-studio/scripts/generate-codex-agents.mjs`
+> writes all 33 into `~/.codex/agents/` (pass a path for a project-local `.codex/agents/`).
+> Re-run it after upgrading the plugin. Without this the skills still work — they just run each
+> phase inline instead of delegating.
 
 > [!TIP]
 > A skill that says "delegate the build to `rust-builder`" runs that phase itself on a host
@@ -123,7 +132,7 @@ node scripts/generate-openai-metadata.mjs
 
 Validation catches manifest/marketplace drift, non-standard skill frontmatter, description-budget
 regressions, stale metadata or references, missing inline fallbacks, and vendor-only APIs leaking
-into the 53 portable skills.
+into the 56 portable skills.
 
 ## Releasing
 
@@ -152,7 +161,7 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .lsp.json                # bundled rust-analyzer LSP
 │       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
-│       ├── skills/                  # 55 skills + references + OpenAI metadata
+│       ├── skills/                  # 58 skills + references + OpenAI metadata
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 20 path-scoped Rust standards
 │       ├── output-styles/           # opt-in terse review style   (plugin only)

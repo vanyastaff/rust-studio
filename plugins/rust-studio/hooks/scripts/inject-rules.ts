@@ -93,7 +93,39 @@ interface Input {
     old_string?: string;
     new_string?: string;
     edits?: Array<{ old_string?: string; new_string?: string }>;
+    [key: string]: unknown;
   };
+}
+
+/** Files and added text carried by a Codex `apply_patch` blob.
+ *
+ *  Claude names the file it is about to touch in `tool_input.file_path`. Codex
+ *  hands the whole edit over as one patch document instead, so without this the
+ *  injector saw no path and every path-scoped standard stayed silent on Codex.
+ *  The blob is located by its `*** Begin Patch` marker in whichever string field
+ *  carries it, rather than by field name, so it keeps working if the wrapper key
+ *  changes. Format verified against real Codex session transcripts. */
+export function applyPatchTargets(toolInput: Record<string, unknown> | undefined): {
+  paths: string[];
+  added: string;
+} {
+  const blob = Object.values(toolInput ?? {}).find(
+    (v): v is string => typeof v === "string" && v.includes("*** Begin Patch"),
+  );
+  if (!blob) return { paths: [], added: "" };
+
+  const paths: string[] = [];
+  const added: string[] = [];
+  for (const line of blob.split("\n")) {
+    const file = /^\*\*\* (?:Add|Update|Delete|Move) File: (.+?)\s*$/.exec(line);
+    if (file) {
+      paths.push(file[1]);
+      continue;
+    }
+    // `+++`/`---` are diff headers, not content; a lone `+` prefix is an added line.
+    if (line.startsWith("+") && !line.startsWith("+++")) added.push(line.slice(1));
+  }
+  return { paths: [...new Set(paths)], added: added.join("\n") };
 }
 
 // Main flow is guarded so importing this module (tests import globToRegex /
@@ -105,8 +137,12 @@ if (import.meta.main) {
 
   const event = data.hook_event_name || "PreToolUse";
   const filePath = data.tool_input?.file_path || data.tool_input?.path || "";
-  if (!filePath) done();
-  const norm = String(filePath).replace(/\\/g, "/");
+  const patch = applyPatchTargets(data.tool_input);
+  // One path on Claude, potentially several on Codex — a single apply_patch can
+  // rewrite a whole module. Rules are unioned over every file the edit touches.
+  const norms = (filePath ? [String(filePath)] : patch.paths).map((p) => p.replace(/\\/g, "/"));
+  if (!norms.length) done();
+  const norm = norms[0];
 
   const rulesDir = join(pluginRoot(), "rules");
   let entries: string[];
@@ -140,7 +176,7 @@ if (import.meta.main) {
       contentTriggered.push({ name, desc });
       continue;
     }
-    if (pathMatches(globs, norm)) matched.push({ name, desc });
+    if (norms.some((n) => pathMatches(globs, n))) matched.push({ name, desc });
   }
 
   // Content trigger: an edit that introduces or touches `unsafe` pulls in the
@@ -151,6 +187,7 @@ if (import.meta.main) {
     data.tool_input?.new_string,
     data.tool_input?.old_string,
     ...(data.tool_input?.edits || []).flatMap((e) => [e?.new_string, e?.old_string]),
+    patch.added,
   ]
     .filter(Boolean)
     .join("\n");
@@ -159,7 +196,8 @@ if (import.meta.main) {
   // name, and not a doc that merely discusses unsafe. Match `unsafe` immediately
   // followed by a block/fn/impl/trait/extern.
   const touchesUnsafe =
-    norm.endsWith(".rs") && /\bunsafe\s*(?:\{|fn\b|impl\b|trait\b|extern\b)/.test(payload);
+    norms.some((n) => n.endsWith(".rs")) &&
+    /\bunsafe\s*(?:\{|fn\b|impl\b|trait\b|extern\b)/.test(payload);
   if (touchesUnsafe) {
     for (const r of contentTriggered) {
       if (!matched.some((m) => m.name === r.name)) matched.push(r);
@@ -174,26 +212,28 @@ if (import.meta.main) {
     a.name === "core" ? -1 : b.name === "core" ? 1 : a.name.localeCompare(b.name),
   );
 
-  // Inject a given path's rules at most once per session — a Read followed by
-  // several Edits to the same file shouldn't re-inject the same standard each time.
+  // Announce each rule at most once per session — keyed by RULE, not by file.
+  // Keying by path meant core.md's pointer was re-injected once per file touched:
+  // measured at 12 re-announcements and ~70% of all rule-pointer tokens in a
+  // 12-file session (`bun tools/context-cost.ts`). Telling an agent to read
+  // core.md a twelfth time carries no information the first eleven didn't; it
+  // just dilutes attention as the session grows. PreCompact clears these markers,
+  // so a rule is re-announced exactly when the context holding it was discarded —
+  // re-injection tracks actual context loss instead of file count.
+  //
   // Fail-open: any fs error just means we inject (never wedge the session).
-  // No session_id → no dedupe key: a shared "nosession" marker would persist in tmp
-  // and suppress rule injection for every LATER id-less session. Rules are
+  // No session_id → no dedupe key: a shared "nosession" marker would persist in
+  // tmp and suppress rule injection for every LATER id-less session. Rules are
   // high-value; fail toward injecting (skip the dedupe entirely).
+  let fresh = matched;
   try {
     if (!data.session_id) throw new Error("no session key");
     const dir = join(tmpdir(), "rust-studio-rules");
     const sid = String(data.session_id).replace(/[^A-Za-z0-9]/g, "_");
-    // Key the marker by whether `unsafe` is present so the first edit that
-    // introduces unsafe still surfaces unsafe.md even if the path was seen before.
-    const suffix = touchesUnsafe ? "__unsafe" : "";
-    const marker = join(
-      dir,
-      `${sid}__${norm.replace(/[^A-Za-z0-9]/g, "_")}${suffix}`,
-    );
-    if (existsSync(marker)) done();
     mkdirSync(dir, { recursive: true });
-    writeFileSync(marker, "1");
+    fresh = matched.filter((r) => !existsSync(join(dir, `${sid}__rule__${r.name}`)));
+    if (!fresh.length) done(); // every applicable standard is already in context
+    for (const r of fresh) writeFileSync(join(dir, `${sid}__rule__${r.name}`), "1");
   } catch {
     /* inject anyway */
   }
@@ -205,13 +245,18 @@ if (import.meta.main) {
   const root = pluginRoot().replace(/\\/g, "/").replace(/\/+$/, "");
   const CRITICAL = new Set(["unsafe", "ffi", "security"]);
 
+  // Name every file when the edit spans several, so the agent can tell which
+  // standard it is being held to on which file.
+  const scope =
+    norms.length === 1
+      ? `\`${basename(norm)}\``
+      : norms.map((n) => `\`${basename(n)}\``).join(", ");
   const header =
-    `Path-scoped Rust standards apply to \`${basename(norm)}\` (Rust Code Studio). ` +
+    `Path-scoped Rust standards apply to ${scope} (Rust Code Studio). ` +
     "These are BINDING — do not shape the edit from memory. Before you finish this " +
-    "edit, **read (Read tool) each rule below that you have not already read this " +
-    "session**:\n";
+    "edit, **read each rule below**:\n";
 
-  const bullets = matched.map((r) => {
+  const bullets = fresh.map((r) => {
     const ptr = `${root}/rules/${r.name}.md`;
     const tag = CRITICAL.has(r.name) ? " — ⚠️ **REQUIRED before this edit**" : "";
     return `- **${r.name}** — ${r.desc}${tag}\n    Read: \`${ptr}\``;

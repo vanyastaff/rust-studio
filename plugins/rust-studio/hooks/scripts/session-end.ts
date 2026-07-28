@@ -15,7 +15,14 @@ import { readInput, emit, done, watchdog, run, which, optionBool } from "./_lib.
 
 // Armed for the whole run — the git dirty-check child runs after stdin, so an
 // early disarm would leave it unguarded. Watchdog fails open (exit 0).
-watchdog(10_000);
+//
+// Budgeted for the TIGHTER host: Codex clamps a SessionEnd hook to 3s regardless
+// of the declared timeout ("clamping SessionEnd hook timeout to Ns" is in its
+// binary). A 10s watchdog there just means the process is killed mid-run while
+// the config claims it is configured. Everything below fails open — the watchdog
+// exits 0 and `dirty` defaults to true — so a tight budget degrades to "remind
+// anyway", never to a hang or a missed reminder.
+watchdog(2_200);
 
 interface Input {
   cwd?: string;
@@ -38,7 +45,7 @@ try {
 // Prefer to remind only when the tree is dirty; if we can't tell, remind anyway.
 let dirty = true;
 if (which("git")) {
-  const st = run(["git", "-C", cwd, "status", "--porcelain"], { timeout: 5_000 });
+  const st = run(["git", "-C", cwd, "status", "--porcelain"], { timeout: 1_000 });
   if (st) dirty = st.stdout.trim().length > 0;
 }
 

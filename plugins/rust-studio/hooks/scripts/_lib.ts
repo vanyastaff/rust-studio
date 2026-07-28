@@ -87,12 +87,23 @@ export function pluginRoot(): string {
   return fileURLToPath(new URL("../..", import.meta.url));
 }
 
-/** Read a plugin userConfig value, exposed to hook subprocesses as
- *  CLAUDE_PLUGIN_OPTION_<KEY>. Tries the upper-cased key (documented form) then the
- *  verbatim key; returns null when unset/blank so callers can fall back. */
+/** Read a studio setting. Claude Code exposes plugin userConfig to hook
+ *  subprocesses as CLAUDE_PLUGIN_OPTION_<KEY> (upper-cased form documented, the
+ *  verbatim key tried as a fallback).
+ *
+ *  Codex has no userConfig channel, so every setting there would be frozen at
+ *  its default — including `git_guard`, which the irreversible-action guard tells
+ *  the user to flip when it blocks something. RUST_STUDIO_<KEY> is the
+ *  host-neutral escape hatch that makes that instruction true on both hosts. It
+ *  is consulted last so a Claude userConfig value still wins on Claude.
+ *
+ *  Returns null when unset/blank so callers can fall back to their own default. */
 export function option(key: string): string | null {
   const env = process.env;
-  const v = env[`CLAUDE_PLUGIN_OPTION_${key.toUpperCase()}`] ?? env[`CLAUDE_PLUGIN_OPTION_${key}`];
+  const v =
+    env[`CLAUDE_PLUGIN_OPTION_${key.toUpperCase()}`] ??
+    env[`CLAUDE_PLUGIN_OPTION_${key}`] ??
+    env[`RUST_STUDIO_${key.toUpperCase()}`];
   const s = (v ?? "").trim();
   return s ? s : null;
 }

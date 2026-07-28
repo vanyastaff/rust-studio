@@ -1,4 +1,4 @@
 interface:
   display_name: "Test Setup"
-  short_description: "Setting up a Rust test toolchain with proptest, Criterion,"
+  short_description: "Setting up a Rust test toolchain with proptest, Criterion"
   default_prompt: "Use $test-setup when setting up a Rust test toolchain with proptest, Criterion, nextest, and coverage."

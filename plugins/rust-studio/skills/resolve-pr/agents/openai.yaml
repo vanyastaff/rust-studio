@@ -1,4 +1,4 @@
 interface:
   display_name: "Resolve PR"
-  short_description: "Addressing pull-request review threads or CI failures, or"
+  short_description: "Addressing pull-request review threads or CI failures"
   default_prompt: "Use $resolve-pr when addressing pull-request review threads or CI failures, or watching a PR until merge-ready."

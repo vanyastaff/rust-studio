@@ -1,4 +1,4 @@
 interface:
   display_name: "Brainstorm"
-  short_description: "Exploring a Rust crate or feature before design: clarify"
+  short_description: "Exploring a Rust crate or feature before design"
   default_prompt: "Use $brainstorm when exploring a Rust crate or feature before design: clarify constraints and compare 2–4 approaches."

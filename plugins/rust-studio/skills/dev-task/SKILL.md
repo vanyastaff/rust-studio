@@ -115,7 +115,7 @@ changes the approach. If nothing surfaces, proceed
 The lead's maintainer verdict in Phase 2 is a *self*-check; this gate adds an **independent**
 adversarial pass so a flawed plan is caught **before any code is written**, not after. Reviewers
 are read-only — they attack the PLAN, never edit. Scale the depth to the **review mode** chosen
-above (default to **lean** when the host or user has not configured an intensity):
+above:
 - **solo** — run it only when the plan is boundary-moving (public API, `unsafe`, cross-crate, a
   new dependency, or data/migration). Then spawn `harsh-critic` to attack the plan; otherwise
   state *"solo: plan-review skipped — localized change, no boundary"* and proceed.

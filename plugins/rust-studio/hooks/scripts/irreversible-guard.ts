@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Rust Code Studio — irreversible-action guard (PreToolUse: Bash).
+// Rust Code Studio — irreversible-action guard (PreToolUse, both hosts).
 //
 // The studio is autonomy-first: tactical calls get decided and executed without
 // asking. That is the right default for work a commit can undo — and the wrong
@@ -19,9 +19,11 @@
 // `push --force-with-lease` (it refuses to clobber work it hasn't seen), and
 // `cargo publish --dry-run` (that is exactly what /publish is supposed to run).
 //
-// Blocking uses exit code 2 + stderr — the long-stable contract every Claude
-// Code version honors. The watchdog exits 0 (fails OPEN) if anything stalls: a
-// guard that wedges the session would be worse than the risk it manages.
+// Blocking uses exit code 2 + stderr — the contract both hosts honor (Codex
+// reports "PreToolUse hook exited with code 2 but did not write a blocking
+// reason to stderr" when the message is missing, so the same shape blocks
+// there). The watchdog exits 0 (fails OPEN) if anything stalls: a guard that
+// wedges the session would be worse than the risk it manages.
 
 import { readInput, done, watchdog, optionBool } from "./_lib.ts";
 
@@ -109,13 +111,30 @@ export function blockMessage(rule: Rule): string {
     `${rule.reason}\n\n` +
     `You do not have authority to run this. Explain what you were trying to do and let ` +
     `the user run it themselves, or reach for a reversible alternative.\n\n` +
-    `(Turn this guard off with the studio's \`git_guard\` setting.)\n`
+    `(Turn this guard off with the studio's \`git_guard\` setting, or ` +
+    `\`RUST_STUDIO_GIT_GUARD=off\` on a host without plugin settings.)\n`
   );
 }
 
-interface Input {
+export interface Input {
   tool_name?: string;
-  tool_input?: { command?: string };
+  tool_input?: Record<string, unknown>;
+}
+
+/** The shell command this tool call carries, or null when it isn't a shell call.
+ *
+ *  Matched on payload SHAPE, not on the tool's name. The hosts disagree on both:
+ *  Claude Code sends `Bash { command: string }`, Codex sends
+ *  `exec_command { cmd: string }`. Keying on the name meant the guard was a
+ *  silent no-op on Codex — the failure mode a safety hook can least afford —
+ *  and it would break again the next time a host renames its shell tool. An
+ *  array form is joined for matching; the rules are anchored on git/cargo verbs,
+ *  so a flattened argv reads the same as the string a shell would see. */
+export function shellCommand(data: Input): string | null {
+  const raw = data.tool_input?.command ?? data.tool_input?.cmd;
+  if (typeof raw === "string") return raw;
+  if (Array.isArray(raw) && raw.every((s) => typeof s === "string")) return raw.join(" ");
+  return null;
 }
 
 if (import.meta.main) {
@@ -125,9 +144,11 @@ if (import.meta.main) {
 
   // Opt-out: studio config `git_guard` (default on).
   if (!optionBool("git_guard", true)) done();
-  if (data.tool_name !== "Bash") done();
 
-  const rule = check(data.tool_input?.command ?? "");
+  const command = shellCommand(data);
+  if (command == null) done();
+
+  const rule = check(command);
   if (!rule) done();
 
   process.stderr.write(blockMessage(rule));

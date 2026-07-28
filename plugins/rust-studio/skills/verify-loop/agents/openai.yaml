@@ -1,4 +1,4 @@
 interface:
   display_name: "Verify Loop"
-  short_description: "Driving a Rust change green with cargo fmt, clippy, and tests in"
+  short_description: "Driving a Rust change green with cargo fmt, clippy"
   default_prompt: "Use $verify-loop when driving a Rust change green with cargo fmt, clippy, and tests in a bounded auto-fix loop."
