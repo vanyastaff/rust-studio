@@ -263,14 +263,18 @@ function projection(rows: Row[], reinj: { totalChars: number; redundantChars: nu
 // ----------------------------------------------------------------------------
 // D. RULE RE-INJECTION — true cross-file redundancy
 //
-// inject-rules dedupes per PATH, but rules with a broad glob (core.md = **/*.rs,
-// and other always-on baselines) are re-injected for EVERY distinct file. Each
-// such injection is a fresh concatenation, so exact-match dedup (sections B/C)
-// can't see the overlap. Here we decompose each file's injection back into its
-// constituent rule bodies and count how many times each body is re-injected
-// across a realistic multi-file session — the real context-rot driver.
+// inject-rules dedupes per RULE per session, so a broad-glob baseline (core.md =
+// **/*.rs) is announced once and then stays quiet however many files the session
+// touches. It used to dedupe per PATH, which re-announced core.md for every
+// distinct file; this section is what measured that (70% of pointer tokens) and
+// is what proves it stayed fixed. Each file's injection is decomposed back into
+// its constituent rule bullets and counted across one realistic session.
+//
+// The whole walk MUST share one session_id: a fresh id per file bypasses the
+// dedupe and the meter would report the pre-fix number forever.
 // ----------------------------------------------------------------------------
 async function ruleReinjection() {
+  const session = `reinj-${RUN}`;
   // a realistic async/web workspace coding session (12 distinct files)
   const files = [
     "src/lib.rs", "src/main.rs", "src/error.rs", "src/config.rs",
@@ -281,11 +285,10 @@ async function ruleReinjection() {
   // name -> { count: times its bullet is injected, size: bullet chars }
   const occ = new Map<string, { count: number; size: number }>();
   let totalChars = 0;
-  let i = 0;
   for (const fp of files) {
     const r = await runHook("inject-rules.ts", {
       hook_event_name: "PreToolUse",
-      session_id: `reinj-${RUN}-${i++}`,
+      session_id: session,
       tool_input: { file_path: fp },
     });
     totalChars += r.modelContext.length;

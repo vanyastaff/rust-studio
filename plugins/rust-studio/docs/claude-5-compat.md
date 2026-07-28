@@ -7,6 +7,7 @@ working there. Grounded in Anthropic's official guidance:
 - [Introducing Claude Fable 5 and Claude Mythos 5](https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5)
 - [Migration guide (Opus 4.8 → Fable 5)](https://platform.claude.com/docs/en/about-claude/models/migration-guide)
 - [Claude Code model configuration — Work with Fable 5 / Automatic model fallback](https://code.claude.com/docs/en/model-config)
+- [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
 
 The studio stays **model-agnostic** — everything here degrades gracefully on Opus/Sonnet/Haiku
 sessions. Nothing in the plugin requires Fable 5.
@@ -55,9 +56,23 @@ sessions. Nothing in the plugin requires Fable 5.
   same audit deterministically.
 - **Specialists stay `sonnet`, the scout `haiku`** — routine, well-scoped work; the cost
   tiering is intentional and unchanged.
+- **No agent pins `effort`, and that is the decision.** Subagent frontmatter accepts `effort`
+  (`low`…`max`) alongside `model`; omitting it means the subagent inherits the session's effort.
+  That inheritance is the point — it is what makes "effort is the user's dial" true for the
+  33-agent roster and not just for skills. `effort` is model-gated (Haiku 4.5 does not take it)
+  and `xhigh` needs an xhigh-capable model and can be restricted by org policy, so pinning a
+  level on the `model: inherit` gates would break model-agnosticism on a smaller session.
+  Anyone who wants to exercise this lever should treat it as an evidence-first change: one
+  agent, measured with `/eval-agents` and `bun tools/context-cost.ts`, not a roster-wide sweep.
 
 ### Authoring rules (agents and skills)
 
+- **Delete what the model no longer needs, and measure the deletion.** Anthropic removed over
+  80% of Claude Code's own system prompt for Opus 5 / Fable 5 "with no measurable loss on our
+  coding evaluations" — the burden of proof now sits on keeping an instruction, not on cutting
+  it. The studio's two meters are `bun tools/context-cost.ts` (what the hooks inject) and
+  `/eval-agents` (whether recall survives the cut). An instruction that changes neither number
+  is sediment. Editorial detail: `writing-skills.md`.
 - **Never instruct an agent to echo, transcribe, or "show" its reasoning** in output. On
   Claude 5 this trips the `reasoning_extraction` classifier and the turn is refused. Ask for
   conclusions, findings, verdicts, and evidence. (Audited 2026-07: no shipped agent or skill

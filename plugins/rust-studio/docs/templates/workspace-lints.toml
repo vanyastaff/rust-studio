@@ -12,6 +12,18 @@
 unsafe_code = "forbid"            # drop to "deny" (then re-allow per-module) if you genuinely need unsafe
 
 [workspace.lints.clippy]
+# --- broad groups: negative priority so the specific levels below win ---
+# NOT optional hygiene. As of clippy 1.97 `overly_complex_bool_expr` moved
+# correctness → pedantic and `nonminimal_bool` moved complexity → pedantic, so both
+# are allow-by-default and absent from `clippy::all`. A bare `-- -D warnings` gate
+# therefore passes an always-false expression. Verified on clippy 0.1.97:
+# `pub fn b(x: bool) -> bool { x && !x }` is clean under the bare gate and reports
+# "this boolean expression contains a logic bug" only once pedantic is on.
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+# restriction-tier, so neither group above turns it on. Without it,
+# `let _ = validate(x);` silently discards a validation the gate cannot see.
+let_underscore_must_use = "warn"
 # --- gate self-protection ---
 allow_attributes_without_reason = "deny"   # no silent #[allow]; a reason is mandatory
 allow_attributes = "warn"                  # prefer #[expect] over #[allow] where it fits

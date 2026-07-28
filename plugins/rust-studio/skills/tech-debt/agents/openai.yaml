@@ -1,4 +1,4 @@
 interface:
   display_name: "Tech Debt"
-  short_description: "Auditing Rust technical debt: TODOs, lint suppressions, unwraps,"
+  short_description: "Auditing Rust technical debt: TODOs, lint suppressions, unwraps"
   default_prompt: "Use $tech-debt when auditing Rust technical debt: TODOs, lint suppressions, unwraps, oversized units, and missing tests."

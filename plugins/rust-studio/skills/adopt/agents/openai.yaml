@@ -1,4 +1,4 @@
 interface:
   display_name: "Adopt"
-  short_description: "Onboarding a Rust crate or workspace: map structure and public"
+  short_description: "Onboarding a Rust crate or workspace"
   default_prompt: "Use $adopt when onboarding a Rust crate or workspace: map structure and public API, infer standards, and catalog debt."

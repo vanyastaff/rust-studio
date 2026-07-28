@@ -52,8 +52,10 @@ Applies to crate roots, domain/API modules, module boundaries, and manifests.
 ## SOLID, expressed in Rust
 - SRP — one reason to change. Enforce via struct decomposition and crate boundaries: each
   type and each crate owns a single concept.
-- OCP — open for extension, closed for modification. Add behavior with `#[non_exhaustive]`
-  enums/structs and default trait methods, not by editing closed match arms callers depend on.
+- OCP — open for extension, closed for modification. Add behavior with default trait methods,
+  and with `#[non_exhaustive]` on public enums/structs that may grow — but not reflexively:
+  the forced `_` arm suppresses exhaustiveness checking, so an internal enum the workspace must
+  handle completely is worse off with it. Full ruling in api.md ("Controlled growth").
 - ISP — keep traits small and focused (one capability each, like `Display` or `Iterator`);
   do not bolt unrelated methods onto one god-trait.
 - DIP — depend on traits at component boundaries, not on concrete types, so implementations

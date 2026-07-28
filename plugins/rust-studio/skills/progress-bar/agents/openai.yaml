@@ -1,6 +1,6 @@
 interface:
   display_name: "Progress Bar"
-  short_description: "Running Claude Code and configuring, refreshing, or removing the"
+  short_description: "Running Claude Code and configuring, refreshing"
   default_prompt: "Use $progress-bar when running Claude Code and configuring, refreshing, or removing the Rust Code Studio status line."
 policy:
   allow_implicit_invocation: false

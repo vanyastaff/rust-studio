@@ -54,6 +54,16 @@ matrix, `-Zminimal-versions`, macOS+Windows, llvm-cov→Codecov), `safety.yml` (
 | Coverage | `cargo llvm-cov --lcov` → `codecov/codecov-action@v5` (one Linux run) | nice |
 | Typos | `crate-ci/typos` | nice |
 
+> **`-D warnings` alone is not a correctness gate.** It only denies what is already *on*, and the
+> default set keeps shrinking. As of clippy 1.97 `overly_complex_bool_expr` moved correctness →
+> pedantic and `nonminimal_bool` moved complexity → pedantic; both are now allow-by-default and
+> outside `clippy::all`. Verified on clippy 0.1.97: `pub fn b(x: bool) -> bool { x && !x }` — an
+> always-false expression — passes `cargo clippy --all-targets -- -D warnings` clean, and is caught
+> only once `pedantic` is enabled. Set the lint LEVELS in the manifest
+> (`templates/workspace-lints.toml`: `pedantic`/`nursery` at `warn` with `priority = -1`, plus the
+> restriction-tier `let_underscore_must_use`) and let the CI flag deny them. The command in the
+> table is the *enforcement*; the manifest is what decides the gate can see anything at all.
+
 **Matrix:** OS × toolchain (stable/beta/nightly) + a pinned MSRV leg; `fail-fast: false`. Keep it lean
 on PRs, expand on merge/cron.
 

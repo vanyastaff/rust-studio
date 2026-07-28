@@ -9,7 +9,7 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 > rebuilt from the ground up for Rust and packaged for Claude Code and Codex.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **55 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
+- **58 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
 - **20 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
 - **10 Claude hook handlers across 7 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
@@ -166,6 +166,10 @@ hard timeout with a watchdog, so it can never freeze the session (even mid-subag
 The plugin prompts for these when you enable it (and you can change them anytime via `/plugin`
 → **Rust Code Studio** → configure).
 
+> **On Codex**, which has no plugin-settings channel, set any option below through the
+> environment instead: `RUST_STUDIO_<OPTION>` in upper case — `RUST_STUDIO_GATE_INTENSITY=lean`,
+> `RUST_STUDIO_GIT_GUARD=off`. On Claude Code a configured value still wins over the variable.
+
 **Behavior** — surfaced in the SessionStart briefing so the team honors them; `default_msrv`
 also fills the MSRV line when a `Cargo.toml` doesn't declare one:
 
@@ -187,6 +191,7 @@ verdict check) is always on, and the whole plugin disables with
 | **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
 | **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
 | **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit — capture stays manual (`/remember`, `/session-wrap`) and in-skill. |
+| **Irreversible-action guard** (`git_guard`) | on | The agent may again run commands nothing can undo — `git reset --hard`, `clean -f`, `checkout .`, `branch -D`, `stash drop`, plain force-push, `reflog expire`, and a real `cargo publish`/`yank`. Plain `git push`, `--force-with-lease`, and `publish --dry-run` are never blocked either way. |
 | **Progress visibility** (`progress_tracking`) | on | Orchestrating skills (`/dev-task`, `team-*`, `/refactor`, `/spec-verify`) stop keeping a live task list + per-phase result lines — phases run without the checklist narration. |
 
 > LSP and any bundled MCP servers can't be toggled with a flag (they're declared statically) —

@@ -61,8 +61,8 @@ minimum `rust-version` exceeds the current declared MSRV. Produce a table:
 ```
 crate            declared MSRV   effect
 -------          -------------   ------
-serde 1.0.197    1.70            raises floor to 1.70
-tokio 1.37        1.63            within floor
+<crate> <ver>    <msrv>          raises floor to <msrv>
+<crate> <ver>    <msrv>          within floor
 ```
 
 ## Phase 4 — Compare and decide
