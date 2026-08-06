@@ -36,7 +36,7 @@ Claude Code, Codex, Cursor, OpenCode, Zed, Copilot and ~70 other hosts. No npm p
 the [skills CLI](https://github.com/vercel-labs/skills) reads a local clone or Git repository
 directly. For a remote install, use `npx skills add <owner>/rust-studio`. Safe to re-run.
 
-The 56 host-neutral workflows bundle their standards and deterministic helpers, so they work
+The 57 host-neutral workflows bundle their standards and deterministic helpers, so they work
 installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
 
 <details>
@@ -74,7 +74,7 @@ npx skills add . --skill '*' --agent '*' -y
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities and explicit-invocation-only
-> in Codex. The other 56 skills, including `/env-setup` and `/help`, are standalone.
+> in Codex. The other 57 skills, including `/env-setup` and `/help`, are standalone.
 
 ## What you get, where
 
@@ -132,7 +132,7 @@ node scripts/generate-openai-metadata.mjs
 
 Validation catches manifest/marketplace drift, non-standard skill frontmatter, description-budget
 regressions, stale metadata or references, missing inline fallbacks, and vendor-only APIs leaking
-into the 56 portable skills.
+into the 57 portable skills.
 
 ## Releasing
 
