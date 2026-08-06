@@ -4,11 +4,14 @@
 // The session is ending, so we cannot inject context for Claude — only surface a
 // `systemMessage` to the USER. If the working tree has uncommitted Rust work,
 // remind them to run /session-wrap so learnings get captured (via /remember) and
-// spec statuses get updated before the context evaporates.
+// spec statuses get updated before the context evaporates. Independently, list
+// any leftover linked worktrees (agent-isolation leftovers accumulate fast —
+// dozens of copies of the tree, eating disk and breaking repo gates that scan
+// the filesystem) and point at /worktree-sweep.
 //
-// Non-blocking and cheap: a dirty-tree check with a tight timeout, and on any
-// error (no git, slow git, not a repo) it falls back to a plain reminder. Never
-// fails the session.
+// Non-blocking and cheap: dirty-tree and worktree checks with tight timeouts,
+// and on any error (no git, slow git, not a repo) it falls back gracefully.
+// Never fails the session.
 
 import { join } from "node:path";
 import { readInput, emit, done, watchdog, run, which, optionBool } from "./_lib.ts";
@@ -49,12 +52,41 @@ if (which("git")) {
   if (st) dirty = st.stdout.trim().length > 0;
 }
 
-if (!dirty) done();
+// Leftover linked worktrees: the first `git worktree list` entry is the main
+// worktree; everything after it is a linked one. Agent-isolation worktrees
+// (basename `agent-*`) are the usual accumulators — each is a full checkout,
+// and repo scripts that scan the filesystem trip on their stale copies.
+let worktreeNote = "";
+if (which("git")) {
+  const wt = run(["git", "-C", cwd, "worktree", "list"], { timeout: 5_000 });
+  if (wt) {
+    const paths = wt.stdout
+      .trim()
+      .split("\n")
+      .map((l) => l.split(/\s+/)[0])
+      .filter(Boolean);
+    const extra = paths.slice(1);
+    if (extra.length) {
+      const agentMade = extra.filter((p) => /^agent-/.test(p.split("/").pop() ?? ""));
+      worktreeNote =
+        ` ${extra.length} leftover git worktree(s) detected` +
+        (agentMade.length ? ` (${agentMade.length} look agent-created)` : "") +
+        " — run /worktree-sweep to inspect and prune before they eat disk or " +
+        "break local gates.";
+    }
+  }
+}
+
+if (!dirty && !worktreeNote) done();
 
 emit({
   systemMessage:
-    "Rust Code Studio: session ending. If you have uncommitted work, run /session-wrap " +
-    "to capture durable learnings (via /remember) and update spec statuses before " +
-    "the context is gone.",
+    "Rust Code Studio: session ending." +
+    (dirty
+      ? " If you have uncommitted work, run /session-wrap " +
+        "to capture durable learnings (via /remember) and update spec statuses before " +
+        "the context is gone."
+      : "") +
+    worktreeNote,
   suppressOutput: true,
 });

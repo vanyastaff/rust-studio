@@ -52,3 +52,9 @@ Applies to every `Cargo.toml`.
   see the one mistake that silently disables a check.
 - Multi-crate workspaces: set `lto = "thin"` in the release profile (no cross-crate
   LTO by default). At 20+ crates, run `cargo hakari` to unify features and cut rebuilds.
+
+## Hygiene
+- Manifest comments state rationale, not process history: no plan/task IDs, phase
+  markers, or review citations (`Cycle N`, `TODO(A-5)`, `PR #NNN review`) — write the
+  invariant or constraint the gating serves, so the comment outlives the process that
+  produced it.

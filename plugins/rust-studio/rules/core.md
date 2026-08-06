@@ -36,6 +36,9 @@ Applies to every `.rs` file.
 - `#[must_use]` on builders, `Result`-like returns, and guard types — anywhere a silently
   discarded value is a bug.
 - Modules small and cohesive; `pub(crate)` by default, `pub` only when intended.
+- Size budget: a file past ~1,500–2,000 lines is a smell — split it; a `#[cfg(test)]`
+  module that dominates its file belongs in `tests/` or a `#[path]`-split module; a
+  function past ~150 lines should decompose unless it is one indivisible decision table.
 - `mem::take`/`mem::replace` to move a value out behind `&mut` for enum-variant transitions;
   prefer `Option::take()` over `mem::take(opt)`, and `mem::replace(field, placeholder)` when
   the type is not `Default`.
@@ -95,8 +98,9 @@ Applies to every `.rs` file.
     Presume it masks an early `return` that short-circuits the check. Remove the allow, read what
     the warning was hiding, and only then decide.
 - `TODO`/`FIXME` include an owner or issue reference, else they are not allowed.
-- No plan/task IDs or phase markers (`TODO(A-5)`, "Phase B") in committed code — write the
-  invariant a future change enforces, not the plan id that schedules it.
+- No plan/task IDs or phase markers (`TODO(A-5)`, "Phase B", "Cycle N", "PR #NNN review")
+  in committed code, manifests, or in-tree docs — write the invariant a future change
+  enforces, not the plan id that schedules it.
 
 ## Modern idioms & recurring misses
 - Verify idioms against the **current** toolchain (edition 2024; check official Rust

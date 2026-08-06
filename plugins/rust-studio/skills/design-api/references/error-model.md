@@ -33,6 +33,12 @@ Applies to error and result types.
 - Public error types are part of the API: document them, consider `#[non_exhaustive]` for
   published crates, and keep variant names stable when external consumers exist.
 
+## Composition roots
+- Bootstrap/init functions return `Result` up to `main`; only `main` maps the error to an
+  exit code. A `panic!` on an ENVIRONMENT failure mid-bootstrap (device init, window
+  creation, config parse, missing runtime dependency) hides a recoverable misconfiguration
+  — that is a fallible path, not an invariant, even in a binary crate.
+
 ## Diagnostics
 - Error messages name the failed invariant or operation and enough identifiers to debug.
 - Do not leak secrets, tokens, raw credentials, or private data through `Debug`, `Display`,

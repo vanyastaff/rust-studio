@@ -1,7 +1,7 @@
 ---
 name: commit
 description: "Use when committing one logical Rust change: run fmt and clippy, then create a Conventional Commit."
-allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
+allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*) Bash(just *) Bash(make *) Bash(bash scripts/check-*)"
 disable-model-invocation: true
 ---
 
@@ -17,8 +17,11 @@ the message before running `git commit`
 2. **One logical unit per commit.** If the diff mixes unrelated concerns, say so and propose
    splitting into separate commits.
 3. Pre-commit hygiene: run `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings`
-   on touched crates. If either fails, surface the output and offer to fix via `/lint` or
-   `/fix-build` before proceeding.
+   on touched crates, and — when the repo defines its own pre-PR gate (a justfile recipe,
+   a Makefile target, `scripts/check-*.sh`) — run that too. A red local gate blocks the
+   commit even when hosted CI happens to be green; a failure caused by untracked local
+   artifacts is an environment defect to fix or report, not to skip. If anything fails,
+   surface the output and offer to fix via `/lint` or `/fix-build` before proceeding.
 4. Compose a **Conventional Commit**, deriving:
    - **type**: `feat` / `fix` / `refactor` / `perf` / `docs` / `test` / `build` / `chore`.
    - **scope**: the crate or module (e.g. `feat(parser):`).

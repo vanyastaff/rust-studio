@@ -98,7 +98,14 @@ also surface it on a `MEMORY:` line in your verdict for the orchestrator to `/re
 8. Run `cargo +nightly miri test` for ALL unsafe (and `cargo careful` as a fast
    pre-check); add `loom` for lock-free / atomic code. Paste results verbatim
    (or state why skipped).
-9. Record findings in the safety-review template; present to `systems-perf-lead`
+9. Audit the CLAIMS around the unsafe, not only the blocks:
+   - A change that asserts thread confinement or drops `Send`/`Sync` (owner-local
+     refactors, retired unsafe impls) must pin the claim at compile time — a static
+     assertion (`assert_not_impl_any!`-style) or a `compile_fail` doctest. An unpinned
+     confinement claim is a 🟠 finding: the bound can silently return in a later change.
+   - CI jobs that guard UB (miri/loom) but run advisory (`continue-on-error`) do not
+     protect the merge — flag as a 🟡 gap until they block.
+10. Record findings in the safety-review template; present to `systems-perf-lead`
    for SAFETY-GATE co-sign.
 
 ## Standards you enforce

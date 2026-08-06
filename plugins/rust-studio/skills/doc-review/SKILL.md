@@ -26,7 +26,15 @@ Use `/doc-review` for specs, plans, ADRs, RFCs, and design docs.
 ## How to run
 1. Read the doc named in `input` (default: the most recently changed file under
    `.rust-studio/specs/`, `docs/adr/`, or `docs/`). State what you're reviewing.
-2. Fan out the relevant lenses **in parallel** (one task per persona, or background subagents
+2. **Mechanical prose pass** (cheap, before the fan-out) — findings, not style polish:
+   - near-duplicate paragraphs/blocks: the same point or limitation stated twice in one
+     doc (an edit pass appended a revision without removing the original);
+   - change-history narration ("this used to be", "moved here from", "previously"):
+     belongs in git, not in the doc's current state;
+   - private process IDs leaking into the text (Cycle N, audit/review IDs, `PR #NNN
+     review`, spec success-criteria numbers): a reader without the process history cannot
+     resolve them — state the invariant instead.
+3. Fan out the relevant lenses **in parallel** (one task per persona, or background subagents
    — see Orchestration; skip the ones the doc doesn't touch), each returning severity-tagged
    findings — not a grade:
    - **`harsh-critic`** — attack the premise: is the problem real, is this the right
@@ -40,7 +48,8 @@ Use `/doc-review` for specs, plans, ADRs, RFCs, and design docs.
    - **`qa-lead`** — testability: can each acceptance criterion be proven? what's unfalsifiable?
    - A domain lead when the doc is domain-specific (`async-systems-lead`, `api-design-lead`
      for a public-surface/semver decision, `systems-perf-lead` for unsafe/perf claims).
-3. Merge and de-duplicate. Resolve disagreements between lenses explicitly — don't average them.
+4. Merge and de-duplicate (the mechanical prose pass's findings included). Resolve
+   disagreements between lenses explicitly — don't average them.
 
 ## Output
 Ordered by severity, one line each, grouped by dimension:

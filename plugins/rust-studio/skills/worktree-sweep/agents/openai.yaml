@@ -1,0 +1,6 @@
+interface:
+  display_name: "Worktree Sweep"
+  short_description: "Inspecting and pruning leftover git worktrees (agent-isolation"
+  default_prompt: "Use $worktree-sweep when inspecting and pruning leftover git worktrees (agent-isolation leftovers included) — per-worktree dirty/merge status, removal only on explicit approval."
+policy:
+  allow_implicit_invocation: false
