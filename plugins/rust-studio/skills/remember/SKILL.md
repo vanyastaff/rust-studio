@@ -61,7 +61,11 @@ specific to one session.
 4. **Link it from the index.** `note_insert` (or `note_patch`) a one-line pointer onto
    `<vault>/projects/<project>/MEMORY.md` (create it with a `# <project> — project memory` header if
    absent): `- [[<kebab-slug>|<Title>]] — <one-line hook ≤140 chars>`.
-5. Confirm what was saved and where. **COMPLETE**.
+5. **Verify index integrity** (`references/memory-protocol.md`): every index entry has a
+   file and every note file has an entry — list the folder's `*.md`, diff against the index,
+   fix on the spot: re-add the line for an unindexed file; REPORT (never silently delete) an
+   entry whose file is missing; a broken `[[wikilink]]` target is a finding of the same class.
+   Then confirm what was saved and where. **COMPLETE**.
 
 ## Notes
 - Use **only real** obsidian MCP tools: `search_text`, `search_metadata`, `search_semantic`,
