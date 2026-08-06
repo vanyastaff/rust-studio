@@ -9,7 +9,7 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 > rebuilt from the ground up for Rust and packaged for Claude Code and Codex.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **58 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
+- **59 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
 - **20 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
 - **10 Claude hook handlers across 7 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
