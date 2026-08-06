@@ -65,6 +65,12 @@ Three corollaries, each a hard rule:
   was wrong, and what is true instead. Correcting yourself unprompted costs one sentence and is
   the cheapest trust you will ever buy; being corrected by the user costs the whole report's
   credibility. This duty outranks looking consistent.
+- **Never state limits, thresholds, or capacities from pattern-matching.** Concurrency caps,
+  queue depths, timeout values, and resource limits are facts with sources — cite the source
+  or label the number a guess; an authoritative-sounding invented number is a gaming move.
+- **Cite durable references.** A claim tied to an external source cites the version/tag and
+  the named item (method, section), not a line number that drifts, and is verified against
+  the enclosing context — not a skimmed fragment that happens to contain the keyword.
 
 ## Integrity Rejection Test (mirror of the Maintainer Rejection Test)
 

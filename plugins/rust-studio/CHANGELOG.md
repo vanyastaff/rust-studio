@@ -5,7 +5,35 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.34.0] - 2026-08-06
+
+### Changed
+
+Mined from accumulated project-memory notes of real agent failures — each item is a
+recurring defect class encoded as a standing rule:
+
+- **Worktree discipline for sub-agents** (`docs/large-workspace.md`): absolute worktree
+  paths + expected branch in every sub-agent brief, branch verification before commit,
+  merge-base verification of spawned branches, commit-before-report — prevents commits
+  landing on the owner's checkout and stranded worktrees.
+- **Anti-confabulation evidence rules** (`docs/integrity-and-evidence.md`): limits,
+  thresholds, and capacities must be sourced or labeled as guesses; external citations
+  cite version/tag + named item, verified against the enclosing context.
+- **`rust-reviewer`** gains three findings: one-sided fixes of symmetric code, defensive
+  bounds with no exercising test, and one-at-a-time stale-fact fixes.
+- **Benchmark fidelity** (`rules/perf.md`): match production discipline in benches,
+  pre-build outside `b.iter`, compute don't estimate sizes, a written bench is not a run
+  bench, recompute dependent tables in the same commit.
+- **Dead test files** (`rules/testing.md`): a new `tests/` file under `autotests = false`
+  is dead unless mounted; watch the test COUNT rise; examples compile only under
+  `--all-targets`.
+- **Clippy cache gotcha** (`/verify-loop`): clippy after a plain check/build may reuse
+  artifacts and skip lints — `cargo clean -p` before trusting the verdict.
+
+## [0.31.1] - 2026-08-06
 ## [0.33.1] - 2026-08-06
+||||||| parent of 8b70a97 (feat: v0.32.0 — encode recurring agent failure classes mined from project-memory vaults)
+## [0.31.1] - 2026-08-06
 
 ### Changed
 

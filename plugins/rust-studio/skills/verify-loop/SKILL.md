@@ -61,6 +61,9 @@ reason to fall back to "CI is green". No repo gate defined → the trio stands a
 - Never make it pass by deleting or `#[ignore]`-ing tests, weakening assertions, adding
   blanket `#[allow]` to silence a real lint, or masking with `unwrap`. Fix the cause. These are the
   gaming moves the honesty bar forbids (`references/integrity-and-evidence.md`).
+- A green `cargo clippy` right after a plain `cargo check`/build can be a cache artifact —
+  clippy may reuse the fresh check artifacts and skip lints. On a touched crate whose last
+  compile was a check/build, `cargo clean -p <crate>` before trusting the clippy verdict.
 - If a fix would change intended behavior or the public API, stop and ask — that is a
   decision for `/dev-task`, not a build fix.
 
