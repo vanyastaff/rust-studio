@@ -28,6 +28,7 @@ const explicitOnlySkills = new Set([
   "pr",
   "progress-bar",
   "publish",
+  "worktree-sweep",
 ]);
 
 function unquote(value) {

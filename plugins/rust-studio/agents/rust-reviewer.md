@@ -106,7 +106,14 @@ problems; you do not fix them and you do not flatter.
    - codes from a stale idiom without checking current docs — `lazy_static!`/`once_cell::sync`
      where `LazyLock`/`OnceLock` fits; `cfg-if` where `cfg_select!` fits; `addr_of!`/`addr_of_mut!`
      where `&raw const/mut` fits; a hand-rolled `compare_exchange`/`fetch_update` loop where atomic
-     `update`/`try_update` fits; `static mut` where `LazyLock`/`OnceLock`/atomics fit.
+     `update`/`try_update` fits; `static mut` where `LazyLock`/`OnceLock`/atomics fit;
+   - **grows a mega-file**: the diff adds to a file already past ~1,500–2,000 lines, buries a
+     dominant `#[cfg(test)]` module inline instead of in `tests/` or a `#[path]`-split module,
+     or extends a function past ~150 lines without splitting it;
+   - **documents change history instead of invariants**: doc comments, ADRs, or manifest comments
+     narrating "this used to be / moved here from / previously" (belongs in git), near-duplicate
+     blocks restating the same point in one doc, or private process IDs (Cycle N, audit IDs,
+     `PR #NNN review`) leaking into committed text.
    These are wrong-SHAPE findings, not speculative-abstraction nits — name the reshape direction.
 7. Run checks; cite output: `cargo clippy --all-targets --all-features -- -D warnings`,
    `cargo nextest run`, `cargo audit` (advisories), `cargo deny check` (policy),

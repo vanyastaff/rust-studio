@@ -5,6 +5,35 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0] - 2026-08-06
+
+### Added
+
+- **`/worktree-sweep` skill.** Inspects and prunes leftover git worktrees —
+  agent-isolation leftovers included — with per-worktree dirty/merge status; removal
+  only on explicit approval, never for the main worktree or unmerged work.
+- **Session-end worktree reminder.** The SessionEnd hook now reports leftover linked
+  worktrees (count, agent-created subset) and points at `/worktree-sweep` — leftover
+  worktrees eat disk and break repo gates that scan the filesystem.
+- **Repo-gate discovery.** `/verify-loop`, `/commit`, and `/pr` now discover the repo's
+  own pre-PR gate (justfile recipe, Makefile target, `scripts/check-*.sh`) and treat a
+  red LOCAL gate as blocking even when hosted CI is green; failures caused by untracked
+  local artifacts are environment defects to fix or report, not skip.
+- **`/doc-review` mechanical prose pass** before the persona fan-out: near-duplicate
+  blocks, change-history narration, and private process IDs leaking into design docs.
+
+### Changed
+
+- **`rust-reviewer`** flags mega-file growth (files past ~1,500–2,000 lines, dominant
+  inline `#[cfg(test)]` modules, functions past ~150 lines) and
+  change-history-in-comments as shape findings.
+- **`rules/core.md`** extends the process-marker ban to manifests and in-tree docs and
+  adds a size-budget bullet; **`rules/error-model.md`** requires composition roots to
+  return `Result` up to `main` (a bootstrap `panic!` on environment failure is a
+  finding); **`rules/cargo-manifest.md`** gains a Hygiene section.
+- **`unsafe-auditor`** audits the claims around unsafe, not only the blocks:
+  thread-confinement / `Send`/`Sync` removals must be compile-time pinned, and advisory
+  (`continue-on-error`) miri/loom CI jobs are flagged as gaps.
 ## [0.32.0] - 2026-07-28
 
 ### Fixed
@@ -270,6 +299,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `validate-distribution.sh` now checks the invocation axis in both harnesses against the
   side-effecting roster, so Claude and Codex can no longer drift apart — in either
   direction.
+||||||| parent of fc9d468 (feat: v0.31.0 — worktree hygiene, repo-gate discovery, review teeth from a live audit)
 
 ## [0.30.0] - 2026-07-10
 

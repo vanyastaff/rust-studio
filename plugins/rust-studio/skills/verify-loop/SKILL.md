@@ -19,9 +19,17 @@ allocation-aware, borrow-first change — restructure ownership/borrows before r
 clone, fix at the owning crate, check the API against current docs. Smallest is textual scope,
 not a license for a junior shape.
 
+**Repo gate first.** The cargo trio below is the studio floor, not necessarily the repo's
+gate. Discover the repo's own pre-PR gate — `just --list` (justfile), `make help`,
+`scripts/check-*.sh`, an xtask — and run it in the same loop. A red LOCAL gate blocks even
+when hosted CI is green (CI may not see what the local gate sees); a gate failure caused by
+untracked or ignored local artifacts is an environment defect to fix or report — never a
+reason to fall back to "CI is green". No repo gate defined → the trio stands alone.
+
 ## The loop (max 3 passes)
 
 1. **Run** (scope from `input` — package, feature set, or test filter):
+   - the repo's own pre-PR gate, when one exists (see **Repo gate first**)
    - `cargo fmt --all --check`
    - `cargo clippy --all-targets --all-features -- -D warnings`
    - `cargo nextest run` for unit/integration tests; `cargo test --doc` for doc-tests.

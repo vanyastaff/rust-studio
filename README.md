@@ -1,13 +1,13 @@
 # Rust Code Studio
 
 <p>
-  <img src="https://img.shields.io/badge/skills-58-111111?style=flat-square" alt="58 skills">
+  <img src="https://img.shields.io/badge/skills-59-111111?style=flat-square" alt="59 skills">
   <img src="https://img.shields.io/badge/agents-33-111111?style=flat-square" alt="33 agents">
   <img src="https://img.shields.io/badge/works%20with-70%2B%20hosts-111111?style=flat-square" alt="Works with 70+ hosts">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
-A Rust engineering studio for coding agents: 58 skills that carry the standards a strict crate
+A Rust engineering studio for coding agents: 59 skills that carry the standards a strict crate
 maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
@@ -80,7 +80,7 @@ npx skills add . --skill '*' --agent '*' -y
 
 | | skills via `npx` | Codex plugin | Claude Code plugin |
 |---|---|---|---|
-| 58 skills | yes | yes | yes |
+| 59 skills | yes | yes | yes |
 | Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
 | 33 named studio agents | no — phases run inline | yes, after one generator step | yes, spawned per phase |
 | Session briefing + path-scoped rule injection | no | yes | yes |
@@ -161,7 +161,7 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .lsp.json                # bundled rust-analyzer LSP
 │       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
-│       ├── skills/                  # 58 skills + references + OpenAI metadata
+│       ├── skills/                  # 59 skills + references + OpenAI metadata
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 20 path-scoped Rust standards
 │       ├── output-styles/           # opt-in terse review style   (plugin only)

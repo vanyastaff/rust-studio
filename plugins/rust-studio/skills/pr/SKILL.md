@@ -14,6 +14,9 @@ before pushing and before creating the PR** (`references/collaboration.md`).
 1. Preconditions:
    - Not on the default branch. If you are, offer to create a feature branch first.
    - Working tree clean (or offer `/commit`). Determine the base branch (`main`/`master`).
+   - The repo's own pre-PR gate (justfile recipe / Makefile target / `scripts/`) passes
+     LOCALLY — "CI is green" does not substitute for a red local gate; fix or report the
+     local failure first.
    - `gh` available? If not, prepare everything and output the manual `git push` +
      PR-description steps instead of failing.
 2. Gather context: `git log <base>..HEAD` and `git diff <base>...HEAD` to summarize the change.
