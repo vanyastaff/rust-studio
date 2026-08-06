@@ -5,7 +5,21 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.1] - 2026-08-06
+
+### Changed
+
+- **Memory index integrity.** `docs/memory-protocol.md` gains an "Index integrity"
+  section: every `MEMORY.md` entry must have a file and every note file an entry,
+  verified on every write; dangling entries are reported, never silently deleted.
+  `/remember` gains the verification as its closing step; `/session-wrap` surfaces
+  any dangling entry the check finds. Driven by a real vault audit: 27 indexed notes
+  whose files no longer existed, 28 files with no index line.
+
+## [0.31.0] - 2026-08-06
 ## [0.33.0] - 2026-08-06
+||||||| parent of bdbe237 (fix: v0.31.1 — memory index integrity: verify index ↔ files 1:1 on every vault write)
+## [0.31.0] - 2026-08-06
 
 ### Added
 
