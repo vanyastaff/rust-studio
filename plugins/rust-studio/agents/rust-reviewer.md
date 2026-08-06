@@ -113,7 +113,17 @@ problems; you do not fix them and you do not flatter.
    - **documents change history instead of invariants**: doc comments, ADRs, or manifest comments
      narrating "this used to be / moved here from / previously" (belongs in git), near-duplicate
      blocks restating the same point in one doc, or private process IDs (Cycle N, audit IDs,
-     `PR #NNN review`) leaking into committed text.
+     `PR #NNN review`) leaking into committed text;
+   - **fixes one side of symmetric code**: a defect fixed at the flagged site while its
+     symmetric counterpart (forward/reverse, encode/decode, old-side/new-side loop) stays
+     defective — scan for the mirror and fix both in the same commit; "currently unreachable"
+     protects the mirror until the next refactor;
+   - **adds a defensive bound with no exercising test**: a loop cap, timeout, or retry limit
+     added "for safety" whose worst case no test triggers — the bound is vestigial until a
+     test reaches it;
+   - **leaves stale-fact fixes one-at-a-time**: a stale claim fixed in isolation without
+     sweeping the same pattern across adjacent rows, cross-referenced docs, and version
+     mentions in the same commit.
    These are wrong-SHAPE findings, not speculative-abstraction nits — name the reshape direction.
 7. Run checks; cite output: `cargo clippy --all-targets --all-features -- -D warnings`,
    `cargo nextest run`, `cargo audit` (advisories), `cargo deny check` (policy),

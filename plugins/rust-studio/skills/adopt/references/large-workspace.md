@@ -67,6 +67,23 @@ parallel `team-*` agents) — list every crate any subagent needs.
 > Note: deny rules and hooks must also be in the **repo-root** `.claude/settings.json`, because
 > inside a worktree the working dir is the worktree root, not the crate you launched from.
 
+### Worktree discipline for sub-agents (multi-checkout environments)
+When parallel agents run in linked worktrees, the repo root is the OWNER's checkout —
+possibly on a live branch with uncommitted WIP:
+- Give every sub-agent the ABSOLUTE worktree path and the expected branch, with an explicit
+  "operate only in this path, never the bare repo root" — non-isolated agents resolve
+  relative paths against the main checkout and silently write there.
+- Before committing, `git -C <worktree> branch --show-current` must equal the expected
+  branch. A chained `cd <repo-root> && git add && git commit` lands on whatever branch the
+  MAIN checkout has, not the worktree's.
+- Verify a spawned branch's base before relying on it (`git merge-base <branch> main`) —
+  isolation tooling does not guarantee an off-main base. To guarantee one, create the
+  worktree explicitly from `main`.
+- Commit early and BEFORE the final report — committed work survives an interrupted agent;
+  an unwritten report does not.
+- Prune finished worktrees (`/worktree-sweep`): each is a full checkout, they accumulate
+  fast, and they break repo gates that scan the filesystem.
+
 ## 5. Cross-crate access from a subdirectory
 Starting from `crates/api/` but need to edit a shared type in `crates/core/`?
 ```json

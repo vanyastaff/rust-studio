@@ -23,6 +23,10 @@ Applies to integration tests, test modules, and benches.
   (`returns_err_on_empty_input`), not `test1`.
 - Shared setup via fixtures/builders, not copy-paste. No ordering dependencies between
   tests — each runs in isolation.
+- A new file under `tests/` is DEAD unless it is mounted: with `autotests = false` it must
+  be registered in the crate's `tests/main.rs` (or as a `[[test]]` target). Watch the total
+  test COUNT rise after adding a file — green without a count change means it never ran.
+  Examples compile only under `--all-targets` (`cargo clippy`), never a bare check.
 
 ## No flakiness
 - No reliance on wall-clock sleeps, real network, or ambient global state. Inject clocks,

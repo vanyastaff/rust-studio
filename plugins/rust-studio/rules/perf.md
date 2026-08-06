@@ -21,6 +21,20 @@ Applies to benchmarks and performance-critical paths.
   them off the hot path. It is a hint about *frequency*, not a substitute for a measurement —
   the ordering above still holds: profile first.
 
+## Benchmark fidelity (a bench that shortcuts flips the verdict toward the shortcut)
+- Match production discipline exactly: if production dedups by hash+eq, the bench must not
+  dedup by hash alone; if production resolves a handle before lookup, so does the bench —
+  or label the result a lower bound, not a production cost.
+- Pre-build invariant state OUTSIDE `b.iter` — per-iteration construction measures setup,
+  not the path under test.
+- Compute `size_of::<T>()` from the struct definition; never estimate. `Vec<T>`/`Box<T>`
+  fields hold only the header; the buffer is heap (see Allocation & copies).
+- "Bench written" is not "bench run": clippy compiling a bench proves nothing about its
+  numbers — it runs under `cargo bench`. And the baseline must be the REAL rejected
+  alternative; a too-cheap proxy distorts toward the shortcut.
+- When an accounting constant changes, recompute every dependent table/total/ratio in the
+  same commit.
+
 ## Allocation & copies
 - Hot paths avoid per-iteration allocation: reuse buffers, `Vec::with_capacity`,
   `SmallVec`/`arrayvec` for small bounded collections, `&mut` scratch space.

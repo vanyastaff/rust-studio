@@ -31,6 +31,17 @@ and `skills/recall/SKILL.md`; do not restate them elsewhere.
 - Flat layout: notes are `<kebab-slug>.md`; the index is `MEMORY.md` (one line per
   note). No subfolders, no registry.
 
+## Index integrity (verified on every write)
+
+The index and the notes are ONE graph: every `MEMORY.md` entry has a file, and every
+note file has an entry. A write is not done until that is verified — list the project
+folder's `*.md`, diff against the index entries, and fix the mismatch on the spot:
+re-add the line for an unindexed file; REPORT (never silently delete) an entry whose
+file is missing. A `[[wikilink]]` to a nonexistent note is a finding of the same class.
+The vault decays silently otherwise: a cleanup pass that deletes files without pruning
+their index lines leaves dangling entries that look like knowledge and resolve to
+nothing.
+
 ## What to capture (canonical — every restatement defers here)
 
 Capture what is **non-obvious and durable**:
