@@ -1,4 +1,4 @@
 interface:
   display_name: "Recall"
   short_description: "Starting related work to recall project decisions, gotchas"
-  default_prompt: "Use $recall when starting related work to recall project decisions, gotchas, conventions, and fixes from Obsidian."
+  default_prompt: "Use $recall when starting related work to recall project decisions, gotchas, conventions, and fixes, verifying each still holds."

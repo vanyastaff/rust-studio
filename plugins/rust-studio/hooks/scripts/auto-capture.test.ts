@@ -65,9 +65,21 @@ describe("capturedSignal", () => {
     expect(capturedSignal(blk)).toBe(true);
   });
 
-  test("detects an obsidian note write", () => {
-    expect(capturedSignal('"name":"note_create"')).toBe(true);
-    expect(capturedSignal('"name":"mcp__obsidian__note_write"')).toBe(true);
+  test("detects a Write/Edit into a host memory directory (any project) or the resolved store", () => {
+    expect(capturedSignal('"file_path":"/home/u/.claude/projects/-x/memory/gotcha.md"')).toBe(true);
+    expect(capturedSignal('"file_path":"/repo/.claude/agent-memory/rust-studio-chief-architect/MEMORY.md"')).toBe(true);
+    expect(capturedSignal('"file_path":"/custom/mem/note.md"', "/custom/mem")).toBe(true);
+    expect(capturedSignal('"file_path":"\\/custom\\/mem\\/note.md"', "/custom/mem")).toBe(true);
+    expect(capturedSignal('"file_path":"/custom/mem/note.md"')).toBe(false);
+    expect(capturedSignal('"file_path":"/repo/src/memory/allocator.rs"')).toBe(false);
+  });
+
+  test("a /memory-doctor run counts as a capture pass", () => {
+    expect(capturedSignal(JSON.stringify({ input: { skill: "memory-doctor" } }))).toBe(true);
+  });
+
+  test("an obsidian MCP note write is no longer a capture signal (the vault is gone)", () => {
+    expect(capturedSignal('"name":"mcp__obsidian__note_write"')).toBe(false);
   });
 
   test("detects a /remember slash command in assistant text", () => {
@@ -113,6 +125,12 @@ describe("buildCaptureFeedback", () => {
     const fb = buildCaptureFeedback();
     expect(fb).toContain("/remember");
     expect(fb.toLowerCase()).toContain("durable");
+    expect(fb).toContain("never a secret");
+  });
+
+  test("names the store and its budget when a store is known", () => {
+    const fb = buildCaptureFeedback({ dir: "/nowhere/mem", source: "default", exists: false, hostInjectsIndex: true, projectKey: "k", root: "/r" });
+    expect(fb).toContain("Store: /nowhere/mem (nothing saved yet)");
   });
 });
 

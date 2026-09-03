@@ -63,6 +63,14 @@ actual_claude_only=$(comm -23 <(echo "$claude_scripts") <(echo "$codex_scripts")
   fail "Claude-only hook set changed — port it to Codex or update the expected list. Got: $(echo "$actual_claude_only" | tr '\n' ' ')"
 
 [[ -x skills/env-setup/scripts/env-setup.sh ]] || fail "env-setup portable script is missing or not executable"
+for f in memory-doctor.ts memory-store.ts _lib.ts; do
+  [[ -f skills/memory-doctor/scripts/$f ]] || fail "memory-doctor portable bundle is missing $f"
+done
+grep -q 'bun "scripts/memory-doctor.ts"' skills/memory-doctor/SKILL.md ||
+  fail "memory-doctor skill must run its bundled CLI, not a plugin-root path"
+! grep -rqE 'OBSIDIAN_VAULT_PATH|vault_path|note_create|search_semantic|obsidian MCP|`obsidian`' \
+    skills/*/SKILL.md docs/*.md README.md $(ls hooks/scripts/*.ts | grep -v '\.test\.ts$') ||
+  fail "Obsidian-era memory contract remnants: memory is the host's auto-memory store since 0.36.0"
 
 # hooks/hooks.json is auto-discovered by both hosts. Keep the Claude-only lifecycle file
 # under an explicit name until every hook is intentionally ported and tested on Codex.
@@ -222,6 +230,14 @@ $skill_count	../../README.md	coding agents: N skills
 $skill_count	../../README.md	| N skills |
 $portable	../../README.md	The other N skills
 $portable	../../README.md	The N host-neutral workflows
+$portable	../../INSTALL.md	The N host-neutral workflows
+$skill_count	../../INSTALL.md	The N skills are
+$skill_count	../../INSTALL.md	gets the N skills
+$skill_count	../../install.sh	(N skills, 
+$portable	../../install.sh	(N portable skills
+$skill_count	plugin.json	coding agents: N skills
+$skill_count	docs/usage-guide.md	**Skills** (N)
+$skill_count	docs/usage-guide.md	## The skills (N)
 EOF
 
 # Codex agents install OUTSIDE the plugin (~/.codex/agents/), so the ${CLAUDE_PLUGIN_ROOT}

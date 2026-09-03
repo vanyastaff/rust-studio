@@ -128,6 +128,7 @@ orchestrator (the single vault writer), the canonical vault path rule, and what 
 capturing — lives in `docs/memory-protocol.md`. Two lines every skill and agent honors:
 
 - **Before** planning/designing/debugging/building in a known area: `/recall <area>`; say
-  when a recalled note changed the approach.
+  when a recalled note changed the approach — and verify it still holds (paths, symbols,
+  dates) before it does: holds / stale / unverifiable.
 - **After** settling something durable (or seeing a `MEMORY:` line in any agent's verdict):
   persist it via `/remember` before the final verdict — or state "nothing durable" explicitly.

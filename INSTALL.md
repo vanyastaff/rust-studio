@@ -17,7 +17,7 @@ path. Safe to re-run; `--dry-run` prints the commands without running them.
 
 ## Just the skills, on any agent
 
-The 59 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
+The 60 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
 Codex, Cursor, OpenCode, Zed and ~70 other hosts — no npm publish, no clone:
 
 ```text
@@ -25,7 +25,7 @@ npx skills add .                                      # from a local clone
 npx skills add <owner>/rust-studio --skill dev-task --agent codex
 ```
 
-The 57 host-neutral workflows bundle the standards and deterministic helpers they need. What you
+The 58 host-neutral workflows bundle the standards and deterministic helpers they need. What you
 *don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
 stop-guard), the status line, and working versions of the two clearly labeled Claude-only
 utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
@@ -37,7 +37,7 @@ that phase inline — see
 `plugins/rust-studio/` carries a root `plugin.json` in the cross-vendor
 [Agent Plugins 1.0](https://agent-plugins.org) format — `$schema` + `name`, skills discovered
 from the flat `skills/` directory. Any client that implements it (Codex ≥ 0.147, Cursor, Copilot
-CLI ≥ 1.0.74, Kiro) can install the plugin directory directly and gets the 59 skills; hooks,
+CLI ≥ 1.0.74, Kiro) can install the plugin directory directly and gets the 60 skills; hooks,
 agents, LSP, and status line stay with the Claude Code and Codex manifests beside it.
 
 ## Codex plugin
@@ -193,7 +193,7 @@ for other platforms.
 
 On enable, Claude Code prompts for the studio's options: behavioral defaults (preferred test
 runner, gate intensity, house MSRV fallback) and toggles for ambient behaviors (`memory_recall`,
-`routing_nudge`, `fmt_nudge` — all on by default — plus an Obsidian `vault_path`). There's also an
+`routing_nudge`, `fmt_nudge` — all on by default — plus a `memory_dir` override for the project memory store). There's also an
 opt-in **`stop_guard`** (+ `stop_guard_strict`) that mechanically blocks an undisciplined turn
 ending (ownership-dodging, test avoidance, "done" without evidence) — off by default. Change them
 later via `/plugin` → **Rust Code Studio** → configure. The plugin also ships an opt-in

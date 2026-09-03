@@ -84,19 +84,29 @@ done
 
 # Keep deterministic helper code inside the portable skill package. The plugin-level copy is the
 # source so existing plugin automation and release paths remain stable.
-asset_src=scripts/env-setup.sh
-asset_dest=skills/env-setup/scripts/env-setup.sh
-if (( check )); then
-  if ! cmp -s "$asset_src" "$asset_dest"; then
-    echo "stale: $asset_dest"
-    stale=1
+# <src>:<dest> pairs. memory-doctor's CLI imports memory-store.ts and _lib.ts relatively, so
+# all three travel together and the skill stays self-contained.
+assets=(
+  scripts/env-setup.sh:skills/env-setup/scripts/env-setup.sh
+  hooks/scripts/memory-doctor.ts:skills/memory-doctor/scripts/memory-doctor.ts
+  hooks/scripts/memory-store.ts:skills/memory-doctor/scripts/memory-store.ts
+  hooks/scripts/_lib.ts:skills/memory-doctor/scripts/_lib.ts
+)
+for pair in "${assets[@]}"; do
+  asset_src=${pair%%:*}
+  asset_dest=${pair#*:}
+  if (( check )); then
+    if ! cmp -s "$asset_src" "$asset_dest"; then
+      echo "stale: $asset_dest"
+      stale=1
+    fi
+  else
+    mkdir -p "$(dirname "$asset_dest")"
+    cp "$asset_src" "$asset_dest"
+    [[ $asset_dest == *.sh ]] && chmod +x "$asset_dest"
+    echo "$(basename "$(dirname "$(dirname "$asset_dest")")"): bundled $(basename "$asset_dest")"
   fi
-else
-  mkdir -p "$(dirname "$asset_dest")"
-  cp "$asset_src" "$asset_dest"
-  chmod +x "$asset_dest"
-  echo "env-setup: bundled script"
-fi
+done
 
 # A skill that names a studio sub-agent must ship the fallback for hosts that have none,
 # or it deadlocks on "delegate all writes to rust-builder" where no rust-builder exists.

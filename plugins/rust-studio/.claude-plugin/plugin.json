@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Turn a single Claude Code session into a full Rust engineering studio. Tiered agent team (architect -> leads -> specialists), path-scoped Rust standards, quality gates, and cargo-aware hooks across libraries, async/web services, CLIs, and systems/embedded code.",
-  "version": "0.35.0",
+  "version": "0.36.0",
   "author": {
     "name": "Rust Studio contributors"
   },
@@ -48,18 +48,18 @@
     "memory_recall": {
       "type": "boolean",
       "title": "Session-start memory recall",
-      "description": "Scan the Obsidian vault at session start and inject a ranked index of relevant project notes. Turn off to skip the vault scan; the /remember, /recall, and /session-wrap skills still work.",
+      "description": "At session start, rank the project memory index against the branch / changed crates / last commit, surface the notes that bind this work (kind + age + path) and report index health against the host's 200-line / 25 KB load limit; on each prompt, point at notes that match it (once per session per note). Turn off to skip both — the host still loads its index, and /remember, /recall, /memory-doctor, /session-wrap still work.",
       "default": true
     },
-    "vault_path": {
+    "memory_dir": {
       "type": "directory",
-      "title": "Obsidian vault path",
-      "description": "Path to the Obsidian vault used for cross-session memory. Overrides the OBSIDIAN_VAULT_PATH env var. Leave empty to use OBSIDIAN_VAULT_PATH, or ~/memory by default."
+      "title": "Project memory directory",
+      "description": "Where project memory lives. Leave empty to use the host's auto-memory directory for this repository (Claude Code's autoMemoryDirectory setting, else ~/.claude/projects/<project-key>/memory) — the same MEMORY.md index Claude Code loads at session start, shared with Codex sessions. Set it only to keep the studio's memory somewhere else; Claude Code will not load that index itself, so the session-start hook carries it instead."
     },
     "auto_capture": {
       "type": "boolean",
       "title": "Auto-capture learnings",
-      "description": "When a turn finishes a real unit of work (a completion summary + uncommitted changes) but nothing was saved to memory, block the stop ONCE and nudge the agent to /remember any non-obvious, durable learning. The agent does the judging and writing (a hook has no MCP access). Nudges at most once per turn and never re-blocks (stop_hook_active breaks the loop), so it is far gentler than stop_guard. Turn off to keep memory capture purely manual.",
+      "description": "When a turn finishes a real unit of work (a completion summary + uncommitted changes) but nothing was saved to memory, block the stop ONCE and nudge the agent to /remember any non-obvious, durable learning. The agent does the judging and writing (a hook cannot judge what was learned). Nudges at most once per turn and never re-blocks (stop_hook_active breaks the loop), so it is far gentler than stop_guard. Turn off to keep memory capture purely manual.",
       "default": true
     },
     "statusline": {

@@ -16,7 +16,7 @@ You accumulate project findings across sessions via agent memory — accepted
 so each re-audit starts from what was already proven sound, not from scratch.
 When this audit settles something **durable** — an accepted `unsafe` block with its SAFETY
 contract, a miri result, a soundness exception you signed off — record it to your project
-memory so the next re-audit inherits it. You are read-only (you cannot write the vault), so
+memory so the next re-audit inherits it. You are read-only (you do not write the project store), so
 also surface it on a `MEMORY:` line in your verdict for the orchestrator to `/remember`.
 
 ## You own

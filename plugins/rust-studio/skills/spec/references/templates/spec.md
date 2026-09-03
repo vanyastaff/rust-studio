@@ -39,4 +39,4 @@ deprecation decisions. (See `/api-review`.)*
 - *…*
 
 ## Links
-*ADR, related specs, memory notes (in the Obsidian vault via the `obsidian` MCP), issues.*
+*ADR, related specs, memory notes (project memory store — `/recall`), issues.*

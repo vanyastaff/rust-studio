@@ -3,7 +3,7 @@
 # Backs the /env-setup skill; also usable standalone.
 #
 # Usage: env-setup.sh [--check] [--core] [--full] [--qol] [--nightly] [--os-deps]
-#                     [--memory] [--yes] [--dry-run]
+#                     [--yes] [--dry-run]
 #
 #   --check     report installed vs missing and exit (default when no tier given)
 #   --core      rustup + stable + components + binstall + core cargo tools
@@ -11,7 +11,6 @@
 #   --qol       also install quality-of-life CLI tools
 #   --nightly   also install the nightly toolchain with miri + rust-src
 #   --os-deps   also install OS build prerequisites (the one sudo step)
-#   --memory    also install obsidian-mcp with local embeddings (compiles from source)
 #   --yes       non-interactive: skip confirmation prompts
 #   --dry-run   print every mutating command instead of running it
 #
@@ -20,7 +19,7 @@
 set -euo pipefail
 
 CHECK_ONLY=1
-CORE=0 FULL=0 QOL=0 NIGHTLY=0 OS_DEPS=0 MEMORY=0 YES=0 DRY_RUN=0
+CORE=0 FULL=0 QOL=0 NIGHTLY=0 OS_DEPS=0 YES=0 DRY_RUN=0
 
 for arg in "$@"; do
   case "$arg" in
@@ -30,10 +29,9 @@ for arg in "$@"; do
     --qol)     QOL=1; CHECK_ONLY=0 ;;
     --nightly) NIGHTLY=1; CHECK_ONLY=0 ;;
     --os-deps) OS_DEPS=1; CHECK_ONLY=0 ;;
-    --memory)  MEMORY=1; CHECK_ONLY=0 ;;
     --yes)     YES=1 ;;
     --dry-run) DRY_RUN=1 ;;
-    -h|--help) sed -n '2,19p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) echo "unknown flag: $arg (see --help)" >&2; exit 2 ;;
   esac
 done
@@ -162,11 +160,6 @@ if have cargo && cargo binstall -V >/dev/null 2>&1; then
 else
   echo "binstall: MISSING"
 fi
-if have obsidian-mcp; then
-  echo "obsidian-mcp: $(command -v obsidian-mcp)  (studio memory server)"
-else
-  echo "obsidian-mcp: MISSING  (studio memory server — install with --memory)"
-fi
 
 MISSING_CRATES=()
 report_tier "core"              "${CORE_TOOLS[@]}"
@@ -289,20 +282,6 @@ echo "cargo:   $(cargo --version 2>/dev/null || echo MISSING)"
 [ "$FULL" = 1 ] && report_tier "deep quality/perf" "${FULL_TOOLS[@]}"
 [ "$QOL" = 1 ]  && report_tier "QoL" "${QOL_TOOLS[@]}"
 
-if [ "$MEMORY" = 1 ]; then
-  echo
-  echo "== obsidian memory server (cross-session studio memory) =="
-  if have obsidian-mcp; then
-    echo "obsidian-mcp already installed: $(command -v obsidian-mcp)"
-  else
-    # prebuilt binaries don't carry the embeddings feature — this one must compile
-    run cargo install obsidian-mcp --features embeddings
-  fi
-  echo "register it once (user scope, so agent teammates inherit it):"
-  echo '  claude mcp add obsidian -s user \'
-  echo '    -e OBSIDIAN_VAULT_PATH=<your-vault> -e OBSIDIAN_EMBEDDINGS=true -- obsidian-mcp'
-  echo "note: the first semantic search downloads the embedding model (~130 MB) once."
-fi
 
 if [ "$FULL" = 1 ] && [ "$OS" = Linux ] && [ -r /proc/sys/kernel/perf_event_paranoid ]; then
   paranoid="$(cat /proc/sys/kernel/perf_event_paranoid)"

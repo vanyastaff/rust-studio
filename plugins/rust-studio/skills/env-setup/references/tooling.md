@@ -7,15 +7,12 @@ context-frugal than `grep`/`find`/`cat` in Bash. **Reach for the right tool; use
 things, not to search them.** All of these are *prefer-if-available* — fall back cleanly when a
 tool isn't installed.
 
-## Prerequisites — serena + exa + obsidian (companions, not bundled)
+## Prerequisites — serena + exa (companions, not bundled)
 
 The studio assumes these MCP servers are configured in your own Claude Code settings:
 
 - **serena** — code navigation / language-server intelligence (symbol defs, refs, impls).
 - **exa** — external evidence (real code examples, crates.io adoption, advisory/issue audits).
-- **obsidian** — cross-session memory: the vault backing `/recall`, `/remember`, `/session-wrap`
-  and the session-start memory-recall hook. Optional — without it, memory recall is skipped and
-  the studio runs stateless.
 
 The plugin **intentionally does not bundle** these (no `mcpServers` in `plugin.json`): MCP
 servers are loaded from the *user's* project/user settings, not from a plugin — and agent-team
@@ -32,24 +29,7 @@ project's README — serena (`github.com/oraios/serena`) and exa
 *prefer-if-available*: every workflow falls back cleanly to `rg`/Glob for navigation and `gh`/web
 for evidence, just less precisely.
 
-**obsidian memory server** — the memory skills call snake-case tools (`note_create`, `note_patch`,
-`note_insert`, `search_semantic`, `search_metadata`, `search_text`), which
-[`lstpsche/obsidian-mcp`](https://github.com/lstpsche/obsidian-mcp) provides. It reads the vault
-directly from the filesystem — **no running Obsidian app or Local REST API plugin required** — and
-keeps a local embeddings index under `<vault>/.obsidian-mcp/`. Install and register it:
-
-```bash
-cargo install obsidian-mcp --features embeddings   # local fastembed (BAAI/bge-small-en-v1.5)
-claude mcp add obsidian -s user \
-  -e OBSIDIAN_VAULT_PATH=<your-vault> \
-  -e OBSIDIAN_EMBEDDINGS=true \
-  -- obsidian-mcp
-```
-
-Use **user scope** so agent-team teammates inherit it. The vault defaults to `$OBSIDIAN_VAULT_PATH`
-(or `~/memory`); set the same value the `vault_path` plugin option / session-start hook resolves.
-First `search_semantic` downloads the embedding model (~130 MB) once. Any obsidian MCP exposing the
-tool names above works — this is the reference server the skills are written against.
+**Project memory needs no server.** `/recall`, `/remember`, `/memory-doctor`, and the session-start / prompt hooks use the host's auto-memory directory for the repository through the harness's own Read/Write/Grep — the same `MEMORY.md` index Claude Code loads at session start, shared with Codex sessions. Contract and path rule: `memory-protocol.md`.
 
 ## Code navigation — semantic first
 Prefer the **serena** MCP (a language server under the hood — the "code intelligence" the
