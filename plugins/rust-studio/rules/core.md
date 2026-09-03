@@ -112,7 +112,16 @@ Applies to every `.rs` file.
   push_*_mut` family (**1.95**), which hand back `&mut T` instead of the push-then-`last_mut()
   .unwrap()` dance; **`assert_matches!`** (**1.96**, see testing.md); and the integer bit helpers
   `bit_width` / `highest_one` / `isolate_lowest_one` (**1.97**) in place of hand-rolled
-  `leading_zeros` arithmetic.
+  `leading_zeros` arithmetic; **`bool::ok_or` / `ok_or_else`** (**1.98**) —
+  `cond.ok_or(Error::Invalid)?` replaces the `if !cond { return Err(..) }` guard;
+  **`str::substr_range` / `[T]::subslice_range`** (**1.98**) to recover the offset of a
+  sub-slice instead of pointer arithmetic; **`strip_circumfix`** (**1.98**) for the
+  `strip_prefix` + `strip_suffix` pair; **`NonZero::from_str_radix`** (**1.98**) instead of
+  parse-then-check; **`Atomic<T>::from_mut` / `get_mut_slice`** (**1.98**) to borrow plain
+  data as atomics without a copy. Rust **1.98** also turned some `ambiguous_glob_imports`
+  into hard errors, rejects `T = T` where-bounds, and denies
+  `invalid_runtime_symbol_definitions` — a build that was warning-clean on 1.97 can go red
+  on 1.98 for those alone, which is a toolchain fact to report, not code to work around.
   Don't default to `Arc<Mutex<_>>` / `Rc<RefCell<_>>`. Prefer making the wrong path
   *syntactically absent* (visibility, scoped borrows, newtypes) over a "remember to call me" helper.
 - `map.entry(k).or_default()` — one lookup, not `get(&k)` then `entry()` on miss.

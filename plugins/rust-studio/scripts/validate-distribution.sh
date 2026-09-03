@@ -57,7 +57,7 @@ done < <(jq -r '.hooks | keys[]' hooks/codex-hooks.json)
 # not because nobody revisited it. Keep the two files' script sets diffable.
 claude_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/claude-hooks.json | sort -u)
 codex_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/codex-hooks.json | sort -u)
-expected_claude_only=$'/auto-capture.ts\n/statusline-install.ts\n/subagent-stop.ts'
+expected_claude_only=$'/auto-capture.ts\n/model-switch.ts\n/statusline-install.ts\n/subagent-stop.ts'
 actual_claude_only=$(comm -23 <(echo "$claude_scripts") <(echo "$codex_scripts"))
 [[ $actual_claude_only == "$expected_claude_only" ]] ||
   fail "Claude-only hook set changed — port it to Codex or update the expected list. Got: $(echo "$actual_claude_only" | tr '\n' ' ')"
@@ -75,6 +75,21 @@ codex_name=$(jq -r '.name' .codex-plugin/plugin.json)
 claude_version=$(jq -r '.version' .claude-plugin/plugin.json)
 codex_version=$(jq -r '.version' .codex-plugin/plugin.json)
 [[ $claude_version == "$codex_version" ]] || fail "manifest versions differ"
+
+# The Agent Plugins 1.0 manifest (agent-plugins.org) is what Codex >= 0.147, Cursor, Copilot
+# CLI and Kiro load. Its schema is closed: $schema + name are required, the component
+# locations are fixed (flat skills/), and it must not drift from the host manifests.
+[[ -f plugin.json ]] || fail "missing plugin.json (Agent Plugins 1.0 manifest)"
+jq -e '
+  ."$schema" == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json" and
+  .name == "rust-studio" and
+  (.description | length > 0) and
+  (keys - ["$schema","name","version","description","author","homepage","repository","license","keywords","extensions"] | length == 0)
+' plugin.json >/dev/null || fail "plugin.json is not a valid Agent Plugins 1.0 manifest (schema, name, or an unknown key)"
+[[ $(jq -r '.version' plugin.json) == "$claude_version" ]] || fail "plugin.json version differs from the host manifests"
+for skill_dir in skills/*/; do
+  [[ -f $skill_dir/SKILL.md ]] || fail "${skill_dir%/} has no SKILL.md — Agent Plugins clients read only immediate children of skills/"
+done
 
 jq -e '
   .skills == "./skills/" and
@@ -221,7 +236,50 @@ if grep -rlE '\$\{CLAUDE_[A-Z_]*\}' "$codex_agent_probe" >/dev/null 2>&1; then
 fi
 rm -rf "$codex_agent_probe"
 
+# Catalog drift: a skill that /help and the usage guide never mention is one nobody finds.
+# Three skills had gone missing from the guide and one from /help before this gate existed.
+for skill_dir in skills/*/; do
+  skill=${skill_dir%/}; skill=${skill##*/}
+  grep -qF "\`/$skill\`" docs/usage-guide.md || fail "docs/usage-guide.md does not list /$skill"
+  grep -qF "\`/$skill\`" skills/help/SKILL.md || fail "skills/help/SKILL.md does not list /$skill"
+done
+
+# The README's hook inventory is derived from the hook config, so it cannot drift.
+handlers=$(jq '[.hooks[][] | .hooks[]] | length' hooks/claude-hooks.json)
+events=$(jq '.hooks | keys | length' hooks/claude-hooks.json)
+grep -qF "**$handlers Claude hook handlers across $events events**" README.md ||
+  fail "README.md hook inventory is stale: hooks/claude-hooks.json has $handlers handlers across $events events"
+
+# `claude plugin eval` cases: prompt.md with the execution frontmatter and a real prompt,
+# at least one grader with a known type, and nothing that assumes this machine — cases
+# run in a sandbox cwd, so an absolute path or ~/ silently scores 0.
+grader_types="regex tool_order tool_used file_exists llm baseline"
+eval_cases=0
+for case_dir in evals/*/; do
+  [[ -f $case_dir/prompt.md ]] || continue
+  eval_cases=$((eval_cases + 1))
+  case=${case_dir%/}; case=${case##*/}
+  fm=$(awk 'NR==1 && $0!="---" {exit} NR>1 && /^---$/ {exit} NR>1 {print}' "$case_dir/prompt.md")
+  for key in max_turns timeout_seconds allowed_tools; do
+    grep -qE "^$key:" <<<"$fm" || fail "evals/$case/prompt.md frontmatter lacks $key"
+  done
+  body=$(awk 'f {print} /^---$/ {n++; if (n==2) f=1}' "$case_dir/prompt.md")
+  [[ -n ${body//[[:space:]]/} ]] || fail "evals/$case/prompt.md has no prompt body"
+  graders=$(find "$case_dir/graders" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
+  (( graders >= 1 )) || fail "evals/$case has no graders"
+  for g in "$case_dir"/graders/*.md; do
+    t=$(awk -F': *' '/^type:/ { print $2; exit }' "$g")
+    [[ " $grader_types " == *" $t "* ]] || fail "$g: grader type '${t:-missing}' is not one of: $grader_types"
+  done
+  if grep -rnE 'TODO|/home/|~/' "$case_dir" >/dev/null; then
+    fail "evals/$case carries a TODO placeholder or a machine-specific path"
+  fi
+done
+(( eval_cases >= 1 )) || fail "no eval cases under evals/"
+jq -e '.experimental.evals == "./evals"' .claude-plugin/plugin.json >/dev/null ||
+  fail "plugin.json does not declare experimental.evals = ./evals"
+
 node scripts/generate-openai-metadata.mjs --check
 ./scripts/sync-references.sh --check
 
-echo "distribution valid: $skill_count skills, $description_chars description characters, version $codex_version"
+echo "distribution valid: $skill_count skills, $description_chars description characters, $eval_cases eval cases, version $codex_version"

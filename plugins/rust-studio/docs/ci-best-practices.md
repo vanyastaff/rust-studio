@@ -19,7 +19,7 @@ matrix, `-Zminimal-versions`, macOS+Windows, llvm-cov→Codecov), `safety.yml` (
 | Action | Role | Note |
 |--------|------|------|
 | `dtolnay/rust-toolchain@stable` (or `@master` + `toolchain:`) | install toolchain + components | branch-versioned; SHA-pin `@master` if you need reproducibility |
-| `Swatinem/rust-cache@v2` | build cache | place **after** toolchain (key includes rustc version); caches deps not your crates; sets `CARGO_INCREMENTAL=0` |
+| `Swatinem/rust-cache@v2` | build cache | place **after** toolchain (key includes rustc version); caches deps not your crates; sets `CARGO_INCREMENTAL=0` (from Cargo **1.99** cargo itself disables incremental when `CI` is set, so the variable becomes belt-and-braces, not the fix) |
 | `taiki-e/install-action@<tool>` | install CLI tools from prebuilt binaries (falls back to **`cargo binstall`**) | far faster than `cargo install`; do NOT SHA-pin the `@<tool>` shorthand |
 
 **Tool install:** prefer **`cargo binstall <tool>`** locally and `taiki-e/install-action` in CI;
@@ -78,6 +78,15 @@ on PRs, expand on merge/cron.
 - **Secret scanning + push protection** (GitHub setting). **Dependabot** for `cargo` + `github-actions`.
 - **`cargo-vet`** (human supply-chain audits) and **`cargo-auditable`** (embed SBOM in shipped binaries)
   for high-assurance / binary-shipping projects. **OpenSSF Scorecard** for broadly-consumed libraries.
+- **Publish-age cooldown** in the repo's `.cargo/config.toml` (`registry.global-min-publish-age`,
+  Cargo 1.100+) so CI never resolves a version younger than a few days — the window in which a
+  hijacked release (`arrayref 0.3.10`, 2026-08-20) exists before it is pulled. Pair it with a
+  committed `Cargo.lock` for binaries; `cargo update` runs are where the cooldown bites.
+- **`cargo-semver-checks` ≥ 0.49 exit codes**: `100` = a semver violation was found, `101` = the
+  tool itself failed (missing baseline, rustdoc error). A CI step that only tests `!= 0` reports a
+  broken toolchain as "breaking change" — branch on the code, and treat `101` as infra red.
+- **`cargo-deny` ≥ 0.20** removed its long-deprecated flags; scripts that still pass them fail at
+  startup. `cargo deny check` with a `deny.toml` is the whole interface.
 
 ## Hang / correctness / determinism (the studio's anti-hang gate)
 

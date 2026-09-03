@@ -9,6 +9,9 @@ plugins/.rust-studio.backup-pre-memory-unify/
 .serena/
 .obsidian-mcp/
 
+# claude plugin eval output
+plugins/rust-studio/evals/results/
+
 # Rust build artifacts (benchmark fixtures are source-only)
 target/
 *.rlib

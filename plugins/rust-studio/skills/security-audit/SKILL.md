@@ -32,6 +32,11 @@ Spawn **`security-auditor`** to run all of the following and collect raw output:
   Treat any `RUSTSEC-` advisory as a finding. Note yanked crates and unmaintained warnings.
   Use the exa MCP (`web_search_exa`) to look up RUSTSEC advisory details or upstream fix
   status when the `cargo audit` summary is thin.
+- **Supply-chain incident sweep** — when an advisory names a hijacked release (a version
+  published then deleted, e.g. `arrayref 0.3.10` on 2026-08-20), check more than the current
+  lockfile: `~/.cargo/registry/cache` on every build machine and the `Cargo.lock` of every
+  CI run inside the window, because a build that resolved it already ran its build script.
+  Report the repo's publish-age cooldown setting (`references/cargo-manifest.md`).
 - **`cargo deny check advisories bans licenses`** — enforce advisory denies, crate bans,
   and license policy. Surface any `deny` or `warn` items.
 - **Secret scan** — use `rg` to search for patterns that suggest hardcoded secrets: API

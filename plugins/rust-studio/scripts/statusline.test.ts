@@ -11,6 +11,7 @@ import {
   freshProgress,
   effortLabel,
   cacheHitPct,
+  cacheHitFromSession,
   render,
 } from "./statusline.ts";
 
@@ -145,5 +146,22 @@ describe("powerline rendering (Tokyo Night)", () => {
     expect(out).toContain(""); // powerline right cap
     expect(out).toContain("\x1b[48;2;"); // truecolor background (theme segment)
     expect(out).toContain("rust-studio");
+  });
+});
+
+describe("cacheHitFromSession", () => {
+  test("prefers the harness prompt_cache hit ratio when present", () => {
+    const session = {
+      prompt_cache: { hit_ratio: 0.91, warm: true },
+      context_window: { current_usage: { cache_read_input_tokens: 10, input_tokens: 90 } },
+    };
+    expect(cacheHitFromSession(session)).toBe(91);
+  });
+  test("falls back to the token split on older Claude Code", () => {
+    const session = { context_window: { current_usage: { cache_read_input_tokens: 7200, input_tokens: 2800 } } };
+    expect(cacheHitFromSession(session)).toBe(72);
+  });
+  test("nothing known yields null (segment hidden)", () => {
+    expect(cacheHitFromSession({})).toBeNull();
   });
 });

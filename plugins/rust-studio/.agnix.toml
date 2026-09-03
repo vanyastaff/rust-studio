@@ -1,0 +1,21 @@
+# agnix (github.com/agent-sh/agnix) — cross-host agent-config linter (Claude Code, Cursor,
+# Codex, Copilot, Kiro, Agent Skills, MCP rules). CI runs `agnix --strict` from this directory.
+severity = "Warning"
+exclude = ["node_modules/**", ".git/**", "target/**", "evals/results/**"]
+
+[rules]
+# XML-001 — `<crate>`, `<title>`, `<Question>` in docs/templates are markdown placeholders,
+#           not XML tags; "closing" them would corrupt the templates.
+# AS-013  — skills cite `references/templates/<x>.md`, two levels deep by design; the
+#           sync-references script bundles that tree into every skill.
+# XP-003  — the docs describe host paths (`~/.claude`, `~/.codex`) on purpose: that text IS
+#           the portability guidance, not a hard-coded dependency.
+# CC-PL-015 — misreads the `experimental.monitors` manifest key as a component folder.
+disabled_rules = ["XML-001", "AS-013", "XP-003", "CC-PL-015"]
+
+[[overrides]]
+# CC-SK-006 wants `disable-model-invocation` on anything that smells like a release.
+# /team-release only ever runs a publish dry-run, the irreversible-action guard blocks a real
+# publish, and the studio routes to this skill from prose — so it must stay model-invocable.
+paths = ["skills/team-release/SKILL.md"]
+disabled_rules = ["CC-SK-006"]

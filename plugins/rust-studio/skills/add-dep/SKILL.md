@@ -36,6 +36,10 @@ Every item below must be reported; "unknown" is valid, silence is not.
 ### Security — advisories
 - Run `cargo audit` and `cargo deny check`; cross-reference the [RUSTSEC advisory DB](https://rustsec.org/).
 - Flag active advisories (severity, CVE ID, patched version if available).
+- Check the candidate version's age: a release younger than the project's publish-age
+  cooldown (default three days, `references/cargo-manifest.md` §Versions) is a hold, not a
+  block — pin the previous version now and bump after the window, unless the fresh version
+  is the fix for an advisory you are already exposed to.
 - Unmaintained crates with no active advisory are still flagged as a maintenance risk.
 
 ### Maintenance & popularity

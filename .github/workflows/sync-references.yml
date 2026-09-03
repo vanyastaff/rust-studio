@@ -23,3 +23,24 @@ jobs:
       - name: Test hooks and status-line scripts
         run: bun test
         working-directory: plugins/rust-studio
+
+  host-validators:
+    # The hosts' own validators: Claude Code's strict plugin/marketplace check and agnix, the
+    # cross-host agent-config linter (Claude Code, Cursor, Codex, Copilot, Kiro rules).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Claude Code
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: claude plugin validate --strict
+        run: |
+          claude plugin validate --strict --json plugins/rust-studio
+          claude plugin validate --strict --json .
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: cargo-bins/cargo-binstall@main
+      - name: agnix --strict
+        run: |
+          cargo binstall -y agnix-cli
+          agnix --strict plugins/rust-studio

@@ -48,3 +48,9 @@ Owned by `security-auditor`; feeds the RELEASE-GATE security check. The full swe
 ## Supply chain
 - `cargo audit` (RUSTSEC) and `cargo deny` clean before release. Vet new deps (`/add-dep`).
 - Pin and review anything touching crypto, parsing, or process/exec.
+- A fresh release is the attack surface: a hijacked account ships a malicious version that
+  is deleted within hours (`arrayref 0.3.10`, 2026-08-20, 86 minutes live). Configure the
+  publish-age cooldown (`cargo-manifest.md` §Versions) and, when an incident is announced,
+  **sweep** — `~/.cargo/registry/cache` and every `Cargo.lock` in CI history for the named
+  versions, not just the current lockfile — because a build that ran during the window
+  already executed the build script.

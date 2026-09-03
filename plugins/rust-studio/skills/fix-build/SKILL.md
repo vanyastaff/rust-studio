@@ -17,6 +17,13 @@ the resolver applies the Maintainer Rejection Test while fixing — wrong-crate 
 clone/`Arc<Mutex>`-to-appease-borrowck, stale-API call — not merely satisfying the type system.
 The fix is the smallest CORRECT, idiomatic, architecture-compatible change, never the smallest diff.
 
+## Toolchain first
+A build that is red only on **nightly** may be the toolchain, not the code: since August
+2026 nightly runs the next-generation trait solver and the Polonius-alpha borrow checker by
+default, so trait-resolution and borrow errors can differ from stable. Reproduce on stable
+(`cargo +stable check`) before changing code; if only nightly fails, report it as a
+toolchain finding with the `rustc --version` line, and keep the crate's CI on stable.
+
 ## Steps
 **Recall first:** `/recall <workspace/crate>` (or reuse the session-start memory index if it
 already surfaced this area) — known build gotchas for this workspace (feature traps, MSRV,

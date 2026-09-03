@@ -5,6 +5,89 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.0] - 2026-09-03
+
+Brought up to date with a month of host and toolchain change: Claude Code 2.1.232–2.1.259,
+Codex 0.153, the cross-vendor Agent Plugins 1.0 format, `claude plugin eval`, Rust 1.98 and
+the Cargo 1.99/1.100 supply-chain work. Breaking where the host contract moved.
+
+### Added
+
+- **`claude plugin eval` suite** (`evals/`, declared as `experimental.evals`): seven cases
+  derived from the benchmark fixtures — the reviewer, integrity, unsafe, security, perf and
+  API fixtures inlined into a natural prompt with an `llm` rubric restating the ground truth,
+  a `regex` check for a studio verdict, and `tool_used` indicators for the plugin's own path —
+  plus a routing case. Scored against a no-plugin baseline arm (`--ablation with-without`).
+  `plugin eval` is early access on Anthropic's side; `/eval-agents` remains the in-session path.
+- **Agent Plugins 1.0 manifest** (`plugin.json` at the plugin root, agent-plugins.org): the
+  cross-vendor package format Codex ≥ 0.147, Cursor, GitHub Copilot CLI ≥ 1.0.74 and Kiro load
+  directly. Skills only by design; hooks, agents, LSP and status line stay with the Claude Code
+  and Codex manifests. All three manifests must carry the same version (validated).
+- **`PostModelSwitch` hook** (`model-switch.ts`): when the session or a sub-agent changes model
+  — a classifier fallback or `/model` — a two-sentence note names which model now judges the
+  inherit-model gates and how to return; inside a sub-agent it asks for the model to be named
+  next to the verdict's evidence. Claude-only (Codex has no such event).
+- **Rust 1.98 idioms** in `rules/core.md` (`bool::ok_or`, `substr_range`/`subslice_range`,
+  `strip_circumfix`, `NonZero::from_str_radix`, `Atomic::from_mut`) and the 1.98 hard errors a
+  1.97-clean build can hit; `rules/perf.md` gains `format_into`/`NumBuffer` for hot integer
+  formatting and the `algebraic_*` float ops with their reproducibility caveat.
+- **Publish-age cooldown** (`registry.global-min-publish-age` +
+  `resolver.incompatible-publish-age`, honored from Cargo 1.100) in `rules/cargo-manifest.md`,
+  `rules/security.md` and `docs/ci-best-practices.md`, motivated by the 2026-08-20 `arrayref
+  0.3.10` hijack (86 minutes live). `/deps-check` reports publish-age exposure and a missing
+  cooldown as a finding; `/add-dep` holds a version younger than the window; `/security-audit`
+  sweeps registry caches and CI lockfiles when an incident names a deleted release.
+- **`[lints.cargo]`** (Cargo 1.100) in `rules/cargo-manifest.md`: `unused_dependencies`,
+  `missing_lints_inheritance`, the Trojan-Source codepoint denies.
+- `/fix-build` opens with a toolchain check: nightly now runs the next-generation trait solver
+  and the Polonius-alpha borrow checker, so a nightly-only red is reproduced on stable first.
+- Tooling notes: `cargo-semver-checks` ≥ 0.49 exit codes (`100` violation, `101` tool failure)
+  in `/api-review` and the CI doc; `cargo-deny` ≥ 0.20 dropped its deprecated flags; Cargo 1.99
+  disables incremental under `CI` itself.
+- `.agnix.toml` and a CI job running `claude plugin validate --strict --json` (plugin and
+  marketplace) and `agnix --strict`, the cross-host agent-config linter.
+- Validator gates: the Agent Plugins manifest (schema, closed key set, version parity, flat
+  `skills/`), catalog drift (every skill listed in `/help` and the usage guide), the README hook
+  inventory derived from `claude-hooks.json`, and eval-case structure (frontmatter, graders,
+  no machine-specific paths).
+
+### Changed
+
+- **BREAKING — `SubagentStop` blocks once instead of advising.** Claude Code does not honor
+  `additionalContext` on this event, so the verdict reminder had been silently dropped. The hook
+  now reads the harness's `last_assistant_message`, and a roster agent whose final text carries
+  no verdict is stopped once (exit 2) and told to re-send its deliverable with the verdict and
+  evidence appended. Bounded three ways: roster agents only, only when the final text was read
+  and lacks a verdict, and never twice (`stop_hook_active`). Built-in agents are never touched.
+- **BREAKING — irreversible-action guard.** `cargo publish`/`cargo yank` match only as cargo's
+  actual subcommand (global options and `+toolchain` allowed); the bodies of data heredocs
+  (`python3 - <<EOF`, `cat <<EOF > f`) are stripped before matching, so a documentation edit
+  that quotes a guarded command is no longer blocked. A heredoc fed to a shell keeps its body.
+- The status line prefers Claude Code's own `prompt_cache.hit_ratio` (2.1.251+) over the last
+  response's token split; the status-line installer runs only on `startup`, not on every
+  resume/compact/clear.
+- `docs/claude-5-compat.md`: the `opus` alias resolves to **Opus 5** since 2.1.251, which also
+  runs with classifiers — the `security-auditor` pin now buys an in-audit fallback to Opus 4.8
+  rather than a classifier-free model; headless release gates should pin a classifier-free ID.
+- `docs/delegation.md`: Claude Code ≥ 2.1.232 runs spawned sub-agents in the background by
+  default (and a `fork` inherits the conversation); workers get large inputs as file paths,
+  not pasted text. `/eval-agents` orchestration rewritten accordingly and points at the CLI
+  suite.
+- Considered and rejected: `metadata.internal: true` on the two Claude-only utilities so the
+  skills CLI hides them from bulk installs. The CLI checks a boolean, the Agent Skills spec
+  (and every strict Agent Plugins client) requires string metadata values, and agnix fails
+  the file — spec conformance wins; the skills stay labeled in their descriptions instead.
+
+### Fixed
+
+- `CHANGELOG.md` shipped three unresolved merge-conflict remnants (duplicate 0.31.x/0.33.x
+  headings and `|||||||` markers); the 0.33.0/0.33.1 entries are restored.
+- Stale counts everywhere the validator did not reach: `install.sh` and `INSTALL.md` said 55/53
+  skills, the usage guide 54/55, `CONTRIBUTING.md` 55, the README 10 hook handlers.
+- The usage guide had lost `/ci-gate`, `/doc-review`, `/grill-me`, `/merge-conflicts`,
+  `/prototype`, `/research`, `/resolve-pr` and `/worktree-sweep`; `/help` had lost
+  `/worktree-sweep`. Now gated.
+
 ## [0.34.0] - 2026-08-06
 
 ### Changed
@@ -30,10 +113,7 @@ recurring defect class encoded as a standing rule:
 - **Clippy cache gotcha** (`/verify-loop`): clippy after a plain check/build may reuse
   artifacts and skip lints — `cargo clean -p` before trusting the verdict.
 
-## [0.31.1] - 2026-08-06
 ## [0.33.1] - 2026-08-06
-||||||| parent of 8b70a97 (feat: v0.32.0 — encode recurring agent failure classes mined from project-memory vaults)
-## [0.31.1] - 2026-08-06
 
 ### Changed
 
@@ -44,10 +124,7 @@ recurring defect class encoded as a standing rule:
   any dangling entry the check finds. Driven by a real vault audit: 27 indexed notes
   whose files no longer existed, 28 files with no index line.
 
-## [0.31.0] - 2026-08-06
 ## [0.33.0] - 2026-08-06
-||||||| parent of bdbe237 (fix: v0.31.1 — memory index integrity: verify index ↔ files 1:1 on every vault write)
-## [0.31.0] - 2026-08-06
 
 ### Added
 
@@ -76,6 +153,7 @@ recurring defect class encoded as a standing rule:
 - **`unsafe-auditor`** audits the claims around unsafe, not only the blocks:
   thread-confinement / `Send`/`Sync` removals must be compile-time pinned, and advisory
   (`continue-on-error`) miri/loom CI jobs are flagged as gaps.
+
 ## [0.32.0] - 2026-07-28
 
 ### Fixed
@@ -341,8 +419,6 @@ recurring defect class encoded as a standing rule:
 - `validate-distribution.sh` now checks the invocation axis in both harnesses against the
   side-effecting roster, so Claude and Codex can no longer drift apart — in either
   direction.
-||||||| parent of fc9d468 (feat: v0.31.0 — worktree hygiene, repo-gate discovery, review teeth from a live audit)
-
 ## [0.30.0] - 2026-07-10
 
 ### Added

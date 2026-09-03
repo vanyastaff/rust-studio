@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "rust-studio",
+  "version": "0.35.0",
+  "description": "Maintainer-grade Rust engineering workflows for coding agents: 59 skills for architecture, implementation, review, testing, performance, security, and release work.",
+  "author": {
+    "name": "Rust Studio contributors",
+    "url": "https://github.com/vanyastaff/rust-studio"
+  },
+  "homepage": "https://github.com/vanyastaff/rust-studio",
+  "repository": "https://github.com/vanyastaff/rust-studio",
+  "license": "MIT",
+  "keywords": [
+    "rust",
+    "cargo",
+    "code-review",
+    "architecture",
+    "testing",
+    "security",
+    "performance",
+    "release"
+  ]
+}

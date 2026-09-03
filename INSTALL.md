@@ -17,7 +17,7 @@ path. Safe to re-run; `--dry-run` prints the commands without running them.
 
 ## Just the skills, on any agent
 
-The 55 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
+The 59 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
 Codex, Cursor, OpenCode, Zed and ~70 other hosts — no npm publish, no clone:
 
 ```text
@@ -25,12 +25,20 @@ npx skills add .                                      # from a local clone
 npx skills add <owner>/rust-studio --skill dev-task --agent codex
 ```
 
-The 53 host-neutral workflows bundle the standards and deterministic helpers they need. What you
+The 57 host-neutral workflows bundle the standards and deterministic helpers they need. What you
 *don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
 stop-guard), the status line, and working versions of the two clearly labeled Claude-only
 utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
 that phase inline — see
 [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md).
+
+## Agent Plugins (Cursor, GitHub Copilot CLI, Kiro, Codex)
+
+`plugins/rust-studio/` carries a root `plugin.json` in the cross-vendor
+[Agent Plugins 1.0](https://agent-plugins.org) format — `$schema` + `name`, skills discovered
+from the flat `skills/` directory. Any client that implements it (Codex ≥ 0.147, Cursor, Copilot
+CLI ≥ 1.0.74, Kiro) can install the plugin directory directly and gets the 59 skills; hooks,
+agents, LSP, and status line stay with the Claude Code and Codex manifests beside it.
 
 ## Codex plugin
 

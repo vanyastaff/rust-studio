@@ -271,3 +271,72 @@ describe("owesStudioVerdict — gate the nag to studio agents", () => {
     expect(owesStudioVerdict(undefined, roster)).toBe(true);
   });
 });
+
+// --- the stop decision (Claude Code ≥ 2.1.232: last_assistant_message + one-time block)
+
+import { decide, asText, blockReason } from "./subagent-stop.ts";
+
+describe("decide — block once, only on a read final text with no verdict", () => {
+  const roster = new Set(["rust-reviewer", "rust-builder"]);
+  const noTranscript = () => null;
+
+  test("a studio agent whose final message carries a verdict is allowed to stop", () => {
+    const d = decide(
+      { agent_type: "rust-reviewer", last_assistant_message: "src/a.rs:3 🔴 BUG …\n\nVERDICT: NEEDS WORK" },
+      roster,
+      noTranscript,
+    );
+    expect(d.action).toBe("allow");
+  });
+
+  test("a studio agent whose final message has NO verdict is blocked with an append-only reason", () => {
+    const d = decide(
+      { agent_type: "rust-studio:rust-reviewer", last_assistant_message: "Looks fine to me, ship it." },
+      roster,
+      noTranscript,
+    );
+    expect(d.action).toBe("block");
+    if (d.action === "block") {
+      expect(d.reason).toContain("rust-studio:rust-reviewer");
+      expect(d.reason).toMatch(/COMPLETE \/ NEEDS WORK \/ REDO-TO-BAR \/ BLOCKED/);
+      expect(d.reason).toMatch(/do not drop/i); // never displace the deliverable
+    }
+  });
+
+  test("content-block arrays are read like strings", () => {
+    const msg = [{ type: "text", text: "Map:\nsrc/lib.rs:1" }, { type: "text", text: "COMPLETE" }];
+    expect(asText(msg)).toContain("COMPLETE");
+    expect(decide({ agent_type: "rust-builder", last_assistant_message: msg }, roster, noTranscript).action).toBe("allow");
+  });
+
+  test("stop_hook_active breaks the loop — never block twice", () => {
+    const d = decide(
+      { agent_type: "rust-reviewer", last_assistant_message: "no verdict here", stop_hook_active: true },
+      roster,
+      noTranscript,
+    );
+    expect(d.action).toBe("allow");
+  });
+
+  test("built-in / non-roster agents are never blocked", () => {
+    for (const t of ["Explore", "general-purpose", "claude-code-guide", "some-other-plugin:agent"]) {
+      expect(decide({ agent_type: t, last_assistant_message: "data, no verdict" }, roster, noTranscript).action).toBe("allow");
+    }
+  });
+
+  test("no final text AND no readable transcript → allow (fail open)", () => {
+    expect(decide({ agent_type: "rust-reviewer" }, roster, noTranscript).action).toBe("allow");
+  });
+
+  test("no final text → the transcript fallback decides", () => {
+    const withVerdict = () => [userLine("Review."), asstLine("Findings…\nCOMPLETE")].join("\n");
+    const without = () => [userLine("Review."), asstLine("Findings… that's all.")].join("\n");
+    expect(decide({ agent_type: "rust-reviewer" }, roster, withVerdict).action).toBe("allow");
+    expect(decide({ agent_type: "rust-reviewer" }, roster, without).action).toBe("block");
+  });
+
+  test("blockReason names the agent when known", () => {
+    expect(blockReason("rust-scout")).toContain("`rust-scout`");
+    expect(blockReason(undefined)).toContain("this sub-agent");
+  });
+});

@@ -109,6 +109,8 @@ team feature flag, task UI, mailbox, or background mode is missing.
 
 **Roles.** The current session is the orchestrator. A worker receives the complete brief: scope,
 relevant files or diff, acceptance criteria, constraints, expected evidence, and required verdict.
+Hand a worker its large inputs — a diff, a spec, a fixture — as a **file path**, not pasted
+text: the brief stays small, the worker can re-read, and two workers see the same bytes.
 Workers do focused work; the orchestrator owns synthesis, user-facing gates, and cleanup.
 
 **Task graph.** Represent phases as tasks when the host supports it. Express dependencies in the
@@ -122,9 +124,12 @@ shutdown, close workers after their result is integrated; otherwise let the host
 lifecycle.
 
 **Host adapters.** Claude Code may expose background subagents (spawned directly through its
-agent tool), task-list tools, and a mailbox; Codex may expose collaboration workers, custom
-agents, and a plan surface. Treat those as adapters for the neutral model above, not
-prerequisites and not instructions to call unavailable tools.
+agent tool — since 2.1.232 a spawned sub-agent runs in the background by default and the
+orchestrator is notified when it finishes; a `fork` of the session inherits the whole
+conversation and suits a continuation, never an independent gate lens), task-list tools, and
+a mailbox; Codex may expose collaboration workers, custom agents, and a plan surface. Treat
+those as adapters for the neutral model above, not prerequisites and not instructions to call
+unavailable tools.
 
 **Gotchas (load-bearing).**
 - **No plan inheritance** — teammates do *not* inherit the lead's conversation or plan; *all*

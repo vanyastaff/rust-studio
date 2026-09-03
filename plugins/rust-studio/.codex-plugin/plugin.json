@@ -1,6 +1,6 @@
 {
   "name": "rust-studio",
-  "version": "0.34.0",
+  "version": "0.35.0",
   "description": "A maintainer-grade Rust engineering studio with 59 focused skills for architecture, implementation, review, testing, performance, security, and release work.",
   "author": {
     "name": "Rust Studio contributors",
