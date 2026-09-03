@@ -3,37 +3,32 @@
 //
 // 1) Detects a Rust project at the session cwd and injects a concise studio briefing
 //    (detected stack + domain classification + collaboration protocol).
-// 2) RECALLS the most relevant project memory from the shared Obsidian vault and injects a
-//    compact ranked index, so the session starts with a "second brain" already primed.
-// A command hook has no MCP access, so recall reads the vault files directly (filesystem) and
-// ranks them against a cheap git signal (branch / changed crates / last commit). Deep semantic
-// retrieval is `/recall`. Never fails the session: on any error it injects what it can and exits 0.
+// 2) RECALLS project memory from the host-native store (Claude Code's auto-memory
+//    directory for this repo, shared with Codex sessions): ranks the index against a
+//    cheap git signal (branch / changed crates / last commit) and surfaces the few notes
+//    that bind this work, plus index health (budget, index ↔ files). On Claude Code the
+//    host loads the index itself, so only pointers are added; on Codex the index rides
+//    along. Deeper retrieval is `/recall`. Never fails the session: on any error it
+//    injects what it can and exits 0.
 
-import { readFileSync, statSync, readdirSync } from "node:fs";
-import { join, basename, dirname, resolve } from "node:path";
-import { homedir } from "node:os";
-import { execSync } from "node:child_process";
+import { readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { readInput, emit, watchdog, option, optionBool, pluginRoot } from "./_lib.ts";
-
-/** Canonical main-worktree root for cwd, so a git WORKTREE recalls the real
- *  project's vault memory (the main repo), not the worktree dir name. Falls back to cwd. */
-function gitMainRoot(cwd: string): string {
-  try {
-    const common = execSync("git rev-parse --git-common-dir", {
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-      timeout: 2000,
-    }).trim();
-    if (common) {
-      const abs = resolve(cwd, common); // relative ".git" in main checkout, absolute in a worktree
-      return basename(abs) === ".git" ? dirname(abs) : abs;
-    }
-  } catch {
-    /* not a git repo / git missing */
-  }
-  return cwd;
-}
+import {
+  INDEX_FILE,
+  bodyReader,
+  budgetLine,
+  gitSignal,
+  indexHealth,
+  labelFor,
+  rankEntries,
+  readIndex,
+  resolveStore,
+  type IndexEntry,
+  type IndexHealth,
+  type Ranked,
+  type StoreInfo,
+} from "./memory-store.ts";
 
 // Armed for the WHOLE run — buildRecall's git calls + vault walk happen after
 // stdin, so disarming after readInput would leave the slow path unguarded and
@@ -95,154 +90,105 @@ export function routeByDomain(domains: string[]): string {
   return picks.join("; ") + ".";
 }
 
-// --- memory recall (reads the shared Obsidian vault directly; no MCP in a command hook) ---
-const STOP = new Set([
-  "the", "and", "for", "with", "this", "that", "from", "into", "your", "you", "are", "was",
-  "main", "master", "feat", "fix", "chore", "refactor", "docs", "test", "wip", "branch",
-  "add", "update", "remove", "merge", "rust", "crate", "crates", "src", "lib", "mod",
-]);
+// --- memory recall (host-native store; a command hook has no tools, so it reads the files) ---
 
-function fmField(fm: string, key: string): string {
-  const m = new RegExp(`^\\s*${key}\\s*:\\s*(.+)$`, "im").exec(fm);
-  return m ? m[1].trim().replace(/^["'\[]+|["'\]]+$/g, "").trim() : "";
+/** Warnings worth a line at session start: the index is close to what the host will
+ *  load, or the index and the files disagree. Empty when healthy. */
+export function healthLines(h: IndexHealth): string[] {
+  const out: string[] = [];
+  if (h.overCap)
+    out.push(`⚠ memory ${budgetLine(h)} — OVER the host cap: Claude Code stops loading past it. Run \`/memory-doctor\` now.`);
+  else if (h.nearCap) out.push(`⚠ memory ${budgetLine(h)} (${Math.round(h.fill * 100)}%) — run \`/memory-doctor\` before it hits the cap.`);
+  const bad: string[] = [];
+  if (h.dangling.length) bad.push(`${h.dangling.length} index line(s) point at missing files`);
+  if (h.unindexed.length) bad.push(`${h.unindexed.length} note(s) have no index line`);
+  if (h.duplicates.length) bad.push(`${h.duplicates.length} duplicate index line(s)`);
+  if (bad.length) out.push(`⚠ memory index ↔ files disagree: ${bad.join("; ")} — \`/memory-doctor\` (reindex / archive).`);
+  return out;
 }
 
-function noteMeta(body: string): { title: string; note_type: string; tags: string; hook: string } {
-  let fm = "";
-  const fmm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(body);
-  if (fmm) fm = fmm[1];
-  const title = fmField(fm, "title") || fmField(fm, "name");
-  const note_type = fmField(fm, "note_type") || fmField(fm, "type");
-  const tags = fmField(fm, "tags");
-  let hook = fmField(fm, "description");
-  if (!hook) {
-    const after = fmm ? body.slice(fmm[0].length) : body;
-    for (const raw of after.split(/\r?\n/)) {
-      const line = raw.trim();
-      if (!line || line.startsWith("#") || line.startsWith(">") || line.startsWith("---")) continue;
-      hook = line;
-      break;
+export interface RecallView {
+  store: StoreInfo;
+  entries: IndexEntry[];
+  health: IndexHealth;
+  ranked: Ranked[];
+  signal: string[];
+  labelOf: (file: string) => string;
+  now?: number;
+}
+
+/** Render the session-start memory block. On Claude Code the host already loads the
+ *  index, so this is pointers + health only; on a host that does not (Codex), it also
+ *  carries the index itself, ranked matches first. */
+export function renderRecall(v: RecallView): string {
+  const { store, entries, health, ranked } = v;
+  const dir = store.dir.replace(/\\/g, "/");
+  const pathOf = (file: string): string => `${dir}/${file}`;
+  const bullet = (e: IndexEntry): string =>
+    `- **${e.title}**${v.labelOf(e.file)}${e.hook ? ` — ${e.hook}` : ""}\n    Read: \`${pathOf(e.file)}\``;
+  const contract = join(pluginRoot(), "docs", "memory-protocol.md").replace(/\\/g, "/");
+  const sig = v.signal.length ? ` (signal: ${v.signal.slice(0, 8).join(", ")})` : "";
+  const warn = healthLines(health);
+  const lines: string[] = [];
+
+  if (store.hostInjectsIndex) {
+    if (ranked.length) {
+      lines.push(`## Project memory — pointers for this work${sig}`, "", ...ranked.map(bullet), "");
+      lines.push(
+        `_${entries.length} notes indexed (${budgetLine(health)}); Claude Code loads the index itself. ` +
+          "`/recall <topic>` to pull more, `/remember` to save what settles, `/memory-doctor` to audit. " +
+          `Contract: \`${contract}\`._`,
+      );
+    } else {
+      lines.push(
+        `_Project memory: ${entries.length} notes in \`${dir}\` (index loaded by Claude Code) — consult before ` +
+          "re-deriving a decision; `/recall <topic>` · `/remember` · `/memory-doctor`._",
+      );
     }
+  } else {
+    lines.push(`## Project memory${sig}`, "");
+    lines.push(
+      `Durable decisions, gotchas, conventions, and fixes from earlier sessions live in \`${dir}\` ` +
+        "(shared with Claude Code's auto-memory for this repo). Consult before re-deriving; capture what settles " +
+        `with \`/remember\`; contract: \`${contract}\`.`,
+      "",
+    );
+    const seen = new Set(ranked.map((r) => r.file));
+    const rest = entries.filter((e) => !seen.has(e.file));
+    const cap = Math.max(0, INDEX_INJECT_CAP - ranked.length);
+    if (ranked.length) lines.push("**Most relevant to this work:**", ...ranked.map(bullet), "");
+    if (rest.length) lines.push(ranked.length ? "**Everything else:**" : "", ...rest.slice(0, cap).map(bullet));
+    if (rest.length > cap) lines.push(`- … ${rest.length - cap} more in \`${pathOf(INDEX_FILE)}\``);
+    lines.push("", "_`/recall <topic>` to pull more, `/remember` to save, `/memory-doctor` to audit._");
   }
-  if (hook.length > 140) hook = hook.slice(0, 137).trimEnd() + "…";
-  return { title, note_type, tags, hook };
+  if (warn.length) lines.push("", ...warn);
+  return lines.filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n");
 }
 
-interface Note { title: string; note_type: string; hook: string; score: number; mtime: number; path: string }
+/** How many index lines a non-injecting host gets at session start (the index itself
+ *  is capped at 200 by the host; a hook briefing should stay well under that). */
+export const INDEX_INJECT_CAP = 60;
 
 function buildRecall(cwd: string): string {
   try {
-    const vault = option("vault_path") || process.env.OBSIDIAN_VAULT_PATH || join(homedir(), "memory");
-    const project = basename(gitMainRoot(cwd)); // worktree -> main repo name
-    const dir = join(vault, "projects", project);
-    try {
-      if (!statSync(dir).isDirectory()) return "";
-    } catch {
-      return ""; // project not in the vault yet — nothing to recall
-    }
-
-    // cheap git signal (every call fail-open)
-    const git = (args: string): string => {
-      try {
-        return execSync(`git ${args}`, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 2000 }).trim();
-      } catch {
-        return "";
+    const store = resolveStore(cwd);
+    if (!store.exists) return ""; // nothing saved for this project yet
+    const index = readIndex(store.dir);
+    const health = indexHealth(store.dir, index);
+    const entries = index?.entries ?? [];
+    if (!entries.length && !health.unindexed.length) return "";
+    const sig = gitSignal(cwd);
+    const ranked = rankEntries(entries, sig, 5, bodyReader(store.dir));
+    const metaCache = new Map<string, string>();
+    const labelOf = (file: string): string => {
+      let l = metaCache.get(file);
+      if (l == null) {
+        l = labelFor(store.dir, file);
+        metaCache.set(file, l);
       }
+      return l;
     };
-    const sig = new Set<string>();
-    const addTerms = (s: string): void => {
-      for (const t of s.toLowerCase().split(/[^a-z0-9]+/)) if (t.length >= 4 && !STOP.has(t)) sig.add(t);
-    };
-    addTerms(git("rev-parse --abbrev-ref HEAD"));
-    addTerms(git("log -1 --format=%s"));
-    const changed = git("diff --name-only HEAD") + "\n" + git("diff --name-only");
-    for (const m of changed.matchAll(/crates[\/\\]([a-z0-9_-]+)/gi)) sig.add(m[1].toLowerCase());
-
-    // bounded recursive walk of the project memory (skip large mirror corpora + archives)
-    const SKIP_DIRS = new Set(["research", "codebase", "processed", "node_modules"]);
-    const notes: Note[] = [];
-    let budget = 220;
-    const walk = (d: string): void => {
-      if (budget <= 0) return;
-      let ents;
-      try {
-        ents = readdirSync(d, { withFileTypes: true });
-      } catch {
-        return;
-      }
-      for (const e of ents) {
-        if (budget <= 0) return;
-        if (e.name.startsWith(".")) continue;
-        const p = join(d, e.name);
-        if (e.isDirectory()) {
-          if (!SKIP_DIRS.has(e.name)) walk(p);
-          continue;
-        }
-        if (!e.name.endsWith(".md") || e.name === "MEMORY.md" || e.name.startsWith("_Index_of_")) continue;
-        budget--;
-        let body = "";
-        try {
-          body = readFileSync(p, "utf8");
-        } catch {
-          continue;
-        }
-        const meta = noteMeta(body);
-        const title = meta.title || e.name.replace(/\.md$/, "");
-        const hay = `${e.name} ${title} ${meta.tags} ${meta.note_type}`.toLowerCase();
-        const hayBody = body.toLowerCase();
-        let score = 0;
-        for (const t of sig) {
-          if (hay.includes(t)) score += 3;
-          else if (hayBody.includes(t)) score += 1;
-        }
-        let mtime = 0;
-        try {
-          mtime = statSync(p).mtimeMs;
-        } catch {
-          /* keep 0 */
-        }
-        notes.push({ title, note_type: meta.note_type, hook: meta.hook, score, mtime, path: p.replace(/\\/g, "/") });
-      }
-    };
-    walk(dir);
-    if (notes.length === 0) return "";
-
-    const fmtBullet = (n: Note): string =>
-      `- **${n.title}**${n.note_type ? ` (${n.note_type})` : ""}${n.hook ? ` — ${n.hook}` : ""}` +
-      `\n    Read: \`${n.path}\``;
-
-    const sigList = [...sig].slice(0, 8).join(", ");
-    // Flat ranked list (the vault layout is flat per docs/memory-protocol.md —
-    // notes + MEMORY.md, no subfolders): pure score/recency, top 8.
-    const matched = notes
-      .filter((n) => n.score > 0)
-      .sort((a, b) => b.score - a.score || b.mtime - a.mtime)
-      .slice(0, 8);
-
-    // Orient the agent: when project memory exists, the durable design record lives in
-    // the vault, not the repo — so consult/extend it instead of re-deriving from code.
-    const orient =
-      `**This project's durable design record lives in the Obsidian vault** ` +
-      `(\`projects/${project}/\`), not the repo — its decisions, gotchas, conventions, and fixes. ` +
-      "Consult it before designing or re-deriving; capture what settles with `/remember` " +
-      `(contract: \`${join(pluginRoot(), "docs", "memory-protocol.md").replace(/\\/g, "/")}\`).`;
-
-    let out: string;
-    if (matched.length) {
-      out =
-        `## Recalled project memory — most relevant to this work${sigList ? ` (signal: ${sigList})` : ""}\n\n` +
-        `${orient}\n\n` +
-        matched.map(fmtBullet).join("\n");
-    } else {
-      const recent = notes.slice().sort((a, b) => b.mtime - a.mtime).slice(0, 4);
-      out = `## Recalled project memory — most recent\n\n${orient}\n\n` + recent.map(fmtBullet).join("\n");
-    }
-    return (
-      out +
-      `\n\n_${notes.length} notes scanned in \`projects/${project}/\`. ` +
-      "Read any above directly by its path; `/recall <topic>` for deeper semantic search across all " +
-      "notes; `/remember` to capture a learning._"
-    );
+    return renderRecall({ store, entries, health, ranked, signal: [...sig], labelOf });
   } catch {
     return "";
   }

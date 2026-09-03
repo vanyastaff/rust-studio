@@ -6,17 +6,19 @@ description: "Use when closing a Rust work session: recap changes, capture durab
 # /session-wrap — close the session cleanly
 
 Turn a session's work into a short record and a clear next step, so the next session (yours
-or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`) into a ritual.
+or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`, `/memory-doctor`) into a ritual.
 
 ## Steps
 1. **Summarize** — read `git diff`/`git log` for this branch; recap in a few bullets: what
    changed, what's done, what's still open or BLOCKED.
 2. **Capture learnings** — identify anything **non-obvious and durable** worth keeping (a
    decision + rationale, a gotcha, a convention discovered). For each, run `/remember`
-   directly — it writes the note into the Obsidian vault via the `obsidian` MCP; note the
-   resulting note path in the output. Skip what the code, git history, or `Cargo.toml` already
-   make obvious (canonical capture rule: `references/memory-protocol.md`). `/remember`'s
-   integrity step also verifies the index ↔ files 1:1 — surface any dangling entry it finds.
+   directly — it writes the note into the project memory store (the host's auto-memory
+   directory); note the resulting note path in the output. Skip what the code, git history, or
+   `Cargo.toml` already make obvious (canonical capture rule: `references/memory-protocol.md`).
+   `/remember`'s integrity step also verifies the index ↔ files 1:1 — surface any dangling
+   entry it finds. If the session-start briefing warned about the index budget or integrity,
+   run `/memory-doctor` now, while the context that can judge each note is still here.
 3. **State of play** — list done / in-progress / blocked with the next action for each open
    item. If a spec is active (`.rust-studio/specs/`), update its task
    statuses.

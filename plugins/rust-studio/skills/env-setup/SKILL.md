@@ -43,10 +43,9 @@ Prompt the user (skip what `input` already decided; batch the rest in one ask):
   deep-quality/perf tier: `/mutants`, `/fuzz`, `/bloat`, `/perf`).
 - **Extras** (multi-select): OS prerequisites (the sudo step — skip if the report shows a
   working C toolchain); nightly toolchain + miri (`/audit-unsafe`; `cargo-udeps`,
-  `cargo-fuzz`, `cargo-careful` need nightly at *run* time); QoL CLI tools; the memory
-  stack (`--memory`: obsidian-mcp with local embeddings — backs `/recall`, `/remember`,
-  `/session-wrap`; the one tool that compiles from source, since prebuilt binaries don't
-  carry the `embeddings` feature); mold linker config; sccache config.
+  `cargo-fuzz`, `cargo-careful` need nightly at *run* time); QoL CLI tools; mold linker
+  config; sccache config. (Project memory needs no install: it lives in the host's
+  auto-memory directory — `references/memory-protocol.md`.)
 
 ## Phase 3 — Install
 
@@ -89,12 +88,6 @@ suggest they run it via `! <command>` in the prompt, then re-run the script.
 - **macOS OpenSSL:** brew's `openssl` is keg-only, so `openssl-sys` won't find it via
   pkg-config alone — if a build fails on it, set
   `export OPENSSL_DIR="$(brew --prefix openssl@3)"` (the script prints this hint too).
-- **Memory-stack registration** (after `--memory` installs `obsidian-mcp`): the MCP
-  server must be registered in *user* scope so agent teammates inherit it — the script
-  prints the `claude mcp add obsidian -s user …` line; fill `OBSIDIAN_VAULT_PATH` from
-  the plugin's `vault_path` setting, the `OBSIDIAN_VAULT_PATH` env var, or `~/memory`
-  (that resolution order matches the session-start hook). Full contract:
-  `references/tooling.md` ("obsidian memory server").
 - **Not on crates.io, so not binstallable:** `lefthook` (Go) — needed by `/ci-gate`;
   offer the platform package (`brew install lefthook`, `npm i -g lefthook`, or the vendor
   repo) or leave it to `/ci-gate` to prompt.

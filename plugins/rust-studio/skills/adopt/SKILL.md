@@ -157,8 +157,8 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
       `references/templates/large-workspace-settings.json`
     - Public API hygiene issues → `/review` in **full** mode
 
-15. **Seed the memory vault.** Adoption infers a project's durable facts in one pass — persist
-    them so the vault starts populated: run `/remember` for the domain map decision, each
+15. **Seed project memory.** Adoption infers a project's durable facts in one pass — persist
+    them so the store starts populated: run `/remember` for the domain map decision, each
     inferred convention (error style, test patterns, MSRV posture), and the top gotchas from the
     debt catalog (it dedups). Report the note paths
     (`references/memory-protocol.md`).

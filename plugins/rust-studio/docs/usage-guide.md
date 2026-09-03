@@ -14,7 +14,7 @@ Five moving parts:
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (59) — slash commands. They are *workflows*: a skill orchestrates the right agents
+- **Skills** (60) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
 - **Rules** (20) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
@@ -26,7 +26,7 @@ Five moving parts:
   start, path-scoped rule pointers after edits, a lint nudge **and a memory-capture nudge** when
   you stop, a sub-agent verdict check that blocks a verdict-less finish once, a note when the
   model switches (a classifier fallback or `/model`) so you know which model now judges, and
-  session-lifecycle aids (a `/recall` nudge on each prompt, compaction / session-end reminders).
+  session-lifecycle aids (memory pointers for each prompt, compaction / session-end reminders).
 - **Gates** — named checkpoints a lead clears before work proceeds: `ARCH / API / ASYNC / CLI /
   PERF / SAFETY / QA / RELEASE / BUILD`. Run at **lean** (one crate), **full** (public API,
   unsafe, releases), or **solo** (prototype) intensity.
@@ -117,7 +117,7 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 
 ---
 
-## The skills (59)
+## The skills (60)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
@@ -183,16 +183,23 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
   becomes a minimized regression test.
 - **`/flaky-hunt`** — reproduce, diagnose, and fix/quarantine a flaky test.
 
-### Memory (cross-session, in the Obsidian vault via the `obsidian` MCP)
-- **`/remember`** — capture a durable learning (decision/gotcha/convention/fix).
-- **`/recall`** — surface prior learnings for a topic before you work.
+### Memory (cross-session, in the host's auto-memory store)
+- **`/remember`** — capture a durable learning (decision/gotcha/convention/fix) as a typed note
+  with evidence, under the host's index budget.
+- **`/recall`** — surface prior learnings for a topic before you work, each with a freshness
+  verdict (holds / stale / unverifiable) checked against the repo.
+- **`/memory-doctor`** — deterministic audit + judged cleanup: index budget and integrity,
+  stale or resolved notes, secrets, conventions to promote into `CLAUDE.md`/rules, and a
+  one-time import of a legacy Obsidian vault.
 - **`/session-wrap`** — recap the session, capture learnings, suggest the next step.
 - Capture is also **automatic**: the work skills (`/dev-task`, `/debug`, `/verify-loop`,
   `/refactor`, `/spec-verify`) run `/remember` for durable learnings, and the `auto_capture`
-  Stop hook nudges you once after a completed unit if nothing was saved. Recall is automatic at
-  session start (`memory_recall`). Both toggle via `/plugin` → Rust Code Studio.
-- The full contract (recall-before, remember-after, `MEMORY:` verdict lines, vault path rule)
-  lives in [`docs/memory-protocol.md`](memory-protocol.md).
+  Stop hook nudges you once after a completed unit if nothing was saved. Recall is automatic:
+  the host loads the index at session start, the session-start hook ranks it against the
+  branch and reports index health, and every prompt gets pointers to notes that match it
+  (`memory_recall`). All toggle via `/plugin` → Rust Code Studio.
+- The full contract (recall-before, remember-after, verify-before-it-steers, `MEMORY:` verdict
+  lines, the path rule, rules ≠ memory) lives in [`docs/memory-protocol.md`](memory-protocol.md).
 
 ### Ship & release
 - **`/commit`** — Conventional Commit for the current changes (fmt/clippy first; no hook bypass).
@@ -276,14 +283,15 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 ## Tooling, memory, and large workspaces
 - Agents prefer **serena** (semantic code nav) and `rg`/`ast-grep` over Bash search, **exa** for
   external evidence, and purpose-built `cargo` subcommands — see `tooling.md`.
-- Memory has two layers that share **one** Obsidian vault under a per-project folder:
-  - the **shared project store** — `/remember`, `/recall`, and the session-start recall hook
-    read/write `<vault>/projects/<project>/` through the `obsidian` MCP (the hook reads the files
-    directly, since a command hook has no MCP access);
+- Memory has two layers, both host-managed directories — no MCP, no vault:
+  - the **project store** — Claude Code's auto-memory directory for the repository
+    (`~/.claude/projects/<project-key>/memory/`, or `autoMemoryDirectory`; a Codex session
+    shares the same path). `/remember`, `/recall`, `/memory-doctor`, and the hooks read and
+    write it with the harness's own file tools; the host loads its `MEMORY.md` at session start.
   - **per-agent memory** — `chief-architect`, `unsafe-auditor`, and `security-auditor` carry
-    `memory: project`, so the harness injects each agent's own `MEMORY.md` at start. For these to be
-    *one* store, the harness auto-memory path must be junctioned into the vault's project folder; if
-    it is not, an agent's memory and `/recall` will diverge. The read-only auditors surface durable
-    findings on a `MEMORY:` line so the orchestrator can `/remember` them into the shared store.
+    `memory: project`, so the host keeps each agent's own rulings in
+    `.claude/agent-memory/rust-studio-<agent>/` (commit it or `.gitignore` it — your call).
+    The read-only auditors surface durable findings on a `MEMORY:` line so the orchestrator can
+    `/remember` them into the project store.
 - For big multi-crate workspaces, see `large-workspace.md` (per-crate CLAUDE.md, `target/`
   read-denies, sparse worktrees, the bundled rust-analyzer LSP).

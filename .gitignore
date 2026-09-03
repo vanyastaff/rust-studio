@@ -7,7 +7,6 @@ plugins/.rust-studio.backup-pre-memory-unify/
 
 # MCP / tool-local state
 .serena/
-.obsidian-mcp/
 
 # claude plugin eval output
 plugins/rust-studio/evals/results/

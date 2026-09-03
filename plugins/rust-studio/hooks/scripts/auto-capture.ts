@@ -3,8 +3,8 @@
 //
 // When a turn finishes a real unit of work but nothing was persisted to project
 // memory, nudge the agent ONCE to run /remember for any durable learning. A command
-// hook has no MCP access, so it cannot write the obsidian note itself — it blocks the
-// stop (exit 2 + stderr) so the agent, which DOES have MCP, continues and captures.
+// hook cannot judge what was learned, so it blocks the stop (exit 2 + stderr) and the
+// agent — which can — continues and captures into the host-native memory store.
 //
 // Fires only when ALL hold:
 //   * auto_capture userConfig is on (default ON),
@@ -13,7 +13,8 @@
 //     "I finished a unit" summary (Files changed / Commands run / Verification /
 //     Result), reusing the stop-guard evidence detector,
 //   * the working tree is dirty (real uncommitted work that may hold a learning),
-//   * no /remember or /session-wrap (or obsidian note write) already ran this turn,
+//   * no /remember, /session-wrap, /memory-doctor, or write into the memory store
+//     (Write/Edit on a file under it) already happened this turn,
 //   * stop_hook_active is false — the loop-breaker: after we block once, Claude
 //     continues and the next Stop carries stop_hook_active=true, so we never re-block.
 //
@@ -31,6 +32,7 @@ import { tmpdir } from "node:os";
 import { readFileSync, writeFileSync } from "node:fs";
 import { readInput, watchdog, optionBool, run, which, pluginRoot } from "./_lib.ts";
 import { getEvidenceGroups, lastAssistantFromTranscript } from "./stop-guard.ts";
+import { budgetLine, indexHealth, resolveStore, type StoreInfo } from "./memory-store.ts";
 
 const MIN_EVIDENCE = 2;
 const TAIL_BYTES = 200_000;
@@ -74,17 +76,28 @@ export function nudgeBudgetExhausted(sessionId: string, max = MAX_NUDGES): boole
   return peekNudges(sessionId) >= max;
 }
 
-/** Strong signals that a capture already happened in this work block: a /remember or
- *  /session-wrap invocation, or an obsidian note write (note_create / note_write /
- *  note_patch / note_insert — /remember uses patch/insert to update an existing note).
- *  No leading word boundary on note_* so the MCP-prefixed form (mcp__obsidian__note_write)
- *  still matches. Best-effort — on no match we nudge (safe: the agent simply confirms
- *  there is nothing to add rather than silently dropping a learning). */
-const CAPTURE_SIGNAL =
-  /("skill"\s*:\s*"(remember|session-wrap)")|(note_(create|write|patch|insert)\b)|((^|[\s>])\/(remember|session-wrap)\b)/i;
+/** Strong signals that a capture already happened in this work block: a /remember,
+ *  /session-wrap, or /memory-doctor invocation, or a Write/Edit whose file_path sits in
+ *  a memory directory — the resolved store (when known) or any host memory dir
+ *  (`…/memory/`, `…/agent-memory/`, `…/agent-memory-local/`). Best-effort — on no match
+ *  we nudge (safe: the agent simply confirms there is nothing to add rather than
+ *  silently dropping a learning). */
+const CAPTURE_SKILL =
+  /("skill"\s*:\s*"(remember|session-wrap|memory-doctor)")|((^|[\s>])\/(remember|session-wrap|memory-doctor)\b)/i;
+const MEMORY_WRITE = /"file_path"\s*:\s*"[^"]*[\/\\](memory|agent-memory|agent-memory-local)[\/\\][^"]*\.md"/i;
 
-export function capturedSignal(blockRaw: string): boolean {
-  return CAPTURE_SIGNAL.test(blockRaw);
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function capturedSignal(blockRaw: string, storeDir?: string): boolean {
+  if (CAPTURE_SKILL.test(blockRaw) || MEMORY_WRITE.test(blockRaw)) return true;
+  if (storeDir) {
+    const dir = escapeRe(storeDir.replace(/\\/g, "/").replace(/\/+$/, ""));
+    // JSON-escaped path in the transcript: "/" may appear as "\/" — accept both.
+    return new RegExp(`"file_path"\\s*:\\s*"${dir.replace(/\//g, "(?:\\\\)?/")}(?:\\\\)?/[^"]*\\.md"`, "i").test(blockRaw);
+  }
+  return false;
 }
 
 /** Normalize the harness-provided `last_assistant_message` (string | content-block
@@ -147,17 +160,24 @@ export function shouldNudge(s: CaptureSignals, minEvidence = MIN_EVIDENCE): bool
   return s.evidenceGroups >= minEvidence; // a real completed-unit summary
 }
 
-export function buildCaptureFeedback(): string {
+export function buildCaptureFeedback(store?: StoreInfo): string {
   // One-line echo of the capture rule — the canonical version lives in
   // docs/memory-protocol.md (edit there first, keep this a summary).
+  let where = "";
+  if (store) {
+    const h = store.exists ? indexHealth(store.dir) : null;
+    where = `Store: ${store.dir.replace(/\\/g, "/")}` + (h ? ` (${budgetLine(h)}${h.nearCap ? " — near the host cap, keep the index line short" : ""})` : " (nothing saved yet)");
+  }
   return [
     "CAPTURE CHECK (Rust Code Studio): you finished a unit of work but nothing was",
     "persisted to project memory this turn.",
     "",
     "Before stopping: if anything NON-OBVIOUS and DURABLE was learned (decision+rationale,",
     "gotcha, convention, non-trivial fix, or durable external reference), run /remember",
-    "now. Skip what code/git/Cargo.toml already makes obvious. Full capture rule:",
+    "now. Skip what code/git/Cargo.toml already makes obvious, anything session-local, and",
+    "never a secret. Full capture rule:",
     `${join(pluginRoot(), "docs", "memory-protocol.md").replace(/\\/g, "/")}`,
+    ...(where ? [where] : []),
     "",
     "If there is genuinely nothing durable to capture, say 'nothing to capture' and stop.",
   ].join("\n");
@@ -241,11 +261,17 @@ if (import.meta.main) {
     process.exit(0); // nothing to judge — allow
   }
 
+  let store: StoreInfo | undefined;
+  try {
+    store = resolveStore(cwd);
+  } catch {
+    store = undefined;
+  }
   const signals: CaptureSignals = {
     stopHookActive: Boolean(input.stop_hook_active),
     evidenceGroups: getEvidenceGroups(lastText).length,
     gitDirty: gitDirty(cwd),
-    captured: capturedSignal(lastBlockRaw(raw)),
+    captured: capturedSignal(lastBlockRaw(raw), store?.dir),
   };
   disarm();
 
@@ -261,7 +287,7 @@ if (import.meta.main) {
       }
       bumpNudges(sessionId);
     }
-    process.stderr.write(buildCaptureFeedback());
+    process.stderr.write(buildCaptureFeedback(store));
     process.exit(2); // block the stop; stderr becomes feedback to Claude
   }
   process.exit(0);

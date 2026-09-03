@@ -1,42 +1,40 @@
 ---
 name: recall
-description: "Use when starting related work to recall project decisions, gotchas, conventions, and fixes from Obsidian."
+description: "Use when starting related work to recall project decisions, gotchas, conventions, and fixes, verifying each still holds."
 ---
 
-# /recall — retrieve project memory
+# /recall — retrieve project memory, verified
 
-Pull relevant past learnings into context so work compounds instead of repeating
-(protocol: `references/memory-protocol.md`). Companion to `/remember`.
+Pull the few notes that bind the task into context — and check they are still true — so work
+compounds instead of repeating (protocol: `references/memory-protocol.md`). Companion to
+`/remember` and `/memory-doctor`.
 
-## Where notes live (resolve every time)
-- **Vault root:** `$OBSIDIAN_VAULT_PATH`, default `~/memory` (cross-platform — never hardcode).
-- **Project folder:** `<vault>/projects/<project>/`, `<project>` = basename of the **main
-  worktree root** (`git rev-parse --git-common-dir` → the dir containing it; plain checkout =
-  repo root — this keeps a git-worktree session on the same folder the session-start hook reads);
-  the index is `<vault>/projects/<project>/MEMORY.md`. Read through the **obsidian** MCP.
+## Where notes live
+The same store `/remember` writes: on Claude Code the auto-memory directory named in your
+system prompt (`# Memory`), else `~/.claude/projects/<project-key>/memory/` with
+`<project-key>` = main-worktree root path, non-`A-Za-z0-9-` → `-` (studio `memory_dir` /
+`RUST_STUDIO_MEMORY_DIR` overrides). The index is `<store>/MEMORY.md`. The host loads that index
+at session start, the session-start hook ranks it against the branch, and every prompt gets
+pointers to notes that match it — `/recall` is the deliberate, deeper pass.
 
 ## Steps
-1. If `input` is empty, `note_read` the project index `<vault>/projects/<project>/MEMORY.md`
-   and summarize what's there (most-relevant first).
-2. Otherwise **rank-search the project folder**, semantic-first, and fuse the signals:
-   - **`search_semantic`** (PRIMARY) — meaning-based, finds the note even when wording differs.
-     Ask for a small `top_k` (~8); never request an unbounded result.
-   - **`search_metadata`** — narrow by `note_type` (decision/gotcha/convention/fix/reference/concept)
-     or `tags` when the query implies a kind.
-   - **`search_text`** — keyword leg. `search_text` here returns an UNRANKED FLOOD; **always** request
-     the smallest window the tool supports and keep only the top few — never consume the raw dump.
-   - **`wikilinks`** — on the single strongest hit, pull backlinks + outgoing to surface related notes.
-   Merge the lists and rank by relevance (a note that several legs agree on ranks highest).
-3. `note_read` the few top matches (not the whole neighbourhood) and present each as:
-   **title** (`note_type`) → the key takeaway, with the note path.
-4. If nothing matches, say so plainly and suggest capturing one with `/remember` once the work is done.
-
-## Graceful degrade
-If `search_semantic` errors (the obsidian MCP was built without embeddings) or the MCP is
-unavailable, fall back to `search_text` (small window only) plus the harness **Grep** tool over
-`<vault>/projects/<project>/` — match titles, tags, and bodies; rank by hit density. Same vault,
-lexical-only.
+1. If `input` is empty, read the index and summarize what is there by `kind`, most relevant
+   first (use the branch name and changed files as the signal).
+2. Otherwise **rank-search the store**: Grep the index (title + hook) and then the note bodies
+   (`<store>/*.md`; also `.claude/agent-memory/*/` for the agents' own rulings) for the topic's
+   words, paths, and symbols. A hit in a slug or title outranks one in a body; a note several
+   terms agree on ranks highest. Read the top few notes (not the whole neighbourhood).
+3. **Verify before it steers.** A note reflects when it was written. For each recalled note,
+   check what it names still exists and still says that — Glob the paths, Grep the symbol or
+   flag, `git log -1 -- <path>` for when the code last moved — and compare with the note's
+   `modified` / `verified` dates. Give each a verdict: **holds**, **stale** (what changed), or
+   **unverifiable**. A stale note is fixed now (Edit the fact, set `verified: <today>`) or
+   handed to `/memory-doctor`; it never silently steers the plan.
+4. Present each as: **title** (`kind`, age) → the key takeaway → verdict → note path. Say when
+   a recalled note changes the approach.
+5. If nothing matches, say so plainly and suggest capturing with `/remember` once the work is
+   done.
 
 ## Output
-A short, ranked list of relevant notes with their key takeaways, each linked to its note path.
-Lead with the single most relevant learning. Don't pad with marginally-related notes.
+A short, ranked list of relevant notes with their takeaways and freshness verdicts, each with
+its path. Lead with the single most relevant learning. Don't pad with marginally-related notes.

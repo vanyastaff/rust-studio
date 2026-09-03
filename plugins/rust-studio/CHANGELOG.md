@@ -5,6 +5,87 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0] - 2026-09-03
+
+Memory rebuilt on the host. The studio no longer keeps a store of its own: project memory is
+the host's auto-memory directory — the `MEMORY.md` index Claude Code loads at session start
+plus one file per memory, shared with Codex sessions — and the studio adds the discipline the
+hosts don't: typed notes with evidence, recall that verifies before it steers, a budget gate,
+and a doctor that keeps the store true and small. Driven by evidence, not taste: on the
+machine this was designed on, one project's Obsidian vault (92 notes) and its host memory
+directory (52) shared 12 slugs — the model writes where the host tells it to, and a parallel
+vault just diverges. Reviewed against what shipped in the last month: Claude Code auto-memory
+(`autoMemoryDirectory`, `memory:` sub-agent scopes, `modified` stamps), Codex `memories`
+(background extraction, off by default), Gemini CLI's approval inbox, and the memory-hygiene
+literature (StateAuditor, DreamBench-SWE, "Measure Before You Manage").
+
+### Added
+
+- **`/memory-doctor` skill + bundled CLI** (`scripts/memory-doctor.ts`: `audit`, `reindex`,
+  `archive`, `import`). Deterministic findings per note — `missing-path` (a path the note
+  names is gone from the repo), `unverified` (≥ 90 days since modified/verified),
+  `resolved`, `relative-date`, `secret`, `untyped`, `long-hook`, `promote` (a convention
+  that held ≥ 30 days belongs in `CLAUDE.md` / rules — rules ≠ memory) — plus index budget
+  and integrity (dangling, unindexed, duplicate). Every mutation is a dry run until
+  `--apply`; nothing is deleted (archive moves under `archive/`).
+- **Legacy vault import.** `memory-doctor import <vault>/projects/<project>` converts
+  Obsidian notes (title/tags/note_type/updated, `[[wikilinks]]`) to the host form, keeps their
+  dates, never overwrites, and projects the index line count against the host cap.
+- **Prompt-scoped recall** (UserPromptSubmit). The host loads the whole index but never says
+  which notes matter for *this* prompt: each prompt is matched against the index and a strong
+  hit is surfaced once per session as a pointer (title, kind/age, path).
+- **Index health at session start**: budget vs the host's 200-line / 25 KB load limit
+  (warns at 85 %, shouts over it), index ↔ files disagreement, with the fix named.
+- **Note labels**: `metadata.kind` (decision / gotcha / convention / fix / reference /
+  concept), `evidence`, `verified`, `status` on top of the host's `type` — string keys under
+  `metadata` survive the host's own rewrites (verified on 2.1.259).
+- **Freshness verdicts in `/recall`**: every recalled note is checked against the repo (Glob
+  the path, Grep the symbol, `git log -1`) and reported as holds / stale / unverifiable
+  before it may steer the plan.
+- `hooks/scripts/memory-store.ts`: one resolver for the store (studio `memory_dir` →
+  host `autoMemoryDirectory` → `~/.claude/projects/<project-key>/memory`), the host's
+  project key (main-worktree path, non-`[A-Za-z0-9-]` → `-`), index parsing (host and
+  legacy wikilink forms), health, and ranking — shared by the hooks and the CLI. 39 new
+  tests across the store, the doctor, prompt recall, and the retargeted capture signal.
+
+### Changed
+
+- **Session-start recall** now reads the host store; on Claude Code (index already loaded by
+  the host) it adds only ranked pointers + health; on Codex it carries the index (≤ 60
+  lines, ranked first). Age and kind ride every pointer.
+- **Auto-capture** counts a Write/Edit into the store (or any host memory dir) and a
+  `/memory-doctor` run as a capture; its nudge names the store and its budget and says
+  "never a secret".
+- **`/remember`** writes with the harness's Write/Edit (no MCP), dedups by Grep, refuses
+  relative dates and secrets, treats externally sourced facts as `reference`, and stops to
+  run the doctor at ≥ 170 index lines.
+- `docs/memory-protocol.md` rewritten around the host store: why not a vault, the layer
+  table (+ prompt recall, + doctor, + agent memory paths), note format, index budget,
+  freshness, rules ≠ memory. `docs/tooling.md`, the usage guide, `/help`, `/session-wrap`,
+  `/adopt`, `/dev-task`, `/env-setup`, the three `memory: project` agents, and the READMEs
+  follow.
+- Studio option **`vault_path` → `memory_dir`** (breaking; empty = the host's store).
+  `memory_recall` now gates both the session-start pointers and the prompt-time pointers.
+
+### Removed
+
+- The Obsidian vault + `obsidian` MCP as the memory backend: `OBSIDIAN_VAULT_PATH`,
+  `note_*` / `search_semantic` tool contracts, the `--memory` tier of `env-setup.sh`, the
+  obsidian prerequisites in `docs/tooling.md`. Migration: run `/memory-doctor` → step 5
+  (`import`) once per project; the converter is idempotent.
+- Semantic search over notes. At the sizes the host can load (≤ 200 index lines) Grep over
+  titles, hooks, and bodies plus the host's own index is enough, and it needs no embeddings
+  download, no server, and no per-host registration.
+
+### Considered and rejected
+
+- A per-turn verbatim event log beside the notes (DreamBench-SWE's strongest cheap baseline):
+  the host transcripts and `git log` already are that log; a second copy would only rot.
+- Recall counters in frontmatter to drive promotion: every bump is a host-stamped `modified`,
+  which would destroy the freshness signal. `promote` uses kind + age instead.
+- Writing into Codex's `~/.codex/memories/`: it is background-consolidated by Codex itself and
+  off by default; the studio shares Claude Code's directory on both hosts instead.
+
 ## [0.35.0] - 2026-09-03
 
 Brought up to date with a month of host and toolchain change: Claude Code 2.1.232–2.1.259,

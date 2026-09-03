@@ -9,7 +9,7 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 > rebuilt from the ground up for Rust and packaged for Claude Code and Codex.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **59 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
+- **60 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
 - **20 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
 - **12 Claude hook handlers across 8 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
@@ -74,7 +74,7 @@ intensity to match the work.
 - **TDD & verify** — `/tdd` · `/verify-loop`
 - **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
 - **Testing** — `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
-- **Memory** — `/remember` · `/recall` · `/session-wrap` (cross-session, stored in the Obsidian vault via the `obsidian` MCP)
+- **Memory** — `/remember` · `/recall` · `/memory-doctor` · `/session-wrap` (cross-session, in the host's auto-memory store — no MCP, no vault)
 - **Ship** — `/commit` · `/pr`
 - **Release** — `/publish` · `/changelog` · `/msrv-check`
 - **Teams** — `/team-api` · `/team-async` · `/team-perf` · `/team-release`
@@ -103,16 +103,20 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
 ## Hooks
 
 - **SessionStart** — detects the crate/workspace, edition, MSRV, and domain; briefs the team, and
-  recalls the most relevant notes from the project's Obsidian-vault memory as a compact index —
-  title + one-line hook + a direct path to read each note — ranked against the git branch /
-  changed crates / last commit (`/recall` for deeper semantic search).
+  recalls from the project memory store (the host's auto-memory directory): the notes that bind
+  this work — title + kind/age + one-line hook + a direct path — ranked against the git branch /
+  changed crates / last commit, plus index health (budget vs the host's 200-line / 25 KB load
+  limit, index ↔ files). On Claude Code the host loads the index itself, so only pointers are
+  added; on Codex the index rides along (`/recall` for the deliberate, verified pass).
 - **PreToolUse (Read/Write/Edit)** — injects a compact *pointer* to each path-scoped Rust
   standard (name + one-line summary + absolute path) *before* you read or edit a matching file,
   so the agent knows which standards bind and reads the full rule on demand — instead of dumping
   every rule body into the window on every file (the dominant context cost, see
   `tools/context-cost.ts`). An edit that introduces `unsafe` also points to the unsafe-code
   standard. `core` leads every list; safety/security-critical rules are flagged ⚠️ REQUIRED.
-- **UserPromptSubmit** — a light nudge to `/recall` before working in a known area and to prefer a
+- **UserPromptSubmit** — prompt-scoped recall: the prompt is matched against the memory index
+  and a note that scores a strong hit is surfaced once per session (title, kind/age, path);
+  plus a once-per-session nudge to `/recall` before working in a known area and to prefer a
   studio skill when one fits.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
 - **Auto-capture (Stop)** — after a turn that finished a real unit of work (a completion summary +
@@ -191,8 +195,8 @@ verdict check) is always on, and the whole plugin disables with
 
 | Option | Default | Effect when off |
 |--------|---------|-----------------|
-| **Session-start memory recall** (`memory_recall`) | on | SessionStart skips the Obsidian-vault scan; `/remember`, `/recall`, `/session-wrap` still work. |
-| **Obsidian vault path** (`vault_path`) | — | Sets the vault used for recall; overrides `OBSIDIAN_VAULT_PATH` (default `~/memory`). |
+| **Memory recall** (`memory_recall`) | on | No ranked pointers + index health at session start and no per-prompt pointers; the host still loads its index, and `/remember`, `/recall`, `/memory-doctor`, `/session-wrap` still work. |
+| **Project memory directory** (`memory_dir`) | — | Moves the studio's memory off the host's auto-memory directory (Claude Code then no longer loads that index itself; the session-start hook carries it). Leave empty to share the host's store. |
 | **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
 | **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
 | **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit — capture stays manual (`/remember`, `/session-wrap`) and in-skill. |
@@ -297,11 +301,10 @@ just makes the relevant skill report it's unavailable and point you at the insta
 ### Optional integrations
 
 - **MCP servers**, used when present: a symbol-navigation server (serena) for `rust-scout` /
-  `rust-builder`, a web-search server (exa) for advisory / freshness lookups, and the `obsidian`
-  server ([`lstpsche/obsidian-mcp`](https://github.com/lstpsche/obsidian-mcp), filesystem-direct —
-  no Obsidian app needed) for cross-session memory (`/remember`, `/recall`). See
-  [`docs/tooling.md`](docs/tooling.md#prerequisites--serena--exa--obsidian-companions-not-bundled)
-  for the install/register snippet.
+  `rust-builder` and a web-search server (exa) for advisory / freshness lookups. See
+  [`docs/tooling.md`](docs/tooling.md#prerequisites--serena--exa-companions-not-bundled)
+  for the install/register snippet. Cross-session memory needs no server — it is the host's
+  auto-memory directory ([`docs/memory-protocol.md`](docs/memory-protocol.md)).
 
 ## License
 

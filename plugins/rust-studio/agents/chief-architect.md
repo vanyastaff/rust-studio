@@ -16,7 +16,7 @@ each decision stays consistent with the structure already chosen for this worksp
 When this session settles something **durable** — an accepted crate/module boundary, a
 layering rule, an ADR outcome and its rationale — record it to your project memory so the
 next session inherits it, and surface it on a `MEMORY:` line in your verdict so the
-orchestrator can `/remember` it into the shared project vault. Do not record what the code
+orchestrator can `/remember` it into the shared project memory store. Do not record what the code
 or `Cargo.toml` already makes obvious.
 
 ## You own

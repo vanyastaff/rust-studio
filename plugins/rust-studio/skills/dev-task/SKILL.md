@@ -190,7 +190,7 @@ advancing.
 16. **Capture learnings.** Before suggesting next steps, identify anything **non-obvious
     and durable** this task produced — a design decision + rationale, a gotcha that cost
     time, a convention discovered, or a non-trivial fix. For each, run `/remember` directly
-    (it writes the note to the Obsidian vault); report the resulting note path. Skip what
+    (it writes the note to the project memory store); report the resulting note path. Skip what
     the code, git history, or `Cargo.toml` already makes obvious. If nothing is durable, say
     so and move on. Also sweep every agent verdict for `MEMORY:` lines and run `/remember`
     for each (it dedups) — canonical rule: `references/memory-protocol.md`.

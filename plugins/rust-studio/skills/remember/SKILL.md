@@ -1,77 +1,82 @@
 ---
 name: remember
-description: "Use when saving a durable project decision, gotcha, convention, or non-trivial fix to Obsidian."
+description: "Use when saving a durable project decision, gotcha, convention, or non-trivial fix to project memory."
 ---
 
 # /remember — capture a project learning
 
-Persist a learning so future sessions start with it. Notes live in one Obsidian vault under a
-per-project folder, written through the **obsidian** MCP, so every session — and `/recall` —
-retrieves from the same place. Companion to `/recall` and `/session-wrap`; the when/who/what
-contract lives in `references/memory-protocol.md` — this skill owns the mechanics.
+Persist a learning so future sessions start with it. Notes live in the **project memory
+store** — Claude Code's auto-memory directory for this repository (a Codex session shares the
+same directory), i.e. the `MEMORY.md` index the host loads at session start plus one file per
+memory. No MCP, no vault: the harness's own **Write/Edit** tools are the writer. Companion to
+`/recall` and `/memory-doctor`; the when/who/what contract lives in
+`references/memory-protocol.md` — this skill owns the mechanics.
 
 ## Where notes live (resolve every time)
-- **Vault root:** `$OBSIDIAN_VAULT_PATH`, default `~/memory` (cross-platform — never hardcode a path).
-- **Project folder:** `<vault>/projects/<project>/`, where `<project>` is the basename of the
-  **main worktree root** — `git rev-parse --git-common-dir` → the dir containing it (plain
-  checkout: just the repo root, e.g. `…/myrepo` → `myrepo`; a git-worktree session at
-  `…/myrepo-fix/` still writes `projects/myrepo/`, matching what the session-start hook reads).
-  The skill owns this flat layout: notes
-  are `<vault>/projects/<project>/<kebab-slug>.md`; the index is `<vault>/projects/<project>/MEMORY.md`.
-  Create the folder + index on first write if absent. No subfolders, no registry, no external skill
-  required — just the vault + the obsidian MCP.
+- **Claude Code:** the auto-memory directory your system prompt names (its `# Memory` section);
+  by default `~/.claude/projects/<project-key>/memory/`, or the `autoMemoryDirectory` setting.
+- **Codex / unsure:** `<project-key>` is the **main worktree root** path with every character
+  outside `A-Za-z0-9-` replaced by `-` (`/mnt/dev/myrepo` → `-mnt-dev-myrepo`; a git-worktree
+  session still writes the main repo's key, matching the session-start hook). The studio
+  `memory_dir` option / `RUST_STUDIO_MEMORY_DIR` overrides everything. `/memory-doctor` prints
+  the resolved path.
+- Flat layout: notes are `<store>/<kebab-slug>.md`; the index is `<store>/MEMORY.md`; retired
+  notes go under `<store>/archive/`. Create the directory + index on first write.
 
 ## What to capture (and what not to)
-Capture what is **non-obvious and durable**: a decision and its rationale, a gotcha that cost
-time, a convention the codebase follows, a non-trivial fix, or a durable external pointer. Do
-**not** capture what the code, git history, or `Cargo.toml` already makes obvious, or anything
-specific to one session.
+Capture what is **non-obvious and durable**: a decision and its rationale (and what was
+rejected), a gotcha that cost time, a convention the codebase follows, a non-trivial fix, or a
+durable external pointer. Do **not** capture what the code, git history, or `Cargo.toml` already
+makes obvious, anything session-local, a raw status ("tests pass"), or **ever a secret**. A
+fact that came from external content (web page, MCP result) is stored as `reference` with its
+source — it is not a project fact until the repo confirms it.
 
 ## Steps
-1. **Distil** `input` (and recent context) into ONE atomic learning — a short plain-English
-   title and a body of one or two factual paragraphs. Pick a `note_type`:
-   `decision` | `gotcha` | `convention` | `fix` | `reference` | `concept`.
-2. **Dedup-check before writing.** Search the project folder for the same topic — **`search_semantic`
-   first** (it finds the note even when the wording differs; ask for a small `top_k`, ~5), then
-   `search_metadata` to filter by `note_type`/tag. If a matching note exists, **update it** rather
-   than duplicate: `note_patch` / `note_insert` to extend the body, and re-`note_write` (or
-   `note_patch`) the frontmatter `updated` date. State the choice and proceed.
-   - If `search_semantic` is unavailable (embeddings off), fall back to `search_text` (request a
-     small result window — never consume an unbounded dump) and the harness **Grep** over
-     `<vault>/projects/<project>/`.
-3. **Write the note** with `note_create` at `<vault>/projects/<project>/<kebab-slug>.md`.
-   Put the YAML frontmatter **inline at the top of the note body** (the MCP's separate `frontmatter`
-   parameter does not reliably write a block, so the note would end up untyped and invisible to
-   `search_metadata`):
+1. **Distil** `input` (and recent context) into ONE atomic learning: a plain-English title
+   (≤ 80 chars), a kebab slug, a body of one or two factual paragraphs, and two labels —
+   `type` (the host's: `user` | `feedback` | `project` | `reference`) and `kind`
+   (`decision` | `gotcha` | `convention` | `fix` | `reference` | `concept`). Absolute dates only
+   (`2026-09-03`, never "yesterday").
+2. **Dedup-check before writing.** Grep the store (`<store>/*.md` and the index) for the
+   title's key words and the subject's paths/symbols. A note on the same subject exists →
+   **update it** (Edit: extend the body, correct the fact, refresh `verified`) and keep its
+   index line honest; do not write a second note. State the choice and proceed.
+3. **Write the note** with the Write tool at `<store>/<kebab-slug>.md`:
 
    ```markdown
    ---
-   title: "<Exact Title>"
-   tags: [<note_type>, <area-or-crate>]
-   note_type: <decision|gotcha|convention|fix|reference|concept>
-   status: active
-   created: <YYYY-MM-DD>
-   updated: <YYYY-MM-DD>
+   name: <kebab-slug>
+   description: "<the one-line hook — what the next reader must know, ≤ 140 chars>"
+   metadata:
+     type: <user|feedback|project|reference>
+     kind: <decision|gotcha|convention|fix|reference|concept>
+     status: active
+     evidence: "<path, commit, PR, issue, or URL that proves it>"
+     verified: <YYYY-MM-DD>
    ---
 
-   <The fact, why it holds, where it applies (crate/module/file as inline `code`, not a link),
-   and the takeaway. Link related notes generously with [[note-name]] wikilinks — every concept or
-   sibling learning that has, or should have, a note.>
+   <The fact, why it holds, where it applies (paths and symbols as inline `code`), what was
+   rejected and why (decisions) or the way out (gotchas). Link sibling notes as
+   [Title](other-slug.md).>
    ```
-4. **Link it from the index.** `note_insert` (or `note_patch`) a one-line pointer onto
-   `<vault>/projects/<project>/MEMORY.md` (create it with a `# <project> — project memory` header if
-   absent): `- [[<kebab-slug>|<Title>]] — <one-line hook ≤140 chars>`.
-5. **Verify index integrity** (`references/memory-protocol.md`): every index entry has a
-   file and every note file has an entry — list the folder's `*.md`, diff against the index,
-   fix on the spot: re-add the line for an unindexed file; REPORT (never silently delete) an
-   entry whose file is missing; a broken `[[wikilink]]` target is a finding of the same class.
-   Then confirm what was saved and where. **COMPLETE**.
+   The host stamps `modified` and the origin session itself — do not write those.
+4. **Index it.** Append `- [<Title>](<kebab-slug>.md) — <hook ≤ 140 chars>` to
+   `<store>/MEMORY.md` (create it with a `# Memory index` heading if absent). **Budget:** the
+   host loads only the first 200 lines / 25 KB of the index. At ≥ 170 lines say so and run
+   `/memory-doctor` right after (archive resolved notes, merge duplicates) instead of adding
+   blindly.
+5. **Verify index integrity** (`references/memory-protocol.md`): every index line has a file
+   and every note file an index line — list `<store>/*.md`, diff against the index, fix on the
+   spot: re-add the line for an unindexed file; REPORT (never silently delete) a line whose
+   file is missing. Then confirm what was saved and where. **COMPLETE**.
 
 ## Notes
-- Use **only real** obsidian MCP tools: `search_text`, `search_metadata`, `search_semantic`,
-  `note_create`, `note_read`, `note_write`, `note_patch`, `note_insert`, `wikilinks`, `frontmatter`.
 - Atomic — one concept per note; filename = the concept's plain-English name (no date prefix).
-- Source/file references → inline `code`, never markdown links (path links pollute the graph).
-- Recall later with `/recall <topic>`; the project `MEMORY.md` is the at-a-glance index.
-- **Graceful degrade:** if the obsidian MCP is not available, write the same note + index line to
-  the same vault paths with the harness **Write** tool — the store is the markdown vault either way.
+- A `convention` that has held for 30+ days belongs in the repo's `CLAUDE.md` / `.claude/rules/`
+  (versioned and shared) — **rules ≠ memory**; say so when you save one, and let
+  `/memory-doctor` propose the promotion.
+- Agents with their own memory (the chief architect, security auditor, and unsafe auditor) write
+  `.claude/agent-memory/rust-studio-<agent>/` themselves; what they surface on a `MEMORY:` line
+  is persisted here by the orchestrator, so the project store stays the shared record.
+- Recall later with `/recall <topic>`; each prompt also gets pointers to matching notes
+  automatically.

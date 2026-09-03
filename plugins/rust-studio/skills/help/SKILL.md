@@ -27,7 +27,7 @@ list of every installed skill is generated below it.
 **Quality & review:** `/review` (`--full` = parallel multi-lens) · `/doc-review` (specs/plans/ADRs) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
 **Studio self-check:** `/eval-agents` (run the review agents against planted-bug fixtures)
 **Testing:** `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
-**Memory (cross-session):** `/remember` · `/recall` · `/session-wrap`
+**Memory (cross-session):** `/remember` · `/recall` (verified) · `/memory-doctor` (audit, promote, import) · `/session-wrap`
 **Release:** `/publish` · `/changelog` · `/msrv-check`
 **Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback) · `/merge-conflicts` (resolve a stopped merge or rebase) · `/worktree-sweep` (prune leftover worktrees)
 **Teams (multi-agent presets):** `/team-api` · `/team-async` · `/team-perf` · `/team-release`
@@ -45,6 +45,7 @@ See `references/agent-roster.md` for who-owns-what,
 `references/coordination-protocol.md` for the gates and the autonomy-first
 protocol, and `references/working-preferences.md` for the operating mode
 (decide-don't-interrogate, no quick wins, modern idioms, observability-as-DoD). Path-scoped
-standards live in `references/`; cross-session memory in the Obsidian vault
-via the `obsidian` MCP, under the memory contract in
-`references/memory-protocol.md` (recall-before / remember-after / `MEMORY:` lines).
+standards live in `references/`; cross-session memory in the host's auto-memory
+store (no MCP, no vault), under the memory contract in
+`references/memory-protocol.md` (recall-before / remember-after / verify-before-it-steers /
+`MEMORY:` lines).
