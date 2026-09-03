@@ -29,7 +29,7 @@ list of every installed skill is generated below it.
 **Testing:** `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
 **Memory (cross-session):** `/remember` · `/recall` · `/session-wrap`
 **Release:** `/publish` · `/changelog` · `/msrv-check`
-**Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback) · `/merge-conflicts` (resolve a stopped merge or rebase)
+**Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback) · `/merge-conflicts` (resolve a stopped merge or rebase) · `/worktree-sweep` (prune leftover worktrees)
 **Teams (multi-agent presets):** `/team-api` · `/team-async` · `/team-perf` · `/team-release`
 
 ## Agents

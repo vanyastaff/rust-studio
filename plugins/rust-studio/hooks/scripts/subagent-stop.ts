@@ -25,10 +25,14 @@
 //   the transcript can't be parsed as JSONL we fall back to the old bounded tail
 //   scan, so an unrecognised format never silently regresses to "no verdict".
 //
-// It deliberately does NOT hard-block (no top-level `decision:block`): a false
-// block would wedge a legitimate non-studio / built-in sub-agent (Explore, Plan,
-// general-purpose) that never speaks in studio verdicts. additionalContext is the
-// safe escalation. Never fails the session — on any error it exits 0 silently.
+// Mechanism (Claude Code ≥ 2.1.232): SubagentStop carries the sub-agent's final
+// text as `last_assistant_message`, and the ONLY way to reach the sub-agent is to
+// block its stop once (exit 2, reason on stderr) — `additionalContext` is not
+// honored on this event, so the earlier advisory nag was silently dropped. A block
+// is loud, so it is bounded three ways: only roster agents (gate below), only when
+// the final text was actually read and has no verdict, and only once per stop
+// (`stop_hook_active` breaks the loop). Never fails the session — on any error it
+// exits 0 silently, which ALLOWS the stop.
 //
 // Gating (why we don't nag every sub-agent):
 //   The verdict convention is a STUDIO convention. Built-in / non-studio agents
@@ -38,17 +42,14 @@
 //   verdict-only closing message; THAT becomes the message returned to the parent,
 //   while the actual deliverable is now an earlier message that only survives in the
 //   output file — the parent gets "VERDICT: COMPLETE" instead of the content it asked
-//   for. (The hook docs don't pin down whether additionalContext lands in the
-//   sub-agent or the parent; this fix is correct either way — if it reaches the parent
-//   it just stops a spurious "UNVERIFIED" nag about an agent that correctly returned
-//   data.) So we classify the agent — `agent_type` is its frontmatter `name`, matched
+//   for. So we classify the agent — `agent_type` is its frontmatter `name`, matched
 //   against the `agents/*.md` roster, plus a built-in denylist — and stay silent for
-//   anything that doesn't owe a studio verdict. And when we DO nag, the wording tells
+//   anything that doesn't owe a studio verdict. And when we DO block, the reason tells
 //   the agent to APPEND the verdict to its existing deliverable, never replace it.
 
 import { readFileSync, readdirSync, statSync, openSync, readSync, closeSync } from "node:fs";
 import { join } from "node:path";
-import { readInput, emit, done, watchdog } from "./_lib.ts";
+import { readInput, done, watchdog } from "./_lib.ts";
 
 /** The studio verdict vocabulary. Word-boundary anchored so it still matches when
  *  the token is wrapped in markdown bold (`**COMPLETE**`), prefixed by a label
@@ -281,10 +282,74 @@ export function verdictPresent(raw: string): boolean {
 
 interface Input {
   agent_type?: string;
+  agent_id?: string;
   transcript_path?: string;
   /** The sub-agent's OWN transcript path (Claude Code ≥ 2.0.42). Preferred over
    *  resolving it from the parent session's `subagents/` directory. */
   agent_transcript_path?: string;
+  /** The sub-agent's final message (Claude Code ≥ 2.1.232 delivers it on SubagentStop).
+   *  Authoritative and cheap — read before any transcript. */
+  last_assistant_message?: unknown;
+  /** True when a Stop/SubagentStop hook already blocked this stop once. */
+  stop_hook_active?: boolean;
+}
+
+/** Normalize `last_assistant_message` (string | content-block array | block object). */
+export function asText(m: unknown): string {
+  if (!m) return "";
+  if (typeof m === "string") return m;
+  if (Array.isArray(m)) {
+    return m
+      .map((p: any) => (typeof p === "string" ? p : typeof p?.text === "string" ? p.text : ""))
+      .filter(Boolean)
+      .join("\n");
+  }
+  const o = m as any;
+  if (typeof o.text === "string") return o.text;
+  if (typeof o.content === "string") return o.content;
+  return "";
+}
+
+export type StopDecision = { action: "allow"; why: string } | { action: "block"; reason: string };
+
+/** The block reason handed to the sub-agent. It must APPEND, never replace: the final
+ *  message is what the caller receives, so a verdict-only closing message would displace
+ *  the deliverable (observed live). */
+export function blockReason(agentType?: string): string {
+  const who = agentType ? `\`${agentType}\`` : "this sub-agent";
+  return (
+    `Rust Code Studio: ${who} is about to finish with NO explicit studio verdict. ` +
+    "Re-send your COMPLETE deliverable (the findings / map / plan / diff summary — do " +
+    "not drop or summarize it) and append one verdict line: **COMPLETE / NEEDS WORK / " +
+    "REDO-TO-BAR / BLOCKED** (pre-code: **ACCEPTABLE / RESHAPE NEEDED**), with the " +
+    "evidence behind it (commands run, files touched). If you are BLOCKED, name the " +
+    "blocker. Without the verdict the orchestrator treats your result as UNVERIFIED."
+  );
+}
+
+/** Pure decision. `readTranscript` is the fallback for hosts that pass no final text;
+ *  it returns the raw transcript, or null when nothing attributable could be read. */
+export function decide(
+  data: Input,
+  roster: Set<string> | null,
+  readTranscript: () => string | null,
+): StopDecision {
+  if (!owesStudioVerdict(data.agent_type, roster)) return { action: "allow", why: "not a studio agent" };
+  // A block already happened for this stop (ours or another hook's) — never loop.
+  if (data.stop_hook_active) return { action: "allow", why: "stop_hook_active" };
+
+  const direct = asText(data.last_assistant_message).trim();
+  if (direct) {
+    return hasVerdict(direct)
+      ? { action: "allow", why: "verdict in last_assistant_message" }
+      : { action: "block", reason: blockReason(data.agent_type) };
+  }
+
+  const raw = readTranscript();
+  if (raw == null) return { action: "allow", why: "no final text readable — fail open" };
+  return verdictPresent(raw)
+    ? { action: "allow", why: "verdict in transcript" }
+    : { action: "block", reason: blockReason(data.agent_type) };
 }
 
 if (import.meta.main) {
@@ -292,27 +357,16 @@ if (import.meta.main) {
   const data = await readInput<Input>();
   disarm();
 
-  // Gate: only studio agents owe a verdict. Built-in / non-studio agents (Explore,
-  // general-purpose, claude-code-guide, …) return data — nagging them would displace
-  // their deliverable with a verdict-only closing message. Stay silent for them.
   const agentsDir = join(import.meta.dir, "..", "..", "agents");
-  if (!owesStudioVerdict(data.agent_type, studioRoster(agentsDir))) done();
 
-  const who = data.agent_type ? `\`${data.agent_type}\`` : "the sub-agent";
-
-  // Resolve the sub-agent's own transcript. The `transcript_path` Claude Code passes
-  // to SubagentStop is the PARENT session's JSONL (e.g. `<session>.jsonl`), not the
-  // sub-agent's own transcript. The sub-agent's transcript lives at:
-  //   `<session_dir>/subagents/<agent-id>.jsonl`
-  // We find the most recently modified `.jsonl` in that `subagents/` directory.
-  // AMBIGUOUS: two subagents finishing within a few seconds of each other means
-  // "newest file" may be the OTHER agent's transcript — judging A against B's
-  // output yields a false nag (or a false pass). Fail open in that case.
+  // Resolve the sub-agent's own transcript when the harness passed no final text. The
+  // `transcript_path` on SubagentStop is the PARENT session's JSONL, not the sub-agent's;
+  // the sub-agent's lives at `<session_dir>/subagents/<agent-id>.jsonl`. Two sub-agents
+  // finishing within seconds make "newest file" ambiguous — fail open then, because
+  // judging A against B's output yields a false block.
   const AMBIGUOUS = "__ambiguous__";
   function resolveSubagentTranscript(parentPath: string): string | null {
     try {
-      // Parent path: /path/to/<session-id>.jsonl
-      // Sub-agent dir: /path/to/<session-id>/subagents/
       const subagentsDir = join(parentPath.replace(/\.jsonl$/, ""), "subagents");
       const files = readdirSync(subagentsDir)
         .filter((f) => f.endsWith(".jsonl"))
@@ -320,7 +374,7 @@ if (import.meta.main) {
           const full = join(subagentsDir, f);
           return { path: full, mtime: statSync(full).mtimeMs };
         })
-        .sort((a, b) => b.mtime - a.mtime); // newest first
+        .sort((a, b) => b.mtime - a.mtime);
       if (files.length >= 2 && files[0].mtime - files[1].mtime < 5_000) return AMBIGUOUS;
       return files[0]?.path ?? null;
     } catch {
@@ -328,82 +382,36 @@ if (import.meta.main) {
     }
   }
 
-  // Read the transcript and look for an explicit verdict in the sub-agent's final
-  // message. If we find one we assume the agent closed properly and stay quiet. If
-  // we can read the transcript and there is clearly NO verdict, escalate. If we
-  // cannot read it at all, fall back to the plain reminder.
-  let verdictSeen = false;
-  let couldRead = false;
-  try {
-    // Prefer the sub-agent's OWN transcript when Claude Code provides it directly
-    // (`agent_transcript_path`, ≥ 2.0.42). Older versions only pass the PARENT
-    // session's `transcript_path`, so fall back to resolving the sub-agent's own
-    // transcript from the `subagents/` sibling directory, then the parent itself.
-    const resolved = data.agent_transcript_path
-      ? data.agent_transcript_path
-      : data.transcript_path
-        ? resolveSubagentTranscript(data.transcript_path) ?? data.transcript_path
-        : null;
-    if (resolved === AMBIGUOUS) done(); // parallel finishers — can't attribute; fail open
-    if (resolved) {
-      // Bound the read: the parent-transcript fallback can be a whole session's
-      // JSONL. The verdict lives in the final work block, so the last ~2MB is
-      // ample — reading everything risks eating the hook budget on long sessions.
+  const readTranscript = (): string | null => {
+    try {
+      const resolved = data.agent_transcript_path
+        ? data.agent_transcript_path
+        : data.transcript_path
+          ? resolveSubagentTranscript(data.transcript_path) ?? data.transcript_path
+          : null;
+      if (!resolved || resolved === AMBIGUOUS) return null;
+      // Bound the read: the parent-transcript fallback can be a whole session's JSONL.
+      // The verdict lives in the final work block, so the last ~2MB is ample.
       const TAIL = 2_000_000;
       const size = statSync(resolved).size;
-      let raw: string;
       if (size > TAIL) {
         const fd = openSync(resolved, "r");
         try {
           const buf = Buffer.alloc(TAIL);
           readSync(fd, buf, 0, TAIL, size - TAIL);
-          raw = buf.toString("utf8");
+          return buf.toString("utf8");
         } finally {
           closeSync(fd);
         }
-      } else {
-        raw = readFileSync(resolved, "utf8");
       }
-      couldRead = true;
-      verdictSeen = verdictPresent(raw);
+      return readFileSync(resolved, "utf8");
+    } catch {
+      return null;
     }
-  } catch {
-    /* couldRead stays false -> plain reminder */
-  }
+  };
 
-  if (verdictSeen) {
-    // Emit an explicit empty additionalContext rather than silently exiting.
-    // (Best-effort: contexts are appended per event, so this cannot be relied on
-    // to REPLACE a prior nag — it just avoids adding one and keeps the emit path
-    // uniform. Harmless either way.)
-    emit({
-      hookSpecificOutput: {
-        hookEventName: "SubagentStop",
-        additionalContext: "",
-      },
-    });
-  }
-
-  const lead = couldRead
-    ? `⚠️ Sub-agent finished (${who}) with NO explicit studio verdict detected in its output. `
-    : `Sub-agent finished (${who}). `;
-
-  emit({
-    hookSpecificOutput: {
-      hookEventName: "SubagentStop",
-      additionalContext:
-        lead +
-        "Treat the result as UNVERIFIED until it carries an explicit verdict — " +
-        "**COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED** (or a pre-code " +
-        "**ACCEPTABLE / RESHAPE NEEDED**) — with evidence (commands run, files " +
-        "touched). A `REDO-TO-BAR` means the work compiles but the shape must be " +
-        "reshaped to the maintainer bar before it is accepted; a `BLOCKED` verdict " +
-        "halts its dependents until the blocker clears. **Append the verdict as a " +
-        "trailing line to your EXISTING final deliverable — do NOT write a new " +
-        "verdict-only message, and do NOT move your findings/data/answer to a " +
-        "separate earlier message. The requested content must remain in your final " +
-        "message in full; the verdict supplements it, never replaces it.** If no " +
-        "verdict was given, add one rather than advancing on an unverified result.",
-    },
-  });
+  const d = decide(data, studioRoster(agentsDir), readTranscript);
+  if (d.action === "allow") done();
+  process.stderr.write(d.reason + "\n");
+  process.exit(2);
 }

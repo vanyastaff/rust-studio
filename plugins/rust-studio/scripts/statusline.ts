@@ -173,6 +173,15 @@ export function cacheHitPct(usage: any): number | null {
   return Math.round((read / denom) * 100);
 }
 
+/** Cache hit % for the bar. Claude Code ≥ 2.1.251 reports the session's own
+ *  `prompt_cache.hit_ratio` (all requests, every provider); prefer it and fall back to
+ *  the last response's token split on older versions. */
+export function cacheHitFromSession(session: any): number | null {
+  const ratio = session?.prompt_cache?.hit_ratio;
+  if (typeof ratio === "number" && Number.isFinite(ratio)) return Math.round(ratio * 100);
+  return cacheHitPct(session?.context_window?.current_usage);
+}
+
 // ---------------- segments ----------------
 interface Seg {
   text: string;
@@ -224,7 +233,7 @@ function segs2(session: any, progress: Progress | null): Seg[] {
     const body = withBar ? `${bar(pct)} ${Math.round(pct)}%` : `${Math.round(pct)}%`;
     out.push({ text: `${I.ctx}${body}`, fg: TN.bg, bg: pctRgb(p) });
   }
-  const cache = cacheHitPct(session?.context_window?.current_usage);
+  const cache = cacheHitFromSession(session);
   if (cache != null) out.push({ text: `${I.cache}${cache}%`, fg: TN.cyan, bg: TN.bg2 });
   if (progress?.phase) {
     const pb = progress.step ? phaseBar(progress.step) : "";

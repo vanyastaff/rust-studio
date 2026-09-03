@@ -6,7 +6,11 @@
 - `plugins/rust-studio/docs/` and `rules/` are the **single source of truth** for standards.
 - `plugins/rust-studio/skills/*/references/` is **generated** — never edit it by hand.
 - `.claude-plugin/` + `.agents/plugins/marketplace.json` — Claude and Codex marketplaces;
-  `plugins/rust-studio/.codex-plugin/plugin.json` — the Codex manifest.
+  `plugins/rust-studio/.codex-plugin/plugin.json` — the Codex manifest;
+  `plugins/rust-studio/plugin.json` — the Agent Plugins 1.0 manifest (Cursor, Copilot, Kiro,
+  Codex). All three carry the same `version`.
+- `plugins/rust-studio/evals/` — the `claude plugin eval` suite (one `prompt.md` + `graders/`
+  per case, derived from `benchmarks/fixtures/`). Keep prompts free of absolute paths.
 
 ## The one invariant
 
@@ -28,7 +32,7 @@ Read it before adding or reshaping a skill. The mechanics below are what CI enfo
 - No host-specific APIs in portable skills (`CLAUDE_PLUGIN_ROOT`, `$ARGUMENTS`, task/team
   tool names, …) — describe capabilities instead; `validate-distribution.sh` enforces the
   exact list. `eval-agents` and `progress-bar` are the labeled Claude-only exceptions.
-- `SKILL.md` under 500 lines; all 55 descriptions share a 6,500-character budget (Codex
+- `SKILL.md` under 500 lines; all skill descriptions share a 6,500-character budget (Codex
   bounds the initial skill catalog).
 - A side-effecting skill (publishes, commits, scaffolds, rewrites machine config) is
   user-invoked in **both** harnesses: `disable-model-invocation: true` in the frontmatter
@@ -42,8 +46,10 @@ Read it before adding or reshaping a skill. The mechanics below are what CI enfo
 
 ```sh
 cd plugins/rust-studio
-./scripts/validate-distribution.sh   # manifests, skills, metadata, references
+./scripts/validate-distribution.sh   # manifests, skills, metadata, references, catalog, evals
 bun test                             # hooks and status-line scripts
+claude plugin validate --strict .    # the host's own validator (also run in CI)
+agnix .                              # cross-host agent-config linter (cargo binstall agnix-cli)
 ```
 
 Both run in CI (`.github/workflows/sync-references.yml`); a PR that fails either does not

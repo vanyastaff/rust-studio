@@ -39,6 +39,10 @@ directly. For a remote install, use `npx skills add <owner>/rust-studio`. Safe t
 The 57 host-neutral workflows bundle their standards and deterministic helpers, so they work
 installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
 
+The plugin directory is also an [Agent Plugins 1.0](https://agent-plugins.org) package (root
+`plugin.json` + flat `skills/`), which Codex ≥ 0.147, Cursor, GitHub Copilot CLI ≥ 1.0.74 and
+Kiro load directly — the same skills, one more door.
+
 <details>
 <summary><strong>Install the plugin on Codex or Claude Code, or one skill on one agent</strong></summary>
 
@@ -87,6 +91,7 @@ npx skills add . --skill '*' --agent '*' -y
 | Irreversible-action guard | no | yes | yes |
 | Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
 | LSP, status line, background monitors | no | no | yes |
+| `claude plugin eval` suite (7 cases, no-plugin baseline arm) | no | no | yes |
 
 > [!TIP]
 > **Codex sub-agents take one command.** The plugin ships the agent briefs as Markdown; Codex
@@ -130,9 +135,12 @@ node scripts/generate-openai-metadata.mjs
 ./scripts/validate-distribution.sh     # what CI runs before Bun tests
 ```
 
-Validation catches manifest/marketplace drift, non-standard skill frontmatter, description-budget
-regressions, stale metadata or references, missing inline fallbacks, and vendor-only APIs leaking
-into the 57 portable skills.
+Validation catches manifest/marketplace drift (all three manifests), non-standard skill
+frontmatter, description-budget regressions, stale metadata or references, missing inline
+fallbacks, vendor-only APIs leaking into the 57 portable skills, catalog drift (every skill
+listed in `/help` and the usage guide), and malformed eval cases. CI also runs
+`claude plugin validate --strict` and the [agnix](https://github.com/agent-sh/agnix)
+agent-config linter.
 
 ## Releasing
 
@@ -161,7 +169,9 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .lsp.json                # bundled rust-analyzer LSP
 │       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
+│       ├── plugin.json              # Agent Plugins 1.0 manifest (Codex/Cursor/Copilot/Kiro)
 │       ├── skills/                  # 59 skills + references + OpenAI metadata
+│       ├── evals/                   # claude plugin eval suite (plugin only)
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 20 path-scoped Rust standards
 │       ├── output-styles/           # opt-in terse review style   (plugin only)

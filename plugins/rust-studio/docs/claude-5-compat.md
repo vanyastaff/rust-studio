@@ -50,10 +50,17 @@ sessions. Nothing in the plugin requires Fable 5.
   review recall, on an Opus session nothing changes. (If you drive the studio from a small
   session model and want stronger gates than your session, re-pin these to `opus` in a fork.)
 - **`security-auditor` stays pinned to `opus`.** Its job is hunting vulnerability patterns,
-  injection vectors, and exploitability — exactly the content Fable 5's cyber classifier
-  screens. A mid-audit trip means a refusal in headless runs or an unplanned model swap in
-  interactive ones, either of which silently weakens the RELEASE-GATE; Opus 4.8 runs the
-  same audit deterministically.
+  injection vectors, and exploitability — exactly the content the cyber classifier screens.
+  Since Claude Code 2.1.251 the `opus` alias resolves to **Opus 5**, which also runs with
+  classifiers; the difference from a Fable session is the fallback path. A cyber trip on
+  Opus 5 falls back to Opus 4.8 automatically in an interactive session (the default
+  `switchModelsOnFlag`), so the audit completes on a model that still clears the bar instead
+  of being refused; in headless (`claude -p`) runs a trip still ends the turn with a refusal.
+  Pinning the session model onto the gate would inherit Fable's fallback instead, which is a
+  model switch for the whole session. If you run the RELEASE-GATE headless, pin the agent to
+  a classifier-free model ID for your provider (e.g. `claude-opus-4-8`) in a fork and score
+  its evals there — a refusal that silently weakens the gate is worse than a slightly older
+  reviewer.
 - **Specialists stay `sonnet`, the scout `haiku`** — routine, well-scoped work; the cost
   tiering is intentional and unchanged.
 - **No agent pins `effort`, and that is the decision.** Subagent frontmatter accepts `effort`
@@ -91,8 +98,9 @@ content the classifier reads (it sees CLAUDE.md and git status on the first requ
 subagent prompts are screened too). Two consequences on a Fable 5 session:
 
 - A `security-auditor` eval can hit the classifier instead of returning findings — that is
-  the classifier working, **not** an agent-prompt gap. The agent is pinned to `opus`
-  precisely so this doesn't happen; if you unpin it, score its evals on an Opus session.
+  the classifier working, **not** an agent-prompt gap. The agent is pinned to `opus` so an
+  interactive trip falls back to Opus 4.8 and the eval still scores; a headless eval run
+  should pin a classifier-free model ID (see Model policy above).
 - Opening a session *inside* the fixtures directory can trigger model fallback before any
   prompt is sent. Working from the repo root (fixtures are a subdirectory the first-request
   context doesn't inline) avoids this; `claude --safe-mode` confirms whether local

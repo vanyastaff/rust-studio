@@ -20,6 +20,15 @@ Applies to benchmarks and performance-critical paths.
 - Mark genuinely rare branches with `core::hint::cold_path()` (**1.95**) so the optimizer keeps
   them off the hot path. It is a hint about *frequency*, not a substitute for a measurement —
   the ordering above still holds: profile first.
+- Integer-to-text on a hot path: `n.format_into(&mut NumBuffer::new())` (**1.98**,
+  `core::fmt::NumBuffer`) writes into a stack buffer with no allocation and no `fmt`
+  machinery — the std replacement for reaching for `itoa`. `format!`/`to_string` per item
+  in a loop stays a finding (see the hot-loop rules below).
+- `f32/f64::algebraic_{add,sub,mul,div,rem}` (**1.98**) let the optimizer reassociate and
+  vectorize float reductions (dot products, sums) that plain `+`/`*` keep strictly ordered.
+  Results are then **not bit-reproducible** across builds/targets: use them only where the
+  consumer tolerates that (a metric, a mean), never in anything checksummed, golden-tested,
+  or replayed — and say so in the doc comment.
 
 ## Benchmark fidelity (a bench that shortcuts flips the verdict toward the shortcut)
 - Match production discipline exactly: if production dedups by hash+eq, the bench must not

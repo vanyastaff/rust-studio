@@ -5,7 +5,7 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
 
 ## Versioning model
 
-- **Two host manifests, one release version.** Keep `.claude-plugin/plugin.json` and
+- **Three manifests, one release version.** Keep `.claude-plugin/plugin.json` and
   `.codex-plugin/plugin.json` on the same `version`. Both marketplace entries intentionally omit
   a version; `scripts/validate-distribution.sh` rejects manifest drift.
 - **Explicit semver, bumped every release.** Because `version` is pinned, pushing commits without
@@ -17,7 +17,7 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
 
 ## Release steps
 
-1. **Bump the version** in both host manifests.
+1. **Bump the version** in all three manifests (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and the Agent Plugins `plugin.json` at the plugin root).
 2. **Update the changelog / README** if component counts or behavior changed.
 3. **Regenerate and validate** from the plugin root:
    ```sh

@@ -35,6 +35,8 @@ cargo public-api --diff <baseline>
 
 # Automated semver-break detection
 cargo semver-checks check-release --baseline-rev <baseline>
+# exit 100 = semver violation found; exit 101 = the tool failed (missing baseline, rustdoc
+# error) — a 101 is infra red, not evidence about the API (cargo-semver-checks >= 0.49)
 ```
 
 If either tool is absent, note it clearly and fall back to a manual

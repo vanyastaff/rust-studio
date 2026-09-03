@@ -79,7 +79,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "cargo-publish",
-    pattern: /\bcargo\b[^&|;]*\bpublish\b/,
+    pattern: /\bcargo\s+(?:[+-]\S*(?:\s+[^-+\s]\S*)?\s+)*publish\b/,
     exempt: /--dry-run/,
     reason:
       "Publishing to crates.io is permanent — a version can never be replaced or removed. " +
@@ -87,14 +87,30 @@ export const RULES: Rule[] = [
   },
   {
     id: "cargo-yank",
-    pattern: /\bcargo\b[^&|;]*\byank\b/,
+    pattern: /\bcargo\s+(?:[+-]\S*(?:\s+[^-+\s]\S*)?\s+)*yank\b/,
     reason: "`cargo yank` changes what every downstream build resolves. It is a release decision.",
   },
 ];
 
+/** Programs whose heredoc body is DATA (a script, a file, a document), never shell. */
+const DATA_HEREDOC_CMDS = "python3?|node|bun|deno|ruby|perl|cat|tee|jq|sed|awk|sqlite3|psql";
+
+/** Remove the bodies of data heredocs (`python3 - <<'EOF' … EOF`, `cat <<EOF > f … EOF`)
+ *  so prose inside them cannot match a rule — a doc edit that quotes a guarded command
+ *  is not that command. Shell heredocs (`bash <<EOF`) are kept: their body is commands.
+ *  The terminator must sit alone on a line, as the shell requires; an unterminated
+ *  heredoc is left untouched (nothing hidden). */
+export function stripDataHeredocs(command: string): string {
+  const re = new RegExp(
+    String.raw`(^|[\n;&|])([^\n]*\b(?:${DATA_HEREDOC_CMDS})\b[^\n]*<<-?\s*(['"]?)(\w+)\3[^\n]*)\n[\s\S]*?\n\t*\4[ \t]*(?=\n|$)`,
+    "g",
+  );
+  return command.replace(re, (_m, lead, opener) => `${lead}${opener}`);
+}
+
 /** The rule that blocks `command`, or null when it is allowed. */
 export function check(command: string): Rule | null {
-  const cmd = (command ?? "").replace(/\s+/g, " ");
+  const cmd = stripDataHeredocs(command ?? "").replace(/\s+/g, " ");
   if (!cmd.trim()) return null;
   for (const rule of RULES) {
     if (!rule.pattern.test(cmd)) continue;

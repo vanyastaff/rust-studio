@@ -21,6 +21,11 @@ All commands in this phase are read-only; run them without asking first.
      Cite every finding with its ID (e.g. `RUSTSEC-2024-XXXX`), severity, and affected
      crate. Reference `references/cargo-manifest.md` for workspace-level
      deny configuration expectations.
+   - **Publish-age exposure** — for every version the lockfile resolved in the last
+     `cargo update`, note any that was under three days old at resolution time (crates.io
+     `pubtime`; `cargo info <crate>` shows the release date). Report whether the repo sets
+     `registry.global-min-publish-age` (`references/cargo-manifest.md` §Versions) — a
+     missing cooldown is a finding, not a note.
    - **`cargo audit`** — cross-check advisories against the RustSec database directly;
      use alongside `deny` to catch anything the deny config doesn't cover.
    - **`cargo outdated`** — list every crate with a newer compatible or semver-breaking

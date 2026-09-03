@@ -11,11 +11,11 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
 - **59 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
 - **20 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
-- **10 Claude hook handlers across 7 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
+- **12 Claude hook handlers across 8 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
 - **Configurable + a terse review style** — set a house MSRV, preferred test runner, and default gate intensity per the `/plugin` config dialog; opt into a one-finding-per-line reviewer output style via `/config`
 - **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
-- **Claude 5 (Fable 5) ready** — judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code; `security-auditor` stays pinned to Opus so Fable 5's cyber classifiers can't refuse mid-audit; authoring rules keep prompts refusal-safe and non-prescriptive ([`docs/claude-5-compat.md`](docs/claude-5-compat.md))
+- **Claude 5 (Fable 5) ready** — judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code; `security-auditor` stays pinned to Opus so a cyber-classifier trip falls back to Opus 4.8 inside the audit instead of switching the whole session; authoring rules keep prompts refusal-safe and non-prescriptive ([`docs/claude-5-compat.md`](docs/claude-5-compat.md))
 
 ---
 
@@ -119,8 +119,13 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable
   learning. Blocks the stop a single time and never re-blocks (`stop_hook_active` breaks the loop),
   so it's far gentler than Stop-guard. On by default (`auto_capture`); fails open.
-- **SubagentStop** — reminds the orchestrator to confirm a sub-agent returned an explicit verdict
-  (COMPLETE / NEEDS WORK / BLOCKED) with evidence before advancing past it.
+- **SubagentStop** — a studio sub-agent that finishes without an explicit verdict
+  (COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED) is stopped **once** and told to re-send its
+  deliverable with the verdict and evidence appended; built-in agents and anything not on the
+  roster are never touched, and a second stop always goes through.
+- **PostModelSwitch** — when the session or a sub-agent changes model (a classifier fallback,
+  `/model`), a two-sentence note says which model now judges the inherit-model gates and how to
+  return; inside a sub-agent it asks for the model to be named next to the verdict's evidence.
 - **PreCompact / SessionEnd** — remind you to persist an in-flight plan to a durable file and to
   run `/session-wrap` so learnings are captured to memory.
 - **Stop-guard (opt-in)** — the mechanical teeth for the integrity doctrine: when `stop_guard` is

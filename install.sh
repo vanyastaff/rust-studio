@@ -31,14 +31,14 @@ found=0
 
 if command -v claude >/dev/null 2>&1; then
   found=1
-  echo "Claude Code — full studio (55 skills, 33 sub-agents, hooks, status line)"
+  echo "Claude Code — full studio (59 skills, 33 sub-agents, hooks, status line)"
   run claude plugin marketplace add "$src"
   run claude plugin install rust-studio@rust-studio
 fi
 
 if command -v codex >/dev/null 2>&1; then
   found=1
-  echo "Codex — native plugin (55 portable skills + lifecycle hooks)"
+  echo "Codex — native plugin (57 portable skills + lifecycle hooks)"
   run codex plugin marketplace add "$src"
   run codex plugin add rust-studio@rust-studio
   # Codex plugins can't bundle agent definitions, so generate the 33 studio

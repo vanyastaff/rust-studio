@@ -16,18 +16,19 @@ Run the studio's review agents against the planted-defect fixtures in
 Protocol: `references/delegation.md` §8 (team execution).
 
 ## Orchestration
-When agent teams are available (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`), run the fixtures as a
-real team (the session already has one implicit shared team — no `TeamCreate`): create one
-`TaskCreate` task per fixture (the fixtures are independent and read-only — no `addBlockedBy`
-between them) and spawn each mapped agent as a
-teammate so they run concurrently, reporting findings via `SendMessage`; the lead scores. The
-lighter alternative for these read-only evaluations is to spawn each as a **background
-subagent** (`background: true`) without forming a team. Otherwise fall back to
-single-orchestrator delegation: spawn the agents sequentially, one per fixture. Teammates
-don't inherit this context (pass the fixture's `input.rs` in the spawn prompt — never the
-ground truth) and don't get bundled MCP (they rely on the user's ambient serena/exa). Shut
-teammates down at the end with `SendMessage {type:"shutdown_request"}` — there is no team to
-delete; idle teammates auto-hide.
+Spawn each fixture's mapped agent as its own sub-agent. The fixtures are independent and
+read-only, so run them concurrently — Claude Code ≥ 2.1.232 runs spawned sub-agents in the
+background by default and notifies you as each finishes; there is nothing to opt into. When
+agent teams are enabled, the same fan-out can run as teammates over the shared task list
+(one `TaskCreate` task per fixture, findings collected via `SendMessage`, the lead scores;
+shut teammates down at the end with `SendMessage {type:"shutdown_request"}`). Sub-agents do
+not inherit this context — pass the fixture's source in the spawn prompt, never the ground
+truth — and do not get bundled MCP (they rely on the user's ambient serena/exa).
+
+The same fixtures also ship as a **`claude plugin eval` suite** under `<plugin-root>/evals/`
+(one prompt + graders per case, scored against a no-plugin baseline arm). When your account
+has plugin eval enabled, `claude plugin eval <plugin-root> --no-publish` scores them outside
+any session; this skill is the in-session path and needs no enablement.
 
 ## Fixture layout
 Each fixture lives at `benchmarks/fixtures/<agent>/<case>/` and always carries:
@@ -71,8 +72,8 @@ Agent folder → agent mapping:
    every fixture has one, where `input.rs` exists only for single-file cases. Filter by `input`
    if a case name or agent folder was given; otherwise run all. List what you'll evaluate before
    proceeding.
-2. For each fixture, spawn the mapped agent (one task per fixture, or a background subagent —
-   see Orchestration) on **only** the source — `input.rs`, or the `src/` tree for a multi-file
+2. For each fixture, spawn the mapped agent (one sub-agent per fixture — see Orchestration)
+   on **only** the source — `input.rs`, or the `src/` tree for a multi-file
    fixture, using the audit prompt its ground truth names. Never pass the ground truth itself. Ask it for
    ITS native output, not a custom format (so its own verification ritual fires). For
    **first-pass bar** fixtures, ask for the reject verdict in the agent's own vocabulary:

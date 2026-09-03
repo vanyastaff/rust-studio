@@ -14,7 +14,7 @@ Five moving parts:
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (54) — slash commands. They are *workflows*: a skill orchestrates the right agents
+- **Skills** (59) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
 - **Rules** (20) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
@@ -22,10 +22,11 @@ Five moving parts:
   demand, so it has the right bar in front of it without bloating the window (`core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `ffi.md` on C-ABI boundaries,
   `macros.md` in proc/declarative macros, …).
-- **Hooks** (7) — deterministic automation: stack briefing **+ memory recall** at session start,
-  path-scoped rule pointers after edits, a lint nudge **and a memory-capture nudge** when you stop,
-  and session-lifecycle aids (a `/recall` nudge on each prompt, a sub-agent verdict check, and
-  compaction / session-end reminders).
+- **Hooks** (8 events) — deterministic automation: stack briefing **+ memory recall** at session
+  start, path-scoped rule pointers after edits, a lint nudge **and a memory-capture nudge** when
+  you stop, a sub-agent verdict check that blocks a verdict-less finish once, a note when the
+  model switches (a classifier fallback or `/model`) so you know which model now judges, and
+  session-lifecycle aids (a `/recall` nudge on each prompt, compaction / session-end reminders).
 - **Gates** — named checkpoints a lead clears before work proceeds: `ARCH / API / ASYNC / CLI /
   PERF / SAFETY / QA / RELEASE / BUILD`. Run at **lean** (one crate), **full** (public API,
   unsafe, releases), or **solo** (prototype) intensity.
@@ -116,7 +117,7 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 
 ---
 
-## The skills (55)
+## The skills (59)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
@@ -134,6 +135,12 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 - **`/adr`** — write and file one architecture decision record.
 - **`/model-domain`** — encode a domain in the type system (newtype, type-state, make illegal
   states unrepresentable).
+- **`/grill-me`** — interview you one focused question at a time when requirements or a
+  consequential decision need your input.
+- **`/prototype`** — throwaway code that settles one design question (an API shape, a lifetime
+  doubt); captured, then deleted.
+- **`/research`** — settle a Rust question against primary sources (crate source, docs.rs, the
+  Reference, an RFC), cited.
 
 ### Build
 - **`/dev-task`** — implement one unit end-to-end: scout → plan → approve → build → review.
@@ -141,6 +148,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 - **`/add-dep`** — vet a crate (RUSTSEC, license, MSRV, features) before adding it.
 - **`/refactor`** — behaviour-preserving cleanup driven by clippy + standards.
 - **`/fix-build`** — get a failing `cargo build`/`check` green (drives `rust-build-resolver`).
+- **`/ci-gate`** — audit or install the anti-hang / anti-silencing CI gate (clippy, nextest
+  timeouts, lefthook).
 
 ### Spec-driven (big / cross-crate work, persisted in `.rust-studio/specs/`)
 - **`/spec`** — explore → weigh approaches → an approved spec doc.
@@ -162,6 +171,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 - **`/api-review`** — semver hazards + required version bump on a public-API change.
 - **`/tech-debt`** — scan + prioritize debt (TODO/FIXME, `#[allow]`, `unwrap` in libs, …).
 - **`/scope-check`** — compare a diff/plan against acceptance criteria; flag creep.
+- **`/doc-review`** — review a requirements, spec, plan, ADR, or design document for coherence,
+  feasibility, scope, and security.
 
 ### Testing
 - **`/test-plan`** — a test plan for a feature (types, cases, edge cases, property laws).
@@ -186,6 +197,12 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 ### Ship & release
 - **`/commit`** — Conventional Commit for the current changes (fmt/clippy first; no hook bypass).
 - **`/pr`** — open a PR with a value-first description via `gh`.
+- **`/resolve-pr`** — work through review threads and CI failures, or watch a PR until it is
+  merge-ready.
+- **`/merge-conflicts`** — resolve a stopped merge or rebase hunk by hunk, then prove the tree
+  still builds.
+- **`/worktree-sweep`** — inspect and prune leftover git worktrees (agent-isolation leftovers
+  included); removal only on explicit approval.
 - **`/changelog`** — generate/update CHANGELOG.md (Keep a Changelog).
 - **`/msrv-check`** — verify the real MSRV vs the declared `rust-version`.
 - **`/publish`** — RELEASE-GATE checklist → dry-run → hands you the exact publish command
@@ -205,7 +222,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 
 ### Studio self-check
 - **`/eval-agents`** — run the review agents against planted-defect fixtures and score recall
-  (quality-assures the plugin itself).
+  (quality-assures the plugin itself). The same fixtures ship as a `claude plugin eval` suite
+  (`evals/`) with a no-plugin baseline arm for out-of-session scoring.
 
 ---
 

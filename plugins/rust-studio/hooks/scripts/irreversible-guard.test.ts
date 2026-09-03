@@ -8,7 +8,7 @@
 // nothing. Both directions are locked below.
 
 import { test, expect, describe } from "bun:test";
-import { check, shellCommand, RULES, type Input } from "./irreversible-guard.ts";
+import { check, shellCommand, stripDataHeredocs, RULES, type Input } from "./irreversible-guard.ts";
 
 describe("blocks irreversible work destruction", () => {
   const blocked: [string, string][] = [
@@ -139,4 +139,47 @@ describe("ignores tool calls that carry no shell command", () => {
       expect(shellCommand(payload)).toBeNull();
     });
   }
+});
+
+describe("prose and data heredocs are not commands", () => {
+  const danger = "git reset " + "--hard"; // assembled: the literal would trip the guard on this file's own edits
+  const publish = "cargo " + "publish";
+
+  test("a python heredoc that documents the guarded commands is allowed", () => {
+    const cmd = [
+      "python3 - <<'PYEOF'",
+      "s = s.replace('x', '- Run `cargo deny check`.')",
+      "s += '- Publish-age cooldown: `.cargo/config.toml` sets `registry.global-min-publish-age`.'",
+      "s += '- `" + danger + "` discards work; `" + publish + "` is permanent.'",
+      "PYEOF",
+      "echo done",
+    ].join("\n");
+    expect(stripDataHeredocs(cmd)).not.toContain("--hard");
+    expect(check(cmd)).toBeNull();
+  });
+
+  test("a heredoc fed to a SHELL keeps its body and is still blocked", () => {
+    const cmd = "bash <<'EOF'\ncd /repo\n" + danger + " origin/main\nEOF";
+    expect(check(cmd)?.id).toBe("reset-hard");
+  });
+
+  test("an unterminated data heredoc is left intact (nothing stripped, nothing hidden)", () => {
+    const cmd = "cat <<EOF > notes.md\n" + danger + " is dangerous";
+    expect(stripDataHeredocs(cmd)).toBe(cmd);
+    expect(check(cmd)?.id).toBe("reset-hard");
+  });
+
+  test("cargo verbs only count as cargo's immediate subcommand", () => {
+    expect(check("cargo +nightly publish")?.id).toBe("cargo-publish");
+    expect(check(publish + " -p my-crate")?.id).toBe("cargo-publish");
+    expect(check("cargo +stable yank --version 1.0.0")?.id).toBe("cargo-yank");
+    // global options between cargo and the verb are still the verb
+    expect(check("cargo --locked " + "publish")?.id).toBe("cargo-publish");
+    expect(check("cargo -Z unstable-options " + "publish")?.id).toBe("cargo-publish");
+    expect(check("cargo --config net.offline=true " + "publish --dry-run")).toBeNull();
+    // prose / file names / markdown that mention the verbs without invoking them
+    expect(check("grep -n 'publish-age' rules/cargo-manifest.md")).toBeNull();
+    expect(check("echo 'the cargo team will publish notes'")).toBeNull();
+    expect(check("cargo run -- --help | grep publish")).toBeNull();
+  });
 });
