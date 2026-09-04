@@ -169,7 +169,37 @@ the later one is spawned only after the earlier one's result has landed, not lau
 it on the promise that it will "wait its turn." This is not hypothetical — an orchestrator
 building this plugin fanned out three tickets that all touched `scripts/validate-distribution.sh`
 and caught the collision only because it happened to notice; nothing in the doctrine forced the
-check.
+check. It happened again on the same plugin, and that time nothing noticed at all: two units in
+one wave both edited `skills/review/SKILL.md` — one appending a bullet, one rewriting a sentence
+four lines below it — and both survived only because they targeted non-adjacent text and landed
+at different moments. Surviving by timing is not the rule holding. It is the rule being broken
+without a bill arriving, which is how a rule quietly stops being enforced.
+
+**Derived files are not a write zone.** A write zone covers *authored* files — the ones that are
+the source of truth. `skills/*/references/**` and `skills/*/agents/openai.yaml` are neither: they
+are outputs of `sync-references.sh` and `generate-openai-metadata.mjs` over `docs/`, `rules/`, and
+SKILL.md frontmatter. Because each output is a pure function of the authored sources, two units
+whose *authored* zones are disjoint may both regenerate and still converge — the second run does
+not clobber the first's work, it recomputes both from the tree as it now stands. Serializing them
+on that overlap would buy nothing. The exclusivity rule still binds on the sources underneath:
+two units editing the same `docs/*.md` is an ordinary collision, and this convergence property
+does not rescue it.
+
+Two teeth on that exemption, both earned here rather than reasoned out:
+
+- **Edit-and-regenerate is one unit of work, not two.** The window between a source edit and the
+  generator run is a genuinely inconsistent tree — the skill cites a section its bundled copy does
+  not yet contain. A gate that runs in that window fails *correctly*. This is not hypothetical: it
+  fired while three units were in flight on this plugin, the §-anchor gate reported a citation
+  resolving to nothing, and a re-run minutes later could not reproduce it. The reflex on an
+  irreproducible gate failure is to call it flaky and move on; the right reading was that a unit
+  had edited a source and not yet run the generator. Run the generator before reporting, not once
+  at the end of the wave.
+- **Never hand-edit a derived file.** It is an authored write wearing a disguise, and the next
+  regeneration discards it without a word. Nothing inside the file admits this — the bundled
+  copies carry no "generated, do not edit" banner — so the tell is the path (`references/`,
+  `agents/openai.yaml`), and `sync-references.sh --check` is what proves a copy is stale rather
+  than deliberately different.
 
 Read-only work is exempt, and that exemption is the whole asymmetry the model rests on: a lens
 that only reads never contends for a write zone, which is why review fan-out (`rust-reviewer`,

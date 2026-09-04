@@ -69,6 +69,18 @@ out of a PR outlives the session that found it.
   two agents, an ASYNC-GATE, and `/team-async`. Published as a map, not a backlog: the
   file's own "a fixture is born from a defect that escaped, never from imagination" rule
   stands. The re-derivation commands are recorded next to the numbers.
+- **Write-zone exclusivity: derived files are exempt, authored files are not**
+  (`docs/delegation.md` §8). The rule as shipped said two units in a wave never declare the same
+  write zone, which forced pointless serialization on `skills/*/references/**` and
+  `skills/*/agents/openai.yaml` — outputs of a deterministic generator over disjoint sources,
+  which converge rather than clobber. Now stated with two teeth: edit-and-regenerate is one unit
+  of work (the window between a source edit and the generator run is a genuinely inconsistent
+  tree, and a gate failing there is right, not flaky — the §-anchor gate did exactly this during
+  a three-unit wave and the failure vanished on re-run), and a hand-edit to a derived file is an
+  authored write in disguise that the next regeneration discards without a word. A second
+  real collision is recorded alongside the first: two units both edited `skills/review/SKILL.md`,
+  and both edits survived only because they hit non-adjacent text at different moments —
+  the rule broken without a bill arriving.
 - **Reshape-over-accretion, as mechanism rather than exhortation.** The studio could already
   name this failure in prose and had nothing that checked for it: the task delivered whole and
   correct, landed as one more special case on a shape that was right for the old requirements.
