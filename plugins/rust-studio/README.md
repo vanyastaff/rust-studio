@@ -8,17 +8,89 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 > [Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios),
 > rebuilt from the ground up for Rust and packaged for Claude Code and Codex.
 
-- **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **62 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, edition & major-dependency migration, CI-gate setup, cross-session memory, and a self-check harness (quality **and** runtime health)
-- **20 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
-- **12 Claude hook handlers across 8 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
-- **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
-- **Configurable + a terse review style** — set a house MSRV, preferred test runner, and default gate intensity per the `/plugin` config dialog; opt into a one-finding-per-line reviewer output style via `/config`
-- **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
-- **Untrusted-context standard** — a Rust session reads a lot of text nobody on the project wrote (crate READMEs and `//!` docs, `docs.rs`, a dependency's `build.rs` output, PR threads, CI logs), and it all lands in the window looking like the agent's own reasoning. A doctrine ([`docs/untrusted-context.md`](docs/untrusted-context.md)) + a provenance pointer from the PreToolUse hook + `🚩 UNTRUSTED` findings in `rust-reviewer` / `security-auditor` / `dependency-manager` make third-party text **material to report on, never to act on**: a crate whose docs tell tooling to add a dep, ignore an advisory, or silence a lint is a `/add-dep` **block**, and Trojan-Source bidi codepoints in dependency source are a finding. Kept honest by the `security/untrusted-context` fixture, which scores whether the studio reports the planted instructions *and* still finds the two real defects they distract from
-- **Claude 5 (Fable 5) ready** — judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code; `security-auditor` stays pinned to Opus so a cyber-classifier trip falls back to Opus 4.8 inside the audit instead of switching the whole session; authoring rules keep prompts refusal-safe and non-prescriptive ([`docs/claude-5-compat.md`](docs/claude-5-compat.md))
+## In the box
 
----
+- **62 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping,
+  build-fixing, edition & major-dependency migration, CI gates, cross-session memory.
+- **33 agents** — 2 directors → 7 leads → 20 specialists (including an adversarial
+  `harsh-critic`) + a scout / builder / resolver / reviewer execution group.
+- **20 path-scoped rule sets** — the right Rust standard surfaces the moment you open a matching
+  file; the agent reads the full rule on demand, so the window stays lean.
+- **12 Claude hook handlers across 8 events** — stack detection and memory recall, rule pointers, lint
+  and lifecycle nudges, verdict checks, and an opt-in stop-guard.
+- **Bundled rust-analyzer LSP** — diagnostics and go-to-definition as you edit, so `rust-scout`
+  resolves symbols instead of scanning files. Just put `rust-analyzer` on PATH.
+- **An integrity layer that rejects a gamed green** — see
+  [What makes it different](#what-makes-it-different).
+
+## Quick start
+
+```text
+/start            # detect the stack and route you
+/dev-task <task>  # implement one unit of work: scout → plan → approve → build → review
+/review           # audit your current diff against the gates
+/team-api <api>   # design & ship a public API with the API team
+```
+
+## Before you start
+
+Only one thing is genuinely required: a **Rust toolchain** via [rustup](https://rustup.rs), with
+the `rustfmt` and `clippy` components. Agents run `cargo check / clippy / test / fmt` on almost
+every task.
+
+Two more turn features on rather than gate them: **`bun`** on PATH runs the hooks (rule
+injection, memory recall, nudges) — without it they no-op and the studio still works — and
+**`rust-analyzer`** on PATH activates the bundled LSP. The quality loop also reaches constantly
+for three cargo tools:
+
+```sh
+cargo install cargo-nextest cargo-deny cargo-audit
+```
+
+Everything else is on demand: the skill that needs a tool names it and tells you how to install
+it. Full table in [Requirements & tooling](#requirements--tooling); installing the plugin itself
+is in [`../../INSTALL.md`](../../INSTALL.md).
+
+## Skills (slash commands)
+
+> Plugin commands are namespaced: `/rust-studio:<name>`.
+
+- **Onboarding** — `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt` · `/studio-doctor` (is the studio actually live here?)
+- **Design** — `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
+- **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/migrate` (edition / major-dependency upgrade, with the semantic review `cargo fix` can't do) · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
+- **Spec-driven** — `/spec` · `/spec-tasks` · `/spec-verify` (persisted in `.rust-studio/specs/`)
+- **TDD & verify** — `/tdd` · `/verify-loop`
+- **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
+- **Testing** — `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
+- **Memory** — `/remember` · `/recall` · `/memory-doctor` · `/session-wrap` (cross-session, in the host's auto-memory store — no MCP, no vault)
+- **Ship** — `/commit` · `/pr`
+- **Release** — `/publish` · `/changelog` · `/msrv-check`
+- **Teams** — `/team-api` · `/team-async` · `/team-perf` · `/team-release`
+
+## If your project is a workspace
+
+Most Rust projects become one, and two defaults stop fitting.
+
+**Context.** A single root context file either bloats with every crate's conventions or stays too
+generic. `/adopt` proposes per-crate files — showing which crates earned one and which it dropped,
+so you strike individual crates rather than accept a block of thirty. Content goes in `AGENTS.md`
+with a two-line `CLAUDE.md` beside it holding only `@AGENTS.md`: Claude Code reads `CLAUDE.md` and
+not `AGENTS.md`, and only `CLAUDE.md` loads on demand as it walks subdirectories, while Codex,
+Cursor and Copilot read `AGENTS.md`. A pointer holds no facts, so the two cannot drift.
+
+**Commands.** A per-crate test command can lie to you:
+
+```sh
+cargo test -p my-crate                                # can be a FALSE GREEN
+cargo nextest run --workspace -E 'package(my-crate)'  # what to trust
+```
+
+Features unify across the graph cargo actually builds, so a crate whose sibling enables a feature
+on a shared dependency passes alone and fails under `--workspace` — and `--all-features` does not
+close it, because it applies only to the selected package. What scopes safely and what lies, with
+reproductions, is in [`docs/large-workspace.md`](docs/large-workspace.md), along with the
+focus-scoping setup for large workspaces (`claudeMdExcludes`, `target/` read-denies, sparse
+worktrees).
 
 ## The idea
 
@@ -63,22 +135,6 @@ cross-cutting adversarial `harsh-critic` (attacks designs/specs — challenges t
 `ARCH-GATE` · `API-GATE` · `ASYNC-GATE` · `CLI-GATE` · `PERF-GATE` · `SAFETY-GATE` ·
 `QA-GATE` · `RELEASE-GATE` · `BUILD-GATE`. Run them at **full**, **lean**, or **solo**
 intensity to match the work.
-
-## Skills (slash commands)
-
-> Plugin commands are namespaced: `/rust-studio:<name>`.
-
-- **Onboarding** — `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt` · `/studio-doctor` (is the studio actually live here?)
-- **Design** — `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
-- **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/migrate` (edition / major-dependency upgrade, with the semantic review `cargo fix` can't do) · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
-- **Spec-driven** — `/spec` · `/spec-tasks` · `/spec-verify` (persisted in `.rust-studio/specs/`)
-- **TDD & verify** — `/tdd` · `/verify-loop`
-- **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
-- **Testing** — `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
-- **Memory** — `/remember` · `/recall` · `/memory-doctor` · `/session-wrap` (cross-session, in the host's auto-memory store — no MCP, no vault)
-- **Ship** — `/commit` · `/pr`
-- **Release** — `/publish` · `/changelog` · `/msrv-check`
-- **Teams** — `/team-api` · `/team-async` · `/team-perf` · `/team-release`
 
 ## Path-scoped standards
 
@@ -148,68 +204,6 @@ studio still works, you just lose auto-injection and recall. Each hook reads std
 hard timeout with a watchdog, so it can never freeze the session (even mid-subagent). See
 [`../../INSTALL.md`](../../INSTALL.md).
 
-## Script safety gate
-
-A January-2026 scan of 31,132 marketplace skills found 26.1% carried at least one
-vulnerability, and skills shipping executable scripts were **2.12x** more likely to have one —
-and no publisher-trust mechanism exists for skills. This plugin ships hook scripts, build
-scripts, and scripts bundled into skills, and to an installer it looks like every other plugin
-in that scan. `scripts/validate-distribution.sh` — the same build-time check that gates every
-release — includes a gate that fails if any shipped script matches one of four literal
-patterns:
-
-1. **Network from a hook.** `fetch(`, an `http(s)://` URL, `curl`, or `wget` anywhere in
-   `hooks/scripts/*.ts` (excluding tests). Hooks run on every matching tool call with no prompt
-   in the loop, so one that could reach the network could exfiltrate anything it reads.
-2. **Dynamic code execution.** `eval(` or `new Function` anywhere in a hook, build, or
-   skill-bundled script — the one primitive no static check can bound.
-3. **`curl … | sh`.** Piping a download straight into an interpreter, anywhere except
-   `scripts/env-setup.sh` — the single declared exception, a user-invoked installer that
-   bootstraps rustup this way on purpose.
-4. **Process spawning outside the shared helper.** Every hook is meant to spawn subprocesses
-   through `hooks/scripts/_lib.ts`'s `run()`, which always sets a timeout so a stuck child can't
-   hang the session. A raw spawn call outside it must still carry its own timeout, and if it
-   builds the command by string interpolation it must additionally be an explicitly reviewed,
-   named exception in the gate itself — today that's two calls in `memory-store.ts`, both
-   passing only hardcoded literal `git` subcommands, never external or session-derived input.
-
-**What this proves:** these four literal patterns are absent from shipped scripts today, and a
-change that reintroduces one fails CI immediately, naming the file and line — so a property
-that already holds can't quietly stop holding. **What this does not prove:** that any script is
-free of other bugs, that no other means of reaching the network or spawning a process exists,
-or that a skill's *prose* can't talk an agent into running something unsafe at your direction —
-that last risk is what the untrusted-context doctrine
-([`docs/untrusted-context.md`](docs/untrusted-context.md)) and `security-auditor` cover, not
-this gate. For the product-wide security posture and how to report a vulnerability, see
-[`../../SECURITY.md`](../../SECURITY.md).
-
-## Status line (live progress)
-
-- **Per-sub-agent rows (automatic).** The plugin ships a `subagentStatusLine`, so each sub-agent
-  in the agent panel below the prompt shows `● <type>: <description> · <elapsed> · <tokens>`
-  (✓ done, ✗ error) instead of a bare name + token count. Renders in the Desktop app too. No setup.
-- **Main bar (on by default).** Installed automatically into your `~/.claude/settings.json` on the
-  first session (the `statusline` config; it never clobbers an existing `statusLine` and backs the
-  file up). A plugin can't ship a top-level `statusLine`, hence the one-time auto-install. A two-line
-  **Tokyo Night Powerline** bar with colored arrow segments and Nerd Font icons:
-
-  ```
-  line 1:  🦀 rust-studio · <project> · <branch ●dirty ↑↓> · <model> · think:<effort> · lsp ✓
-  line 2:  <ctx %> · <cache %> · ▸ <phase> <bar> n/total · ✓ <tasks> · 5h/7d · <dur> · +A −R
-  ```
-
-  Truecolor Tokyo Night theme, fast cached git, and smart-hiding of empty segments; the context
-  segment is colored by threshold; `▸ <phase>` / `✓ <tasks>` track the active orchestration via
-  `.rust-studio/progress.json`. Icons are **emoji by default** (no special font needed); the
-  powerline arrows + git branch glyph need a powerline-patched font. Env:
-  `RUST_STUDIO_STATUSLINE_NERDFONT=1` (sleek FontAwesome icons, needs a Nerd Font) or `=0` (text
-  labels) · `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot + rounded caps) ·
-  `RUST_STUDIO_STATUSLINE_ASCII=1` · `NO_COLOR`.
-  Manage with **`/progress-bar`**: `nerd` (FontAwesome — needs a Nerd Font) · `emoji` (default) ·
-  `symbols` (plain Unicode ⌂ ◔ ↻ ⏱ — no font needed) · `text` (no icons) · `off` (remove) · or no
-  arg to refresh after a plugin update.
-  Set the `statusline` config off to skip the auto-install entirely.
-
 ## Configuration
 
 The plugin prompts for these when you enable it (and you can change them anytime via `/plugin`
@@ -263,14 +257,73 @@ Fine-tune via env: `STOP_GUARD_MIN_EVIDENCE` (default 2), `STOP_GUARD_MAX_HITS`,
 select it under `/config` → Output style. It keeps Claude's normal engineering behavior and only
 changes how reviews are *reported*.
 
-## Quick start
+## Status line (live progress)
 
-```text
-/start            # detect the stack and route you
-/dev-task <task>  # implement one unit of work: scout → plan → approve → build → review
-/review           # audit your current diff against the gates
-/team-api <api>   # design & ship a public API with the API team
-```
+- **Per-sub-agent rows (automatic).** The plugin ships a `subagentStatusLine`, so each sub-agent
+  in the agent panel below the prompt shows `● <type>: <description> · <elapsed> · <tokens>`
+  (✓ done, ✗ error) instead of a bare name + token count. Renders in the Desktop app too. No setup.
+- **Main bar (on by default).** Installed automatically into your `~/.claude/settings.json` on the
+  first session (the `statusline` config; it never clobbers an existing `statusLine` and backs the
+  file up). A plugin can't ship a top-level `statusLine`, hence the one-time auto-install. A two-line
+  **Tokyo Night Powerline** bar with colored arrow segments and Nerd Font icons:
+
+  ```
+  line 1:  🦀 rust-studio · <project> · <branch ●dirty ↑↓> · <model> · think:<effort> · lsp ✓
+  line 2:  <ctx %> · <cache %> · ▸ <phase> <bar> n/total · ✓ <tasks> · 5h/7d · <dur> · +A −R
+  ```
+
+  Truecolor Tokyo Night theme, fast cached git, and smart-hiding of empty segments; the context
+  segment is colored by threshold; `▸ <phase>` / `✓ <tasks>` track the active orchestration via
+  `.rust-studio/progress.json`. Icons are **emoji by default** (no special font needed); the
+  powerline arrows + git branch glyph need a powerline-patched font. Env:
+  `RUST_STUDIO_STATUSLINE_NERDFONT=1` (sleek FontAwesome icons, needs a Nerd Font) or `=0` (text
+  labels) · `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot + rounded caps) ·
+  `RUST_STUDIO_STATUSLINE_ASCII=1` · `NO_COLOR`.
+  Manage with **`/progress-bar`**: `nerd` (FontAwesome — needs a Nerd Font) · `emoji` (default) ·
+  `symbols` (plain Unicode ⌂ ◔ ↻ ⏱ — no font needed) · `text` (no icons) · `off` (remove) · or no
+  arg to refresh after a plugin update.
+  Set the `statusline` config off to skip the auto-install entirely.
+
+## What makes it different
+
+- **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
+- **Untrusted-context standard** — a Rust session reads a lot of text nobody on the project wrote (crate READMEs and `//!` docs, `docs.rs`, a dependency's `build.rs` output, PR threads, CI logs), and it all lands in the window looking like the agent's own reasoning. A doctrine ([`docs/untrusted-context.md`](docs/untrusted-context.md)) + a provenance pointer from the PreToolUse hook + `🚩 UNTRUSTED` findings in `rust-reviewer` / `security-auditor` / `dependency-manager` make third-party text **material to report on, never to act on**: a crate whose docs tell tooling to add a dep, ignore an advisory, or silence a lint is a `/add-dep` **block**, and Trojan-Source bidi codepoints in dependency source are a finding. Kept honest by the `security/untrusted-context` fixture, which scores whether the studio reports the planted instructions *and* still finds the two real defects they distract from
+- **Claude 5 (Fable 5) ready** — judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code; `security-auditor` stays pinned to Opus so a cyber-classifier trip falls back to Opus 4.8 inside the audit instead of switching the whole session; authoring rules keep prompts refusal-safe and non-prescriptive ([`docs/claude-5-compat.md`](docs/claude-5-compat.md))
+
+### Script safety gate
+
+A January-2026 scan of 31,132 marketplace skills found 26.1% carried at least one
+vulnerability, and skills shipping executable scripts were **2.12x** more likely to have one —
+and no publisher-trust mechanism exists for skills. This plugin ships hook scripts, build
+scripts, and scripts bundled into skills, and to an installer it looks like every other plugin
+in that scan. `scripts/validate-distribution.sh` — the same build-time check that gates every
+release — includes a gate that fails if any shipped script matches one of four literal
+patterns:
+
+1. **Network from a hook.** `fetch(`, an `http(s)://` URL, `curl`, or `wget` anywhere in
+   `hooks/scripts/*.ts` (excluding tests). Hooks run on every matching tool call with no prompt
+   in the loop, so one that could reach the network could exfiltrate anything it reads.
+2. **Dynamic code execution.** `eval(` or `new Function` anywhere in a hook, build, or
+   skill-bundled script — the one primitive no static check can bound.
+3. **`curl … | sh`.** Piping a download straight into an interpreter, anywhere except
+   `scripts/env-setup.sh` — the single declared exception, a user-invoked installer that
+   bootstraps rustup this way on purpose.
+4. **Process spawning outside the shared helper.** Every hook is meant to spawn subprocesses
+   through `hooks/scripts/_lib.ts`'s `run()`, which always sets a timeout so a stuck child can't
+   hang the session. A raw spawn call outside it must still carry its own timeout, and if it
+   builds the command by string interpolation it must additionally be an explicitly reviewed,
+   named exception in the gate itself — today that's two calls in `memory-store.ts`, both
+   passing only hardcoded literal `git` subcommands, never external or session-derived input.
+
+**What this proves:** these four literal patterns are absent from shipped scripts today, and a
+change that reintroduces one fails CI immediately, naming the file and line — so a property
+that already holds can't quietly stop holding. **What this does not prove:** that any script is
+free of other bugs, that no other means of reaching the network or spawning a process exists,
+or that a skill's *prose* can't talk an agent into running something unsafe at your direction —
+that last risk is what the untrusted-context doctrine
+([`docs/untrusted-context.md`](docs/untrusted-context.md)) and `security-auditor` cover, not
+this gate. For the product-wide security posture and how to report a vulnerability, see
+[`../../SECURITY.md`](../../SECURITY.md).
 
 ## Requirements & tooling
 
@@ -335,8 +388,8 @@ just makes the relevant skill report it's unavailable and point you at the insta
   bar) surface after each edit. Missing binary → `Executable not found in $PATH` in the `/plugin`
   Errors tab and a graceful fall back to file scanning. For large multi-crate workspaces see
   [`docs/large-workspace.md`](docs/large-workspace.md) for the full focus-scoping setup (per-crate
-  CLAUDE.md, `target/` read-denies, sparse worktrees) — Anthropic's large-codebase guidance,
-  mapped to Rust.
+  context files, `target/` read-denies, sparse worktrees) and the per-crate commands that lie —
+  Anthropic's large-codebase guidance, mapped to Rust.
 
 ### Optional integrations
 
@@ -349,3 +402,4 @@ just makes the relevant skill report it's unavailable and point you at the insta
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
