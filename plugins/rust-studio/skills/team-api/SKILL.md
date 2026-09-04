@@ -10,6 +10,12 @@ sub-agents; the orchestrator never writes.** Gate at phase boundaries (quality g
 not permission loops) — decide tactical calls yourself with a one-line rationale.
 Protocol: `references/delegation.md` (§8 team execution).
 
+## When NOT this skill
+- One focused, single-crate API surface, no team run needed → `/design-api`: the same
+  Question → Options → Decision → Draft → Approval loop, run solo, ending in a design doc
+  handed off to `/dev-task` rather than built in-house by a team.
+- The API isn't even sketched yet → `/brainstorm` to explore the idea first.
+
 ## Orchestration & progress
 Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
 Use workers and a native task surface when available; otherwise run each named role inline and
@@ -46,7 +52,9 @@ and advances the chain.
   items get rustdoc with `# Errors`/`# Panics`/`# Examples` doc-tests.
 - In parallel — create sibling tasks so they run concurrently — `test-engineer` drafts
   integration + property tests against the public API; `docs-engineer` drafts the crate-level
-  docs / README section. Each delegates its writes to `rust-builder`.
+  docs / README section. Each delegates its writes to `rust-builder`. Declared write zones must
+  not overlap (`references/delegation.md` §8, write-zone exclusivity) — if the crate-level
+  `//!` docs land in the same file `rust-builder` is still writing the surface into, serialize.
 - Report a diff summary to the user; proceed to Phase 4 without a gate.
 
 ## Phase 4 — Validate (blocked by 3)

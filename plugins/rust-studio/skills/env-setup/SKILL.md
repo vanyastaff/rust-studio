@@ -1,6 +1,6 @@
 ---
 name: env-setup
-description: "Use when provisioning a Rust machine with OS prerequisites, rustup, components, cargo-binstall, and studio tools."
+description: "Use when provisioning a Rust machine: OS prerequisites, rustup, components, cargo-binstall, studio tools."
 ---
 
 # /env-setup — provision the machine for Rust + the studio tool suite

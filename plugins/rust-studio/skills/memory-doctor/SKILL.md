@@ -1,6 +1,6 @@
 ---
 name: memory-doctor
-description: "Use when project memory needs an audit: index budget, integrity, stale or resolved notes, secrets, conventions to promote into rules, or a legacy vault import."
+description: "Use when project memory needs an audit: index budget, integrity, stale notes, secrets, or promotion to rules."
 ---
 
 # /memory-doctor — keep project memory true and small
@@ -32,9 +32,13 @@ mutation is a dry run until `--apply`. Contract: `references/memory-protocol.md`
    - `secret` → remove it now (Edit), tell the user it was stored so it can be rotated.
    - `untyped` → add `metadata.type` (`user|feedback|project|reference`) and `kind`.
    - `long-hook` → shorten the index line to ≤ 140 chars; the detail goes into the body.
-   - `promote` → a convention that held ≥ 30 days belongs in the repo's `CLAUDE.md` or
-     `.claude/rules/` (versioned, shared — rules ≠ memory): propose the exact line; on approval
-     add it, set the note `status: promoted`, then archive it.
+   - `promote` → a convention that held ≥ 30 days, or one flagged a second time, belongs in
+     the repo's `CLAUDE.md` or `.claude/rules/` (versioned, shared — rules ≠ memory): propose
+     the exact line; on approval add it, set the note `status: promoted`, then archive it.
+     Take the highest rung the convention supports — a lint, `deny.toml` entry, or CI check
+     beats prose that a reader has to remember. If the repo has no `CLAUDE.md` to promote
+     into, that is the finding: offer to create one from
+     `references/templates/project-claude-md.md` rather than leaving the note to age.
    - Near-duplicates (same subject, two notes): keep one, fold the other's facts in, archive
      the rest.
 4. **Budget:** above 85% of the cap, archive resolved/superseded notes, merge duplicates, and

@@ -24,6 +24,14 @@ nursery = { level = "warn", priority = -1 }
 # restriction-tier, so neither group above turns it on. Without it,
 # `let _ = validate(x);` silently discards a validation the gate cannot see.
 let_underscore_must_use = "warn"
+# --- unsafe-doctrine enforcement (see rules/unsafe.md) ---
+# Both restriction-tier, so `pedantic`/`nursery` above do NOT turn them on. Verified on
+# clippy 0.1.98: a probe crate with two uncommented `unsafe` blocks scores 0 hits under
+# `-W clippy::pedantic -W clippy::nursery`, 2 hits once `undocumented_unsafe_blocks` is
+# enabled explicitly — without this line, this plugin's most-repeated rule (`// SAFETY:`
+# on every unsafe block, stated in 10 doctrine files) ships with no mechanical guard.
+undocumented_unsafe_blocks = "warn"     # requires the `// SAFETY:` comment
+multiple_unsafe_ops_per_block = "warn"  # requires one unsafe op per `unsafe { }` block
 # --- gate self-protection ---
 allow_attributes_without_reason = "deny"   # no silent #[allow]; a reason is mandatory
 allow_attributes = "warn"                  # prefer #[expect] over #[allow] where it fits

@@ -8,7 +8,7 @@
 // rather than quietly disarming the injector.
 
 import { test, expect, describe } from "bun:test";
-import { applyPatchTargets, pathMatches } from "./inject-rules.ts";
+import { applyPatchTargets, pathMatches, untrustedSource } from "./inject-rules.ts";
 
 const ADD = `*** Begin Patch
 *** Add File: /repo/crates/storage/src/domain/credential.rs
@@ -128,5 +128,80 @@ describe("announces each standard once per session, re-arming on compaction", ()
     const b = `test-iso-b-${Math.random().toString(36).slice(2)}`;
     expect(edit(a, "/r/src/lib.rs")).toContain("core");
     expect(edit(b, "/r/src/lib.rs")).toContain("core");
+  });
+});
+
+describe("flags third-party sources (untrusted-context)", () => {
+  // The vector this covers is not a hostile page the agent chose to visit — it is a
+  // crate README that arrived because someone ran `cargo add`, and that reads like
+  // project code once it is in the window. Detection is by source ROOT, not tool name.
+  test("dependency and vendored roots are third-party", () => {
+    for (const p of [
+      "/home/u/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.2/README.md",
+      "/home/u/.cargo/git/checkouts/tokio-abc123/src/lib.rs",
+      "/repo/vendor/ring/src/aead.rs",
+      "/repo/node_modules/left-pad/index.js",
+      "/repo/target/package/demo-0.1.0/src/main.rs",
+    ]) {
+      expect(untrustedSource([p], "")).not.toBeNull();
+    }
+  });
+
+  test("first-party paths that merely contain the words are not", () => {
+    for (const p of [
+      "/repo/src/vendor_api/client.rs",
+      "/repo/crates/registry/src/lib.rs",
+      "/repo/src/node_modules_loader.rs",
+      "/repo/target/debug/build/demo-1/out/gen.rs",
+    ]) {
+      expect(untrustedSource([p], "")).toBeNull();
+    }
+  });
+
+  test("a fetched URL is third-party even with no path", () => {
+    expect(untrustedSource([], "https://docs.rs/serde/1.0.2/serde/")).not.toBeNull();
+    expect(untrustedSource([], "   ")).toBeNull();
+  });
+
+  const HOOK = new URL("./inject-rules.ts", import.meta.url).pathname;
+  const root = new URL("../..", import.meta.url).pathname;
+  const call = (session: string, tool_input: Record<string, unknown>) => {
+    const r = Bun.spawnSync(["bun", HOOK], {
+      stdin: Buffer.from(JSON.stringify({ session_id: session, tool_input })),
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: root },
+    });
+    const out = new TextDecoder().decode(r.stdout).trim();
+    return out ? (JSON.parse(out).hookSpecificOutput.additionalContext as string) : "";
+  };
+
+  test("a WebFetch carries no path but still gets the standard", () => {
+    const s = `test-web-${Math.random().toString(36).slice(2)}`;
+    const ctx = call(s, { url: "https://example.com/crate" });
+    expect(ctx).toContain("third-party");
+    expect(ctx).toContain("docs/untrusted-context.md");
+  });
+
+  test("reading a dependency's source gets both the Rust standards and the provenance", () => {
+    const s = `test-dep-${Math.random().toString(36).slice(2)}`;
+    const ctx = call(s, {
+      file_path: "/home/u/.cargo/registry/src/index.crates.io-1949/serde-1.0.2/src/lib.rs",
+    });
+    expect(ctx).toContain("untrusted-context.md");
+    expect(ctx).toContain("- **core**"); // lib.rs still matches the path-scoped rules
+  });
+
+  test("announced once per session — twenty files out of one crate say it once", () => {
+    const s = `test-dedupe-${Math.random().toString(36).slice(2)}`;
+    expect(call(s, { file_path: "/home/u/.cargo/registry/src/idx/a-1.0/src/a.rs" })).toContain(
+      "untrusted-context.md",
+    );
+    expect(call(s, { file_path: "/home/u/.cargo/registry/src/idx/a-1.0/src/b.rs" })).not.toContain(
+      "untrusted-context.md",
+    );
+  });
+
+  test("an ordinary project edit says nothing about provenance", () => {
+    const s = `test-clean-${Math.random().toString(36).slice(2)}`;
+    expect(call(s, { file_path: "/repo/src/lib.rs" })).not.toContain("untrusted-context.md");
   });
 });

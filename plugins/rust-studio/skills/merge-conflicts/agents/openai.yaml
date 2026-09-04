@@ -1,4 +1,4 @@
 interface:
   display_name: "Merge Conflicts"
   short_description: "A Rust merge or rebase is stopped on conflicts"
-  default_prompt: "Use $merge-conflicts when a Rust merge or rebase is stopped on conflicts — resolve each hunk by intent, then prove the tree still builds."
+  default_prompt: "Use $merge-conflicts when a Rust merge or rebase is stopped on conflicts: resolve each hunk by intent, then prove it builds."

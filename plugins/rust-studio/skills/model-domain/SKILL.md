@@ -19,6 +19,10 @@ at genuine strategic forks and before irreversible actions.
 examples. For concepts that span multiple crates or public APIs, suggest running
 `/architecture` first.
 
+If `input` instead names an **existing** type/module whose fit has changed — "add a variant to
+X", "this state doesn't cover Y anymore", "X needs a Z field for the new case" — this is
+re-modelling, not greenfield: skip to **Re-modelling mode** below before Phase 1.
+
 ## Phase 1 — Clarify
 
 1. Restate the concept in one sentence. If genuinely ambiguous (multiple plausible
@@ -121,6 +125,52 @@ examples. For concepts that span multiple crates or public APIs, suggest running
 
     Suggest next steps: `/dev-task` to build logic on top of the new types or to update
     downstream call-sites, `/review` for a deeper audit.
+
+## Re-modelling mode — extend or re-cut?
+
+An alternate entry point for the case Phase 1–5 doesn't cover: not a fresh concept but an
+existing model a requirement has outgrown. The output is a decision — **EXTEND** / **RE-CUT** /
+**RE-CUT, ESCALATED** — not a lecture; EXTEND is a correct answer whenever the current shape
+genuinely still covers the concept, and this mode must be able to reach it.
+
+R1. Spawn **`rust-scout`** scoped to the existing type, not just its location: every
+    field/variant, every call site, every `impl`, and — from tests and doc comments, not
+    guesswork — the requirements the shape was cut to serve versus the ones it serves today.
+
+R2. Check the shape against the **Design-drift tells** (`references/types.md`
+    §"Design-drift tells"). Name which fire, and where (`path:line`). A tell that doesn't fire is
+    evidence for EXTEND, not silence — record that too.
+
+R3. Answer the decision basis from what R1/R2 found:
+    - **Requirement count** — how many requirements the shape serves today (distinct call sites
+      / match arms / callers) versus how many it was originally cut for. Serving meaningfully
+      more, through drift-tell shapes (a bolted-on bool, an always-`None` field), is outgrowing
+      the cut; serving about the same, or more through the type's *existing* dimensions, is not.
+    - **Variant or different concept** — does the new requirement branch on a dimension the type
+      already models (a legitimate new case of the same concept), or does it need a field/method
+      that is meaningless for the type's existing cases (a different concept wearing this type)?
+      The latter is never EXTEND, regardless of how small the diff looks.
+    - **Blast radius vs. carry cost** — the re-cut's blast radius (the call sites R1 found; the
+      Controlled-growth guidance in `references/types.md` if `#[non_exhaustive]` is at stake)
+      against the compounding cost of one more special case on a shape that already failed R2. A
+      wide blast radius does not by itself justify EXTEND once R2 has fired.
+
+R4. Decide, and carry the verdict into the phase named below — do not invent a separate verdict
+    vocabulary:
+    - **EXTEND** — no drift tell fires, or the new requirement is a clean variant the shape
+      absorbs without a new bool/Option/wildcard. State which tells were checked and why none
+      apply, then proceed to Phase 3 (type sketch) to add the variant/field within the current
+      shape.
+    - **RE-CUT** — one or more tells fire, the requirement is a different concept in the old
+      type's clothes, and the blast radius sits inside this task's boundary. State the firing
+      tells and the target shape, then proceed to Phase 2 (design options) scoped to that shape.
+    - **RE-CUT, ESCALATED** — the re-cut is correct but its blast radius reaches beyond this
+      task (other crates, other teams' call sites, a module boundary). Implement the immediate
+      ask as EXTEND — the smallest change that does not deepen the drift — or decline to
+      implement if even that isn't safe, and raise a **non-blocking escalation** to
+      `product-steward` (scope/story) or `chief-architect` (module boundary): the same route
+      `/review`'s Accretion check uses. Name the escalation and what shipped instead in the
+      Phase 5 verdict; never let the wider reshape block the task in front of you.
 
 ## Error recovery
 

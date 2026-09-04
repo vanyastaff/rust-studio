@@ -14,6 +14,13 @@ Honors the collaboration protocol (`references/collaboration.md`).
 You are the orchestrator: **you do not write files directly — delegate all file writes to
 `rust-builder`.**
 
+## When NOT this skill
+- The crate hasn't been through semver, security, dependency, MSRV, or changelog work
+  yet → `/team-release`: it runs those audits and drafts the changelog, THEN reaches the
+  same RELEASE-GATE checklist and dry-run `/publish` performs. `/publish` assumes that
+  prep is already done and only walks the gate, the dry-run, and hands you the command.
+- You need the changelog written, not just referenced → `/changelog`.
+
 ## Input
 
 `input` is the crate name (or path). If the workspace has multiple publishable crates,

@@ -20,6 +20,16 @@ inventing a new type/trait/error, encode invariants structurally (newtype / enum
 sealed / `#[non_exhaustive]`) over caller discipline, and carry a forward view. The Pre-code
 Maintainer Gate (Phase 2.5) runs ON TOP OF `API-GATE`.
 
+## When NOT this skill
+- Cross-crate scope, a major breaking change, or you want the design taken all the way
+  through build, tests, docs, and review in one run → `/team-api`: it runs the whole team
+  (`api-design-lead` + `api-designer` + `error-architect` + `docs-engineer` +
+  `test-engineer` + `rust-builder` + `rust-reviewer`) through Design → Build → Validate →
+  Sign-off. `/design-api` stops at an approved design doc and hands implementation off to
+  `/dev-task`.
+- The idea isn't shaped yet — you don't know if this is one API or a bigger concept →
+  `/brainstorm` first.
+
 ## Input
 
 `input` is the type or feature to design. If empty, ask: "What API surface are

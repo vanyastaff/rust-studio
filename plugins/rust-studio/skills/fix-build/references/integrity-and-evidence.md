@@ -28,6 +28,7 @@ Three corollaries, each a hard rule:
 | Move | What it looks like |
 |------|--------------------|
 | **Quick-win / easy subset** | Did the tractable 20% and called it done; left the cross-crate ripple, the error path, or the hard case for "later". |
+| **Extend over reshape** | Delivered the whole stated task, correctly — then landed it as one more special case on a shape that was right for the old requirements and is wrong for these: a new `if`, a new `Option` field, a new enum variant, or a new bool parameter bolted on where the type or module should have been re-cut. Distinct from *Quick-win / easy subset* (does less than asked): this does everything asked, correctly, and still leaves the module worse than it found it. |
 | **Stub / placeholder pass** | `todo!()`, `unimplemented!()`, a canned-constant `return true`/`Ok(())`, or a body deep enough to satisfy a *shallow* check but not the behavior (the "sha256 that only passes the metadata check" move). |
 | **Weaken the oracle** | Edited, deleted, `#[ignore]`-d, `SKIP`-ped, or commented-out a test or assertion to go green; relaxed `assert_eq!(x, expected)` to `assert!(x.is_ok())`; changed the *test* to match the code instead of the code to match the spec. |
 | **Vacuous test** | A "test" that cannot fail: asserts existence not value (`is_ok()` with no value check), a tautology (`assert_eq!(x, x)`), happy-path-only, or no assertion at all. It executes lines without proving behavior. |
@@ -39,6 +40,33 @@ Three corollaries, each a hard rule:
 | **Inference dressed as verification** | Reported a conclusion you *reasoned to* in the voice of one you *checked*. "It handles the empty case" because the function is called `handle_empty`; "the caller guards this" because it would be odd not to. The reasoning may even be right — presenting it as a finding is the defect. |
 | **Verified observation, invented mechanism** | Checked *that* something happens, then explained *why* from plausibility and reported both at the same confidence. Observed in a live eval: two reviewers each correctly found that `unused_assignments` does not fire on `delay *= 2`, and gave mutually exclusive reasons — one blamed the early `return` dominating the loop's back-edge, the other the overloaded `MulAssign` counting as a use. A three-line probe settles it (swap `Duration` for `u32`, same control flow, and the lint fires), so only the second is true. The observation was earned; the mechanism was not, and a wrong mechanism sends the next reader to fix the wrong thing. |
 | **Silent retraction** | Discovered that something asserted earlier was wrong and moved on without withdrawing it. The correction lives in your head; the record still carries the false claim, and whoever reads it inherits the error. |
+
+## The Missing Reflex
+
+"Extend over reshape" survives review for a structural reason, not a laziness one: the trigger
+that used to catch it doesn't exist in an agent. In a human team, a developer who opened a
+tangled function and lost track of its branches, callers, and special cases refactored it —
+staying lost was more expensive than stopping to re-cut the shape. That reflex is documented in
+*"AI Agents and the Refactoring That Never Happens"* (rosenfeld.page, 2026-09-02,
+<https://www.rosenfeld.page/articles/programming/2026_09_02_ai_agents_and_the_refactoring_that_never_happens/>):
+
+> "that reflex — 'I'm lost, therefore it's time to refactor' — has quietly been one of the most
+> important forces keeping long-lived systems maintainable."
+
+An agent does not get lost. It can read the tangled function, trace every caller, and make sense
+of the mess that would have stopped a human cold — so the trigger never fires, and the tenth
+`if` gets written as cleanly as the first. Nothing about writing the eleventh special case felt
+harder than writing the first one, so the branches accumulate indefinitely instead of forcing a
+stop.
+
+The cost compounds past any single diff. The named symptoms: no developer ends up fully
+understanding the key components; reviews on the resulting code become rubber stamps, because
+the reviewer can follow the change no better than the author could refactor it; and teams start
+trusting the agent's output *because* they no longer understand the code themselves — which is
+exactly backwards. The fix is not to make the agent feel lost. It's to replace the missing
+reflex with an explicit check: flag when a touched module has grown past reasonable size or
+branching complexity, and propose a reshape instead of only extending. That's what the Accretion
+check in `skills/review/SKILL.md` does.
 
 ## The Evidence Rules (how results are reported)
 

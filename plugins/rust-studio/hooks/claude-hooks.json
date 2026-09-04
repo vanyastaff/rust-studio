@@ -34,7 +34,7 @@
         ]
       },
       {
-        "matcher": "Read|Write|Edit",
+        "matcher": "Read|Write|Edit|WebFetch",
         "hooks": [
           {
             "type": "command",

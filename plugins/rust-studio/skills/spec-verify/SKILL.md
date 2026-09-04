@@ -12,6 +12,15 @@ Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertio
 (`references/verdicts.md`, §7). You are the orchestrator:
 **delegate writes (the verify report) to `rust-builder`**; do not write files directly.
 
+## When NOT this skill
+- You're not checking against a written spec — you want to restructure existing code
+  without changing behavior → `/refactor`. `/spec-verify` only checks already-finished
+  work against `.rust-studio/specs/<slug>/spec.md`; it doesn't touch code.
+- No spec is in play and you just need cargo fmt/clippy/tests driven green →
+  `/verify-loop`: a bounded auto-fix loop with no notion of a spec. `/spec-verify` checks
+  the result against a spec's acceptance criteria one by one and produces the archiving
+  evidence.
+
 ## Progress visibility
 Use the host's task or plan surface when available; otherwise keep a concise in-message checklist.
 Create one item per step, mark the active step, and surface each result in one line before moving

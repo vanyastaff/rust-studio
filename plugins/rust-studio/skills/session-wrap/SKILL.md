@@ -19,6 +19,11 @@ or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`, `
    `/remember`'s integrity step also verifies the index ↔ files 1:1 — surface any dangling
    entry it finds. If the session-start briefing warned about the index budget or integrity,
    run `/memory-doctor` now, while the context that can judge each note is still here.
+   **Sweep for repeats before you write:** anything this session was corrected on that the
+   project had already been told once is not another note — it is a promotion. Name the rung
+   (a lint or CI check if it can be decided mechanically, a repo rule if it binds everyone, a
+   `convention` note otherwise) and propose the exact line
+   (`references/memory-protocol.md` §"Flagged twice is a rule, not a note").
 3. **State of play** — list done / in-progress / blocked with the next action for each open
    item. If a spec is active (`.rust-studio/specs/`), update its task
    statuses.
@@ -30,5 +35,5 @@ or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`, `
 5. No destructive actions on the way out — no force-push, no `--no-verify`.
 
 ## Output
-A tight recap (changed / done / open), the learnings captured (with their vault note paths), and
+A tight recap (changed / done / open), the learnings captured (with their note paths), and
 the recommended next step. Keep it short — this is a handoff note, not an essay.

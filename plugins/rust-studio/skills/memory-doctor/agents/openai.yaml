@@ -1,4 +1,4 @@
 interface:
   display_name: "Memory Doctor"
   short_description: "Project memory needs an audit: index budget, integrity"
-  default_prompt: "Use $memory-doctor when project memory needs an audit: index budget, integrity, stale or resolved notes, secrets, conventions to promote into rules, or a legacy vault import."
+  default_prompt: "Use $memory-doctor when project memory needs an audit: index budget, integrity, stale notes, secrets, or promotion to rules."

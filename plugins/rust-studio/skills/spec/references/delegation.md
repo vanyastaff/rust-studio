@@ -62,6 +62,48 @@ When a host exposes sub-agents (§8), this same model runs over its native task 
 surfaces instead of sequential inline phases. The tiers, gates, and verdicts are unchanged —
 only the coordination surface differs.
 
+### When a handoff earns its cost
+
+§8 decides whether a spawn is *possible*. This decides whether it is *worth it*. A handoff is
+not free: the worker starts blind, so the brief has to restate context the orchestrator already
+holds; nuance that lived in the conversation does not cross; the same files get re-read on the
+other side; and the round trip costs several times the tokens of doing the step inline, plus
+wall-clock. Spawning is a tool with a price, not a sign of rigor.
+
+**Two things a separate process buys that an inline phase cannot. A spawn needs one of them:**
+
+1. **Filtering** — the worker reads far more than it returns. `rust-scout` opens thirty files
+   and hands back a `file:line` table; `/research` reads a crate's impl and returns a cited
+   paragraph; a `--full` review lens reads the whole diff through one lens and returns findings.
+   The value is the tokens that *never come back*. If the worker would return most of what it
+   read, the filter is not there and you have paid the tax for nothing.
+2. **Independence** — the verdict must not come from the author. `rust-reviewer`,
+   `harsh-critic`, `unsafe-auditor`, and `security-auditor` are worth a full re-read precisely
+   *because* they do not inherit the reasoning that produced the code: an author reviewing their
+   own diff re-derives why it was right. This is separation of duties, and it is
+   non-negotiable at a gate — the agent that wrote the change never signs off on it
+   (`verdicts.md` §4). Here the cost is the point, not the overhead.
+
+**Where inline wins — run the phase yourself, under that agent's brief:**
+
+- The orchestrator already holds the plan *and* the file contents, and the change is a few
+  edits in one or two files. The brief would be longer than the diff.
+- The work is iterative — draft, compile, adjust. Each round pays the handoff tax again, and
+  the compile errors that guide the next edit are already in *your* context.
+- The step is a lookup you can answer from what you have read this session.
+- Fan-out where every lens would re-derive the same context and return most of it. Parallel
+  lenses earn their keep when they are independent and read-only, not when they are the same
+  read performed five times.
+
+**Never a reason to delegate:** to avoid doing work you are capable of; to make a thin change
+look thorough; to get a second opinion you intend to overrule; or to put a name on a verdict
+you already decided. A spawn that exists to launder a conclusion is the **Skipped discipline**
+cheat wearing a process costume (`references/integrity-and-evidence.md`).
+
+Skipping the *spawn* is a judgment call. Skipping the *phase* is not — scout before you plan,
+plan before you write, read the diff back adversarially before you call it done, whatever the
+process count (`references/sub-agents.md`).
+
 ### When sub-agents are unavailable
 
 A host without the studio's sub-agents runs each named phase inline, under that agent's
@@ -117,6 +159,40 @@ Workers do focused work; the orchestrator owns synthesis, user-facing gates, and
 native task surface; keep read-only lenses independent so they can run concurrently. Otherwise
 keep the same graph as an ordered checklist in working context. Durable files such as
 `tasks.md` remain the source of truth regardless of UI support.
+
+**Write-zone exclusivity.** §3's domain boundaries and §6's single-writer protocol already point
+at this; the team model needs it stated because parallel waves are where it actually breaks.
+Every spawned unit declares its write zone — the files or directories its brief authorizes it to
+touch — in the same brief that carries scope and acceptance criteria. Two units in the same wave
+never declare the same write zone. When two tickets genuinely need the same file, they serialize:
+the later one is spawned only after the earlier one's result has landed, not launched alongside
+it on the promise that it will "wait its turn." This is not hypothetical — an orchestrator
+building this plugin fanned out three tickets that all touched `scripts/validate-distribution.sh`
+and caught the collision only because it happened to notice; nothing in the doctrine forced the
+check.
+
+Read-only work is exempt, and that exemption is the whole asymmetry the model rests on: a lens
+that only reads never contends for a write zone, which is why review fan-out (`rust-reviewer`,
+`harsh-critic`, `unsafe-auditor`, `security-auditor`) parallelizes freely while a wave of
+`rust-builder` tasks touching the same file does not. The studio makes that asymmetry structural,
+not a habit an orchestrator has to enforce under load: `rust-scout`, `rust-reviewer`,
+`harsh-critic`, `unsafe-auditor`, and `security-auditor` all carry `disallowedTools: Write, Edit,
+NotebookEdit` in their own definitions, so they are parallel-safe *by construction* — minimum
+tool grant, not orchestrator care, is what actually prevents the conflict. Grant a role only the
+tools its job requires; the serialization rule above only has teeth where a role is capable of
+writing at all.
+
+Three 2026 sources converge on this independently. Google's Gemini CLI subagents announcement
+(developers.googleblog.com, Apr 2026) states it outright: "Exercise caution with parallel
+subagents for tasks requiring heavy code edits. Multiple agents editing code simultaneously can
+lead to conflicts and overwriting" — its own worked example grants `frontend-specialist` read
+tools only, which is what makes it parallel-safe by construction rather than by care. DeepSeek
+Harness commentary argues the context half of the same point: dumping a whole repository into a
+worker's prompt is not context engineering, it buries the evidence the next call needs — a
+declared write zone is exactly the evidence a full-repo dump buries. OpenAI's Codex guidance
+reaches the same discipline from the prompting side: state the outcome, not the method, and reuse
+durable `AGENTS.md` context across tasks instead of re-deriving scope per spawn — a declared write
+zone is that outcome-first brief applied to the one property that makes two spawns unsafe together.
 
 **Results and cleanup.** Collect results through the host's worker-result or messaging channel.
 Wait only on workers whose output blocks the next phase. When the host supports explicit worker

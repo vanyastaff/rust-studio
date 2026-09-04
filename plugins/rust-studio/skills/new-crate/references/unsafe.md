@@ -14,6 +14,7 @@ SAFETY-GATE.
   FFI, intrinsics). "It's easier" is not a reason.
 - Keep `unsafe` blocks as small as possible — wrap the single unsafe operation, not a
   whole function body. Expose a **safe** API around it; callers should not need `unsafe`.
+  Enforced by `clippy::multiple_unsafe_ops_per_block`, same restriction-tier gap.
 - `unsafe` does **not** license UB. It only transfers the burden of proving the absence
   of UB from the compiler to you. If you cannot articulate why the operation is sound,
   it isn't — do not write it.
@@ -22,6 +23,8 @@ SAFETY-GATE.
 - Every `unsafe` block has a `// SAFETY:` comment directly above it stating the
   invariant that makes it sound and why it holds here (alignment, non-null, valid for
   reads/writes of N bytes, no aliasing, lifetime, initialization). No exceptions.
+  Enforced by `clippy::undocumented_unsafe_blocks` — a restriction-tier lint that
+  `pedantic`/`nursery` do not include, so `workspace-lints.toml` turns it on explicitly.
 - Every `unsafe fn` documents its `# Safety` contract in rustdoc as a bulleted list of
   preconditions the caller MUST uphold (valid-for-reads/writes of N bytes, alignment,
   no concurrent mutation, lifetime). Prefer safe fns with internal `unsafe` over public

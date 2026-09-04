@@ -19,7 +19,7 @@ matrix, `-Zminimal-versions`, macOS+Windows, llvm-cov→Codecov), `safety.yml` (
 | Action | Role | Note |
 |--------|------|------|
 | `dtolnay/rust-toolchain@stable` (or `@master` + `toolchain:`) | install toolchain + components | branch-versioned; SHA-pin `@master` if you need reproducibility |
-| `Swatinem/rust-cache@v2` | build cache | place **after** toolchain (key includes rustc version); caches deps not your crates; sets `CARGO_INCREMENTAL=0` (from Cargo **1.99** cargo itself disables incremental when `CI` is set, so the variable becomes belt-and-braces, not the fix) |
+| `Swatinem/rust-cache@v2` | build cache | place **after** toolchain (key includes rustc version); caches deps not your crates; sets `CARGO_INCREMENTAL=0` (the fix today; Cargo **1.99** is expected to have cargo itself disable incremental when `CI` is set, which would make the variable belt-and-braces rather than the fix — not shipped yet) |
 | `taiki-e/install-action@<tool>` | install CLI tools from prebuilt binaries (falls back to **`cargo binstall`**) | far faster than `cargo install`; do NOT SHA-pin the `@<tool>` shorthand |
 
 **Tool install:** prefer **`cargo binstall <tool>`** locally and `taiki-e/install-action` in CI;

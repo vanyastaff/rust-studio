@@ -59,6 +59,17 @@ Applies to crate roots (`lib.rs`), public surface modules, and anything re-expor
   and on guard / builder types the caller must not silently drop;
   `#[deprecated(note = "...", since = "...")]` used deliberately.
 - Run `cargo public-api` / `cargo semver-checks` before release; flag any break.
+- **A dependency's major bump is your breaking change whenever its types cross your surface** —
+  a `pub fn` parameter or return, a re-export, a public trait bound, an error `source`. And
+  `cargo semver-checks` does not catch this class: it compares *your* rustdoc, where the type
+  is spelled `dep::Type` before and after, so the bump renders identically. Measured on
+  cargo-semver-checks 0.50.0: a crate whose `pub fn` took `http 0.2::Uri` and then `http
+  1::Uri`, own source untouched, scored `196 checks: 196 pass` and **"no semver update
+  required"** — while a caller passing the old type failed to compile with `expected
+  leaf::Uri, found http::Uri`. The mechanical check for this case is not semver-checks: it is
+  whether the bumped dependency appears in the public surface at all (`cargo public-api`
+  output, or grep the `pub` items for its paths). If it does, the bump is breaking, whatever
+  the tool says.
 
 ## Ergonomics
 - Accept `impl Into<...>` / `impl AsRef<...>` at boundaries; return concrete types.

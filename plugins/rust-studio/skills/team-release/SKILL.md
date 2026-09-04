@@ -10,6 +10,12 @@ sub-agents; the orchestrator never writes.** Gate at phase boundaries (quality g
 per-step permission asks) per `references/collaboration.md` §1 and
 `references/delegation.md` §8 (team execution).
 
+## When NOT this skill
+- Semver, security, dependency, MSRV, and changelog work are already done and you just
+  need the RELEASE-GATE checklist, the dry-run, and the publish command → `/publish`.
+  `/team-release` is the full team that produces that prep (semver bump, security /
+  dependency / MSRV audits, changelog, doc updates) before reaching the same gate.
+
 ## Orchestration & progress
 Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
 Use workers and a native task surface when available; otherwise run each named role inline and

@@ -14,7 +14,7 @@ Five moving parts:
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (60) — slash commands. They are *workflows*: a skill orchestrates the right agents
+- **Skills** (62) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
 - **Rules** (20) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
@@ -117,7 +117,7 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 
 ---
 
-## The skills (60)
+## The skills (62)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
@@ -126,7 +126,12 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
   rustup (+ components), `cargo-binstall`, and the studio's cargo tool suite as prebuilt
   binaries (`check` mode = report only).
 - **`/detect-stack`** — classify a project's domain(s) + the relevant leads/specialists/rules.
-- **`/adopt`** — reverse-engineer an existing crate/workspace into studio docs + a debt catalog.
+- **`/adopt`** — reverse-engineer an existing crate/workspace into studio docs, a project
+  `CLAUDE.md` / `.claude/rules/`, and a debt catalog.
+- **`/studio-doctor`** — is the studio actually live here? Probes the hook runtime, whether
+  hooks reach this session, sub-agents, LSP, the memory store, cargo tooling, and which
+  toggles are in effect — every ambient part fails open, so a broken install looks like a
+  working one until something checks.
 
 ### Design & architecture
 - **`/brainstorm`** — explore an idea before any design (2–4 approaches, no code).
@@ -147,6 +152,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 - **`/new-crate`** — scaffold a crate/workspace member with studio conventions.
 - **`/add-dep`** — vet a crate (RUSTSEC, license, MSRV, features) before adding it.
 - **`/refactor`** — behaviour-preserving cleanup driven by clippy + standards.
+- **`/migrate`** — move an edition (`cargo fix --edition` + the semantic review it cannot do)
+  or a major dependency version; baseline first, then prove behaviour survived.
 - **`/fix-build`** — get a failing `cargo build`/`check` green (drives `rust-build-resolver`).
 - **`/ci-gate`** — audit or install the anti-hang / anti-silencing CI gate (clippy, nextest
   timeouts, lefthook).
@@ -173,6 +180,13 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 - **`/scope-check`** — compare a diff/plan against acceptance criteria; flag creep.
 - **`/doc-review`** — review a requirements, spec, plan, ADR, or design document for coherence,
   feasibility, scope, and security.
+- Two standards bind every review lens. [`docs/integrity-and-evidence.md`](integrity-and-evidence.md)
+  governs the honesty of what the studio *emits* (`🚩 INTEGRITY`);
+  [`docs/untrusted-context.md`](untrusted-context.md) governs the trust level of what it
+  *reads* (`🚩 UNTRUSTED`) — a crate README, `docs.rs` page, PR comment, or CI log that tells
+  tooling to add a dependency, ignore an advisory, or silence a lint is a finding to report,
+  never an instruction to follow. The PreToolUse hook announces the standard the first time a
+  session reads under `~/.cargo/registry`, `~/.cargo/git`, `vendor/`, or fetches a URL.
 
 ### Testing
 - **`/test-plan`** — a test plan for a feature (types, cases, edge cases, property laws).
@@ -198,8 +212,15 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
   the host loads the index at session start, the session-start hook ranks it against the
   branch and reports index health, and every prompt gets pointers to notes that match it
   (`memory_recall`). All toggle via `/plugin` → Rust Code Studio.
+- **Repeats get promoted, not restated.** The second time a review, a gate, or a PR thread
+  flags the same thing, the correction has failed to stick: `/review`, `/resolve-pr` and
+  `/session-wrap` name the rung it belongs on — a lint or CI check if it can be decided
+  mechanically, a repo rule if it binds everyone, a `convention` note otherwise — and propose
+  the exact line. A defect that got past review entirely goes one further and becomes a
+  fixture under `benchmarks/fixtures/`.
 - The full contract (recall-before, remember-after, verify-before-it-steers, `MEMORY:` verdict
-  lines, the path rule, rules ≠ memory) lives in [`docs/memory-protocol.md`](memory-protocol.md).
+  lines, the path rule, rules ≠ memory, the promotion ladder) lives in
+  [`docs/memory-protocol.md`](memory-protocol.md).
 
 ### Ship & release
 - **`/commit`** — Conventional Commit for the current changes (fmt/clippy first; no hook bypass).
@@ -228,9 +249,15 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
   (`🦀 rust-studio · ▸ build 2/4 · <model> · ctx %`); `/progress-bar off` removes it.
 
 ### Studio self-check
+- **`/studio-doctor`** — the runtime half of the self-check: what is actually live in this
+  install (hooks, agents, LSP, memory, tooling) versus what silently degraded.
 - **`/eval-agents`** — run the review agents against planted-defect fixtures and score recall
   (quality-assures the plugin itself). The same fixtures ship as a `claude plugin eval` suite
-  (`evals/`) with a no-plugin baseline arm for out-of-session scoring.
+  (`evals/`) with a no-plugin baseline arm for out-of-session scoring, and CI runs that suite
+  whenever the studio's own configuration changes (`skills/`, `agents/`, `rules/`, `hooks/`,
+  `docs/`) — those files are the studio's source code, and a prompt edit regresses recall the
+  way a code edit regresses a test. A defect that escapes the studio becomes a permanent
+  fixture before the fix is called done.
 
 ---
 

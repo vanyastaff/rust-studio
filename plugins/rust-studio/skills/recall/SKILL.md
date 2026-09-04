@@ -1,6 +1,6 @@
 ---
 name: recall
-description: "Use when starting related work to recall project decisions, gotchas, conventions, and fixes, verifying each still holds."
+description: "Use when starting related work: recall project decisions, gotchas, conventions, and fixes; verify each holds."
 ---
 
 # /recall — retrieve project memory, verified

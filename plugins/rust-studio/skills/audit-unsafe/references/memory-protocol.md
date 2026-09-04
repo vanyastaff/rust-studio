@@ -99,6 +99,33 @@ note recalled again and again — belongs in the rules, not the store. `/memory-
 these (`promote`), proposes the exact rule line, and on approval marks the note `promoted` and
 archives it. The studio's own standards grew the same way: a recurring memory becomes a rule.
 
+### Flagged twice is a rule, not a note
+
+Time is one promotion trigger; **repetition is the other, and it is faster**. The first time a
+review, a gate, or a PR thread flags something, you fix it — that is a correction. The *second*
+time the same class of finding appears, the correction has failed to stick, and re-explaining it
+per change is now the expensive option. Promote it the same turn, one rung up this ladder:
+
+| Rung | Form | Use when |
+|---|---|---|
+| 1. **Correction** | fix the diff, say why | first occurrence |
+| 2. **Note** | a `convention` note in the store | recurred, and it is *this* project's taste |
+| 3. **Rule** | a line in `CLAUDE.md` / `.claude/rules/` | recurred, and it binds everyone on the repo |
+| 4. **Gate** | a clippy lint, `[lints]` entry, `deny.toml` rule, CI check, or hook | it can be decided mechanically |
+
+**Always take the highest rung the finding supports.** A convention a linter can enforce should
+not be a paragraph a reader has to remember: `clippy::disallowed_methods`, a `deny.toml` ban, or
+a workspace `[lints]` entry holds without attention and cannot be forgotten under deadline. Prose
+is for judgment calls that no lint can express — and prose should say *why*, not just what, so
+the next reader can reason past it rather than pattern-match it.
+
+Who applies it: `/review` and `/resolve-pr` name the rung when a finding repeats,
+`/session-wrap` sweeps the session for repeats before it closes, and `/memory-doctor`'s
+`promote` finding is the deterministic backstop for anything that slipped through. A finding
+that *escaped* review entirely — caught later in CI or in production — goes one step further
+and becomes a permanent fixture under `benchmarks/fixtures/`, so the gap cannot silently
+reopen (`benchmarks/README.md`).
+
 ## Freshness (verify before it steers)
 
 A note reflects when it was written. Before a recalled note changes a plan, check that what it
