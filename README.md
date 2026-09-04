@@ -11,104 +11,161 @@ A Rust engineering studio for coding agents: 62 skills that carry the standards 
 maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
-The skills are [Agent Skills](https://agentskills.io) and run on any skill-capable host. The repo
-also ships native plugin manifests for Claude Code and Codex. Claude Code gets the full ambient
-studio (33 named agents, hooks, LSP, and status line); Codex gets the portable skills, the
-host-neutral hooks (session stack briefing, routing and rustfmt nudges), and the 33 agents as
-generated Codex custom agents — never Claude-specific lifecycle code.
+**What changes when you install it.** Your agent stops writing plausible Rust and starts writing
+Rust that a maintainer would merge: it locates before it edits, plans before it builds, asks you
+to approve the plan, runs `clippy` and the tests as evidence instead of asserting success (plus
+`miri` where unsafe or concurrency is involved), and reviews its own diff against the standard
+for the files it touched — `unsafe.md` when a block appears, `api.md` on `lib.rs`, `ffi.md` at a
+C boundary.
+
+---
 
 ## Install
 
-**One command. Detects the agents on your machine and installs the right shape for each** —
-full studio on Claude Code, native plugin on Codex, portable skills anywhere else:
-
 ```bash
-./install.sh            # from a clone; --dry-run to preview
+git clone <owner>/rust-studio && cd rust-studio
+./install.sh            # --dry-run to preview
 ```
 
-Or pick the skills interactively with the skills CLI:
+That one command detects the agents on your machine and installs the right shape for each. Pick
+your row if you'd rather do it by hand:
 
-```bash
-npx skills add .
-```
+| You use | Run this | You get |
+|---|---|---|
+| **Claude Code** | `/plugin marketplace add <owner>/rust-studio` then `/plugin install rust-studio@rust-studio` | Everything: skills, 33 agents, hooks, LSP, status line |
+| **Codex** | `codex plugin marketplace add <owner>/rust-studio` then `codex plugin add rust-studio@rust-studio` | Skills, host-neutral hooks, 33 agents after one generator step (below) |
+| **Cursor · Zed · Copilot · OpenCode · ~70 more** | `npx skills add .` | The skills, each self-contained |
 
-Claude Code, Codex, Cursor, OpenCode, Zed, Copilot and ~70 other hosts. No npm publish is needed:
-the [skills CLI](https://github.com/vercel-labs/skills) reads a local clone or Git repository
-directly. For a remote install, use `npx skills add <owner>/rust-studio`. Safe to re-run.
+Safe to re-run. No npm publish needed — the [skills CLI](https://github.com/vercel-labs/skills)
+reads a local clone or Git repo directly; for a remote install use `npx skills add <owner>/rust-studio`.
 
-The 60 host-neutral workflows bundle their standards and deterministic helpers, so they work
-installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
-
-The plugin directory is also an [Agent Plugins 1.0](https://agent-plugins.org) package (root
-`plugin.json` + flat `skills/`), which Codex ≥ 0.147, Cursor, GitHub Copilot CLI ≥ 1.0.74 and
-Kiro load directly — the same skills, one more door.
+Prerequisites (Bun, rust-analyzer), local-clone installs and the `settings.json` route live in
+**[INSTALL.md](INSTALL.md)**.
 
 <details>
-<summary><strong>Install the plugin on Codex or Claude Code, or one skill on one agent</strong></summary>
+<summary><strong>Codex sub-agents, single skills, and the Agent Plugins door</strong></summary>
 
 <br>
 
-Codex (repo marketplace + native `.codex-plugin` manifest):
+**Codex sub-agents take one extra command.** The plugin ships agent briefs as Markdown; Codex
+wants TOML, so generate them once — this writes all 33 into `~/.codex/agents/` (pass a path for a
+project-local `.codex/agents/`). Re-run after upgrading.
 
-```text
-codex plugin marketplace add <owner>/rust-studio
-codex plugin add rust-studio@rust-studio
+```bash
+node plugins/rust-studio/scripts/generate-codex-agents.mjs
 ```
 
-Claude Code adds the 33 agents, hooks (session briefing, path-scoped rule injection, format
-check, stop-guard), LSP, and status line on top of the skills:
+Without it the skills still work; they just run each phase inline instead of delegating.
 
-```text
-/plugin marketplace add <owner>/rust-studio
-/plugin install rust-studio@rust-studio
-```
-
-The desktop app has no `/plugin` command — add the marketplace from Customize → personal
-plugins → Add from repository. Local clone, the `settings.json` alternative and the
-Bun/rust-analyzer prerequisites live in **[INSTALL.md](INSTALL.md)**.
-
-Narrower, without the prompts:
+**One skill, one agent, no prompts:**
 
 ```bash
 npx skills add . --skill dev-task --agent codex -y
 npx skills add . --skill '*' --agent '*' -y
 ```
 
+**Agent Plugins 1.0.** The plugin directory is also an [Agent Plugins 1.0](https://agent-plugins.org)
+package (root `plugin.json` + flat `skills/`), which Codex ≥ 0.147, Cursor, GitHub Copilot CLI
+≥ 1.0.74 and Kiro load directly — the same skills, one more door.
+
+**Claude desktop app** has no `/plugin` command — add the marketplace from Customize → personal
+plugins → Add from repository.
+
 </details>
 
-> [!NOTE]
-> `/progress-bar` and `/eval-agents` are Claude Code-only utilities and explicit-invocation-only
-> in Codex. The other 60 skills, including `/env-setup` and `/help`, are standalone.
+---
 
-## What you get, where
+## Using it
 
-| | skills via `npx` | Codex plugin | Claude Code plugin |
-|---|---|---|---|
-| 62 skills | yes | yes | yes |
-| Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
-| 33 named studio agents | no — phases run inline | yes, after one generator step | yes, spawned per phase |
-| Session briefing + path-scoped rule injection | no | yes | yes |
-| Irreversible-action guard | no | yes | yes |
-| Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
-| LSP, status line, background monitors | no | no | yes |
-| `claude plugin eval` suite (7 cases, no-plugin baseline arm) | no | no | yes |
+### Your first session
 
-> [!TIP]
-> **Codex sub-agents take one command.** The plugin ships the agent briefs as Markdown; Codex
-> wants TOML, so generate them once — `node plugins/rust-studio/scripts/generate-codex-agents.mjs`
-> writes all 33 into `~/.codex/agents/` (pass a path for a project-local `.codex/agents/`).
-> Re-run it after upgrading the plugin. Without this the skills still work — they just run each
-> phase inline instead of delegating.
+```text
+/start                        # detects your stack, briefs the team, tells you what to run next
+/dev-task add a retry policy to the http client
+```
 
-> [!TIP]
-> A skill that says "delegate the build to `rust-builder`" runs that phase itself on a host
-> with no sub-agents, rather than stalling. The rule is
-> [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md); every skill that names an
-> agent ships a copy, and CI enforces it.
+`/start` is the orientation command — run it once in a new repo. After that, `/dev-task` is the
+one you'll use most.
+
+### Three ways in
+
+1. **Run a skill** — `/dev-task <what you want>`. The skill drives the whole flow. This is the
+   usual entry point. Type `/rust-studio:<name>` if a bare `/<name>` is ambiguous on your host.
+2. **Name an agent** — "use `unsafe-auditor` on this module" delegates one focused job. Your
+   agent also picks the right specialist on its own from their descriptions.
+3. **Just describe the task** — no slash command needed; the routing picks a skill for you.
+
+### What actually happens when you run `/dev-task`
+
+It is a quality loop, not a permission loop. You get asked once, at the point where your answer
+changes the work:
+
+```
+0  triage      right-size the ceremony — a typo fix does not get the full pipeline
+1  locate      rust-scout maps the types, impls and call sites involved (read-only)
+2  plan        the smallest correct change that fits the existing architecture
+2.5 critique   an adversarial pass attacks the plan before you ever see it
+3  APPROVE     ← you decide here
+4  build       rust-builder writes code and tests, runs check/clippy/test/fmt
+5  review      rust-reviewer audits the diff — severity-tagged findings, no praise
+6  verdict     COMPLETE / NEEDS WORK / BLOCKED, with the command output as evidence
+```
+
+Between those gates, agents decide tactical calls and proceed. They come back to you for a
+strategic fork, an irreversible action, or an outward one — push, PR, `cargo publish`.
+
+### A whole feature, end to end
+
+```text
+/recall <area>          # what was learned about this area last time
+/spec <feature>         # big or cross-crate: explore → 2-4 approaches → approved spec
+  /spec-tasks <slug>    #   split into ordered tasks, each run through /dev-task
+/dev-task <task>        # one unit of work
+/tdd <behavior>         # or build it test-first: RED → GREEN → REFACTOR
+/verify-loop            # drive checks to green with bounded auto-fix
+/review --full          # parallel multi-lens audit before merge
+/commit → /pr           # Conventional Commit, then open the PR
+/session-wrap           # capture what was learned for next session
+```
+
+**Small change?** Skip the spec. `/dev-task`, or even just `/lint` + `/review`, is enough. Plan
+only when the approach is uncertain or the change spans files.
+
+### The five you'll actually reach for
+
+| Command | When |
+|---|---|
+| `/dev-task <task>` | Implement one unit of work, properly |
+| `/review` | Audit your current diff before you push |
+| `/fix-build` | The build or type-check is broken |
+| `/add-dep <crate>` | Vet a crate: RUSTSEC, license, MSRV, features, redundancy |
+| `/help` | The live list, on the host you're on |
+
+---
+
+## What's under the hood
+
+- **Agents (33)** — the workforce, in three tiers: directors decide, leads own a domain and its
+  quality gate, specialists do the work. Each runs in its own context, so their reading never
+  crowds your conversation.
+- **Skills (62)** — the workflows. A skill orchestrates the right agents through phases.
+- **Rules (20)** — path-scoped standards. Edit a matching file and a *pointer* to the relevant
+  rule is injected automatically; the agent pulls the full text on demand. `core.md` on every
+  `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `macros.md` inside macros.
+- **Hooks (8 events)** — stack briefing and memory recall at session start, rule pointers after
+  edits, a lint nudge when you stop, a check that blocks a verdict-less finish, and a note when
+  the model switches so you know who is judging now.
+- **Gates** — named checkpoints: `ARCH / API / ASYNC / CLI / PERF / SAFETY / QA / RELEASE /
+  BUILD`, run at **lean** (one crate), **full** (public API, unsafe, releases), or **solo**
+  (prototype) intensity.
+
+Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
+
+---
 
 ## The skills
 
-Start with `/start` for a tour, or `/help` under the plugin for the live list.
+`/start` for a tour, `/help` for the live list under the plugin.
 
 | Group | Skills |
 |---|---|
@@ -122,30 +179,64 @@ Start with `/start` for a tour, or `/help` under the plugin for the live list.
 | Memory | `recall` `remember` `memory-doctor` `session-wrap` |
 | Setup | `start` `adopt` `new-crate` `detect-stack` `lint` `env-setup` `help` `progress-bar` `eval-agents` |
 
-## Development
+## What you get, where
+
+| | skills via `npx` | Codex plugin | Claude Code plugin |
+|---|---|---|---|
+| 62 skills | yes | yes | yes |
+| Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
+| 33 named studio agents | no — phases run inline | yes, after one generator step | yes, spawned per phase |
+| Session briefing + path-scoped rule injection | no | yes | yes |
+| Irreversible-action guard | no | yes | yes |
+| Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
+| LSP, status line, background monitors | no | no | yes |
+| `claude plugin eval` suite (10 cases, no-plugin baseline arm) | no | no | yes |
+
+> [!NOTE]
+> `/progress-bar` and `/eval-agents` are Claude Code-only utilities, and explicit-invocation-only
+> in Codex. The other 60 skills, including `/env-setup` and `/help`, are standalone.
+
+> [!TIP]
+> A skill that says "delegate the build to `rust-builder`" runs that phase itself on a host with
+> no sub-agents, rather than stalling. The rule is
+> [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md); every skill that names an agent
+> ships a copy, and CI enforces it.
+
+The 60 host-neutral workflows bundle their standards and deterministic helpers, so they work
+installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
+
+The skills are [Agent Skills](https://agentskills.io) and run on any skill-capable host. Claude
+Code gets the full ambient studio; Codex gets the portable skills, host-neutral hooks (session
+briefing, routing and rustfmt nudges) and the 33 agents as generated Codex custom agents — never
+Claude-specific lifecycle code.
+
+---
+
+## Contributing
 
 `docs/` and `rules/` are the single source of truth. Each skill carries a copy of what it cites
 under `skills/<name>/references/`, so it stays self-contained when installed standalone.
-Regenerate after editing either:
+Regenerate after editing either — never hand-edit a file under `references/`, the next
+regeneration discards it:
 
 ```bash
 cd plugins/rust-studio
 ./scripts/sync-references.sh           # rebuild references + portable helpers
 node scripts/generate-openai-metadata.mjs
 ./scripts/validate-distribution.sh     # what CI runs before Bun tests
+bun test
 ```
 
-Validation catches manifest/marketplace drift (all three manifests), non-standard skill
-frontmatter, description-budget regressions, stale metadata or references, missing inline
-fallbacks, vendor-only APIs leaking into the 58 portable skills, catalog drift (every skill
-listed in `/help` and the usage guide), and malformed eval cases. CI also runs
-`claude plugin validate --strict` and the [agnix](https://github.com/agent-sh/agnix)
-agent-config linter.
+Validation catches manifest/marketplace drift (all three manifests), non-standard skill or agent
+frontmatter, description-budget regressions, skill descriptions that overlap without declaring a
+boundary, unsafe patterns in shipped scripts, stale metadata or references, section citations
+that resolve to nothing, missing inline fallbacks, vendor-only APIs leaking into the 60 portable
+skills, catalog drift, and malformed eval cases. CI also runs `claude plugin validate --strict`
+and the [agnix](https://github.com/agent-sh/agnix) agent-config linter.
 
-## Releasing
+### Releasing
 
-The Claude and Codex manifests, marketplace entry, skill metadata, bundled references, and hook
-tests are checked in CI. Keep the version in both plugin manifests identical, then tag and push:
+Keep the version in both plugin manifests identical, then tag and push:
 
 ```bash
 cd plugins/rust-studio
@@ -154,7 +245,10 @@ claude plugin tag --push      # creates rust-studio--v<version> from the manifes
 
 Full checklist: [`plugins/rust-studio/docs/releasing.md`](plugins/rust-studio/docs/releasing.md).
 
-## Layout
+<details>
+<summary><strong>Repository layout</strong></summary>
+
+<br>
 
 ```
 rust-studio/                         (repo + neutral "rust-studio" marketplace)
@@ -170,7 +264,7 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
 │       ├── plugin.json              # Agent Plugins 1.0 manifest (Codex/Cursor/Copilot/Kiro)
-│       ├── skills/                  # 60 skills + references + OpenAI metadata
+│       ├── skills/                  # 62 skills + references + OpenAI metadata
 │       ├── evals/                   # claude plugin eval suite (plugin only)
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 20 path-scoped Rust standards
@@ -182,6 +276,8 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 ├── INSTALL.md
 └── LICENSE
 ```
+
+</details>
 
 ## License
 
