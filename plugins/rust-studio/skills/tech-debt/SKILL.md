@@ -107,6 +107,69 @@ stories/tasks (see `/spec-tasks` and `references/templates/tasks.md`).
 
 Do **not** write story files directly — delegate to `product-steward`.
 
+For a single item rather than the whole approved list — or when the user wants a lightweight
+issue instead of a full spec-tasks breakdown — use **Durable capture** below instead of spawning
+`product-steward`.
+
+## Durable capture — file a single finding
+
+A finding that is real, out of scope for the diff in front of you, and worth doing later must
+land somewhere that outlives the session — not a chat message that dies with it. This is where
+`/review`'s Accretion check, `/model-domain`'s RE-CUT ESCALATED, and `/scope-check`'s "split"
+disposition each route a lone finding; treat those pointers as "come here," not as a second
+definition of this mechanism. It differs from Phase 5 above: Phase 5 turns an *approved list*
+into stories; this section files *one* finding on its own, without a full scan.
+
+### 1. Dedup gate (always first)
+
+Compute a fingerprint: `<file>:<line-or-range>` + category + a normalized 5–8 word gist of the
+shape observed. Check it against:
+- **`.rust-studio/debt-log.md`** in this repo (grep the fingerprint fields) — the ledger every
+  filed-or-logged finding writes to, whichever rung below it actually lands on.
+- **`gh issue list --search "<gist>" --state all`** when GitHub is in play — catches an issue
+  filed by a session that never wrote, or never pulled, the ledger file.
+
+A match is not an automatic skip: a *closed* issue whose finding has recurred is a regression,
+not a duplicate. Present the match and ask the user: (a) already tracked — link it and stop;
+(b) closed but recurred — reopen it (rung 1) or append a "recurred" line (rung 2); (c) related
+but actually distinct — file fresh. Only file without asking when nothing matches.
+
+### 2. Draft the finding
+
+Fill `references/templates/debt-log-entry.md` — a one-line title is useless six weeks out. It
+needs the `file:line`, the shape observed (quoted, not paraphrased), the correct re-cut, and
+what triggered it, not just a title.
+
+### 3. Pick the rung (fallback ladder)
+
+1. **GitHub issue** — only when all three hold: `gh` is installed, `gh auth status` is clean,
+   and `gh repo view --json url` resolves (the remote is actually GitHub). Fall through on the
+   first that doesn't.
+2. **`.rust-studio/debt-log.md`** — the floor, and always available: a file write can't fail the
+   way an API call can, it's git-tracked so it reviews and merges like code, and it's the only
+   rung that works for a GitLab/Jira/Linear/no-tracker repo alike. Append the drafted entry
+   under its own `## <date> — <title>` heading. On a non-GitHub tracker, still print the drafted
+   entry after appending it — this plugin holds no credentials for arbitrary trackers, so the
+   user pastes it in themselves.
+
+State which rung applies and why (no `gh`, no GitHub remote, or the user's own preference) —
+never downgrade silently.
+
+### 4. Gate — propose, never file
+
+Filing is outward: a GitHub issue is public and notifies watchers; even the local ledger commits
+a claim into repo history. Never file on the way past a review — prompt the user:
+
+> "This finding is out of scope here. File it now — as a GitHub issue / a
+> `.rust-studio/debt-log.md` entry — or hold it in this conversation only?"
+
+Proceed only on the user's explicit go-ahead, the same outward-action gate `/pr` uses
+(`references/collaboration.md`). On rung 1, run the drafted `gh issue create --title "<title>"
+--body-file <tmp-file>` after approval and report the issue URL. On rung 2, append to the
+ledger and report the `file:line` of the new entry. Either way, write (or update) the
+`.rust-studio/debt-log.md` line for this fingerprint — so step 1 catches it next time even when
+rung 1 is the one actually used.
+
 ## Output
 
 End with a brief summary:

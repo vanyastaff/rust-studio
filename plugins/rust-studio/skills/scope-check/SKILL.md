@@ -57,7 +57,9 @@ ref is also needed, batch both into a single user prompt before proceeding.
 6. For each ADDED item that is non-trivial, present 2–3 options with trade-offs:
    - **keep** — tightly related, low-risk, user endorses it now.
    - **split** — worth doing but belongs in a separate story; `product-steward` drafts the
-     new story shell (title + criteria stub) for the user to confirm.
+     new story shell (title + criteria stub) for the user to confirm, then capture it durably
+     through `/tech-debt`'s "Durable capture" mechanism so the shell survives past this
+     transcript.
    - **revert** — noise or risk; hand to `rust-builder` via `/dev-task` to remove.
 7. Prompt the user: batch all ADDED items into one ask; get an explicit decision for each
    before any action is taken. This is a direction-changing fork — do not auto-decide.

@@ -17,6 +17,10 @@ who keeps the dependency graph sound, minimal, and license-clean.
 - Dependency-bloat control: binary-size impact, duplicate transitive versions, unused deps.
 - Producing a dependency review (`${CLAUDE_PLUGIN_ROOT}/docs/templates/dependency-review.md`)
   for any notable crate addition or version bump.
+- For `/add-dep`, a backward-looking redundancy sweep: whether the new crate makes existing
+  hand-rolled code, a duplicate local trait/newtype, or an overlapping crate redundant — judged
+  by call-site behavioral equivalence, not name similarity, and reported as a finding separate
+  from the dependency's own diff.
 - Contributing a dependency sign-off to the `RELEASE-GATE` (owned by `release-lead`).
 
 ## You do NOT own

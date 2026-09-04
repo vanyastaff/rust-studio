@@ -48,6 +48,10 @@ proceed (`references/memory-protocol.md`).
 5. **`chief-architect`** identifies the design questions that actually need answering (e.g.
    split vs. merge a crate, which crate owns a type, visibility rules, async boundary placement).
    Narrow to the 2–5 decisions that drive everything else.
+   For any split-vs-keep question, read the scout's map against `references/architecture.md`
+   §"Crate-extraction tells" and the counter-case beside them. Name which tells fire and where
+   (`path:line`) and which were checked and did not — a tell that does not fire is evidence for
+   leaving the module in place, and the default is to leave it.
 6. For each decision, present **2–4 options** with concrete trade-offs (coupling, compile time,
    reuse, `pub` surface, maintainability). Each option must ALSO state:
    - **(a) Invariants & encoding** — the invariants the option must uphold and HOW they are
