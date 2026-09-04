@@ -1,6 +1,11 @@
 # Template — the project's own `CLAUDE.md`
 
-Copy into the **repo root** as `CLAUDE.md`. This is the user's file, not the studio's: it is
+Copy into the **repo root** as `AGENTS.md`, and put a two-line `CLAUDE.md` beside it holding
+only `@AGENTS.md` and nothing else — the same split `/adopt` uses per crate, for the same
+reason: Claude Code reads `CLAUDE.md` and not `AGENTS.md`, while Codex, Cursor and Copilot read
+`AGENTS.md`. The pointer holds no facts, so the two cannot drift. (Anthropic documents this
+import as the remedy, and steers away from a symlink because a Windows checkout cannot make
+one.) A root file in only one of the two names leaves every other host with no context at all. This is the user's file, not the studio's: it is
 versioned, shared with the team, and read by every agent that opens the repo — including agents
 that have never heard of this plugin. It is where the studio's understanding of a project
 becomes durable.
@@ -72,5 +77,5 @@ Two rules keep it honest:
   the same PR review as the code does. `/memory-doctor` proposes promotions; a human approves
   them.
 
-Per-crate `CLAUDE.md` files in a large workspace scope context to the crate being edited — see
+Per-crate context files in a large workspace scope context to the crate being edited — see
 `large-workspace.md` before adding them, because each one is loaded whenever that crate is open.

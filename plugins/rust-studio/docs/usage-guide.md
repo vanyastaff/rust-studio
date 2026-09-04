@@ -52,7 +52,7 @@ opinion (`working-preferences.md`).
 ```
 /start                 # detect stack, brief the team, route
 /recall <area>         # pull prior learnings before you touch the area
-/spec <feature>        # (big/cross-crate) explore → 2–4 approaches → approved spec doc
+/spec <feature>        # (big/cross-crate) intent → explore → 2–4 approaches → approved spec
   /spec-tasks <slug>   #   break it into ordered tasks, each run via /dev-task
 /dev-task <task>       # (one unit) scout → plan → approve → build → review
 /tdd <behavior>        # (alt) build a behavior test-first: RED → GREEN → REFACTOR
@@ -159,7 +159,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
   timeouts, lefthook).
 
 ### Spec-driven (big / cross-crate work, persisted in `.rust-studio/specs/`)
-- **`/spec`** — explore → weigh approaches → an approved spec doc.
+- **`/spec`** — intent (the problem in your words, frozen) → explore → weigh approaches →
+  an approved spec doc.
 - **`/spec-tasks`** — break a spec into ordered tasks, drive each via `/dev-task`.
 - **`/spec-verify`** — prove the implementation meets the spec's acceptance criteria; archive.
 

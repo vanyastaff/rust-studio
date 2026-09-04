@@ -7,7 +7,9 @@
 - **Governing ADR:** `<docs/adr/NNNN-….md or none>`
 
 ## Problem
-*What we're solving and for whom. The concrete scenario, not an abstraction.*
+*Carried over from `intent.md`, not re-authored here — the point of the intent is that this
+sentence was written before an approach existed to bend it. If you find yourself rewording it
+to fit the design, that is a correction to log in the intent, not a phrasing choice.*
 
 ## Goals / Non-goals
 **Goals**
@@ -39,4 +41,5 @@ deprecation decisions. (See `/api-review`.)*
 - *…*
 
 ## Links
-*ADR, related specs, memory notes (project memory store — `/recall`), issues.*
+*`intent.md` (same slug) first, then ADR, related specs, memory notes (project memory store —
+`/recall`), issues.*

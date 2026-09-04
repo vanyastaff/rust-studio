@@ -5,6 +5,125 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0] - 2026-09-04
+
+Three Anthropic sources read end to end — the large-codebases article, the AI-Native SDLC
+playbook, and the code-migrations write-up — and what came out is mostly *not* what they say
+on the surface. The large-codebases piece declines to answer for compiled monorepos in one
+sentence; that sentence turned into the sharpest thing in this release. The SDLC playbook's
+three-reviewer chain does not survive a single-owner engineering context, but its ordering
+does. The migrations piece is about porting languages, which this plugin will never do, and
+carries three general mechanisms that transfer anyway.
+
+### Added
+
+- **Per-crate commands: what is safe to scope, and what lies** (`docs/large-workspace.md` §3,
+  +98). Anthropic's large-codebases article says per-subdirectory command scoping "works well
+  for service-oriented codebases" and then: *"In compiled-language monorepos with deep
+  cross-directory dependencies, per-subdirectory scoping is harder to achieve."* A Cargo
+  workspace is exactly that case. Every claim below was produced by running cargo 1.98 against
+  a purpose-built three-member workspace, not recalled:
+  - `cargo test -p <crate>` at the root is byte-identical to `cd <crate> && cargo test` — same
+    test binary hash, same `target/`.
+  - It is also a **false green**: features unify across the graph being built, so a crate whose
+    sibling enables a feature on a shared dependency passes alone and fails under `--workspace`.
+  - **`--all-features` does not close it.** It applies to the *selected* package only, so it
+    catches the crate's own features and stays blind to the sibling-enabled one. Verified
+    twice, independently.
+  - No resolver version changes this. The same experiment under `resolver = "1"`, `"2"` and
+    `"3"` gives an identical split — v2/v3 de-unify build-dependencies, proc-macros and
+    target-specific dependencies, never sibling members in one build. Recorded so nobody
+    re-derives it.
+  - The honest scoped command is `cargo nextest run --workspace -E 'package(<crate>)'`, which
+    reproduces the failure that `-p <crate>` reports as green.
+  - Also: `--all-targets` silently drops doctests (a deliberately failing doctest never ran and
+    the command was green); `nextest` never runs them at all; `[workspace.lints]` reach `-p`
+    only where the member opted in with `[lints] workspace = true`; `clippy -p` lints workspace
+    path-dependencies transitively; `.cargo/config.toml` is CWD-discovered, so a crate-local
+    `[env]` block is invisible to `-p` from the root.
+- **`/adopt` scaffolds per-crate context files** — the article's highest-leverage move
+  ("initializing in subdirectories, not at the repo root") and the half `/adopt` never did.
+  The naming is settled by Anthropic's own memory docs rather than by preference: Claude Code
+  reads `CLAUDE.md` and **not** `AGENTS.md`, and only `CLAUDE.md` lazy-loads per subdirectory,
+  while Codex, Cursor and Copilot read `AGENTS.md`. So content goes in `AGENTS.md` and a
+  two-line `CLAUDE.md` beside it holds `@AGENTS.md` and nothing else — a pointer with no facts
+  cannot drift. A symlink is rejected for the reason Anthropic gives: a Windows checkout cannot
+  make one. The root template now uses the same shape, so a Codex user is no longer left with
+  per-crate context and nothing at the root. Contents are pruned by one discriminator — *the
+  file is for someone editing this crate, not consuming it* — leaving three sections, and the
+  thirty-identical-files failure is answered structurally: **a line true of two crates is not a
+  crate line**; promote it and delete every copy.
+- **`/spec` Phase 0 — intent, before any technical framing** (+ `docs/templates/intent.md`).
+  Today the spec's Problem statement is written in Phase 4, *after* the approach is chosen in
+  Phase 3, by the same pass that just committed to a design. Nothing holds an independent
+  record of the goal, so a spec can solve an adjacent problem, trace its own criteria to
+  itself, and go green. Phase 0 captures the problem in the user's words while there is no
+  solution to defend, then freezes it. The playbook's product-owner gate does **not** transfer
+  — with one person owning both problem and solution, approving your own intent is theatre —
+  so the gate asks for a *correction*, not an approval: "is this your problem?" is the one
+  question the owner still cannot answer for themselves in advance. Wanting to edit the intent
+  later is the finding, logged under `## Corrections`.
+- **Uncalibrated oracle** (`docs/integrity-and-evidence.md`) — a green suite offered as proof
+  that behavior *survived* a change, without ever establishing the suite can go red for the
+  class of breakage that change causes. Green-before and green-after are then two readings of
+  an instrument nobody calibrated. Distinct from *Vacuous test*: there one test cannot fail and
+  you can see it in the source; here every test is real and the gap is between what they
+  observe and what the change moves. Paired with the evidence rule **"a judge nobody has seen
+  fail is not a judge"** and a bounded `/migrate` Phase 0 step that breaks one thing on purpose
+  and records what the baseline is blind to, with `/mutants` named as the escalation.
+
+### Changed
+
+- **`/spec-verify` audits the intent trace in both directions.** Phase 4 asserts that every
+  criterion answers to intent's "What 'fixed' looks like"; nothing checked it afterwards. The
+  reverse direction is the dangerous one: a line in the intent with **no** criterion pointing
+  at it means everything present passes and the missing thing is what the user asked for.
+- **`/brainstorm` → `/spec` no longer seeds the intent from a contaminated source.** Phase 0
+  originally seeded from the concept note — which `/brainstorm` writes at step 9, *after* the
+  direction is picked, so it is already shaped by the chosen approach. It now seeds from the
+  step-3 goal-and-constraints header, the only statement of the problem written before a
+  direction exists, and `/brainstorm` carries that header verbatim into its handoff.
+- **Write-zone doctrine gains a cost axis** (`docs/delegation.md` §8). "Derived files are not a
+  write zone" is sound about *correctness* and silently implies "therefore free". `target/` is
+  derived and contended: two builds launched 0.4s apart produced `Blocking waiting for file
+  lock on build directory`, 5.3s of wall clock for 2.8s of work. So the expensive shared step
+  runs once at the wave boundary, not inside every unit's inner loop — the same decision the
+  migration article records, where a fast type-checker sat inside the loop and cargo was banned
+  from it. What the shared directory does *not* cost is redone work: cargo keys artifacts by
+  feature set and `RUSTFLAGS`, so variants coexist and nothing recompiled on re-runs. That
+  negative is recorded because it rules out the naive fix — a `CARGO_TARGET_DIR` per unit trades
+  a queue for N cold rebuilds.
+- **Fix the loop, not the diff** (`docs/delegation.md` §8). When a reviewer catches the same
+  defect across units of one wave, amend the shared brief and re-dispatch what the amendment
+  changes, rather than hand-patching N returned diffs against an unamended brief. The existing
+  promotion ladder covers the durable half; nothing covered the units still in flight.
+- **Two lenses that disagree get a probe, not a tie-break** (`docs/delegation.md` §3.3). The
+  migration article's third adjudicating agent was rejected: the studio's lenses read different
+  questions rather than judging one claim, and this repo already records a run where two
+  reviewers agreed on an observation and gave mutually exclusive mechanisms — a three-line probe
+  settled it where a vote would have picked whichever sounded surer. A disagreement about what
+  the code *does* is factual: probe one variable. Escalate only the judgment residue.
+
+### Verified, no change warranted
+
+- **Model tiering.** The migration article's rule — cheap models for implementation fan-out,
+  the largest for reviewers *and for anything that writes rules other agents follow* — already
+  holds across all 33 agents (`sonnet` ×26, `inherit` ×5, `opus` ×1, `haiku` ×1). Every
+  reviewing agent is top-tier, and every durable rule-writing path (`/adr`, the promotion
+  ladder, `chief-architect`, `product-steward`) is too; `sonnet` leads decide domain policy for
+  one change and route it upward to become durable. One case the article's rule does not model:
+  `security-auditor` is pinned to `opus` for a *capability* reason, not a cost one.
+- **`docs/large-workspace.md` against the official docs.** Compared against
+  code.claude.com/docs/en/large-codebases: `claudeMdExcludes`, `worktree.sparsePaths`,
+  `symlinkDirectories`, `additionalDirectories`, `--add-dir` and both of the page's subtle
+  gotchas were already covered. One pattern was not, and was added: per-directory project
+  skills under `.claude/skills/`, with the Rust angle that a crate-local skill earns a file
+  only for a *procedure* specific to that crate.
+- **No language-porting pipeline.** The migrations article describes work that cost 5.9B
+  uncached input tokens and roughly $165k for one port, and Anthropic ships a separate starter
+  kit for it. `/migrate` stays edition-and-dependency migration; a half-built port pipeline
+  would be ceremony. Skill count unchanged at 62.
+
 ## [0.39.0] - 2026-09-04
 
 Three new build gates — four total counting 0.38.0's §-anchor check — and the ADR the
