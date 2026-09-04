@@ -169,8 +169,10 @@ R4. Decide, and carry the verdict into the phase named below — do not invent a
       ask as EXTEND — the smallest change that does not deepen the drift — or decline to
       implement if even that isn't safe, and raise a **non-blocking escalation** to
       `product-steward` (scope/story) or `chief-architect` (module boundary): the same route
-      `/review`'s Accretion check uses. Name the escalation and what shipped instead in the
-      Phase 5 verdict; never let the wider reshape block the task in front of you.
+      `/review`'s Accretion check uses. Capture it durably through `/tech-debt`'s "Durable
+      capture" mechanism, the same way — it doesn't just live in this conversation. Name the
+      escalation and what shipped instead in the Phase 5 verdict; never let the wider reshape
+      block the task in front of you.
 
 ## Error recovery
 

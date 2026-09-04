@@ -27,3 +27,7 @@ Thumbs.db
 
 # autopilot runtime state (dashboard server port/pid)
 .autopilot/serve.pid
+
+# per-agent scratch memory written into the plugin tree during a session —
+# agent state, not plugin content; must not ship in the distribution
+plugins/rust-studio/.claude/agent-memory/

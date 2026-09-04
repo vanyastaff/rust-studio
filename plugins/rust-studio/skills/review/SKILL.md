@@ -83,6 +83,11 @@ used to ask, on every touched area:
   fit this one? Read the shape against the named tells in `references/types.md`
   §"Design-drift tells" rather than eyeballing "exceptions" from scratch.
 - Could a human reason about it now without you tracing every branch for them?
+- Has the module **outgrown the crate it lives in** — it is the recompile hotspot, it carries
+  its own dependency set, a newtype exists only to dodge the orphan rule, or a sibling already
+  imports it through a narrow door? Read it against `references/architecture.md`
+  §"Crate-extraction tells", and against the counter-case beside them before calling it: the
+  default is to leave the module where it is, and a tell that does not fire is evidence for that.
 
 A hit is a real defect — tag it `🚩 INTEGRITY` per the Cheat Catalog's "Extend over reshape"
 entry (`references/integrity-and-evidence.md`). It is **not** a `🟣 REDO` finding and does
@@ -94,7 +99,8 @@ BLOCKED to cover it. Report the diff's own verdict on its own merits, and raise 
 finding as a **separate, non-blocking escalation**: hand it to `product-steward` (scope/story
 owner) or `chief-architect` (when it's a module-boundary call) to open a scoped reshape task —
 the same route `/tech-debt` uses to turn debt into a story instead of a line patch on the diff
-in front of you.
+in front of you. Then capture it durably through `/tech-debt`'s "Durable capture" mechanism —
+the finding doesn't just live in this transcript.
 
 ## Oracle-weakening checklist
 "Weaken the oracle" is in the Cheat Catalog, but no file-based linter sees a deleted assertion,

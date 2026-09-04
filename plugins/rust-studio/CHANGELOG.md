@@ -13,6 +13,13 @@ inventing a citation and guessing at two identifiers that both 404'd. The gates 
 share a method: derive the threshold from the data, then check the derivation didn't get
 picked to fit a wish.
 
+The second half of the release answers a different question: not "did the agent cut a corner"
+— that was already armed — but "the agent did the whole job correctly and the module still got
+worse." Accretion instead of reshape, and the design drift underneath it, have no linter and
+no review verdict; what they have now is tells you can point at in the tree, a counter-case
+for each so the rules can say *leave it*, and one durable capture path so a finding deferred
+out of a PR outlives the session that found it.
+
 ### Added
 
 - **Skill-description similarity gate.** Flags any pair of skill descriptions scoring
@@ -62,6 +69,62 @@ picked to fit a wish.
   two agents, an ASYNC-GATE, and `/team-async`. Published as a map, not a backlog: the
   file's own "a fixture is born from a defect that escaped, never from imagination" rule
   stands. The re-derivation commands are recorded next to the numbers.
+- **Reshape-over-accretion, as mechanism rather than exhortation.** The studio could already
+  name this failure in prose and had nothing that checked for it: the task delivered whole and
+  correct, landed as one more special case on a shape that was right for the old requirements.
+  It is distinct from the shortcut defects already covered — it does everything asked, and
+  still leaves the module worse than it found it. Four surfaces now fire, each at a different
+  moment:
+  - `docs/integrity-and-evidence.md` — an **Extend over reshape** row in the Cheat Catalog,
+    and a **Missing Reflex** section: the human trigger for refactoring is "I am lost in my
+    own module", and an agent that re-reads the file cold every session never accumulates
+    the confusion that fires it.
+  - `rules/types.md` §**Design-drift tells** — eleven reading tells (borrow-checker fights
+    that are really shape complaints, `Option` fields that cannot all be `None` together,
+    a bool parameter answering a question the type should), path-scoped onto model, protocol,
+    parser, config, and error files so they surface when an agent opens one. Tells, not
+    lints: no clippy rule fires on any of them, which is why they need naming.
+  - `skills/review/SKILL.md` §**Accretion check** and §**Oracle-weakening checklist** — the
+    latter is 11 `git diff` probes for tests bent to fit the change. The review vocabulary's
+    gap is recorded rather than papered over: there is no verdict for *this diff is correct,
+    but the module it lives in needs a reshape the diff cannot carry*, and `REDO-TO-BAR`,
+    which reshapes only the touched area, is not it.
+  - `skills/model-domain/SKILL.md` §**Re-modelling mode** — R1–R4 resolving to EXTEND /
+    RE-CUT / RE-CUT, ESCALATED, where a tell that does not fire counts as evidence for
+    EXTEND rather than as silence.
+- **Crate-extraction tells** (`rules/architecture.md`, +102). The rule already stated what a
+  split *costs* — version skew, lost cross-crate LTO, `cargo-hakari` — and had no way to say
+  when to pay it. Nine tells, each pointing at something in the tree: the recompile hotspot
+  (gated on `cargo build --timings`, the claim most often asserted unmeasured), an orphan-rule
+  workaround, a private dependency set, a feature flag standing in for a boundary that feature
+  unification then undoes, a per-package MSRV/edition/target floor held hostage by one module,
+  a cycle Cargo forbids outright, a narrow stable door a sibling already uses, a sibling
+  copying rather than depending, and a vocabulary that has left the workspace. **Size is not a
+  tell.** Paired with §**When extraction is wrong** — eight counter-conditions, default is to
+  leave it — because a rule that only ever says "extract" is worth as little as one that never
+  does. The `paths:` glob was widened to close a real hole: `**/src/**/mod.rs` matches
+  2015-style module roots but not 2018-style `src/parser.rs`, so the boundary rule was silent
+  on the exact file where a top-level module lives. Verified against the hook's own
+  `pathMatches`: 4 paths gained, **0 lost**, and `src/parser/lexer.rs`, `benches/`, `tests/`,
+  `build.rs`, `src/bin/` correctly stay out.
+- **`/add-dep` Phase 3 — redundancy sweep** (+45). Adding a crate can make part of the tree
+  redundant the moment it lands, and that DRY violation is invisible in the add's own diff
+  because the diff never touches the code it obsoletes. `rust-scout` searches on the crate's
+  *capability*, not its name. **Most hits are lookalikes, not duplicates — that is the default
+  finding**, and the test is behavioral equivalence at the call sites: does the crate cover
+  every case, does the local code exist for an orthogonal reason (`no_std`/WASM, measured
+  perf, a lean profile), would swapping actually type-check and keep tests green unmodified.
+  Survivors are reported as a finding separate from the `cargo add` diff, never folded into
+  it. The reverse case is a legitimate outcome: the honest answer may be "don't add it".
+- **`/tech-debt` durable capture** (+63) — the mechanism that makes a deferred finding outlive
+  the session, so accretion noticed during a review does not die in a transcript. Dedup gate
+  first (fingerprint = `file:line` + category + a normalized gist, checked against both the
+  ledger and `gh issue list --state all`; a closed match is treated as a possible regression,
+  not silently skipped), then a two-rung fallback ladder: a GitHub issue when `gh`, auth, and
+  repo all resolve, and `.rust-studio/debt-log.md` as the floor — git-tracked, so it reviews
+  and merges like code, and it works for GitLab, Jira, or no tracker at all. It proposes and
+  shows; it never files on the way past. `/review`, `/model-domain`, `/scope-check`, and
+  `/add-dep` route here by reference — one capture path, not five.
 
 ### Changed
 
