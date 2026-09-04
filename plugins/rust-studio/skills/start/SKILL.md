@@ -1,6 +1,6 @@
 ---
 name: start
-description: "Use when starting Rust Code Studio work: detect the project stack and route to the right workflow or specialist."
+description: "Use when starting Rust Code Studio work: detect the stack and route to the right workflow or specialist."
 ---
 
 # /start — onboard into the studio
@@ -9,6 +9,10 @@ description: "Use when starting Rust Code Studio work: detect the project stack 
 > brief — see `references/sub-agents.md`.
 
 Orient and route. Keep it short and concrete.
+
+## When NOT this skill
+- You want the full catalog, not a recommendation for this project → `/help`. `/start`
+  detects the stack and routes to one skill; it does not list everything (see Notes below).
 
 ## Steps
 1. **Detect the project.** Use serena `find_file` / `list_dir` to locate `Cargo.toml`

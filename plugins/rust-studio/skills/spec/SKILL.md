@@ -14,6 +14,12 @@ user at each gate. Protocol: `references/delegation.md`.
 inventing, encode invariants structurally, and carry a forward view. The Pre-code Maintainer
 Gate (Phase 2.5) runs ON TOP OF the approach gate.
 
+## When NOT this skill
+- The idea isn't shaped yet — you don't know the goal, scope, or constraints →
+  `/brainstorm` first. `/spec` assumes a chosen direction and turns it into a written
+  spec with acceptance criteria; it does not explore from scratch.
+- The change is small enough that a spec is overhead → `/dev-task` directly.
+
 ## Phase 1 — Explore
 1. Restate the goal in one line; confirm if fuzzy.
 2. `/recall <area>` to surface prior learnings; spawn `rust-scout` to map the affected code,

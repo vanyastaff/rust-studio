@@ -1,0 +1,4 @@
+interface:
+  display_name: "Studio Doctor"
+  short_description: "The studio seems inactive: check hooks, runtime, agents, LSP"
+  default_prompt: "Use $studio-doctor when the studio seems inactive: check hooks, runtime, agents, LSP, memory, and cargo tooling."

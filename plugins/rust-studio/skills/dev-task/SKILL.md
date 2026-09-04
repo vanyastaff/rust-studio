@@ -20,6 +20,14 @@ Run the phases (scout → plan → plan-review → build → review) using the c
 **`references/delegation.md` §8**. Parallelize independent read-only work when workers are
 available; otherwise execute each named role inline and pass its result to the next phase.
 
+Availability is not a reason to spawn. A separate process costs a brief that restates what you
+already hold, a re-read on the other side, and several times the tokens — so it has to buy
+either **filtering** (the worker reads far more than it returns: `rust-scout` over an
+unfamiliar crate) or **independence** (the verdict must not come from the author:
+`harsh-critic`, `rust-reviewer`). A few edits in a file whose contents and plan are already in
+your context buys neither — run that phase inline (`references/delegation.md` §"When a handoff
+earns its cost"). Skipping the *spawn* is a judgment call; skipping the *phase* is not.
+
 When the host has a task or plan surface, keep one item per phase live and update it as results
 arrive. Otherwise maintain a concise in-message checklist. At every boundary surface the result
 in one line (edit-site map, plan verdict, diff summary, review findings) before moving on. The

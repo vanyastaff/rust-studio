@@ -28,6 +28,64 @@ Applies to domain models, protocols, parsers, config, and error types.
   is no longer true. "Structurally valid at some past instant" is not "valid now."
 - Builders are for genuinely complex construction or staged invariants, not as a reflex.
 
+## Design-drift tells
+Greenfield modelling (above) asks what the domain needs. These tells ask whether a model that
+already shipped still fits — the code compiles, clippy is clean, tests pass, and the model is
+still wrong. They are the concrete shapes behind the Cheat Catalog's "Extend over reshape"
+(`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`) and the question the Accretion check
+asks: has this become all exceptions and no rule? **These are reading tells, not lints** — no
+clippy rule fires on any of them, which is exactly why they need naming instead of waiting for a
+linter that will never catch them. Finding one on a touched model is the trigger to open
+`/model-domain`'s re-modelling mode rather than bolt on one more case.
+
+- **A `String`/`u8`/`i32`/`&str` field whose observed value set has closed.** It started open (a
+  label, a code from outside the crate) and every call site now constructs it from a fixed, known
+  list. The model still says "any string"; the domain says "one of these six." Cut an enum.
+- **Two or more `bool` parameters, or one `bool` that selects behaviour rather than states a fact
+  about the input.** `fn render(&self, bool, bool)` is two unreadable `true`s at the call site; a
+  `bool` that branches into two different code paths inside the function is two functions wearing
+  one name. Split into a typed state the caller must name, or two functions.
+- **An enum variant carrying `Option<T>` fields that are only ever `Some` for some variants.** The
+  variant tag already says which fields make sense; the `Option` re-does that tagging by
+  convention instead of by type, and every match arm has to know which combinations are real.
+  Split the variants that need the extra fields into their own type.
+- **`Option<Option<T>>` anywhere.** Sometimes deliberate — a PATCH-style "absent /
+  present-as-null / present-with-value" protocol — but left as raw nested `Option` it reads
+  identically to an accident, because both start the same way: an already-`Option` field gets
+  wrapped in another `Option` to add a third state. Name it either way: collapse it back to one
+  layer if the outer wrap was drift, or give the three states their own enum
+  (`Missing`/`Null`/`Value(T)`) if it's intentional, so a reader isn't left guessing which layer
+  is the bug.
+- **A `match` that grew a `_ => unreachable!()` / `_ => panic!()` arm covering cases that are now
+  real.** The wildcard was true when it was written; a variant landed since, and the match still
+  compiles because the wildcard silently absorbed it. Drop the wildcard so the compiler forces
+  every call site to handle the new case explicitly.
+- **A struct whose fields are only valid in certain combinations** (a `connected: bool` next to
+  fields that only mean something once connected, a `retry_count` that only means something after
+  a first failure). The struct can be constructed in states the domain doesn't allow. Move the
+  state-dependent fields behind typestate, or split into the types the combinations actually are.
+- **Parameters that always travel together at every call site.** If two or three parameters never
+  vary independently across the callers you can see, they are one struct wearing separate names —
+  bundle them so the type system, not caller discipline, keeps them together.
+- **Two or more `Vec`/slice/map fields kept in lockstep by index or key** (`names[i]` always
+  paired with `scores[i]`), updated and checked together at every call site. The correlation is a
+  domain fact the compiler isn't holding; collapse to one collection of a struct
+  (`Vec<Entry { name, score }>`) so the pairing can't drift apart at a partial update.
+- **The third `impl` of the same method shape across different types.** Two independent
+  same-shaped impls can be coincidence; the third is a pattern the type system isn't tracking yet.
+  Extract a trait so the shared contract is named once and callers can be generic (or `dyn`) over
+  it instead of matching on which concrete type they were handed.
+- **A `Box<dyn Trait>` (or a generic `T: Trait`) whose implementors are all local and fully
+  enumerable**, chosen back when the set was expected to stay open. If nothing outside the crate
+  has implemented it and nothing plausibly will, the open-set cost — vtable indirection, no
+  exhaustiveness checking, auto traits to spell out by hand (dyn-compatibility, above) — is being
+  paid for a set that closed. Collapse to an enum with `match` dispatch; reopen with a trait only
+  when a real external implementor shows up.
+- **`#[allow(clippy::too_many_arguments)]`.** The lint fired on the parameter *count*; the defect
+  is the shape underneath it. Silencing the lint without asking why the function grew that many
+  parameters is "Extend over reshape" in miniature — it passes the check and leaves the model
+  worse than it found it.
+
 ## Borrowing before allocation
 - Do not hide lifetime or ownership problems with needless `clone`, `to_owned`, `collect`,
   boxing, or `String` conversion.

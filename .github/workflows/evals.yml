@@ -1,0 +1,94 @@
+name: agent evals
+
+# The studio's prompts ARE its source code. `skills/`, `agents/`, `rules/`, `hooks/` and
+# `docs/` decide what the reviewer catches, and an edit to any of them can regress recall
+# exactly the way a code edit regresses a test — silently, and only in behavior. The
+# distribution validator and `bun test` check that the files are well-formed; nothing until
+# this job checked that they still do their job.
+#
+# Gate, not decoration: a config change that drops the suite below the threshold fails the PR.
+on:
+  pull_request:
+    paths:
+      - 'plugins/rust-studio/skills/**'
+      - 'plugins/rust-studio/agents/**'
+      - 'plugins/rust-studio/rules/**'
+      - 'plugins/rust-studio/hooks/**'
+      - 'plugins/rust-studio/docs/**'
+      - 'plugins/rust-studio/evals/**'
+      - 'plugins/rust-studio/benchmarks/**'
+      - '.github/workflows/evals.yml'
+  schedule:
+    # The paths filter above runs the suite against what a PR touched. This runs the whole
+    # thing nightly, so a regression that arrives through an untouched path — a model
+    # change, a host update — surfaces on its own rather than on the next unlucky PR.
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # `plugin eval` bills real model calls, so the suite runs only where a key exists.
+      # A fork PR has no secret and must not fail on that account — it reports skipped, and
+      # the job stays green. Anything else would make the gate a barrier to contribution
+      # rather than a check on the studio.
+      - id: key
+        name: Check for an API key
+        run: |
+          if [ -n "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Agent evals skipped::No ANTHROPIC_API_KEY available (expected on fork PRs). The suite runs on the nightly schedule from the base repo."
+          fi
+
+      - name: Install Claude Code
+        if: steps.key.outputs.present == 'true'
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # `claude plugin eval` is early access. Where it is not enabled the command prints a
+      # notice and exits without scoring, which would make an unconditional gate report a
+      # pass it never measured. Probe first, and say which of the two happened.
+      - id: probe
+        name: Probe eval availability
+        if: steps.key.outputs.present == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          out=$(claude plugin eval plugins/rust-studio --case routing-start --runs 1 \
+                  --ablation none --no-publish 2>&1 || true)
+          echo "$out" | tail -20
+          if echo "$out" | grep -qi 'early access'; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Agent evals skipped::\`claude plugin eval\` is not enabled for this account. Run /eval-agents in a session for the same fixtures."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run the eval suite
+        if: steps.probe.outputs.enabled == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude plugin eval plugins/rust-studio \
+            --no-publish \
+            --threshold 0.8 \
+            --max-cost-usd 15
+
+      - name: Upload results
+        if: always() && steps.probe.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: plugins/rust-studio/evals/results/
+          if-no-files-found: ignore

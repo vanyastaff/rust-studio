@@ -17,6 +17,13 @@ recovery) — decide tactical calls yourself, state choice + one-line rationale.
 weak structure (extract, move-to-owning-crate, borrow-instead-of-clone, replace stringly/bool
 with domain types) IS the job here, not a while-I'm-here cleanup to suppress.
 
+## When NOT this skill
+- The code isn't changing — you want to confirm already-finished work matches a written
+  spec before archiving it → `/spec-verify`: it runs the spec's acceptance criteria
+  against `.rust-studio/specs/<slug>/spec.md` and produces a verify report. `/refactor`
+  restructures code under a behavior-preserving constraint; it doesn't check work against
+  a spec or archive anything.
+
 ## Progress visibility
 Use the host's task or plan surface when available; otherwise keep a concise in-message checklist.
 Create one item per phase (scope → clippy signals → plan → refactor → verify → review), mark the

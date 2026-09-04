@@ -1,13 +1,13 @@
 # Rust Code Studio
 
 <p>
-  <img src="https://img.shields.io/badge/skills-60-111111?style=flat-square" alt="60 skills">
+  <img src="https://img.shields.io/badge/skills-62-111111?style=flat-square" alt="62 skills">
   <img src="https://img.shields.io/badge/agents-33-111111?style=flat-square" alt="33 agents">
   <img src="https://img.shields.io/badge/works%20with-70%2B%20hosts-111111?style=flat-square" alt="Works with 70+ hosts">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
-A Rust engineering studio for coding agents: 60 skills that carry the standards a strict crate
+A Rust engineering studio for coding agents: 62 skills that carry the standards a strict crate
 maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
@@ -36,7 +36,7 @@ Claude Code, Codex, Cursor, OpenCode, Zed, Copilot and ~70 other hosts. No npm p
 the [skills CLI](https://github.com/vercel-labs/skills) reads a local clone or Git repository
 directly. For a remote install, use `npx skills add <owner>/rust-studio`. Safe to re-run.
 
-The 58 host-neutral workflows bundle their standards and deterministic helpers, so they work
+The 60 host-neutral workflows bundle their standards and deterministic helpers, so they work
 installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
 
 The plugin directory is also an [Agent Plugins 1.0](https://agent-plugins.org) package (root
@@ -78,13 +78,13 @@ npx skills add . --skill '*' --agent '*' -y
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities and explicit-invocation-only
-> in Codex. The other 58 skills, including `/env-setup` and `/help`, are standalone.
+> in Codex. The other 60 skills, including `/env-setup` and `/help`, are standalone.
 
 ## What you get, where
 
 | | skills via `npx` | Codex plugin | Claude Code plugin |
 |---|---|---|---|
-| 60 skills | yes | yes | yes |
+| 62 skills | yes | yes | yes |
 | Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
 | 33 named studio agents | no — phases run inline | yes, after one generator step | yes, spawned per phase |
 | Session briefing + path-scoped rule injection | no | yes | yes |

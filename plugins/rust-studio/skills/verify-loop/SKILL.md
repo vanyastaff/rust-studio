@@ -26,6 +26,11 @@ when hosted CI is green (CI may not see what the local gate sees); a gate failur
 untracked or ignored local artifacts is an environment defect to fix or report — never a
 reason to fall back to "CI is green". No repo gate defined → the trio stands alone.
 
+## When NOT this skill
+- The trio is already green and you need to confirm the work satisfies a written spec
+  before archiving it → `/spec-verify`. `/verify-loop` only drives cargo fmt/clippy/tests
+  (plus the repo's own gate) to green; it has no notion of a spec or acceptance criteria.
+
 ## The loop (max 3 passes)
 
 1. **Run** (scope from `input` — package, feature set, or test filter):

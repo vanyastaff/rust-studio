@@ -1,6 +1,6 @@
 ---
 name: doc-review
-description: "Use when reviewing a requirements, spec, plan, ADR, or design document for coherence, feasibility, scope, and security."
+description: "Use when reviewing a spec, plan, ADR, or design doc for coherence, feasibility, scope, and security."
 ---
 
 # /doc-review — audit a design document

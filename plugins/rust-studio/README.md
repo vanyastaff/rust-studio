@@ -9,12 +9,13 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 > rebuilt from the ground up for Rust and packaged for Claude Code and Codex.
 
 - **33 agents** — 2 directors → 7 leads → 20 specialists (incl. an adversarial `harsh-critic`) + a scout/builder/resolver/reviewer execution group
-- **60 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, CI-gate setup, cross-session memory, and a self-check harness
+- **62 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping, build-fixing, edition & major-dependency migration, CI-gate setup, cross-session memory, and a self-check harness (quality **and** runtime health)
 - **20 path-scoped rule sets** — a pointer to the right Rust standard surfaces the moment you open or edit a matching file; the agent reads the full rule on demand (keeps the window lean)
 - **12 Claude hook handlers across 8 events** — stack detection **+ memory recall**, path-scoped rule pointers, lint and lifecycle nudges, verdict checks, and an opt-in **stop-guard**
 - **Bundled rust-analyzer LSP** — real-time diagnostics (via `cargo clippy`) and go-to-definition the moment you edit, so `rust-scout` resolves symbols instead of scanning files; no extra plugin to install (just `rust-analyzer` on PATH)
 - **Configurable + a terse review style** — set a house MSRV, preferred test runner, and default gate intensity per the `/plugin` config dialog; opt into a one-finding-per-line reviewer output style via `/config`
 - **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
+- **Untrusted-context standard** — a Rust session reads a lot of text nobody on the project wrote (crate READMEs and `//!` docs, `docs.rs`, a dependency's `build.rs` output, PR threads, CI logs), and it all lands in the window looking like the agent's own reasoning. A doctrine ([`docs/untrusted-context.md`](docs/untrusted-context.md)) + a provenance pointer from the PreToolUse hook + `🚩 UNTRUSTED` findings in `rust-reviewer` / `security-auditor` / `dependency-manager` make third-party text **material to report on, never to act on**: a crate whose docs tell tooling to add a dep, ignore an advisory, or silence a lint is a `/add-dep` **block**, and Trojan-Source bidi codepoints in dependency source are a finding. Kept honest by the `security/untrusted-context` fixture, which scores whether the studio reports the planted instructions *and* still finds the two real defects they distract from
 - **Claude 5 (Fable 5) ready** — judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code; `security-auditor` stays pinned to Opus so a cyber-classifier trip falls back to Opus 4.8 inside the audit instead of switching the whole session; authoring rules keep prompts refusal-safe and non-prescriptive ([`docs/claude-5-compat.md`](docs/claude-5-compat.md))
 
 ---
@@ -67,9 +68,9 @@ intensity to match the work.
 
 > Plugin commands are namespaced: `/rust-studio:<name>`.
 
-- **Onboarding** — `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt`
+- **Onboarding** — `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt` · `/studio-doctor` (is the studio actually live here?)
 - **Design** — `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
-- **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
+- **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/migrate` (edition / major-dependency upgrade, with the semantic review `cargo fix` can't do) · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 - **Spec-driven** — `/spec` · `/spec-tasks` · `/spec-verify` (persisted in `.rust-studio/specs/`)
 - **TDD & verify** — `/tdd` · `/verify-loop`
 - **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
@@ -108,12 +109,16 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   changed crates / last commit, plus index health (budget vs the host's 200-line / 25 KB load
   limit, index ↔ files). On Claude Code the host loads the index itself, so only pointers are
   added; on Codex the index rides along (`/recall` for the deliberate, verified pass).
-- **PreToolUse (Read/Write/Edit)** — injects a compact *pointer* to each path-scoped Rust
-  standard (name + one-line summary + absolute path) *before* you read or edit a matching file,
-  so the agent knows which standards bind and reads the full rule on demand — instead of dumping
-  every rule body into the window on every file (the dominant context cost, see
+- **PreToolUse (Read/Write/Edit/WebFetch)** — injects a compact *pointer* to each path-scoped
+  Rust standard (name + one-line summary + absolute path) *before* you read or edit a matching
+  file, so the agent knows which standards bind and reads the full rule on demand — instead of
+  dumping every rule body into the window on every file (the dominant context cost, see
   `tools/context-cost.ts`). An edit that introduces `unsafe` also points to the unsafe-code
   standard. `core` leads every list; safety/security-critical rules are flagged ⚠️ REQUIRED.
+  The same pass flags **provenance**: a read under a dependency root (`~/.cargo/registry`,
+  `~/.cargo/git`, `vendor/`, `node_modules/`) or any web fetch is announced as third-party text
+  with a pointer to [`docs/untrusted-context.md`](docs/untrusted-context.md) — once per session,
+  not once per file.
 - **UserPromptSubmit** — prompt-scoped recall: the prompt is matched against the memory index
   and a note that scores a strong hit is surfaced once per session (title, kind/age, path);
   plus a once-per-session nudge to `/recall` before working in a known area and to prefer a
@@ -142,6 +147,41 @@ Hooks are TypeScript, run via [`bun`](https://bun.sh). If `bun` isn't on PATH th
 studio still works, you just lose auto-injection and recall. Each hook reads stdin behind a
 hard timeout with a watchdog, so it can never freeze the session (even mid-subagent). See
 [`../../INSTALL.md`](../../INSTALL.md).
+
+## Script safety gate
+
+A January-2026 scan of 31,132 marketplace skills found 26.1% carried at least one
+vulnerability, and skills shipping executable scripts were **2.12x** more likely to have one —
+and no publisher-trust mechanism exists for skills. This plugin ships hook scripts, build
+scripts, and scripts bundled into skills, and to an installer it looks like every other plugin
+in that scan. `scripts/validate-distribution.sh` — the same build-time check that gates every
+release — includes a gate that fails if any shipped script matches one of four literal
+patterns:
+
+1. **Network from a hook.** `fetch(`, an `http(s)://` URL, `curl`, or `wget` anywhere in
+   `hooks/scripts/*.ts` (excluding tests). Hooks run on every matching tool call with no prompt
+   in the loop, so one that could reach the network could exfiltrate anything it reads.
+2. **Dynamic code execution.** `eval(` or `new Function` anywhere in a hook, build, or
+   skill-bundled script — the one primitive no static check can bound.
+3. **`curl … | sh`.** Piping a download straight into an interpreter, anywhere except
+   `scripts/env-setup.sh` — the single declared exception, a user-invoked installer that
+   bootstraps rustup this way on purpose.
+4. **Process spawning outside the shared helper.** Every hook is meant to spawn subprocesses
+   through `hooks/scripts/_lib.ts`'s `run()`, which always sets a timeout so a stuck child can't
+   hang the session. A raw spawn call outside it must still carry its own timeout, and if it
+   builds the command by string interpolation it must additionally be an explicitly reviewed,
+   named exception in the gate itself — today that's two calls in `memory-store.ts`, both
+   passing only hardcoded literal `git` subcommands, never external or session-derived input.
+
+**What this proves:** these four literal patterns are absent from shipped scripts today, and a
+change that reintroduces one fails CI immediately, naming the file and line — so a property
+that already holds can't quietly stop holding. **What this does not prove:** that any script is
+free of other bugs, that no other means of reaching the network or spawning a process exists,
+or that a skill's *prose* can't talk an agent into running something unsafe at your direction —
+that last risk is what the untrusted-context doctrine
+([`docs/untrusted-context.md`](docs/untrusted-context.md)) and `security-auditor` cover, not
+this gate. For the product-wide security posture and how to report a vulnerability, see
+[`../../SECURITY.md`](../../SECURITY.md).
 
 ## Status line (live progress)
 

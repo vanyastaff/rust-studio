@@ -18,6 +18,13 @@ sibling crate already own this; which invariants must hold; does responsibility 
 after a few extensions. Brainstorm writes no plan, so it emits no pre-code verdict — but the chosen
 direction carries these answers forward into the `/design-api` or `/architecture` Pre-code Gate.
 
+## When NOT this skill
+- The feature is non-trivial or cross-crate and you want a written, approved artifact
+  with observable acceptance criteria that `/spec-tasks` can break into tasks → `/spec`.
+  `/brainstorm` produces only a ≤200-word concept note and writes no files itself.
+- The idea is already well-understood (a trivial fix, a one-line change) → `/dev-task`
+  directly; skip both.
+
 ## Input
 
 `input` is the raw idea or problem. If empty, ask: "What are you thinking about

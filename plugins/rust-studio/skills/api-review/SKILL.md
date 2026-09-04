@@ -1,6 +1,6 @@
 ---
 name: api-review
-description: "Use when reviewing Rust public API changes for semver hazards, accidental exports, version bumps, and mitigations."
+description: "Use when reviewing Rust public API changes for semver hazards, accidental exports, and version bumps."
 ---
 
 # /api-review — audit a public API change for semver hazards
@@ -38,6 +38,12 @@ cargo semver-checks check-release --baseline-rev <baseline>
 # exit 100 = semver violation found; exit 101 = the tool failed (missing baseline, rustdoc
 # error) — a 101 is infra red, not evidence about the API (cargo-semver-checks >= 0.49)
 ```
+
+**A green `semver-checks` is not a clean bill when a dependency major moved.** It diffs your
+rustdoc, and `dep::Type` is spelled the same on both sides, so a bump that changes the actual
+type sails through — measured, with the caller's compile error, in `references/api.md`. When
+the diff bumps a dependency, decide separately whether that dependency's types cross your
+public surface; if they do, the release is breaking regardless of the tool's verdict.
 
 If either tool is absent, note it clearly and fall back to a manual
 `cargo doc` + `git diff` inspection via **`rust-scout`** (use serena

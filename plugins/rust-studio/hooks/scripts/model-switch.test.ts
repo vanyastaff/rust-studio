@@ -35,6 +35,13 @@ describe("switchNote", () => {
     expect(n).toContain("Opus 5 → Opus 4.8");
     expect(n).toMatch(/state that model/);
     expect(n).not.toContain("/model");
+    expect(n).not.toContain("/eval-agents");
+  });
+  test("main session: eval results are bound to the model that measured them, too", () => {
+    const n = switchNote({ from_model: "claude-fable-5-1", to_model: "claude-opus-4-8" });
+    expect(n).toContain("/eval-agents");
+    expect(n).toContain("`claude plugin eval`");
+    expect(n).toContain("early access");
   });
   test("no-op switches say nothing", () => {
     expect(switchNote({ from_model: "claude-opus-5", to_model: "claude-opus-5" })).toBe("");

@@ -42,7 +42,76 @@ and `ground-truth.md` (one entry per defect: id, line, type, severity, why). Kee
 small and self-contained — it does not need to compile, but it should be plausible Rust. The
 harness auto-discovers it.
 
+## What earns a new fixture
+Imagination is a poor source of cases. The fixtures that pay for themselves come from **defects
+that actually escaped**: a review that missed something, a gate that passed it, a CI failure or
+an incident that found it later. When that happens, the write-up is part of the fix — a fixture
+lands before the fix is called done, so the blind spot closes permanently instead of for one
+session. It is the last rung of the promotion ladder in `../docs/memory-protocol.md`
+§"Flagged twice is a rule, not a note": a correction that a rule cannot hold becomes a test.
+
+The same fixtures back the `claude plugin eval` cases in `../evals/`, which CI runs whenever
+the studio's own configuration changes (`skills/`, `agents/`, `rules/`, `hooks/`, `docs/`).
+
 ## Honesty
 A missed planted defect is a **real gap in the agent's prompt**, not a test to relax. Fix the
 agent, not the fixture. This is the studio's own "when it looks clean, look harder" applied to
 itself.
+
+## Ground-truth coverage map
+This is **a map, not a backlog**. It records what fixtures actually exercise today so the gap is
+visible — it does not authorize filling the gap by invention. §"What earns a new fixture" above
+still governs: a fixture is born from a defect that actually escaped, never from imagination. The
+map's job is to make an escape in an uncovered domain recognizable as the trigger it is, the
+moment it happens.
+
+Measured 2026-09-04:
+
+**Agent coverage — 6 of 33 agents have fixtures**, via the agent mapping table in
+`skills/eval-agents/SKILL.md`: `api-design-lead`, `chief-architect`, `perf-engineer`,
+`rust-reviewer`, `security-auditor`, `unsafe-auditor`. The other 27 agents (async-runtime-specialist,
+async-systems-lead, build-engineer, cli-specialist, cli-ux-lead, concurrency-specialist,
+database-specialist, dependency-manager, docs-engineer, embedded-specialist, error-architect,
+ffi-specialist, harsh-critic, macro-specialist, observability-engineer, product-steward, qa-lead,
+release-lead, rust-build-resolver, rust-builder, rust-scout, systems-perf-lead, test-engineer,
+tooling-lead, wasm-specialist, web-framework-specialist, api-designer) have none.
+
+Re-derive:
+```bash
+cd plugins/rust-studio
+ls agents/*.md | wc -l                                                              # 33 total
+sed -n '/Agent folder/,/^## Two fixture modes/p' skills/eval-agents/SKILL.md \
+  | grep -E '^\| `' | awk -F'|' '{print $3}' | tr -d ' `' | tr ',' '\n' | sort -u    # 6 unique, named
+```
+
+**Rule-domain coverage — 7 of 20 domains have a fixture family behind them.** A fixture
+*folder* name doesn't always equal the domain it exercises — `naming`, `lifetimes`, `modern-rust`,
+and `integrity` all exercise `core.md` (naming, freshness, borrowck-appeasement, gamed-green
+review discipline); `workspace` and `prior-art` exercise `architecture.md` alongside the
+`architecture` folder itself. Reading each family's `ground-truth.md` against `rules/*.md`'s
+scope gives 7 covered domains: `active-dev`, `api`, `architecture`, `core`, `perf`, `security`,
+`unsafe`.
+
+**13 domains have no fixture family: `async`, `build-scripts`, `cargo-manifest`, `cli`,
+`database`, `embedded`, `error-model`, `ffi`, `macros`, `observability`, `testing`, `types`,
+`wasm`.** One of these, `types.md`, is cited once inside `reviewer/audit-at-scale/ground-truth.md`
+— but as a backlink noting that fixture's finding was later promoted into the rule, not as a
+fixture built to exercise `types.md`'s guidance. It still counts as uncovered.
+
+`async` is the sharpest case: zero fixtures despite shipping a 5.2K `rules/async.md`, two
+dedicated agents (`async-runtime-specialist`, `async-systems-lead`), an ASYNC-GATE, and
+`/team-async`. No cancellation, `select!`, or `Send`/`'static` defect has ever been planted as a
+fixture in this repo.
+
+Re-derive:
+```bash
+cd plugins/rust-studio
+ls rules/*.md | xargs -n1 basename -s .md | sort                                   # 20 domains
+ls benchmarks/fixtures/ | sort                                                     # 13 fixture folders
+grep -rhoE 'rules/[a-z-]+\.md' benchmarks/fixtures --include=ground-truth.md \
+  | sort | uniq -c                                                                 # explicit backlinks (types.md: 1, a citation not a family)
+# then read each family's ground-truth.md against rules/*.md's stated scope to assign a domain
+# (mechanical only for folders that already share the rule's name); covered set is:
+comm -23 <(ls rules/*.md | xargs -n1 basename -s .md | sort) \
+         <(printf '%s\n' active-dev api architecture core perf security unsafe | sort)  # → the 13 above
+```

@@ -50,7 +50,10 @@ export function switchNote(input: Input): string {
     `session model (directors, harsh-critic, rust-reviewer, unsafe-auditor) now judge on ` +
     `${to}. If this was a classifier fallback, finish the current unit here, then ` +
     `\`/model ${input.from_model}\` to return; re-run any review or audit verdict that ` +
-    `was issued on the weaker model before treating it as a gate pass.`
+    `was issued on the weaker model before treating it as a gate pass. Eval results are ` +
+    `bound to whichever model last measured them, too — \`/eval-agents\` re-scores the ` +
+    `same fixtures in-session and needs no enablement, unlike \`claude plugin eval\`, ` +
+    `which is early access.`
   );
 }
 

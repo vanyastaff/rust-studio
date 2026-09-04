@@ -26,8 +26,9 @@ in the frontmatter *and* `policy.allow_implicit_invocation: false` in
 disagree, or when the roster below and the files disagree.
 
 The roster is **side-effecting work**: a skill that publishes, commits, opens a PR,
-scaffolds a crate, or rewrites machine config waits for a human. Currently `add-dep`,
-`commit`, `eval-agents`, `new-crate`, `pr`, `progress-bar`, `publish`.
+scaffolds a crate, mass-rewrites source, or rewrites machine config waits for a human.
+Currently `add-dep`, `commit`, `eval-agents`, `migrate`, `new-crate`, `pr`, `progress-bar`,
+`publish`, `worktree-sweep`.
 
 The rest stay model-invoked, because the studio's routing depends on the agent reaching
 them. Before moving a skill onto the roster, check nothing invokes it: naming it as a

@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: "Use when a Rust design question needs running code to settle — an API shape, a state machine, a lifetime or trait doubt."
+description: "Use when a Rust design question needs running code to settle: an API shape, a state machine, a trait doubt."
 ---
 
 # /prototype — throwaway code that answers a question

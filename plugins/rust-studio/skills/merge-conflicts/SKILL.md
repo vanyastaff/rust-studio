@@ -1,6 +1,6 @@
 ---
 name: merge-conflicts
-description: "Use when a Rust merge or rebase is stopped on conflicts — resolve each hunk by intent, then prove the tree still builds."
+description: "Use when a Rust merge or rebase is stopped on conflicts: resolve each hunk by intent, then prove it builds."
 ---
 
 # /merge-conflicts — resolve a stopped merge or rebase

@@ -94,6 +94,12 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
      async runtime, error strategy, storage layer) — use
      `references/templates/adr.md`.
    - A tech-debt register — distilled from Phase 4 findings.
+   - **The project's own `CLAUDE.md`** (`references/templates/project-claude-md.md`) — the
+     commands, the dependency direction, the conventions the code does not self-document, and
+     the traps. Everything above is written for people; this is the one artifact every future
+     agent session actually loads, including agents that never heard of this studio. Without
+     it, what Phase 2–4 just inferred is lost the moment this session ends. One page, and
+     nothing that belongs in a path-scoped `.claude/rules/<topic>.md` instead.
 10. Prompt the user: present the proposed doc set with a short rationale for each item.
     Let the user trim, add, or defer. **This is the only write-gate for doc creation.**
     Once approved, proceed directly to Phase 6 without re-asking.

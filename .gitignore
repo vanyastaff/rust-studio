@@ -19,3 +19,11 @@ target/
 .DS_Store
 Thumbs.db
 *.swp
+
+# secrets (autopilot preflight)
+.env
+.env.*
+!.env.example
+
+# autopilot runtime state (dashboard server port/pid)
+.autopilot/serve.pid
