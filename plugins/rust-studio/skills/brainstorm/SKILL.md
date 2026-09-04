@@ -45,7 +45,10 @@ the approaches and say when a recalled note changes the direction. If nothing su
    - **Constraints**: MSRV floor, `no_std` requirement, async vs. sync, compile-time vs.
      runtime, public-API stability expectations.
    - **Non-goals**: what should this explicitly *not* do?
-3. Record the clarified goal and constraints as a short header before the options; revise
+3. Record the clarified goal and constraints as a short header before the options — this is
+   the only statement of the problem written before a direction exists, so keep it verbatim
+   and carry it into the handoff at step 11; `/spec` Phase 0 seeds `intent.md` from it, never
+   from the concept note. Revise
    them if the conversation shifts.
 
 ## Phase 2 — Surface unknowns
@@ -104,7 +107,9 @@ the approaches and say when a recalled note changes the direction. If nothing su
     the conversation otherwise. Reserve user prompts for the earlier option forks (Phase 1
     clarify, Phase 3 direction choice).
 11. On approval, **delegate saving the concept note** to `product-steward` — do not write
-    files directly. Instruct `product-steward` to store it at the path it deems appropriate
+    files directly. Hand over the step-3 goal-and-constraints header alongside it, verbatim
+    and clearly labelled as the pre-solution statement, so a later `/spec` can seed an intent
+    from it without re-interviewing the user. Instruct `product-steward` to store it at the path it deems appropriate
     per the template `references/templates/concept-note.md` (if that
     template exists; otherwise plain text is fine).
 

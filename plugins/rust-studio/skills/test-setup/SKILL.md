@@ -68,6 +68,10 @@ state choice + one-line rationale. See `references/collaboration.md`.
    - Respect all conventions in `references/testing.md`.
    - Run `cargo check --tests --benches`, `cargo nextest run`, and
      `cargo clippy --all-targets --all-features -- -D warnings`; fix any issues.
+   - In a multi-crate workspace, scope a per-crate test command as
+     `cargo nextest run --workspace -E 'package(<crate>)'`, never `-p <crate>`: a `-p` build
+     resolves features without the siblings, so it can report a false green. See
+     `references/large-workspace.md` § "Per-crate commands".
 
 7. `rust-builder` reports a diff summary and command output. Show it to the user.
 

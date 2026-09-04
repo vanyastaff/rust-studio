@@ -35,7 +35,17 @@ A migration you cannot attribute is a migration you cannot review.
    later failure is ambiguous. State the counts; they are the denominator for Phase 4.
 3. **Record the behavioral surface** you will compare against: test count, and for a crate
    with benches or a size budget, the current `criterion` / `cargo bloat` numbers.
-4. **MSRV.** An edition has a floor (2024 needs Rust ≥ 1.85); a major bump usually raises one.
+4. **Calibrate the baseline — a green suite is not yet an oracle.** Steps 2–3 record that the
+   suite passes; nothing yet shows it would *stop* passing if this migration broke something,
+   and Phase D's comparison is worth exactly that much. The hazards Phase C lists are the ones a
+   normal suite does not observe: a `Drop` that runs in a different order, a closure that
+   captures a different set, a temporary that lives a different length. Pick the class this
+   migration can actually move, break it on purpose in the working tree — reorder two `Drop`s,
+   widen a guard's scope — confirm the suite goes red, and revert. If it stays green, the
+   baseline is blind to that class: say so on the `BASELINE:` line and treat Phase D's green as
+   evidence about compilation, not behavior (`references/integrity-and-evidence.md`). One class
+   is the budget here; `/mutants` is where you go if you want the systematic answer.
+5. **MSRV.** An edition has a floor (2024 needs Rust ≥ 1.85); a major bump usually raises one.
    Check `rust-version` and CI's pinned toolchain (`/msrv-check`). Raising the MSRV is a
    **semver-relevant decision for a published crate** — surface it, don't absorb it.
 
@@ -131,6 +141,8 @@ Re-run Phase 0's commands and compare against its recorded numbers:
 - `cargo build --workspace --all-targets --all-features` — clean.
 - `cargo nextest run --workspace` — **same test count**, all passing. A test that vanished is
   a finding, not a rounding error (`references/integrity-and-evidence.md`, denominator gaming).
+  This green means as much as Phase 0 step 4 earned it: for a class the baseline was shown blind
+  to, it is not behavioral evidence and the `BEHAVIORAL:` lines say `unverified`, not `tests pass`.
 - `cargo clippy --all-targets --all-features -- -D warnings` — clean.
 - `cargo +nightly miri test` where the diff touched `unsafe`.
 - `cargo semver-checks` where the public surface could have moved.
@@ -140,7 +152,7 @@ Re-run Phase 0's commands and compare against its recorded numbers:
 ## Output
 ```
 MIGRATION: <edition 2021→2024 | crate 0.7→0.8>, <N crates>.
-BASELINE:  <tests before> / <clippy before>.
+BASELINE:  <tests before> / <clippy before> / <the break the suite caught | blind to: class>.
 MECHANICAL: <files touched by cargo fix | hand-fixed sites>.
 BEHAVIORAL: <lint class>  <file:line>  <what changes>  <how it was checked>.
 AFTER:     <tests after> / <clippy after> / <miri | semver-checks | bench delta>.

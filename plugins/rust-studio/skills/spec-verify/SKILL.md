@@ -28,7 +28,17 @@ on. Keep blocking steps in the foreground so the user sees intermediate evidence
 final dump.
 
 ## Steps
-1. Read the spec's **acceptance criteria** (`input` = slug or path).
+1. Read the spec's **acceptance criteria** (`input` = slug or path). Then read
+   `intent.md` beside it, if the spec was written through `/spec` Phase 0, and check the
+   trace the spec claims: **every criterion must answer to something in intent's "What
+   'fixed' looks like".** Phase 4 asserts that trace when it drafts the spec; nothing
+   audits it afterwards, so a criterion that proves only that the chosen approach works
+   rides through to a green verdict for the wrong problem. Report an untraceable criterion
+   as a finding, not a failure — it is either scope the user never asked for or a gap in
+   the intent — and check the reverse direction too: a line in "What 'fixed' looks like"
+   with **no** criterion pointing at it is the more dangerous of the two, because
+   everything present passes and the missing thing is what the user actually asked for.
+   No `intent.md` means skip this step, not fail it.
 2. **First, run the spec-level outer acceptance test** — a green outer test is the primary
    executable proof the feature is met (`references/testing-model.md`). Then, for
    each remaining criterion, find and run the evidence:

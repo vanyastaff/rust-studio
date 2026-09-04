@@ -52,6 +52,15 @@ Agents follow a structured delegation model:
    - Technical/architecture conflicts → `chief-architect`.
    - Scope/priority conflicts → `product-steward`.
    - Quality vs. ship-date conflicts → `product-steward` with `qa-lead` input.
+
+   Two review lenses contradicting each other on the same line is this case, with one
+   qualification: escalation is the *second* move. A disagreement about what the code **does** is
+   a factual question, and it is settled by a probe that changes one variable, not by a third
+   opinion — the "Verified observation, invented mechanism" entry in
+   `references/integrity-and-evidence.md` records the run where two reviewers
+   agreed on the observation, gave mutually exclusive mechanisms, and three lines of code decided
+   it. Escalate the residue: the part that is a judgment call rather than a fact. Never average
+   two lenses into a middle finding, and never drop one because the other sounded surer.
 4. **Change propagation** — cross-crate / cross-domain changes are coordinated by
    `product-steward` (e.g. a public API change that ripples into docs, tests, and
    downstream crates).
@@ -201,6 +210,29 @@ Two teeth on that exemption, both earned here rather than reasoned out:
   `agents/openai.yaml`), and `sync-references.sh --check` is what proves a copy is stale rather
   than deliberately different.
 
+**The expensive shared step runs once, at the wave boundary.** `target/` is a derived directory,
+so the exemption above covers it — two units can both run cargo and converge, and no write zone
+is contended. Safe is not the same as free. Cargo takes a lock on the build directory, so a wave
+that puts a build inside every unit's inner loop gets no parallelism out of it: the units queue.
+Measured here (cargo 1.98.0, one crate + 10 dependencies, cold `target/`): two `cargo build`s
+launched 0.4s apart against one directory produced `Blocking waiting for file lock on build
+directory` on the second, which then sat out the first's full 2.83s before starting its own
+2.49s — 5.3s of wall clock for work that costs 2.8s when it runs once. On a real workspace that
+unit is minutes, not seconds, and that is what decides the loop's shape: a check that answers in
+seconds can live inside each unit's iteration, and one that takes minutes belongs *after* the
+fan-out — units return edits, the orchestrator builds once and feeds the failures back. This is
+a cost rule and the mirror image of **Write-zone exclusivity** above: that one serializes
+conflicting *writes* because concurrency would lose work; this one serializes an operation that
+is already safe concurrently, because concurrency buys nothing and is billed N times.
+
+What the shared directory does *not* cost is redone work, and it is worth knowing so the fix
+isn't aimed at the wrong thing. Cargo keys artifacts by feature set and `RUSTFLAGS`, so variants
+coexist instead of evicting each other: alternating `cargo check`, `cargo check --all-features`,
+and `cargo clippy --all-targets --all-features` over one directory recompiled nothing after each
+had run once (same probe as above). The bill is queueing, not cache thrash — which is why the
+answer is batching and not a `CARGO_TARGET_DIR` per unit, since that trades the queue for a cold
+rebuild each and N copies of the artifacts. Worktrees that share one `target/` share its lock too.
+
 Read-only work is exempt, and that exemption is the whole asymmetry the model rests on: a lens
 that only reads never contends for a write zone, which is why review fan-out (`rust-reviewer`,
 `harsh-critic`, `unsafe-auditor`, `security-auditor`) parallelizes freely while a wave of
@@ -254,6 +286,20 @@ unavailable tools.
   so its orchestrator calls every role directly. Write skills against the floor — one level of
   delegation — and treat deeper nesting as an optimization the host may or may not permit.
   Workers inherit only the permissions and context the host documents.
+
+**A finding that repeats across a wave is a defect in the brief, not in N diffs.**
+`memory-protocol.md` §"Flagged twice is a rule, not a note" already governs the durable half: the
+second occurrence gets promoted a rung rather than corrected again. Fan-out adds the half that
+ladder does not reach. Promotion fixes the *next* wave, while the units already dispatched
+are still generating the same defect against the brief that produced it — so when a lens catches
+one class of finding in two units of a single wave, amend the shared input (the spec section, the
+repo rule, the agent definition, the ticket template) and re-dispatch the affected units against
+the amended version, instead of hand-patching each returned diff. A patch corrects one output;
+the brief is what produced all of them, and hand-patching around a wrong brief is the
+**Quick-win / easy subset** move wearing a wave's clothing
+(`references/integrity-and-evidence.md`). The tell that you are on the wrong side
+of this: the third fix reads exactly like the first two. Re-dispatch only what the amendment
+would actually change — a returned unit whose diff already satisfies the amended rule stands.
 
 **Verdicts and gates are unchanged.** Every teammate still ends in **COMPLETE / NEEDS WORK /
 REDO-TO-BAR / BLOCKED** with evidence (`verdicts.md` §5); the owning lead still runs its gate (`verdicts.md` §4); a

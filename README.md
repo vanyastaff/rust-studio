@@ -118,7 +118,7 @@ strategic fork, an irreversible action, or an outward one — push, PR, `cargo p
 
 ```text
 /recall <area>          # what was learned about this area last time
-/spec <feature>         # big or cross-crate: explore → 2-4 approaches → approved spec
+/spec <feature>         # big or cross-crate: intent → explore → approaches → approved spec
   /spec-tasks <slug>    #   split into ordered tasks, each run through /dev-task
 /dev-task <task>        # one unit of work
 /tdd <behavior>         # or build it test-first: RED → GREEN → REFACTOR

@@ -68,7 +68,7 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
    - `tooling-lead` — missing `deny.toml`, no `rust-toolchain.toml`, no CI config or CI
      that lacks lint/test/publish stages, no `rustfmt.toml`/`clippy.toml`. **If the scout
      reported many workspace members**, also assess context-scoping per
-     `references/large-workspace.md`: per-crate `CLAUDE.md`, `permissions.deny`
+     `references/large-workspace.md`: per-crate context files, `permissions.deny`
      on `target/`/generated, the bundled rust-analyzer LSP for symbol lookup, sparse worktrees.
    - `qa-lead` — test coverage posture: no tests, tests that only cover happy paths,
      missing integration or doc tests, no property-based testing for data-heavy code.
@@ -100,9 +100,37 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
      agent session actually loads, including agents that never heard of this studio. Without
      it, what Phase 2–4 just inferred is lost the moment this session ends. One page, and
      nothing that belongs in a path-scoped `.claude/rules/<topic>.md` instead.
-10. Prompt the user: present the proposed doc set with a short rationale for each item.
-    Let the user trim, add, or defer. **This is the only write-gate for doc creation.**
-    Once approved, proceed directly to Phase 6 without re-asking.
+   - **Per-crate context files** (`references/templates/crate-context.md`) — the crate-level
+     half of the same layering, and in a big workspace the half that does the work: the root
+     file either bloats with every crate's specifics or stays generic
+     (`references/large-workspace.md`). **Propose these only above ~10 crates**; below that the
+     root file still holds everything. Each is an `AGENTS.md` plus a two-line `CLAUDE.md` that
+     imports it — one file with facts, one with a pointer; the template says why.
+
+   **Which crates get one.** Not a size or role threshold — a crate earns a file only if the
+   evidence already in hand produced facts for it. Build the candidate line sets from Phases
+   1–4, then cut them, *before* proposing anything:
+
+   a. **Source every line.** Each candidate traces to a specific Phase 1–4 finding: a scout
+      report entry, a lead's debt item, an inferred convention. A line nobody can attribute was
+      invented — drop it. Do not re-read the crates hunting for something to say; that is
+      exactly how thirty files of plausible filler get written.
+   b. **Promote anything that repeats.** Diff the candidate sets across crates. A line that
+      shows up for two or more crates is not a crate fact — it is a workspace fact (→ the root
+      file) or a standard (→ a path-scoped rule). Move it up and delete every copy. This is the
+      studio's second-occurrence-promotes ladder applied across the crate axis instead of the
+      time axis, and it is the mechanism that structurally prevents thirty near-identical files.
+   c. **Drop the thin ones.** After (b), a crate with nothing left gets no file; a crate with a
+      single surviving line gets that line added to the root file instead.
+   d. Apply the template's four tests to what remains, and its 15-line cap.
+
+   Report both counts — crates considered, crates that survived. If most survived, (b) was not
+   really applied; run it again before the gate.
+10. Prompt the user: present the proposed doc set with a short rationale for each item —
+    for the per-crate files, name the surviving crates, the ones dropped and why, and the lines
+    step (b) promoted up to the root file, so the user can strike individual crates rather than
+    accept a block of thirty. Let the user trim, add, or defer. **This is the only write-gate
+    for doc creation.** Once approved, proceed directly to Phase 6 without re-asking.
 
 ---
 
@@ -117,6 +145,13 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
       decisions) per ADR topic; instruct it to follow
       `references/templates/adr.md`.
     - Tech-debt register → spawn **`tooling-lead`** to assemble from the Phase 4 findings.
+    - Per-crate context files → spawn **one lead per domain, not one per crate**. Assign each
+      crate to exactly one owning lead (its primary domain from Phase 2) and hand that lead its
+      crates, their approved line sets, and `references/templates/crate-context.md`. Batching
+      this way keeps write zones disjoint — no two leads touch the same crate, so the spawns are
+      parallel-safe by construction — and spends a spawn only where it buys filtering the
+      orchestrator does not already have. Each file is a draft for that crate's owner to review
+      in the PR, not a finished artifact.
 12. Specialists write their approved docs and report back with the file path and a summary.
     If a specialist hits a genuine design fork not covered by the approved plan, surface it
     and prompt the user at that point — otherwise proceed.
@@ -158,7 +193,7 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
     - Unsafe without SAFETY docs → `/dev-task` scoped to the unsafe module
     - No tests → `/test-setup`
     - Large workspace not scoped for context → apply
-      `references/large-workspace.md` (per-crate `CLAUDE.md`, deny `target/`,
+      `references/large-workspace.md` (per-crate context files, deny `target/`,
       the bundled rust-analyzer LSP, sparse worktrees) using
       `references/templates/large-workspace-settings.json`
     - Public API hygiene issues → `/review` in **full** mode

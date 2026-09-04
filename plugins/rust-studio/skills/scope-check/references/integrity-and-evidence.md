@@ -32,6 +32,7 @@ Three corollaries, each a hard rule:
 | **Stub / placeholder pass** | `todo!()`, `unimplemented!()`, a canned-constant `return true`/`Ok(())`, or a body deep enough to satisfy a *shallow* check but not the behavior (the "sha256 that only passes the metadata check" move). |
 | **Weaken the oracle** | Edited, deleted, `#[ignore]`-d, `SKIP`-ped, or commented-out a test or assertion to go green; relaxed `assert_eq!(x, expected)` to `assert!(x.is_ok())`; changed the *test* to match the code instead of the code to match the spec. |
 | **Vacuous test** | A "test" that cannot fail: asserts existence not value (`is_ok()` with no value check), a tautology (`assert_eq!(x, x)`), happy-path-only, or no assertion at all. It executes lines without proving behavior. |
+| **Uncalibrated oracle** | Offered a green suite as proof that behavior *survived* a change — a refactor, an edition or dependency migration, a rewrite — without ever establishing that the suite can go **red** for the class of breakage that change can cause. Green-before and green-after are then two readings of an instrument nobody calibrated, and a suite that would have stayed green either way measured nothing. Distinct from *Vacuous test* (one test that cannot fail, and you can see it in the source): here every test is real, and the gap is between what they observe and what this change moves. |
 | **Self-authored as proof** | Presented a test you wrote to match your own code as the *correctness* proof. A self-written test is a **regression guard**; correctness is proven against the spec's acceptance criteria, an independent/upstream oracle, or a property law. |
 | **Denominator gaming** | Reported "N% pass" / "X% coverage" with skipped, ignored, timed-out, or out-of-scope cases silently removed from the denominator. |
 | **Gate disabling** | `#[allow(...)]` with no one-line justification; a crate-level `[lints]` table that redefines a lint and thereby **replaces** (not merges) the inherited `[workspace.lints]` — silently re-opening a workspace `forbid`/`deny`; or editing the gate config itself (`clippy.toml`, `.config/nextest.toml`, CI, `lefthook.yml`) to drop a ban or raise a timeout so failing code passes — fixing the gate instead of the code. |
@@ -77,6 +78,14 @@ check in `skills/review/SKILL.md` does.
 - **A skip carries a reason and a tracking reference, and appears in the result.** Never hidden.
 - **Name the correctness oracle.** "Proven against acceptance criterion 3 / the upstream
   behavior / the round-trip law" — not "the test I added passes".
+- **A judge nobody has seen fail is not a judge.** Before an existing suite is cited as proof
+  that behavior *survived* a change, establish that it can go red for the breakage that change
+  can cause: break the behavior on purpose in the working tree, confirm the suite catches it,
+  revert. `/tdd`'s RED step is this move for one new test; `/mutants` is its systematic form for
+  a module. It matters most in Rust for the classes neither the type system nor a green build
+  observes — `Drop` order, closure capture, temporary scope — where a suite can be large, green,
+  and blind to exactly the thing being changed. Skipping the calibration is allowed; reporting
+  the pass rate as if you had not skipped it is not. Name the blind spot instead.
 - **"Unverified" / "couldn't run X" is a valid and required state.** Substituting *probably* /
   *should pass* for *checked* is itself a gaming move.
 - **Cite what you read, at the range you read it.** A claim about code carries `path:line`, the
@@ -112,6 +121,8 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
 - adds `#[allow(...)]` without justification, or a crate lint override that re-opens a workspace
   `forbid`/`deny`;
 - offers a self-written test as the correctness proof with no spec/oracle/law behind it;
+- claims behavior was preserved on the strength of a suite that was never shown able to fail for
+  the class of breakage the change can cause, and does not name that as unverified;
 - skipped the disciplined path (no failing-test-first for a behavior change, no pre-code verdict,
   no pre-merge review) and cannot say so explicitly;
 - claims success it did not verify (no command output, "should pass");
