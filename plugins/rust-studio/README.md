@@ -268,16 +268,21 @@ changes how reviews are *reported*.
   **Tokyo Night Powerline** bar with colored arrow segments and Nerd Font icons:
 
   ```
-  line 1:  🦀 rust-studio · <project> · <branch ●dirty ↑↓> · <model> · think:<effort> · lsp ✓
-  line 2:  <ctx %> · <cache %> · ▸ <phase> <bar> n/total · ✓ <tasks> · 5h/7d · <dur> · +A −R
+  line 1:  🦀 rust-studio · <project> · <branch ●dirty ↑↓> · PR #42 ✓ · <model> · think:<effort>
+  line 2:  <ctx %> · 🔥 <burn>/min · ▸ <phase> <bar> n/total · 5h 24% · 1h58m · $<cost> · +A −R
   ```
 
   Truecolor Tokyo Night theme, fast cached git, and smart-hiding of empty segments; the context
   segment is colored by threshold; `▸ <phase>` / `✓ <tasks>` track the active orchestration via
-  `.rust-studio/progress.json`. Icons are **emoji by default** (no special font needed); the
-  powerline arrows + git branch glyph need a powerline-patched font. Env:
-  `RUST_STUDIO_STATUSLINE_NERDFONT=1` (sleek FontAwesome icons, needs a Nerd Font) or `=0` (text
-  labels) · `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot + rounded caps) ·
+  `.rust-studio/progress.json`. The **PR pill** carries the review state and is clickable (OSC 8);
+  rate limits show the **countdown to reset**, not just a percentage. Anything only interesting when
+  it goes wrong — a degraded prompt cache (with the harness's miss attribution), a limit about to
+  bite, extra `/add-dir` scope — shares one **rotating alert slot** that stays empty while all is
+  well. The bar reads `COLUMNS` and **adapts**: two rows at ≥120 columns, one row below that, with
+  the least decisive segments dropped until the line fits. Icons are **emoji by default** (no
+  special font needed); the powerline arrows + git branch glyph need a powerline-patched font.
+  Env: `RUST_STUDIO_STATUSLINE_NERDFONT=1` (sleek FontAwesome icons, needs a Nerd Font) or `=0`
+  (text labels) · `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot + rounded caps) ·
   `RUST_STUDIO_STATUSLINE_ASCII=1` · `NO_COLOR`.
   Manage with **`/progress-bar`**: `nerd` (FontAwesome — needs a Nerd Font) · `emoji` (default) ·
   `symbols` (plain Unicode ⌂ ◔ ↻ ⏱ — no font needed) · `text` (no icons) · `off` (remove) · or no
