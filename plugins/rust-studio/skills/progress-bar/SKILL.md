@@ -18,11 +18,37 @@ config, default on; a plugin may not ship a top-level `statusLine` itself). Use 
 **(re)install** it if you turned auto-install off. Once set, the bottom bar shows:
 
 ```
-🦀 rust-studio  ·  <project>  ·  ▸ build 2/4  ·  Opus  ·  ctx 41%
+🦀 rust-studio · 📁 rust-studio ·  main ●4 · PR #42 ✓ · Opus 5 · think:high
+📊 47% · 5h 24% ·1h58m · 7d 41% ·2d · $8.42 · 🕐 1h12m · +156 −23
 ```
 
 The `▸ <phase>` segment appears while an orchestrating skill (`/dev-task`, `team-*`, …) is running
 with `progress_tracking` on — they write `.rust-studio/progress.json`, which the bar reads.
+
+### What the bar shows
+
+| Segment | Source | Notes |
+|---|---|---|
+| `🦀 rust-studio` | — | Always present; collapses to the crab on a narrow terminal |
+| `📁 <project>` |  `workspace.project_dir` | Project root, not the current subdirectory |
+| ` <branch> ●N ↑N ↓N` | `git` | Cached ~5s; truncated when the terminal is not roomy |
+| `PR #42 ✓` | `pr.*` | Review state as a glyph, clickable (OSC 8) via `pr.url`. `MR !42` for a GitLab merge request (`pr.kind === "mr"`) |
+| `⎇ <name>` | `worktree.name` / `workspace.git_worktree` | Scope hint — only outside the main working tree |
+| `Opus 5` · `think:high` · `⚡` | `model`, `effort.level`, `thinking.enabled`, `fast_mode` | |
+| `📊 47%` | `context_window.used_percentage` | Color escalates green → yellow → red |
+| `🔥 ▁▂▄▆ 2.1k/min` | derived | Burn rate over the last 10 min, with a pace sparkline |
+| `5h 24% ·1h58m` | `rate_limits.*` | Percentage **and** the countdown to the window reset |
+| `$8.42` | `cost.total_cost_usd` | |
+| `🕐 1h12m` · `+156 −23` | `cost.*` | |
+
+**The alert slot.** Anything only worth a column when it goes wrong shares one rotating segment, by
+descending urgency: `spend_limit` ≥ 85% → a 5h/7d limit ≥ 85% → prompt-cache hit rate < 70% (with
+the harness's own miss attribution, e.g. `⚠ 💾 62% — tools added`) → extra `/add-dir` scope. When
+nothing is wrong the slot is empty — a calm bar is the normal state.
+
+**Adaptive layout.** Claude Code exports the terminal width as `COLUMNS`. At ≥120 columns the bar
+uses two rows; below that it merges into one and drops segments — least decisive first — until the
+line fits. Identity, git, PR and context percentage are never dropped.
 
 ## Why a stable copy (read first)
 
@@ -69,8 +95,12 @@ script to a stable path and points `settings.json` there. After you update the p
    ```
 
    Use an **absolute** path (resolve `~`), since the shell will not expand `~` inside the quoted
-   argument. `refreshInterval: 10` keeps the bar current while you wait on background sub-agents
-   (the event-driven refresh goes quiet when the main session is idle).
+   argument. `refreshInterval` is **not optional garnish**: Claude Code re-renders the status line
+   only on conversation events (token usage, permission mode, vim mode, model, fast mode, effort,
+   thinking, PR status) — never on a clock. Without it the duration and rate-limit countdowns freeze
+   whenever the session sits idle. The SessionStart hook tops this key back up if it ever goes
+   missing from a `statusLine` that still points at the studio script; a `statusLine` pointing
+   anywhere else is left strictly alone.
 
 6. **Confirm (outward action).** Show the exact diff to the user and get approval **before** writing
    `~/.claude/settings.json` — this edits their global config. On approval, write it.

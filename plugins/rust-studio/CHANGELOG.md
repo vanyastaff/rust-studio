@@ -5,6 +5,70 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.41.0] - 2026-09-04
+
+The status line was reading 16 of the payload's fields. Reading the rest meant not trusting the
+docs: the shipped `statusline` page omits three things Claude Code 2.1.261 actually sends, so the
+source of truth for this release was the bundle itself — the payload constructor, extracted
+verbatim from `~/.local/share/claude/versions/2.1.261`. The same extract carries the list of
+re-render triggers, and that list explains a whole class of bug nobody had named.
+
+### Added
+
+- **PR / merge-request pill** (`pr.*`). Number, review state as a glyph (`✓` approved, `✗` changes
+  requested, `○` draft, `·` pending) and the URL as an OSC 8 hyperlink, so the bar is a click to
+  the review. `pr.kind === "mr"` renders a GitLab merge request as `MR !42` — Claude Code fills
+  `pr.*` from the branch's merge request on a GitLab remote, and numbering it `#` would be wrong.
+- **Rate limits now say when, not just how much.** `rate_limits.*.resets_at` turns `7d 41%` into
+  `7d 41% ·2d`. A percentage alone does not tell you whether to slow down.
+- **`rate_limits.spend_limit`** — a third window, next to `five_hour` and `seven_day`, that appears
+  nowhere in the official field table. Confirmed in the bundle:
+  `(go.five_hour||go.seven_day||go.spend_limit)&&{rate_limits:go}`.
+- **Prompt-cache miss attribution.** `prompt_cache` is undocumented and the bar was taking one field
+  out of it. It actually ships `{warm, caching_observed, ttl, expires_at, requests, misses,
+  expected_rebuilds, hit_ratio, cache_write_tokens, miss_recache_tokens, last_miss_at,
+  last_miss_cause:{causes, tools_added…}}`. The alert now reads `⚠ 💾 62% — tools added`: the
+  harness already knows *why* the cache broke.
+- **Session cost** (`cost.total_cost_usd`) — the one segment every competing status line had and
+  this one did not.
+- **Scope hints** (`workspace.git_worktree`, `worktree.name`, `workspace.added_dirs`) — a session
+  editing a linked worktree or carrying extra `/add-dir` roots no longer looks like a plain one.
+- **`fast_mode` and `thinking.enabled`** — new session-state fields, one glyph each.
+- **Burn rate with a pace sparkline** (`🔥 ▁▂▄▆ 2.1k/min`). The payload has no cumulative token
+  counter, so the script keeps its own, keyed by `session_id`: when `current_usage` changes it adds
+  `output_tokens + cache_creation_input_tokens` — the tokens actually processed anew, since a cache
+  read is by definition not new work. Unchanged usage is ignored, so the several renders one
+  response triggers cannot double-count.
+- **Adaptive layout.** Claude Code exports the terminal width as `COLUMNS` (v2.1.153+); `tput` and
+  language-level detection cannot see it, because the script's output is captured rather than
+  attached to the terminal. Two rows at ≥120 columns, one below that, then segments are dropped —
+  one at a time, least decisive first — until the line fits. Identity, git, PR and context
+  percentage are never dropped. Priority is what a segment is worth per column, not where it sits.
+
+### Changed
+
+- **The always-on cache segment is retired into a rotating alert slot.** It spent ~90% of its width
+  reporting that nothing was wrong. The slot now carries, by descending urgency: `spend_limit` ≥85%
+  → a 5h/7d window ≥85% → cache hit rate <70% with its cause → extra `/add-dir` scope. Empty when
+  the session is healthy, which is the normal state.
+- `fmtDuration` gains a day unit, so a 7-day reset window reads `2d` rather than `50h0m`.
+- Payload coverage: 16 fields → 34.
+
+### Fixed
+
+- **`refreshInterval` could go missing and never come back.** The installer has written it since
+  v0.9.0, but it is one-shot: after the `.statusline-handled` marker exists the hook never looks at
+  `settings.json` again, so if the key is later lost (an edit, a `/statusline` run, a settings
+  rewrite) the loss is permanent. It matters more than it looks — the bundle's re-render trigger
+  list is `["tokenUsage","permissionMode","vimMode","mainLoopModel","fastMode","effortValue",
+  "thinkingEnabled","prStatus"]`, all conversation events and not one clock, so without
+  `refreshInterval` the duration and rate-limit countdowns freeze whenever the session sits idle.
+  The hook now reconciles drift: when `statusLine` still points at the studio's own script it tops
+  up absent managed keys and leaves every other key alone. A `statusLine` pointing anywhere else is
+  still never touched, marker or not.
+- **Width fitting measured the segments without the line's `╭─` cap**, overflowing the terminal by
+  exactly that prefix.
+
 ## [0.40.0] - 2026-09-04
 
 Three Anthropic sources read end to end — the large-codebases article, the AI-Native SDLC
