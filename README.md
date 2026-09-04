@@ -141,6 +141,34 @@ only when the approach is uncertain or the change spans files.
 | `/add-dep <crate>` | Vet a crate: RUSTSEC, license, MSRV, features, redundancy |
 | `/help` | The live list, on the host you're on |
 
+### If your project is a workspace
+
+Most Rust projects become one, and the defaults stop fitting: a single root context file either
+bloats with every crate's conventions or says nothing useful, and a scoped test command can lie
+to you.
+
+`/adopt` proposes **per-crate context files** — it shows you which crates earned one, which it
+dropped and why, so you can strike individual crates instead of accepting a block of thirty, and
+writes only what you approve. The content goes in `AGENTS.md`, plus a two-line `CLAUDE.md`
+beside it holding only `@AGENTS.md`. That split is not a preference: Claude Code reads
+`CLAUDE.md` and not `AGENTS.md`, and only `CLAUDE.md` loads on demand as it moves through
+subdirectories, while Codex, Cursor and Copilot read `AGENTS.md`. A pointer file holds no facts,
+so the two cannot drift. Each file is capped and pruned by one rule — **a line true of two
+crates is not a crate line**, it gets promoted to the root and deleted from both.
+
+The other half is knowing which commands survive being scoped to one crate:
+
+```bash
+cargo test -p my-crate                               # can be a FALSE GREEN
+cargo nextest run --workspace -E 'package(my-crate)'  # what to trust
+```
+
+Features unify across the graph cargo actually builds, so a crate whose sibling enables a
+feature on a shared dependency passes on its own and fails under `--workspace`. `--all-features`
+does not save you — it applies only to the selected package. The full set of what scopes safely
+and what lies, with reproductions, is in
+[`docs/large-workspace.md`](plugins/rust-studio/docs/large-workspace.md).
+
 ---
 
 ## What's under the hood
