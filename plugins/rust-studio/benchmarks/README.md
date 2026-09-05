@@ -9,8 +9,14 @@ project's code. Driven by the `/eval-agents` skill.
 benchmarks/
   fixtures/
     <agent>/<case>/
-      input.rs         # Rust with one or more planted defects
+      input.rs         # Rust with one or more planted defects …
+      Cargo.toml, src/, README.md, …   # … or a whole crate / workspace (everything but the key is copied)
       ground-truth.md  # the defects that must be caught (id, line, type, severity)
+  live/
+    <name>/
+      task.md          # kind: skill|agent, target, timeout, the task text
+      crate/           # the real crate the target works on (copied to a temp dir, git-committed as baseline)
+      check.sh         # the oracle: gate green + golden / probe / forbidden-construct greps → exit 0 = pass
 ```
 `<agent>` maps to the agent under test:
 | folder      | agent under test    |
@@ -23,6 +29,9 @@ benchmarks/
 | `api`       | `api-design-lead`   |
 | `architecture` | `chief-architect` |
 | `naming`    | `rust-reviewer`     |
+| `scout`     | `rust-scout` (map-recall) |
+| `docs`      | `docs-engineer`     |
+| `release`   | `release-lead`      |
 
 (Add more folders → agents as you grow it. The full mapping incl. first-pass-bar folders lives
 in the `/eval-agents` skill.)
@@ -35,6 +44,17 @@ in the `/eval-agents` skill.)
 ```
 The skill spawns the mapped agent on `input.rs` (it never sees `ground-truth.md`), then scores
 recall = caught / planted, lists misses, and flags false positives.
+
+Three modes, chosen from the ground truth's title line: **defect-recall** (the default: planted
+defects, a NEEDS WORK-class verdict), **first-pass** (`verdict: RESHAPE NEEDED` / `REDO-TO-BAR`:
+the pre-code maintainer gate must reject the shape), and **map-recall** (`mode: map-recall`: a
+locator's file:line table is checked row by row, no verdict token required — `scout/trait-map`).
+A ground truth may carry the audit prompt it is calibrated for (`*"..."*` after "calibrated
+for:"); the runner hands exactly that to the agent instead of the generic task.
+
+The **live** tasks under `live/` are the other half: they exercise the agents that *write*
+(`rust-builder`, `rust-build-resolver`) and the orchestrating skills (`/refactor`) on a real
+crate, and `check.sh` — not an LLM — decides. Run them with `bun tools/eval-runner.ts --live`.
 
 ## Adding a fixture
 Drop a new `fixtures/<agent>/<case>/` with `input.rs` (plant realistic, identifiable defects)
