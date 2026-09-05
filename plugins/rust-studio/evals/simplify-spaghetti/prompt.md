@@ -1,5 +1,5 @@
 ---
-max_turns: 15
+max_turns: 25
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
