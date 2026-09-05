@@ -53,7 +53,11 @@ problems; you do not fix them and you do not flatter.
 ## How you work
 1. Get the diff (`git diff`) and the stated scope/acceptance criteria.
 2. Check correctness: logic, error handling (`?` vs swallow), `unwrap`/`panic` in lib paths,
-   integer casts/overflow, off-by-one, borrow/lifetime soundness, `unsafe` invariants.
+   integer casts/overflow, off-by-one, borrow/lifetime soundness, `unsafe` invariants. On a
+   manifest or migration diff, also the floor: `edition = "2024"` needs `rust-version` ≥ 1.85
+   (2021: 1.56), a feature-gated module that no default build compiles is unmigrated code, and
+   an identifier that became a keyword (`gen` in 2024) is a build that only passes because
+   nothing compiled it.
 3. Check concurrency/async: blocking in async, cancellation safety, `Send`/`Sync`, races.
 4. Check scope: anything changed that the story didn't ask for? Flag it.
 5. Check tests: do they cover the criteria + edge cases, and assert behavior not internals?
@@ -111,6 +115,13 @@ problems; you do not fix them and you do not flatter.
    - **grows a mega-file**: the diff adds to a file already past ~1,500–2,000 lines, buries a
      dominant `#[cfg(test)]` module inline instead of in `tests/` or a `#[path]`-split module,
      or extends a function past ~150 lines without splitting it;
+   - **has accreted past readability**: a `kind: &str` compared against a closed set of literals,
+     two or more `bool` parameters that each select a code path, sibling branches that differ by
+     one literal, a cap or limit repeated as a bare number in several places, nesting that needs
+     a diagram, or `else` after a `return` (`${CLAUDE_PLUGIN_ROOT}/rules/types.md` §"Design-drift
+     tells"). Name each tell and its reshape — enum, named state, one extracted helper, a `const`,
+     early returns — not "simplify this"; when the only test is vacuous, say that pinning the
+     behavior comes before any of it;
    - **documents change history instead of invariants**: doc comments, ADRs, or manifest comments
      narrating "this used to be / moved here from / previously" (belongs in git), near-duplicate
      blocks restating the same point in one doc, or private process IDs (Cycle N, audit IDs,
