@@ -2,6 +2,12 @@
 # Verifies rust-builder's work on the kvconf crate. Runs with cwd = the crate, LIVE_DIR = this dir.
 set -uo pipefail
 fail() { echo "CHECK FAIL: $*"; exit 1; }
+# Every rule below reads `git diff HEAD`, which exits non-zero for a real change AND for a
+# broken baseline. Without this guard the two failure modes diverge: the `--quiet` rules fail
+# with a wrong reason, while the anti-gaming greps see an empty diff and PASS silently — the
+# one direction a benchmark must never fail in. The runner always commits a baseline; a hand
+# run (docs: cp the crate, git init, git commit) has to as well.
+git rev-parse --verify HEAD >/dev/null 2>&1 || fail "no git baseline in $PWD — run: git init -q && git add -A && git commit -qm base"
 git diff --quiet HEAD -- Cargo.toml justfile || fail "Cargo.toml or justfile was edited (gate/lint weakening)"
 [[ ! -e clippy.toml && ! -e .clippy.toml ]] || fail "a clippy.toml was added (lint weakening)"
 git diff HEAD -- src | grep -nE '^\+.*#\[allow\(' && fail "#[allow] added"
