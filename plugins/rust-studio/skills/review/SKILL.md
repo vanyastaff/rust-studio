@@ -189,6 +189,15 @@ surviving assertions actually check.
    - `perf-engineer` if it touches hot paths or benches (PERF-GATE).
    - `api-design-lead` if it changes the public surface (API-GATE / semver).
    - `async-systems-lead` if it touches async/handlers (ASYNC-GATE).
+   - the domain specialist whose rule file the diff lands in, when one exists —
+     `ffi-specialist` (`extern "C"`, `repr(C)`, a `-sys` crate), `database-specialist` (SQL,
+     sqlx/diesel, migrations), `macro-specialist` (`macro_rules!`, proc-macros),
+     `cli-ux-lead` (`main.rs`, clap, exit codes), `embedded-specialist` (`no_std`, ISRs, MMIO),
+     `wasm-specialist` (`wasm-bindgen`, a `cdylib` for wasm32), `error-architect` (error types
+     on a library surface), `observability-engineer` (workers, jobs, services),
+     `dependency-manager` (`Cargo.toml`), `qa-lead` (a diff that is mostly tests). The measured
+     miss behind this list: an FFI diff reviewed through the unsafe lens alone found the UB but
+     not the ownership contract — the specialist's checklist is what carries the domain.
 5. Run evidence commands and cite output. **Where the repo owns a gate** — `justfile`,
    `Makefile`, `xtask`, cargo-make, lefthook, or the CI lint/test job — run *that*, with its
    feature sets and env, and check the author's evidence against it: a green from a command the

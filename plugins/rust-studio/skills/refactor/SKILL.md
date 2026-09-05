@@ -87,6 +87,9 @@ usually arrives with a suite that cannot say that, so establish the oracle first
    compared against. A red baseline blocks — fix the build first (`/fix-build`), or every later
    failure is ambiguous. Only a project with no gate falls back to the studio defaults
    (`cargo nextest run`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt`).
+   If no command can run here at all (no shell, a denied tool), say so once, write `BASELINE:
+   unverified — <why>`, and carry on with the reading phases; never retry the command
+   (`references/sub-agents.md`).
 6. **Measure what the suite observes in scope.** Ask the scout which public behaviors of the
    scope have a test that asserts a *value or effect* (not `is_ok()`); `cargo llvm-cov` when
    installed, `rg '#\[test\]'` and a read of the assertions otherwise. Anything you are about to

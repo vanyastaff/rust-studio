@@ -50,7 +50,8 @@ pub extern "C" fn acme_last_status() -> Status {
 pub extern "C" fn acme_describe(frame: *const Frame) -> *const c_char {
     let frame = unsafe { &*frame };
     let text = format!("{}x{}", frame.width, frame.height);
-    unsafe { acme_log(CString::new(text.clone()).unwrap().as_ptr()) };
+    let log_line = CString::new(text.clone()).unwrap().as_ptr();
+    unsafe { acme_log(log_line) };
     CString::new(text).unwrap().into_raw()
 }
 

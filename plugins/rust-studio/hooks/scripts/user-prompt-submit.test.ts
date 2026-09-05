@@ -62,6 +62,7 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     ["Review the exported C API in src/ffi.rs before the binding teams build on it.", "review"],
     ["cargo build fails with error[E0502] after my change, help", "fix-build"],
     ["Audit the unsafe blocks in the ring buffer for soundness", "audit-unsafe"],
+    ["I want to start a new Rust project in this directory — a small CLI that deduplicates lines. How should we begin?", "start"],
     ["continue", null],
     ["what does the ? operator do in rust", null],
   ];

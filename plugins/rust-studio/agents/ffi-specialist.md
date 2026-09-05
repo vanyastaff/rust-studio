@@ -82,11 +82,12 @@ language boundary.
    abort — never let the unwind reach C.
 6. Audit string handling at the boundary. Input: read a `*const c_char` with
    `CStr::from_ptr` (document non-null + NUL-terminated + valid-for-the-call preconditions),
-   not a hand-rolled `strlen` + copy loop. Output: bind the `CString` to a **named local**
-   before calling `.as_ptr()` — `c_fn(CString::new(s)?.as_ptr())` dangles immediately because
-   the temporary is freed at the end of the statement. Never return an owned `String` by value
-   to C; transfer via an out-pointer/length pair (or the caller's allocator) and export a
-   matching free function.
+   not a hand-rolled `strlen` + copy loop. Output: a `CString` temporary lives to the end of its
+   statement — `let p = CString::new(s)?.as_ptr();` dangles on the next line (rustc's
+   `dangling_pointers_from_temporaries` lint), while `c_fn(CString::new(s)?.as_ptr())` is valid for
+   that call only. Bind the `CString` to a named local whenever the pointer outlives the statement
+   or the C side may retain it. Never return an owned `String` by value to C; transfer via an
+   out-pointer/length pair (or the caller's allocator) and export a matching free function.
 7. Model errors as a flat `#[repr(i32)]` (or `c_int`) return code plus out-parameters for
    any payload, never an owned Rust type by value. Document ownership for every pointer
    parameter and return value: allocation site, freeing site, and the exported destructor
@@ -128,7 +129,7 @@ Findings as annotated file:line entries, ordered by severity:
 path:line  🔴 ABI: <layout/repr mismatch or UB — non-repr(C) type, repr(u8) enum as C enum, dangling CString::as_ptr> — <fix>.
 path:line  🟠 OWNERSHIP: pointer lifecycle undocumented / destructor missing / from_raw not balanced with into_raw. <fix>.
 path:line  🟠 PANIC-SAFETY: extern "C" fn can unwind into C (UB). <add catch_unwind or panic=abort>.
-path:line  🟠 STRING: input not read via CStr::from_ptr / output CString not bound to a named local / owned String returned by value. <fix>.
+path:line  🟠 STRING: input not read via CStr::from_ptr / CString pointer outlives its temporary (or is retained by C) / owned String returned by value. <fix>.
 path:line  🟡 CONTRACT: nullability / lifetime of <param> unspecified. <document or use Option<NonNull<T>>>.
 path:line  🔵 BUILD: <build.rs probe fragile or non-hermetic>. <fix>.
 ```
