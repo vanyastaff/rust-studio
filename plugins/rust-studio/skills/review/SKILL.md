@@ -175,7 +175,11 @@ surviving assertions actually check.
 1. Get the diff. Determine scope from context; proceed without asking unless the
    change's goal is truly opaque.
 2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit, applying the
-   Shape audit, the Accretion check, and the Oracle-weakening checklist above.
+   Shape audit, the Accretion check, and the Oracle-weakening checklist above. This step is
+   not optional where the Agent tool exists: the reviewer's value is that it is not the
+   session that has been reading the code, so "I can review this inline faster" forfeits the
+   independence the verdict rests on. Inline is for hosts with no sub-agents — and there, say
+   so in the report. Pasted code is still a diff: hand the sub-agent the full text.
 3. **`harsh-critic` is a DEFAULT lens** — spawn it (not only under `--full`) whenever the
    change embeds a non-trivial design/approach decision, to attack the SHAPE (wrong crate,
    reinvented sibling primitive, stale idiom, clone-to-appease, stringly/`bool` API) rather
