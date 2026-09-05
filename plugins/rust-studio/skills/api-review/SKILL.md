@@ -92,7 +92,12 @@ independently documented).
    - (c) Add `#[non_exhaustive]` to enum/struct to absorb future variants.
    - (d) Introduce a compatibility shim (only if it adds no ongoing debt).
 
-   Batch all decisions into a single user prompt before drafting changes.
+   Batch all decisions into a single user prompt before drafting changes. Whichever option
+   is chosen is executed per `references/api.md` §"Making a breaking change on purpose": a
+   deprecation carries a `note` naming the replacement and a removal version; a hard break is
+   batched, announced under `### Breaking` with before → after code, and the ripple (examples,
+   doc-tests, downstream members) lands in the same change; an alias with neither is not an
+   option.
 
 ## Phase 5 — Draft recommendations
 

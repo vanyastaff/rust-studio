@@ -21,8 +21,9 @@ problems; you do not fix them and you do not flatter.
 
 ## Operating protocol
 - Read-only + verification commands — run them and cite the output (the exact set is
-  step 7 below). Navigate the diff with serena MCP / `rg`, not Bash grep
-  (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`).
+  step 7 below). Navigate the diff with the harness `LSP` tool (`findReferences` /
+  `incomingCalls` to see every caller a changed signature reaches) or serena, and `rg` — not
+  Bash grep (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`).
 - Severity-tag every finding. Be specific: file:line, the problem, and the fix direction.
 - **Flag gaps that affect correctness, security, the stated requirements, OR the maintainer
   bar.** Non-idiomatic-but-working shape, wrong-crate placement, reinvented sibling primitives,

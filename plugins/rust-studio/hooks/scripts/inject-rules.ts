@@ -95,6 +95,9 @@ export function pathMatches(globs: string, path: string): boolean {
 interface Input {
   hook_event_name?: string;
   session_id?: string;
+  /** Present only when the tool call comes from inside a sub-agent (Claude Code sets it
+   *  on every hook payload a sub-agent's tool call produces; absent on the main thread). */
+  agent_id?: string;
   tool_input?: {
     file_path?: string;
     path?: string;
@@ -136,6 +139,22 @@ export function applyPatchTargets(toolInput: Record<string, unknown> | undefined
     if (line.startsWith("+") && !line.startsWith("+++")) added.push(line.slice(1));
   }
   return { paths: [...new Set(paths)], added: added.join("\n") };
+}
+
+/** Dedupe-marker basename for one rule in one CONTEXT.
+ *
+ *  A context is a conversation window, and the session has more than one: the main
+ *  thread, plus every sub-agent, each starting from an empty window. Keying the marker
+ *  by session alone meant that once the orchestrator had touched `src/lib.rs`, the
+ *  `rust-builder` it then spawned to edit the same tree got NO standards at all — the
+ *  marker said "already announced", but it had been announced into a window the builder
+ *  never sees. The one agent that writes source was the one running without the rules.
+ *  So the key is session + agent: the main thread keeps its historical name (PreCompact
+ *  clears by the session prefix, which covers both shapes). */
+export function markerName(sessionId: string, agentId: string | undefined, rule: string): string {
+  const sid = sessionId.replace(/[^A-Za-z0-9]/g, "_");
+  const aid = agentId ? `__agent__${String(agentId).replace(/[^A-Za-z0-9]/g, "_")}` : "";
+  return `${sid}${aid}__rule__${rule}`;
 }
 
 /** Roots whose contents were written by someone outside this project.
@@ -255,7 +274,7 @@ if (import.meta.main) {
     a.name === "core" ? -1 : b.name === "core" ? 1 : a.name.localeCompare(b.name),
   );
 
-  // Announce each rule at most once per session — keyed by RULE, not by file.
+  // Announce each rule at most once per CONTEXT (session + agent) — keyed by RULE, not by file.
   // Keying by path meant core.md's pointer was re-injected once per file touched:
   // measured at 12 re-announcements and ~70% of all rule-pointer tokens in a
   // 12-file session (`bun tools/context-cost.ts`). Telling an agent to read
@@ -277,8 +296,7 @@ if (import.meta.main) {
   try {
     if (!data.session_id) throw new Error("no session key");
     const dir = join(tmpdir(), "rust-studio-rules");
-    const sid = String(data.session_id).replace(/[^A-Za-z0-9]/g, "_");
-    const marker = (name: string) => join(dir, `${sid}__rule__${name}`);
+    const marker = (name: string) => join(dir, markerName(String(data.session_id), data.agent_id, name));
     mkdirSync(dir, { recursive: true });
     fresh = matched.filter((r) => !existsSync(marker(r.name)));
     if (showUntrusted && existsSync(marker("untrusted-context"))) showUntrusted = false;
