@@ -67,6 +67,9 @@ Agent folder → agent mapping:
 | `build-scripts` | `build-engineer` | defect-recall |
 | `embedded` | `embedded-specialist` | defect-recall |
 | `wasm` | `wasm-specialist` | defect-recall |
+| `scout` | `rust-scout` | map-recall (the ground truth is the expected `file:line` map; the agent passes when every row is present, no verdict token needed) |
+| `docs` | `docs-engineer` | defect-recall |
+| `release` | `release-lead` | defect-recall |
 
 `tools/eval-runner.ts` carries the same table (`FIXTURE_AGENTS`) and runs this protocol headless
 (`bun tools/eval-runner.ts --fixtures`) for accounts without `claude plugin eval`; keep the two in

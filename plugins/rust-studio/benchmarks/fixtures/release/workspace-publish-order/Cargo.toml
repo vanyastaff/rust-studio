@@ -1,0 +1,15 @@
+[workspace]
+members = ["crates/acme-core", "crates/acme-store", "crates/acme-cli"]
+resolver = "3"
+
+[workspace.package]
+version = "0.3.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/acme/acme"
+authors = ["Acme Platform <platform@acme.example>"]
+
+[workspace.dependencies]
+acme-core = { path = "crates/acme-core" }
+acme-store = { path = "crates/acme-store", version = "0.3.0" }

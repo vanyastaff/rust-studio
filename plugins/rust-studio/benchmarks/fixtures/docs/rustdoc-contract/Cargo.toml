@@ -1,0 +1,10 @@
+[package]
+name = "acme-limits"
+version = "0.3.0"
+edition = "2024"
+description = "Parse and enforce request limits"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/acme/acme-limits"
+readme = "README.md"
+
+[dependencies]

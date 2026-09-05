@@ -1,0 +1,274 @@
+[
+ {
+  "prompt": "Review this Rust code before I merge it. It lives at `crates/config/src/parse.rs`.\n```rust\nfn f() {}\n```",
+  "route": "review"
+ },
+ {
+  "prompt": "Here's the diff for the retry logic, can you audit it for correctness?\n\n```rust\nloop {}\n```",
+  "route": "review"
+ },
+ {
+  "prompt": "Take a look at this and tell me what's wrong before it lands:\n```rust\npub fn parse(s: &str) -> Option<u32> { s.parse().ok() }\n```",
+  "route": "review"
+ },
+ {
+  "prompt": "Review the PR for the new cache layer for soundness and missing tests.",
+  "route": "review"
+ },
+ {
+  "prompt": "Is this mergeable as it stands?\n```rust\nstruct Mgr;\n```",
+  "route": "review"
+ },
+ {
+  "prompt": "Review `src/service/fanout.rs` for async correctness before it lands on the hot path.",
+  "route": "review"
+ },
+ {
+  "prompt": "Can you check this implementation for bugs?\n```rust\nlet x = v[i + 1];\n```",
+  "route": "review"
+ },
+ {
+  "prompt": "We are about to publish 1.0 of acme-store. Review its error types as the public contract.",
+  "route": "api-review"
+ },
+ {
+  "prompt": "Can we tag and publish 1.3.0? I changed parse to return Result and dropped a field.",
+  "route": "api-review"
+ },
+ {
+  "prompt": "Is this change to our public API breaking, and what version bump does it need?",
+  "route": "api-review"
+ },
+ {
+  "prompt": "Review the public surface of `widget` before we cut 2.0.",
+  "route": "api-review"
+ },
+ {
+  "prompt": "cargo semver-checks complained but CI is green — can we release?",
+  "route": "api-review"
+ },
+ {
+  "prompt": "We are about to add a refund flow to the domain crate. Is it in shape to extend? Give the pre-code maintainer verdict.",
+  "route": "architecture"
+ },
+ {
+  "prompt": "Should the parser live in its own crate or stay a module in core? Weigh the crate boundary.",
+  "route": "architecture"
+ },
+ {
+  "prompt": "How should we split this workspace into crates so the layering is sound?",
+  "route": "architecture"
+ },
+ {
+  "prompt": "Which crate should own the `Money` type — domain or api?",
+  "route": "architecture"
+ },
+ {
+  "prompt": "Nobody can follow `apply_discount` any more. Make it readable; behavior must stay identical.",
+  "route": "refactor"
+ },
+ {
+  "prompt": "This function is 400 lines of nested ifs. Can we simplify it without changing what it does?",
+  "route": "refactor"
+ },
+ {
+  "prompt": "Untangle this module — it has become spaghetti.",
+  "route": "refactor"
+ },
+ {
+  "prompt": "Clean up the naming in this file so a new teammate can read it.",
+  "route": "refactor"
+ },
+ {
+  "prompt": "The story was a --json flag; the branch also renames modules and bumps serde_json. Is this diff in scope?",
+  "route": "scope-check"
+ },
+ {
+  "prompt": "Did this PR creep beyond the ticket? Here is the diffstat.",
+  "route": "scope-check"
+ },
+ {
+  "prompt": "Is adding the --yaml flag scope creep or part of the story?",
+  "route": "scope-check"
+ },
+ {
+  "prompt": "The release binary of our small Rust CLI is 48 MB. Why, and how do we shrink it?",
+  "route": "bloat"
+ },
+ {
+  "prompt": "Our wasm bundle is 6 MB, way too big. Where does the size come from?",
+  "route": "bloat"
+ },
+ {
+  "prompt": "Why is the executable so large after adding reqwest?",
+  "route": "bloat"
+ },
+ {
+  "prompt": "This hot loop allocates on every iteration; can we make it faster and prove it?",
+  "route": "perf"
+ },
+ {
+  "prompt": "Profile the request handler — p99 latency doubled after the last release.",
+  "route": "perf"
+ },
+ {
+  "prompt": "Is this fast enough? It runs 10k times per second.",
+  "route": "perf"
+ },
+ {
+  "prompt": "Our test suite fails about one run in five on CI with no code changes. Where do I start?",
+  "route": "flaky-hunt"
+ },
+ {
+  "prompt": "CI is green nine runs in ten. Which tests are flaky and why?",
+  "route": "flaky-hunt"
+ },
+ {
+  "prompt": "A test passes locally and fails intermittently on CI.",
+  "route": "flaky-hunt"
+ },
+ {
+  "prompt": "cargo build fails with E0499 cannot borrow *self as mutable more than once. Fix it.",
+  "route": "fix-build"
+ },
+ {
+  "prompt": "The build is red after the tokio upgrade: error[E0277]: the trait bound is not satisfied.",
+  "route": "fix-build"
+ },
+ {
+  "prompt": "error: lifetime may not live long enough — I'm stuck, help me get this compiling.",
+  "route": "fix-build"
+ },
+ {
+  "prompt": "Audit the unsafe blocks in `src/raw.rs` for soundness.",
+  "route": "audit-unsafe"
+ },
+ {
+  "prompt": "Does this unsafe impl Send hold? Check the SAFETY comments.",
+  "route": "audit-unsafe"
+ },
+ {
+  "prompt": "Review the FFI boundary in `ffi.rs` — the C API our bindings use.",
+  "route": "audit-unsafe"
+ },
+ {
+  "prompt": "Is this handler vulnerable to SQL injection? It builds the query with format!.",
+  "route": "security-audit"
+ },
+ {
+  "prompt": "Security review of the auth middleware before launch, please.",
+  "route": "security-audit"
+ },
+ {
+  "prompt": "Check the new upload endpoint for path traversal and DoS.",
+  "route": "security-audit"
+ },
+ {
+  "prompt": "I'm starting a new Rust crate that parses .env files and we intend to publish it. Help me design its public API.",
+  "route": "design-api"
+ },
+ {
+  "prompt": "Design the public API for our new rate limiter crate.",
+  "route": "design-api"
+ },
+ {
+  "prompt": "What should the builder and error types look like for this library's public surface?",
+  "route": "design-api"
+ },
+ {
+  "prompt": "I want to start a new Rust project in this directory — a small CLI that deduplicates lines. How should we begin?",
+  "route": "start"
+ },
+ {
+  "prompt": "Let's bootstrap a new crate for the ingestion service. Where do we begin?",
+  "route": "start"
+ },
+ {
+  "prompt": "Before we build it, attack this design. Give me the strongest case against it.",
+  "route": "@harsh-critic"
+ },
+ {
+  "prompt": "Poke holes in this plan: one global mutex for all tenants, cleanup later.",
+  "route": "@harsh-critic"
+ },
+ {
+  "prompt": "Play devil's advocate on this architecture proposal.",
+  "route": "@harsh-critic"
+ },
+ {
+  "prompt": "We are considering taking a new dependency, fast-validate 0.3.1. Vet the crate and tell me whether we should add it.",
+  "route": "@dependency-manager"
+ },
+ {
+  "prompt": "Should we adopt the `color-eyre` crate or stick with anyhow?",
+  "route": "@dependency-manager"
+ },
+ {
+  "prompt": "Audit this dependency before we pull it in.",
+  "route": "@dependency-manager"
+ },
+ {
+  "prompt": "/rust-studio:review",
+  "route": null
+ },
+ {
+  "prompt": "/review the last commit",
+  "route": null
+ },
+ {
+  "prompt": "Thanks, that looks right.",
+  "route": null
+ },
+ {
+  "prompt": "continue",
+  "route": null
+ },
+ {
+  "prompt": "yes",
+  "route": null
+ },
+ {
+  "prompt": "What does the borrow checker actually check? Explain the rules to me.",
+  "route": null
+ },
+ {
+  "prompt": "How does tokio's select! macro decide which branch to poll first?",
+  "route": null
+ },
+ {
+  "prompt": "Write a haiku about Rust lifetimes.",
+  "route": null
+ },
+ {
+  "prompt": "Which files did you change in the last step?",
+  "route": null
+ },
+ {
+  "prompt": "Explain how our review process works in this repo.",
+  "route": null
+ },
+ {
+  "prompt": "Summarize what the retry module does.",
+  "route": null
+ },
+ {
+  "prompt": "Rename the variable `tmp` to `attempts` in this one function.",
+  "route": null
+ },
+ {
+  "prompt": "Add a doc comment to `Config::get`.",
+  "route": null
+ },
+ {
+  "prompt": "git log shows a merge commit from yesterday, who made it?",
+  "route": null
+ },
+ {
+  "prompt": "Translate this error message into Russian for the docs.",
+  "route": null
+ },
+ {
+  "prompt": "I reviewed your plan and it looks fine; proceed.",
+  "route": null
+ }
+]
