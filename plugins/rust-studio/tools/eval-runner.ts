@@ -46,6 +46,7 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, readdi
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { VERDICT } from "../hooks/scripts/subagent-stop.ts";
 
 const PLUGIN_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -66,7 +67,7 @@ interface Options {
   out: string;
   dryRun: boolean;
   timeoutScale: number;
-  /** Runs per case / fixture / live task. Omitted: one run (the case's own `runs` is advisory). */
+  /** Runs per item. Omitted: a case's own frontmatter `runs:` (default 1); fixtures and live tasks run once. */
   runs?: number;
   /** Mean eval-case score below which the process exits 1 (plugin eval's --threshold). */
   threshold?: number;
@@ -239,10 +240,11 @@ export interface GraderResult {
 }
 
 export function gradeRegex(g: Grader, trace: RunTrace): GraderResult {
-  const flags = g.fm.flags ?? "";
+  // The grader's `flags:` pass through (i, m, s, u) so a rubric written for plugin eval scores the same here.
+  const flags = [...new Set((g.fm.flags ?? "").replace(/[^imsu]/g, ""))].join("");
   let re: RegExp;
   try {
-    re = new RegExp(g.body, flags.includes("i") ? "i" : "");
+    re = new RegExp(g.body, flags);
   } catch (e) {
     return { file: g.file, type: g.type, weight: g.weight, score: null, detail: `bad regex: ${e}` };
   }
@@ -504,7 +506,10 @@ interface FixtureResult {
   agent: string;
   mode: string;
   spawned: boolean;
+  /** Ground-truth rows in the fixture; recall = (gtCount - missed.length) / gtCount. */
+  gtCount: number;
   recall: number | null;
+  /** Rows the grader reported as caught, restricted to real GT ids and deduplicated. */
   caught: string[];
   missed: string[];
   verdictOk: boolean | null;
@@ -566,8 +571,8 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
     const j = await llmJson(gradePrompt, o.graderModel);
     const { raw, ...rest } = trace;
     writeFileSync(join(o.out, `fixture__${rel.replace(/\//g, "__")}.run${run}.stream.jsonl`), raw);
-    if (j?.error) return { kind: "fixture", name: rel, run, agent, mode, spawned, recall: null, caught: [], missed: ids, verdictOk: null, falsePositives: null, notes: j.error, trace: rest };
-    const caught: string[] = Array.isArray(j.caught) ? j.caught.filter((x: unknown) => typeof x === "string") : [];
+    if (j?.error) return { kind: "fixture", name: rel, run, agent, mode, spawned, gtCount: ids.length, recall: null, caught: [], missed: ids, verdictOk: null, falsePositives: null, notes: j.error, trace: rest };
+    const caught: string[] = Array.isArray(j.caught) ? [...new Set(j.caught.filter((x: unknown): x is string => typeof x === "string" && ids.includes(x)))] : [];
     const missed = ids.filter((id) => !caught.includes(id));
     const autoFail = Boolean(j.auto_fail);
     return {
@@ -577,7 +582,8 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
       agent,
       mode,
       spawned,
-      recall: ids.length ? caught.filter((c) => ids.includes(c)).length / ids.length : null,
+      gtCount: ids.length,
+      recall: ids.length ? caught.length / ids.length : null,
       caught,
       missed,
       verdictOk: autoFail ? false : typeof j.verdict_ok === "boolean" ? j.verdict_ok : null,
@@ -606,8 +612,6 @@ interface LiveResult {
   verdictPresent: boolean;
   trace: Trace;
 }
-
-export const VERDICT_TOKEN = /\b(COMPLETE|NEEDS\s+WORK|REDO-TO-BAR|BLOCKED|ACCEPTABLE|RESHAPE\s+NEEDED)\b/;
 
 async function runLive(name: string, run: number, o: Options): Promise<LiveResult> {
   const dir = join(PLUGIN_ROOT, "benchmarks", "live", name);
@@ -644,7 +648,7 @@ async function runLive(name: string, run: number, o: Options): Promise<LiveResul
     writeFileSync(join(o.out, `live__${name}.run${run}.stream.jsonl`), raw);
     const check = await runProcess(["bash", join(dir, "check.sh")], cwd, 600_000, { ...cleanEnv(), LIVE_DIR: dir });
     const checkOutput = (check.stdout + (check.stderr ? "\n[stderr]\n" + check.stderr : "")).slice(-6000);
-    return { kind: "live", name, run, target, targetKind, passed: check.timedOut ? null : check.code === 0, checkExit: check.code, checkOutput, verdictPresent: VERDICT_TOKEN.test(trace.lastMessage), trace: rest };
+    return { kind: "live", name, run, target, targetKind, passed: check.timedOut ? null : check.code === 0, checkExit: check.code, checkOutput, verdictPresent: VERDICT.test(trace.lastMessage), trace: rest };
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }
@@ -708,7 +712,7 @@ function groupBy<T extends { name: string }>(items: T[]): Map<string, T[]> {
   return m;
 }
 
-export function renderSummary(cases: CaseResult[], fixtures: FixtureResult[], live: LiveResult[], graderModel: string, runs: number): string {
+export function renderSummary(cases: CaseResult[], fixtures: FixtureResult[], live: LiveResult[], graderModel: string, runs: number | string): string {
   const lines: string[] = [];
   lines.push(`# Eval run — ${new Date().toISOString()}`, "");
   const cost = [...cases, ...fixtures, ...live].reduce((a, r) => a + (r.trace.costUsd || 0), 0);
@@ -740,8 +744,8 @@ export function renderSummary(cases: CaseResult[], fixtures: FixtureResult[], li
     const byAgent = new Map<string, { hits: number; total: number; verdictFails: number; n: number }>();
     for (const f of fixtures) {
       const e = byAgent.get(f.agent) ?? { hits: 0, total: 0, verdictFails: 0, n: 0 };
-      e.hits += f.caught.filter((c) => !f.missed.includes(c)).length;
-      e.total += f.caught.length + f.missed.length;
+      e.hits += f.gtCount - f.missed.length;
+      e.total += f.gtCount;
       e.n += 1;
       if (f.verdictOk === false) e.verdictFails += 1;
       byAgent.set(f.agent, e);
@@ -775,10 +779,14 @@ if (import.meta.main) {
   for (const c of cases) if (!existsSync(join(PLUGIN_ROOT, "evals", c, "prompt.md"))) throw new Error(`no such eval case: ${c}`);
   for (const f of fixtures) if (!existsSync(join(PLUGIN_ROOT, "benchmarks", "fixtures", f, "ground-truth.md"))) throw new Error(`no such fixture: ${f}`);
   for (const l of live) if (!existsSync(join(PLUGIN_ROOT, "benchmarks", "live", l, "task.md"))) throw new Error(`no such live task: ${l}`);
-  const runs = o.runs ?? 1;
+  // A case's frontmatter `runs:` is its default (routing is stochastic; those cases ask for 3);
+  // --runs overrides it for everything. Fixtures and live tasks run once unless --runs says otherwise.
+  const caseRuns = (c: string): number => o.runs ?? Math.max(1, Number(splitFrontmatter(readFileSync(join(PLUGIN_ROOT, "evals", c, "prompt.md"), "utf8")).fm.runs) || 1);
+  const otherRuns = (): number => o.runs ?? 1;
+  const runsLabel: number | string = o.runs ?? "per case (frontmatter `runs:`), 1 for fixtures and live tasks";
   if (o.dryRun) {
-    console.log(`runs per item: ${runs}`);
-    console.log(`would run ${cases.length} case(s): ${cases.join(", ") || "—"}`);
+    console.log(`runs per item: ${runsLabel}`);
+    console.log(`would run ${cases.length} case(s): ${cases.map((c) => `${c}×${caseRuns(c)}`).join(", ") || "—"}`);
     console.log(`would run ${fixtures.length} fixture(s): ${fixtures.map((f) => `${f} → ${FIXTURE_AGENTS[f.split("/")[0]]}`).join(", ") || "—"}`);
     console.log(`would run ${live.length} live task(s): ${live.join(", ") || "—"}`);
     process.exit(0);
@@ -789,57 +797,64 @@ if (import.meta.main) {
   const log = (s: string) => console.error(`[${((Date.now() - started) / 1000).toFixed(0)}s] ${s}`);
   let spent = 0;
   const overBudget = () => o.totalBudget != null && spent >= o.totalBudget;
-  const expand = <T>(items: T[]): Array<[T, number]> => items.flatMap((it) => Array.from({ length: runs }, (_, k) => [it, k + 1] as [T, number]));
+  const EMPTY_TRACE: Trace = { lastMessage: "", toolsUsed: [], skills: [], agents: [], costUsd: 0, turns: 0, durationMs: 0, isError: true, subtype: "runner-error" };
 
-  const caseRaw = await pool(expand(cases), o.parallel, async ([c, k]) => {
-    log(`▶ case ${c} run ${k}`);
-    try {
-      const r = await runCase(c, k, o);
-      spent += r.trace.costUsd;
-      writeFileSync(join(o.out, `${c}.run${k}.json`), JSON.stringify(r, null, 2));
-      log(`✔ case ${c} run ${k} → ${pct(r.score)} ($${r.trace.costUsd.toFixed(2)}, total $${spent.toFixed(2)})`);
+  /** One protocol for every kind of item: log → run → account spend → write `<file>.runN.json` →
+   *  log the outcome; a thrown run becomes a runner-error result; runs the budget stop skipped are
+   *  listed, not silently dropped. */
+  const runAll = async <R extends { trace: Trace }>(
+    kind: string,
+    items: string[],
+    runsFor: (name: string) => number,
+    parallel: number,
+    file: (name: string, run: number) => string,
+    run: (name: string, k: number) => Promise<R>,
+    fallback: (name: string, k: number, err: unknown) => R,
+    outcome: (r: R) => string,
+  ): Promise<{ results: R[]; skipped: string[] }> => {
+    const work = items.flatMap((it) => Array.from({ length: runsFor(it) }, (_, k) => [it, k + 1] as [string, number]));
+    const raw = await pool(work, parallel, async ([name, k]) => {
+      log(`▶ ${kind} ${name} run ${k}`);
+      let r: R;
+      try {
+        r = await run(name, k);
+        spent += r.trace.costUsd;
+        log(`✔ ${kind} ${name} run ${k} → ${outcome(r)} ($${r.trace.costUsd.toFixed(2)}, total $${spent.toFixed(2)})`);
+      } catch (e) {
+        log(`✖ ${kind} ${name} run ${k} failed: ${e}`);
+        r = fallback(name, k, e);
+      }
+      writeFileSync(join(o.out, `${file(name, k)}.run${k}.json`), JSON.stringify(r, null, 2));
       return r;
-    } catch (e) {
-      log(`✖ case ${c} run ${k} failed: ${e}`);
-      const r: CaseResult = { kind: "eval", name: c, run: k, score: null, graders: [{ file: "runner", type: "error", weight: 1, score: null, detail: String(e) }], followUps: 0, trace: { lastMessage: "", toolsUsed: [], skills: [], agents: [], costUsd: 0, turns: 0, durationMs: 0, isError: true, subtype: "runner-error" } };
-      writeFileSync(join(o.out, `${c}.run${k}.json`), JSON.stringify(r, null, 2));
-      return r;
-    }
-  }, overBudget);
-  const caseResults = caseRaw.filter((r): r is CaseResult => r != null);
-  const skipped: string[] = expand(cases).filter((_, i) => caseRaw[i] == null).map(([c, k]) => `case ${c} run ${k}`);
+    }, overBudget);
+    return {
+      results: raw.filter((r): r is R => r != null),
+      skipped: work.filter((_, i) => raw[i] == null).map(([name, k]) => `${kind} ${name} run ${k}`),
+    };
+  };
 
-  const fxRaw = await pool(expand(fixtures), o.parallel, async ([f, k]) => {
-    log(`▶ fixture ${f} run ${k}`);
-    try {
-      const r = await runFixture(f, k, o);
-      spent += r.trace.costUsd;
-      writeFileSync(join(o.out, `fixture__${f.replace(/\//g, "__")}.run${k}.json`), JSON.stringify(r, null, 2));
-      log(`✔ fixture ${f} run ${k} → recall ${pct(r.recall)}, verdict ${r.verdictOk} ($${r.trace.costUsd.toFixed(2)}, total $${spent.toFixed(2)})`);
-      return r;
-    } catch (e) {
-      log(`✖ fixture ${f} run ${k} failed: ${e}`);
-      return { kind: "fixture", name: f, run: k, agent: FIXTURE_AGENTS[f.split("/")[0]] ?? "?", mode: "?", spawned: false, recall: null, caught: [], missed: [], verdictOk: null, falsePositives: null, notes: String(e), trace: { lastMessage: "", toolsUsed: [], skills: [], agents: [], costUsd: 0, turns: 0, durationMs: 0, isError: true, subtype: "runner-error" } } as FixtureResult;
-    }
-  }, overBudget);
-  const fixtureResults = fxRaw.filter((r): r is FixtureResult => r != null);
-  skipped.push(...expand(fixtures).filter((_, i) => fxRaw[i] == null).map(([f, k]) => `fixture ${f} run ${k}`));
-
-  const liveRaw = await pool(expand(live), Math.min(o.parallel, 2), async ([l, k]) => {
-    log(`▶ live ${l} run ${k}`);
-    try {
-      const r = await runLive(l, k, o);
-      spent += r.trace.costUsd;
-      writeFileSync(join(o.out, `live__${l}.run${k}.json`), JSON.stringify(r, null, 2));
-      log(`✔ live ${l} run ${k} → ${r.passed == null ? "timeout" : r.passed ? "PASS" : "FAIL"} ($${r.trace.costUsd.toFixed(2)}, total $${spent.toFixed(2)})`);
-      return r;
-    } catch (e) {
-      log(`✖ live ${l} run ${k} failed: ${e}`);
-      return { kind: "live", name: l, run: k, target: "?", targetKind: "?", passed: null, checkExit: null, checkOutput: String(e), verdictPresent: false, trace: { lastMessage: "", toolsUsed: [], skills: [], agents: [], costUsd: 0, turns: 0, durationMs: 0, isError: true, subtype: "runner-error" } } as LiveResult;
-    }
-  }, overBudget);
-  const liveResults = liveRaw.filter((r): r is LiveResult => r != null);
-  skipped.push(...expand(live).filter((_, i) => liveRaw[i] == null).map(([l, k]) => `live ${l} run ${k}`));
+  const { results: caseResults, skipped } = await runAll<CaseResult>(
+    "case", cases, caseRuns, o.parallel, (c) => c,
+    (c, k) => runCase(c, k, o),
+    (c, k, e) => ({ kind: "eval", name: c, run: k, score: null, graders: [{ file: "runner", type: "error", weight: 1, score: null, detail: String(e) }], followUps: 0, trace: EMPTY_TRACE }),
+    (r) => pct(r.score),
+  );
+  const fx = await runAll<FixtureResult>(
+    "fixture", fixtures, otherRuns, o.parallel, (f) => `fixture__${f.replace(/\//g, "__")}`,
+    (f, k) => runFixture(f, k, o),
+    (f, k, e) => ({ kind: "fixture", name: f, run: k, agent: FIXTURE_AGENTS[f.split("/")[0]] ?? "?", mode: "?", spawned: false, gtCount: 0, recall: null, caught: [], missed: [], verdictOk: null, falsePositives: null, notes: String(e), trace: EMPTY_TRACE }),
+    (r) => `recall ${pct(r.recall)}, verdict ${r.verdictOk}`,
+  );
+  const lv = await runAll<LiveResult>(
+    "live", live, otherRuns, Math.min(o.parallel, 2), (l) => `live__${l}`,
+    (l, k) => runLive(l, k, o),
+    (l, k, e) => ({ kind: "live", name: l, run: k, target: "?", targetKind: "?", passed: null, checkExit: null, checkOutput: String(e), verdictPresent: false, trace: EMPTY_TRACE }),
+    (r) => (r.passed == null ? "timeout" : r.passed ? "PASS" : "FAIL"),
+  );
+  const fixtureResults = fx.results;
+  const liveResults = lv.results;
+  skipped.push(...fx.skipped, ...lv.skipped);
+  const runs = runsLabel;
 
   let summary = renderSummary(caseResults, fixtureResults, liveResults, o.graderModel, runs);
   if (skipped.length) summary += `\n## Skipped — total budget $${o.totalBudget} reached\n\n${skipped.map((x) => `- ${x}`).join("\n")}\n`;
@@ -847,11 +862,21 @@ if (import.meta.main) {
   const mean = perCase.length ? perCase.reduce((a, b) => a + b, 0) / perCase.length : null;
   if (perCase.length) summary += `\nMean eval-case score: **${pct(mean)}** over ${perCase.length} case(s), ${runs} run(s) each${o.threshold != null ? ` (threshold ${pct(o.threshold)})` : ""}.\n`;
   writeFileSync(join(o.out, "summary.md"), summary);
-  writeFileSync(join(o.out, "summary.json"), JSON.stringify({ runs, cases: caseResults, fixtures: fixtureResults, live: liveResults, skipped, meanCaseScore: mean }, null, 2));
+  writeFileSync(join(o.out, "summary.json"), JSON.stringify({ runs: o.runs ?? null, cases: caseResults, fixtures: fixtureResults, live: liveResults, skipped, meanCaseScore: mean }, null, 2));
   console.log(summary);
   console.error(`results: ${relative(process.cwd(), o.out)}`);
-  if (o.threshold != null && mean != null && mean < o.threshold) {
-    console.error(`FAIL: mean eval-case score ${pct(mean)} is below the threshold ${pct(o.threshold)}`);
-    process.exit(1);
+  if (o.threshold != null) {
+    // A gate that reports a pass it never measured is the failure mode this replaces: no score,
+    // a budget-truncated suite, or errored runs all fail, not only a low mean.
+    const unscored = caseResults.filter((r) => r.score == null).length;
+    const reasons: string[] = [];
+    if (mean == null) reasons.push("no eval case produced a score");
+    if (skipped.length) reasons.push(`${skipped.length} run(s) skipped — total budget $${o.totalBudget} reached before the suite finished`);
+    if (unscored) reasons.push(`${unscored} run(s) produced no score (runner or CLI error)`);
+    if (mean != null && mean < o.threshold) reasons.push(`mean eval-case score ${pct(mean)} is below the threshold ${pct(o.threshold)}`);
+    if (reasons.length) {
+      for (const r of reasons) console.error(`FAIL: ${r}`);
+      process.exit(1);
+    }
   }
 }

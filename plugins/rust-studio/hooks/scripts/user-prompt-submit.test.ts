@@ -2,7 +2,7 @@
 // surfaces and that a surfaced note is not repeated.
 import { test, expect, describe } from "bun:test";
 import { readFileSync } from "node:fs";
-import { pickPromptPointers, renderPointers, MIN_PROMPT_SCORE, readSurfaced, writeSurfaced, routeFor, renderRoute, routeKey, readRouted, writeRouted } from "./user-prompt-submit.ts";
+import { pickPromptPointers, renderPointers, MIN_PROMPT_SCORE, readSurfaced, writeSurfaced, routeFor, renderRoute, routeKey, readRouted, writeRouted, namesStudioSkill } from "./user-prompt-submit.ts";
 import { parseIndex } from "./memory-store.ts";
 
 const entries = parseIndex(
@@ -89,6 +89,13 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     expect(corpus.filter((c) => c.route).length).toBeGreaterThanOrEqual(55);
     expect(corpus.filter((c) => !c.route).length).toBeGreaterThanOrEqual(25);
     expect(new Set(corpus.map((c) => c.prompt)).size).toBe(corpus.length);
+  });
+  test("a slash token is a skill invocation only when it names a shipped skill, not a path", () => {
+    expect(namesStudioSkill("/review the last commit")).toBe(true);
+    expect(namesStudioSkill("run /rust-studio:audit-unsafe on src/raw.rs")).toBe(true);
+    expect(namesStudioSkill("Review /home/me/proj/src/ffi.rs before we merge")).toBe(false);
+    expect(namesStudioSkill("logs at /tmp/ci.log, and the crate is under /workspace/crates/core")).toBe(false);
+    expect(namesStudioSkill("what is in /etc here")).toBe(false);
   });
   for (const c of corpus) {
     test(`corpus: ${c.prompt.slice(0, 60).replace(/\n/g, " ")} → ${c.route ?? "(none)"}`, () => {
