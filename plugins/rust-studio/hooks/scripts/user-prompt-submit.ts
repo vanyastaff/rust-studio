@@ -104,7 +104,9 @@ export function renderRoute(r: { skill?: string; agent?: string; why: string }):
     return (
       `Rust Code Studio routing: this prompt reads as ${r.why} — the studio path is the \`${r.agent}\` sub-agent. ` +
       `Spawn it now with the Agent tool (subagent_type \`rust-studio:${r.agent}\`), hand it the full text the user gave, ` +
-      "and relay its findings and its verdict line verbatim; an inline answer skips the independent lens the studio exists for."
+      "and relay its findings; the LAST line of your reply is the sub-agent's own verdict line quoted verbatim " +
+      "(e.g. `DOESN'T SURVIVE — use ALT-2`, `NEEDS WORK — 3 blockers`) — a summary that paraphrases it away is incomplete. " +
+      "An inline answer skips the independent lens the studio exists for."
     );
   }
   return (
