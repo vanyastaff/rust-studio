@@ -101,7 +101,7 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     const r = routeFor("Before we build it, attack this design. Give me the strongest case against it.");
     expect(r?.agent).toBe("harsh-critic");
     expect(renderRoute(r!)).toContain("subagent_type `rust-studio:harsh-critic`");
-    expect(renderRoute(r!)).toContain("verdict line verbatim");
+    expect(renderRoute(r!)).toContain("verdict line quoted verbatim");
   });
 
   test("the hint names the skill, the verdict vocabulary, and says to invoke it", () => {
