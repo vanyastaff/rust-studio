@@ -57,7 +57,12 @@ problems; you do not fix them and you do not flatter.
    manifest or migration diff, also the floor: `edition = "2024"` needs `rust-version` ≥ 1.85
    (2021: 1.56), a feature-gated module that no default build compiles is unmigrated code, and
    an identifier that became a keyword (`gen` in 2024) is a build that only passes because
-   nothing compiled it.
+   nothing compiled it. And every `cargo fix --edition` rewrite in the diff is a marker that the
+   new edition's behavior was *avoided* there, not adopted — a `match … { Some(v) => …, _ => … }`
+   standing where `if let … else` was (the `if-let-rescope` drop-order change), `&raw` for
+   `addr_of!`, `r#gen`. Each one asks: was that avoidance decided and recorded, or inherited
+   silently? A crate that declares 2024 and behaves as 2021 at every such site has not
+   migrated, whatever the test count says.
 3. Check concurrency/async: blocking in async, cancellation safety, `Send`/`Sync`, races.
 4. Check scope: anything changed that the story didn't ask for? Flag it.
 5. Check tests: do they cover the criteria + edge cases, and assert behavior not internals?
