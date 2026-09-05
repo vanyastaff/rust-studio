@@ -77,6 +77,16 @@ mentioned in docs, changelog, or the PR description) and **leaked internal
 types** (types exposed only as return/parameter positions without being
 independently documented).
 
+Two things the class table does not catch, and every review must still call out:
+- **Compatibility shims already in the tree** — `pub type Old = New`, a re-export or wrapper
+  fn kept "for compatibility", a renamed item's old name left behind. Its semver class is
+  additive, so it looks harmless; without `#[deprecated(since = "…", note = "use `New`")]`
+  and a named removal version it is a permanent undeprecated alias, and that is a finding
+  (`references/api.md` §"Making a breaking change on purpose"), not a PATCH row.
+- **"Nobody relies on X"** is a claim, not evidence. Verify it — crates.io reverse
+  dependencies, `cargo public-api` on the previous tag, a grep of the known dependents — or
+  classify the removal as the MAJOR it is on paper. The review states which it did.
+
 ## Phase 4 — Question → Options → Decision
 
 4. If `api-design-lead` finds only `PATCH`-class changes: report and end with
@@ -92,7 +102,12 @@ independently documented).
    - (c) Add `#[non_exhaustive]` to enum/struct to absorb future variants.
    - (d) Introduce a compatibility shim (only if it adds no ongoing debt).
 
-   Batch all decisions into a single user prompt before drafting changes.
+   Batch all decisions into a single user prompt before drafting changes. Whichever option
+   is chosen is executed per `references/api.md` §"Making a breaking change on purpose": a
+   deprecation carries a `note` naming the replacement and a removal version; a hard break is
+   batched, announced under `### Breaking` with before → after code, and the ripple (examples,
+   doc-tests, downstream members) lands in the same change; an alias with neither is not an
+   option.
 
 ## Phase 5 — Draft recommendations
 

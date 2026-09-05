@@ -49,9 +49,12 @@ maintainer-grade plan into working, tested Rust.
    API/type-system shape, performance posture, active-dev break/shim policy, and current-doc
    freshness when relevant. If the verdict fails, stop with `BLOCKED` or perform the approved
    reshape before the feature code.
-3. Locate edit sites with serena (`find_symbol` / `find_referencing_symbols` /
-   `find_implementations`); `ast-grep` for mass/structural renames — not Bash grep+sed.
-   Use `rg` to catch macro-generated or `cfg`-gated sites serena can't see.
+3. Locate edit sites with the language server this session has — the harness `LSP` tool
+   (`findReferences` / `goToDefinition` / `goToImplementation`) or serena (`find_symbol` /
+   `find_referencing_symbols` / `find_implementations`); `ast-grep` for mass/structural
+   renames — not Bash grep+sed. Use `rg` to catch macro-generated or `cfg`-gated sites a
+   language server can't see. Diagnostics from the bundled rust-analyzer surface after each
+   edit — read them before the next edit rather than discovering the same error from `cargo`.
 4. **Apply changes as targeted edits.** Use `Edit` against an existing file; reserve `Write` for
    new ones. Never re-emit a file wholesale to change part of it — a few hundred lines and up
    exhausts the response budget, and the task is then lost with **nothing written**. Edit,

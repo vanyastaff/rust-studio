@@ -14,6 +14,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readInput, emit, watchdog, option, optionBool, pluginRoot } from "./_lib.ts";
+import { classify, field, section } from "./cargo-manifest.ts";
 import {
   INDEX_FILE,
   bodyReader,
@@ -34,44 +35,6 @@ import {
 // stdin, so disarming after readInput would leave the slow path unguarded and
 // hand a stall to the harness's 20s kill (which loses the briefing too).
 watchdog(15_000);
-
-// --- minimal Cargo.toml field extraction (no TOML dep; only the fields used) ---
-function section(text: string, name: string): string {
-  const out: string[] = [];
-  let inSec = false;
-  for (const line of text.split(/\r?\n/)) {
-    if (/^\s*\[/.test(line)) {
-      inSec = line.trim() === `[${name}]`;
-      continue;
-    }
-    if (inSec) out.push(line);
-  }
-  return out.join("\n");
-}
-function field(body: string, key: string): string | null {
-  const m = new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']*)["']`, "m").exec(body);
-  return m ? m[1] : null;
-}
-
-function classify(textLower: string): string[] {
-  const hay = textLower;
-  const domains: string[] = [];
-  if (
-    hay.includes("#![no_std]") ||
-    hay.includes("embedded-hal") ||
-    hay.includes("cortex-m") ||
-    hay.includes("no-std")
-  )
-    domains.push("systems/embedded");
-  if (["tokio", "axum", "actix-web", "actix_web", "hyper", "tower", "sqlx", "async-std"].some((k) => hay.includes(k)))
-    domains.push("async/web");
-  if (["clap", "ratatui", "crossterm"].some((k) => hay.includes(k)) || hay.includes("[[bin]]"))
-    domains.push("cli");
-  if (hay.includes("[lib]")) domains.push("library/crate");
-  const seen: string[] = [];
-  for (const d of domains) if (!seen.includes(d)) seen.push(d);
-  return seen.length ? seen : ["(undetermined — run /detect-stack)"];
-}
 
 /** Map the detected domain(s) to the right ENTRY skill, so the always-on briefing
  *  routes to the fitting command instead of the same generic list every session.
@@ -218,7 +181,12 @@ if (!manifestExists) {
     "## Rust Code Studio active\n\n" +
     "Rust Code Studio plugin is active, but no Cargo.toml was found at the session root. " +
     "If this is a Rust project, run /detect-stack from its root. " +
-    "Studio protocol: Question → Options → Decision → Draft → Approval.";
+    "Studio protocol: Question → Options → Decision → Draft → Approval.\n\n" +
+    "**Rust work without a checkout still routes through the studio:** code pasted for review → " +
+    "`/review` (add `/audit-unsafe`, `/security-audit`, `/api-review` for their lenses); a design or " +
+    "plan to attack → `/brainstorm` (spawns `harsh-critic`); crate/module boundaries → `/architecture`; " +
+    "a reshape that must not change behavior → `/refactor`; scope questions → `/scope-check`. Each ends " +
+    "in a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict with the evidence behind it.";
 } else {
   let text = "";
   try {

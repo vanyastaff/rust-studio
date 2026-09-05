@@ -57,7 +57,7 @@ done < <(jq -r '.hooks | keys[]' hooks/codex-hooks.json)
 # not because nobody revisited it. Keep the two files' script sets diffable.
 claude_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/claude-hooks.json | sort -u)
 codex_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/codex-hooks.json | sort -u)
-expected_claude_only=$'/auto-capture.ts\n/model-switch.ts\n/statusline-install.ts\n/subagent-stop.ts'
+expected_claude_only=$'/auto-capture.ts\n/model-switch.ts\n/statusline-install.ts\n/subagent-start.ts\n/subagent-stop.ts'
 actual_claude_only=$(comm -23 <(echo "$claude_scripts") <(echo "$codex_scripts"))
 [[ $actual_claude_only == "$expected_claude_only" ]] ||
   fail "Claude-only hook set changed — port it to Codex or update the expected list. Got: $(echo "$actual_claude_only" | tr '\n' ' ')"
@@ -176,7 +176,7 @@ unknown_keys=$(awk '
   yaml && /^[A-Za-z0-9_-]+:/ {
     key = $1
     sub(/:.*/, "", key)
-    if (key !~ /^(name|description|license|compatibility|metadata|allowed-tools|disable-model-invocation)$/) {
+    if (key !~ /^(name|description|license|compatibility|metadata|allowed-tools|disable-model-invocation|argument-hint)$/) {
       print FILENAME ":" FNR ":" key
     }
   }

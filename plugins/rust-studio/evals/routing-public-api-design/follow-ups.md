@@ -1,0 +1,3 @@
+Answers: read-only parsing (no process-env mutation); `.env` dialect with `export` prefix, quoting, `#` comments, and `${VAR}` interpolation of earlier keys; input arrives as a `&str` or a `Path`; collect all errors with line numbers rather than stop at the first; std-only, a small dependency like `thiserror` is fine; no round-trip serialization in v1; it will be published on crates.io and other crates will depend on it. Go ahead with the options and your recommendation.
+---
+Take your recommended option. Draft the public surface: the types, the constructor or builder, the error type, and what is `pub`; state the semver posture for a published crate and what you would run before tagging.

@@ -32,34 +32,46 @@ for evidence, just less precisely.
 **Project memory needs no server.** `/recall`, `/remember`, `/memory-doctor`, and the session-start / prompt hooks use the host's auto-memory directory for the repository through the harness's own Read/Write/Grep — the same `MEMORY.md` index Claude Code loads at session start, shared with Codex sessions. Contract and path rule: `memory-protocol.md`.
 
 ## Code navigation — semantic first
-Prefer the **serena** MCP (a language server under the hood — the "code intelligence" the
-official large-codebase guide recommends) for anything about symbols:
+Two semantic layers exist, and either beats text search for anything about symbols. Reach
+for whichever this session has; confirm with `rg` for what neither can see.
 
-Tool names below are given **bare**. The harness prefixes them with the server name at load time
-(`mcp__serena__find_symbol` for the `claude mcp add` path above); a differently-installed server
-carries a different prefix, so match on the tool name, not the prefix.
+1. **The harness `LSP` tool** (Claude Code, built in — nothing to install or register). The
+   plugin ships `.lsp.json`, which starts `rust-analyzer` when the binary is on PATH with
+   `clippy` as its check command, so its diagnostics match the lint gate. Operations:
+   `goToDefinition`, `findReferences`, `hover`, `documentSymbol`, `workspaceSymbol`,
+   `goToImplementation`, `prepareCallHierarchy`, `incomingCalls`, `outgoingCalls`. They are
+   **position-based** (a file plus a 1-based line and character), so the usual move is
+   `workspaceSymbol` or Grep to find the position, then the LSP call. Absent on Codex and on a
+   standalone skill install — there, serena or `rg`.
+2. **serena** MCP — the same language-server intelligence behind a **name-based** API
+   (`find_symbol` takes a name path, not a cursor), on every host where you have configured it.
 
-| Need | Tool |
-|------|------|
-| Where is a type/trait/fn defined | `find_symbol` / `find_declaration` |
-| Who calls / uses it | `find_referencing_symbols` |
-| Who implements a trait | `find_implementations` |
-| Overview of a file's/module's symbols | `get_symbols_overview` |
-| Type hierarchy | `type_hierarchy` |
-| Compiler diagnostics for a file | serena's diagnostics/inspections tool |
-| Pattern across the project | the harness **Grep** tool (ripgrep) |
-| Find a file / list a dir | the harness **Glob** / **Read** tools |
+Tool names below are given **bare**. The harness prefixes serena's with the server name at
+load time (`mcp__serena__find_symbol` for the `claude mcp add` path above); a differently-installed
+server carries a different prefix, so match on the tool name, not the prefix.
 
-The last two rows are not a serena capability gap — `search_for_pattern`, `find_file`, `list_dir`
-and `read_file` all exist. Serena's own README: "When Serena is used inside an agentic harness such
-as Claude Code or Codex, these tools are typically disabled by default, since the surrounding
-harness already provides overlapping file, search, and shell capabilities." So in *this* setting
-they are usually absent — reach for the harness tool and do not wait on a serena call that will
-not resolve.
+| Need | `LSP` tool | serena |
+|------|-----------|--------|
+| Where is a type/trait/fn defined | `workspaceSymbol` → `goToDefinition` | `find_symbol` / `find_declaration` |
+| Who calls / uses it | `findReferences`, `incomingCalls` | `find_referencing_symbols` |
+| Who implements a trait | `goToImplementation` | `find_implementations` |
+| Overview of a file's/module's symbols | `documentSymbol` | `get_symbols_overview` |
+| What does this call reach | `outgoingCalls` | — |
+| Type hierarchy | — | `type_hierarchy` |
+| Compiler diagnostics for a file | surface automatically after an edit | serena's diagnostics/inspections tool |
+| Pattern across the project | the harness **Grep** tool (ripgrep) | |
+| Find a file / list a dir | the harness **Glob** / **Read** tools | |
 
-Serena resolves through the parse/type layer, so it finds real defs/refs that text search
-misses and skips the false hits text search invents. Use **`rg`** to confirm and to catch
-macro-generated / `cfg`-gated sites serena can't see.
+The last two rows are not a capability gap in either — serena's `search_for_pattern`, `find_file`,
+`list_dir` and `read_file` all exist. Serena's own README: "When Serena is used inside an agentic
+harness such as Claude Code or Codex, these tools are typically disabled by default, since the
+surrounding harness already provides overlapping file, search, and shell capabilities." So in
+*this* setting they are usually absent — reach for the harness tool and do not wait on a serena
+call that will not resolve.
+
+Both resolve through the parse/type layer, so they find real defs/refs that text search misses
+and skip the false hits text search invents. Use **`rg`** to confirm and to catch
+macro-generated / `cfg`-gated sites a language server can't see.
 
 ## Text & structural search, files
 - **`rg` (ripgrep)** for text — never `grep`. The harness **Grep** tool is ripgrep; prefer it.
@@ -100,5 +112,5 @@ A green under different flags is a green about a different build: `project-gate.
 
 ## Rule
 Never use Bash `grep`/`find`/`cat`/`sed`/`awk` for searching or navigating code when a
-dedicated tool fits. Bash runs `cargo`/`git`/tools and orchestrates; serena/rg/ast-grep/Glob
-search; exa researches. This keeps reads out of context and answers precise.
+dedicated tool fits. Bash runs `cargo`/`git`/tools and orchestrates; the LSP tool / serena /
+rg / ast-grep / Glob search; exa researches. This keeps reads out of context and answers precise.

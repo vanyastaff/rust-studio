@@ -60,6 +60,12 @@ tokio correctness, cancellation safety, and structured concurrency.
 6. Verify `spawn_blocking` is used for all synchronous-blocking work (I/O, CPU-bound
    loops, FFI). Flag any `std::thread::sleep`, blocking `std::fs`, or `std::sync::Mutex`
    lock under contention used directly in an async context.
+7. Flag every `Instant::now()` / `SystemTime::now()` read inside library logic (not at the
+   edge) as its own finding — `rules/async.md` "Inject the clock": it makes the timing logic
+   untestable under `start_paused` and is the item this lens skips most when the bigger
+   cancellation defects are in view. Same for a `sleep` future recreated every loop
+   iteration inside `select!` (the deadline never fires): name the mechanism, not only the
+   symptom.
 7. Review stream consumers for bounded concurrency (`buffer_unordered` with an explicit
    limit) and correct termination when the stream ends.
 8. Confirm graceful shutdown: a `CancellationToken` (or equivalent) is propagated,

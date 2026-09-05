@@ -47,7 +47,7 @@ Agent folder → agent mapping:
 
 | Folder | Agent | Mode |
 |--------|-------|------|
-| `reviewer` | `rust-reviewer` | defect-recall |
+| `reviewer` | `rust-reviewer` | defect-recall (first-pass bar where the ground truth declares a verdict) |
 | `integrity` | `rust-reviewer` | defect-recall |
 | `unsafe` | `unsafe-auditor` | defect-recall |
 | `security` | `security-auditor` | defect-recall |
@@ -55,6 +55,25 @@ Agent folder → agent mapping:
 | `api` | `api-design-lead` | defect-recall / first-pass bar |
 | `architecture`, `workspace`, `active-dev`, `prior-art` | `chief-architect` | first-pass bar |
 | `lifetimes`, `modern-rust`, `naming` | `rust-reviewer` | first-pass bar |
+| `async` | `async-runtime-specialist` | defect-recall |
+| `error-model` | `error-architect` | defect-recall |
+| `testing` | `qa-lead` | defect-recall |
+| `cli` | `cli-ux-lead` | defect-recall |
+| `ffi` | `ffi-specialist` | defect-recall |
+| `macros` | `macro-specialist` | defect-recall |
+| `observability` | `observability-engineer` | defect-recall |
+| `cargo-manifest` | `dependency-manager` | defect-recall |
+| `database` | `database-specialist` | defect-recall |
+| `build-scripts` | `build-engineer` | defect-recall |
+| `embedded` | `embedded-specialist` | defect-recall |
+| `wasm` | `wasm-specialist` | defect-recall |
+| `scout` | `rust-scout` | map-recall (the ground truth is the expected `file:line` map; the agent passes when every row is present, no verdict token needed) |
+| `docs` | `docs-engineer` | defect-recall |
+| `release` | `release-lead` | defect-recall |
+
+`tools/eval-runner.ts` carries the same table (`FIXTURE_AGENTS`) and runs this protocol headless
+(`bun tools/eval-runner.ts --fixtures`) for accounts without `claude plugin eval`; keep the two in
+step — `bun test` fails when a fixture folder has no mapping.
 
 ## Two fixture modes
 - **defect-recall** — the classic "find the planted bug in finished code" fixture. Score

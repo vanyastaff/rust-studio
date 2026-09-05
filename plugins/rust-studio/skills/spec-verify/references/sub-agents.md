@@ -18,6 +18,19 @@ no `rust-builder` exists: **you write** — but only after running the scout and
 would otherwise have handed off. The protocol exists to keep those phases from collapsing into
 one hurried edit. Skipping the delegation is fine. Skipping the phase is not.
 
+**A refused tool is a fact about the host, not a transient error.** When a command tool is
+absent or a call is denied (no shell, a permission refusal, a sandbox without `cargo`), do not
+retry the same call in a different spelling — a review session that burned twelve turns
+re-running `cargo test` under new paths got nothing for them. Say once what could not run,
+record that check as *unverified* (`integrity-and-evidence.md` — a valid and required state),
+and continue with every phase that needs only reading: the map, the plan, the findings, the
+verdict. An unverified line in the report is the honest result; a turn budget spent on
+retries is not. The refusal comes in several wordings — "requires approval", "permission …
+denied", "blocked", a tool missing from the list — and some hosts append "you may attempt this
+with other tools"; for a build or test command that offer is empty, because no other tool
+compiles Rust. `cd`, `--manifest-path`, `which cargo`, and `echo` probes are the same retry
+with different spelling.
+
 The same holds for anything else the full studio supplies out of band. Some hosts run the
 studio's hooks, which inject a session briefing and push the relevant standards into context
 the moment you touch a matching file. If yours does not, nothing is pushed: read the rules a

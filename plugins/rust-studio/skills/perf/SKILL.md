@@ -11,6 +11,19 @@ description: "Use when profiling and optimizing Rust performance with flamegraph
 Performance work, end to end, with `perf-engineer`. **No change lands without numbers**
 (`references/perf.md`, `references/working-preferences.md`).
 
+## Phase 0 — What can run here?
+Measurement needs a crate that builds and a shell that runs. When the hot path arrives as
+**pasted code with no project**, or the first `cargo`/`Bash`/`Write` call is **refused**, that
+is a fact about the host — say it once, do **not** scaffold a crate, a `benches/` directory, or
+a Criterion harness to measure pasted code, and do not retry the command under another
+spelling (`references/sub-agents.md`, refused tools). Fall through to the reading pass instead:
+walk the code against `references/perf.md` — per-iteration `format!`/`to_string`/`collect`,
+`Vec::new()` where `with_capacity` is knowable, `split(..).collect::<Vec<_>>().join(..)`
+chains, clones that a borrow would serve, a fresh buffer per call where one can be reused —
+and report every allocation site with its line, the fix, and the measurement you would run
+once a crate exists. Then the verdict. A measurement plan is the deliverable when measuring is
+impossible; sixteen turns of scaffolding with no verdict is the failure this phase prevents.
+
 ## Phase 1 — Find the real bottleneck (profile)
 - **Recall first:** `/recall <target>` (or reuse the session-start memory index if it already
   surfaced this area) — known hot paths and past optimization attempts (including rejected ones)

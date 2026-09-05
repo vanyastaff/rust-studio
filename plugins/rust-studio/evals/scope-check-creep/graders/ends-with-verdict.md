@@ -1,0 +1,5 @@
+---
+type: regex
+target: last_message
+---
+\b(IN SCOPE|OVER SCOPE|UNDER SCOPE|MIXED|NEEDS WORK|REDO-TO-BAR|BLOCKED|COMPLETE)\b

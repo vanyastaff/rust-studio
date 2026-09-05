@@ -121,7 +121,10 @@ quarantine the test rather than leaving it silently broken:
 ## Phase 7 — Verdict
 
 16. Summarize: tests hunted, root cause found, fix applied (or quarantine applied),
-    evidence (nextest output, clippy output), gates passed.
+    evidence (nextest output, clippy output), gates passed. State the quarantine policy in
+    one line even when nothing was quarantined — and always when the report is a plan for a
+    repo not checked out here: a flake is fixed or `#[ignore = "<issue-url>: <reason>"]` with
+    a tracking issue; never a bare `#[ignore]`, never a retry that hides it.
     End with **COMPLETE / NEEDS WORK / BLOCKED**.
     **Persist what settled:** a root-caused flake is a canonical durable gotcha — sweep agent
     verdicts for `MEMORY:` lines and `/remember` each (it dedups); `/remember` the flake class +

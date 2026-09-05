@@ -42,9 +42,12 @@ Owned by `ffi-specialist` / `unsafe-auditor`; the unsafe surface also answers to
 - Accept `*const c_char` via `CStr::from_ptr(...).to_str()` (document non-null, NUL-terminated,
   valid-for-the-call, immutable in the `# Safety` section). Never hand-roll `strlen` +
   `copy_nonoverlapping` — a classic UB source.
-- Pass to C by binding the `CString` to a **named local** first, then `.as_ptr()`. Inline
-  `seterr(CString::new(s)?.as_ptr())` dangles immediately; keep the `CString` alive across the
-  call.
+- A `CString` temporary lives to the end of its **statement**, so `let p = CString::new(s)?.as_ptr();`
+  dangles on the next line (rustc's `dangling_pointers_from_temporaries` fires on exactly this
+  form — verified on 1.94), while `c_fn(CString::new(s)?.as_ptr())` is valid *for that call*. Bind
+  the `CString` to a named local whenever the pointer outlives the statement, and whenever the C side
+  may **retain** the pointer (a logger, a registry, a callback context) — then the inline form is a
+  use-after-free one call later. Never hand C a pointer it keeps without transferring ownership.
 
 ## Errors
 - Model failure as a flat `#[repr(i32)]` return code, or a return code + out-parameter pointer
