@@ -56,6 +56,21 @@ The **live** tasks under `live/` are the other half: they exercise the agents th
 (`rust-builder`, `rust-build-resolver`) and the orchestrating skills (`/refactor`) on a real
 crate, and `check.sh` — not an LLM — decides. Run them with `bun tools/eval-runner.ts --live`.
 
+To drive one by hand instead — in a live session, where you can watch the phases — copy the
+crate and **commit a baseline first**: `check.sh` reads `git diff HEAD` for every rule that
+forbids a masking construct, so without a commit those rules have nothing to diff.
+
+```sh
+cp -r benchmarks/live/refactor-spaghetti/crate /tmp/task && cd /tmp/task
+git init -q && git add -A && git commit -qm baseline     # required: check.sh diffs against it
+claude --plugin-dir /path/to/plugins/rust-studio          # then run the task.md body
+export LIVE_DIR=/path/to/plugins/rust-studio/benchmarks/live/refactor-spaghetti
+bash "$LIVE_DIR/check.sh"                                 # exit 0 = pass
+```
+
+`task.md`'s frontmatter says which target to hand the body to: `kind: skill` means invoke
+`/rust-studio:<target>`, `kind: agent` means spawn `rust-studio:<target>` and let it work.
+
 ## Adding a fixture
 Drop a new `fixtures/<agent>/<case>/` with `input.rs` (plant realistic, identifiable defects)
 and `ground-truth.md` (one entry per defect: id, line, type, severity, why). Keep `input.rs`

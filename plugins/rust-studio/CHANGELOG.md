@@ -67,6 +67,13 @@ loop; every fix was re-measured.
 
 ### Fixed
 
+- **A live task's `check.sh` demands its git baseline.** Every anti-gaming rule in
+  `builder-interpolation` and `resolver-red-build` reads `git diff HEAD`, which exits non-zero
+  for a real change and for a broken baseline alike — so without a commit the `--quiet` rules
+  failed with a wrong reason ("Cargo.toml edited" on an untouched crate) while the greps for an
+  added `#[allow(`, a weakened `assert!`, `unsafe` or `transmute` saw an empty diff and passed
+  SILENTLY. A benchmark may fail loudly; it may not pass quietly. `git rev-parse --verify HEAD`
+  now gates both files. The runner always commits a baseline, so only hand runs were exposed.
 - **`agnix` is pinned in CI** (`agnix-cli@0.52.1`). Unpinned, it turned `main` red on a tool
   bump rather than a repo change — 0.52.1 began reading the `$8.42` in `/progress-bar`'s
   status-line example as an indexed `$ARGUMENTS` use. A new lint rule now arrives in its own
