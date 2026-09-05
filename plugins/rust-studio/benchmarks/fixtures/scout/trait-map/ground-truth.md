@@ -18,7 +18,7 @@ inherent `encode`/`decode` methods that are **not** the trait.
 | GT-7  | `src/registry.rs:25`, `:30` | CALLERS (dyn) | `Registry::encode_with` / `decode_with` dispatch through `&dyn Codec`; registrations at `:42`–`:44` (`Json`, `Compact8`, cfg-gated `Cbor`). |
 | GT-8  | `src/pipeline.rs:9`, `:22`, `:27` | CALLERS (generic + dyn) | `frame` / `unframe` (static dispatch via `C: Codec`) and `survives` (`&dyn Codec`). |
 | GT-9  | `tests/roundtrip.rs:10`, `:16`, `:22`, `:27`, `:35`, `:44`; `src/codec.rs:62` | TESTS | Integration tests per codec and for the registry; `cbor_roundtrips` (44) is feature-gated; the one unit test covers the `Box<T>` forwarding impl. |
-| GT-10 | `src/wire.rs:13`, `:19` | NOT-AN-IMPL | `Header::encode` / `Header::decode` are inherent methods on an unrelated type. They must **not** be listed as implementors or trait call sites; mentioning them as an excluded decoy is fine. |
+| GT-10 | `src/wire.rs:13`, `:19` | NOT-AN-IMPL | `Header::encode` / `Header::decode` are inherent methods on an unrelated type. They must **not** be listed as implementors or trait call sites; mentioning them as an excluded decoy is fine. **Negative row: count it as caught when the response does not list `Header` as a `Codec` implementor or caller — silence is the correct answer.** |
 
 Expected gap notes (any one suffices): `Compact16` is never registered in `default_registry`;
 `Cbor` has no test unless the feature is on; `Registry::decode_with` has no test.

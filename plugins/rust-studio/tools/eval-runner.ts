@@ -559,7 +559,7 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
     const gradePrompt =
       `GROUND TRUTH (the planted defects or expected rows; the agent under test never saw this file):\n${gt}\n\n` +
       `AGENT RESPONSE:\n<<<\n${trace.lastMessage.slice(0, 60_000)}\n>>>\n\n` +
-      `For every GT-n row decide whether the response caught it — same item at the same code location (within two lines), matched on substance not wording. ` +
+      `For every GT-n row decide whether the response caught it — same item at the same code location (within two lines), matched on substance not wording. A row the ground truth marks as negative (NOT-AN-IMPL, "must not be listed", "silence is the correct answer") is caught when the response does NOT report that item, and missed only when it does. ` +
       `Then decide whether the response's verdict satisfies the ground truth's Pass condition${passRule}, ` +
       `and whether any "Automatic fail" condition in the ground truth is triggered. Count findings with no ground-truth row as false positives only when they are wrong or noise, not when they are real additional defects. ` +
       `Return {"caught": ["GT-1", …], "missed": ["GT-…"], "verdict_ok": true|false, "auto_fail": true|false, "false_positives": <n>, "notes": "<one or two sentences: what was missed and why the verdict passed or failed>"}.`;
