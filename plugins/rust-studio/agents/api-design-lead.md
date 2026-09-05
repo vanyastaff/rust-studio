@@ -104,6 +104,14 @@ Before classifying a change as additive, rule out every hidden break. The follow
   `Result<_, Box<dyn Error>>` / `Box<dyn Error + Send + Sync>`. Erased errors belong in
   binaries and tests (`anyhow` / `eyre`), not in a versioned API — they erase the variant
   set callers match on and make every future error change invisible to semver tooling.
+- **A "compatibility" alias is a shim unless it is a deprecation.** `pub type Old = New;` or a
+  forwarding `fn` kept "so 1.x code compiles" with no `#[deprecated(since, note = "use …")]` and
+  no removal version is permanent debt, not a migration path — flag it; in a release that is
+  breaking anyway it has no reason to exist (`rules/api.md` §Making a breaking change on purpose).
+- **"Nobody relies on X" is a claim, not a fact.** Before a removal is waved through on that
+  basis, ask for the evidence — `cargo public-api` for whether it is on the surface, the
+  reverse-dependency list or a search of dependents for whether it is used — or route the
+  removal through a deprecation cycle instead.
 - **The usual structural breaks.** Renaming/removing any pub item, changing a function
   signature or trait method set (including adding a non-defaulted method, or a generic method
   to a `dyn`-used trait — see auto traits / dyn-compat), changing field visibility or type on

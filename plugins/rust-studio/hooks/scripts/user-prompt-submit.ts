@@ -66,6 +66,7 @@ export function renderPointers(dir: string, picks: Ranked[], labelOf: (file: str
  *  target is model-invocable — a user-only skill (`/migrate`, `/publish`, `/commit`) would be a
  *  dead pointer, so those are named as "suggest to the user" in `/help` instead. */
 export const ROUTES: ReadonlyArray<{ skill: string; when: RegExp; why: string }> = [
+  { skill: "start", when: /\b(start|begin|bootstrap|scaffold|set up|kick off)\b[^\n]{0,40}\bnew\b[^\n]{0,30}\b(rust )?(project|crate|library|cli|service|binary)\b|\bnew (rust )?(project|crate)\b[^\n]{0,60}\b(how|where|begin|start)/i, why: "a new Rust project to orient and scaffold" },
   { skill: "flaky-hunt", when: /\bflak(y|iness|es)\b|fails? (about |roughly |~)?(one|1) (run )?in (\d+|two|three|four|five|six|seven|eight|nine|ten)\b|intermittent(ly)? fail/i, why: "an intermittently failing test suite" },
   { skill: "bloat", when: /\b(binary|wasm|executable)\b[^\n]{0,60}\b(size|\d+ ?mb|too (big|large)|shrink)|\b(shrink|reduce)\b[^\n]{0,40}\b(binary|size)\b/i, why: "binary size" },
   { skill: "fix-build", when: /\b(cargo (build|check)|the build|compil(e|ation))\b[^\n]{0,60}\b(fails?|failing|broken|error)|error\[E\d{4}\]/i, why: "a red build" },
