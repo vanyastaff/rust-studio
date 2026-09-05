@@ -219,7 +219,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 | Irreversible-action guard | no | yes | yes |
 | Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
 | LSP, status line, background monitors | no | no | yes |
-| Eval suite — 31 `claude plugin eval` cases + 30 agent fixtures (`tools/eval-runner.ts` runs them without early access) | no | no | yes |
+| Eval suite — 31 `claude plugin eval` cases + 45 agent fixtures + 3 live tasks on real crates (`tools/eval-runner.ts` runs them without early access, `--runs N` for repeatability) | no | no | yes |
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities, and explicit-invocation-only

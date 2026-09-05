@@ -11,7 +11,8 @@
   Codex). All three carry the same `version`.
 - `plugins/rust-studio/evals/` — the `claude plugin eval` suite (one `prompt.md` + `graders/`
   per case, derived from `benchmarks/fixtures/`). Keep prompts free of absolute paths.
-  `plugins/rust-studio/tools/eval-runner.ts` runs the suite (and `--fixtures`, the benchmarks)
+  `plugins/rust-studio/tools/eval-runner.ts` runs the suite (`--fixtures` for the benchmarks, `--live` for the
+  writing agents on real crates, `--runs 3` to see variance)
   over `claude -p --plugin-dir` for accounts without early access — a prompt edit to an agent,
   skill, or rule is not done until its fixtures still score.
 
