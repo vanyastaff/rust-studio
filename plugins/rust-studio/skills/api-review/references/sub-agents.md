@@ -25,7 +25,11 @@ re-running `cargo test` under new paths got nothing for them. Say once what coul
 record that check as *unverified* (`integrity-and-evidence.md` — a valid and required state),
 and continue with every phase that needs only reading: the map, the plan, the findings, the
 verdict. An unverified line in the report is the honest result; a turn budget spent on
-retries is not.
+retries is not. The refusal comes in several wordings — "requires approval", "permission …
+denied", "blocked", a tool missing from the list — and some hosts append "you may attempt this
+with other tools"; for a build or test command that offer is empty, because no other tool
+compiles Rust. `cd`, `--manifest-path`, `which cargo`, and `echo` probes are the same retry
+with different spelling.
 
 The same holds for anything else the full studio supplies out of band. Some hosts run the
 studio's hooks, which inject a session briefing and push the relevant standards into context

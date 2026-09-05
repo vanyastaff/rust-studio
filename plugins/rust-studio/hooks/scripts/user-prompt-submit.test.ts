@@ -1,7 +1,7 @@
 // Tests for prompt-scoped recall (UserPromptSubmit): each pins which notes a prompt
 // surfaces and that a surfaced note is not repeated.
 import { test, expect, describe } from "bun:test";
-import { pickPromptPointers, renderPointers, MIN_PROMPT_SCORE, readSurfaced, writeSurfaced, routeFor, renderRoute, readRouted, writeRouted } from "./user-prompt-submit.ts";
+import { pickPromptPointers, renderPointers, MIN_PROMPT_SCORE, readSurfaced, writeSurfaced, routeFor, renderRoute, routeKey, readRouted, writeRouted } from "./user-prompt-submit.ts";
 import { parseIndex } from "./memory-store.ts";
 
 const entries = parseIndex(
@@ -56,7 +56,7 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     ["Our Rust test suite fails about one run in five on CI with no code changes. Where do I start?", "flaky-hunt"],
     ["The release binary of our small Rust CLI is 48 MB. Why, and how do we shrink it?", "bloat"],
     ["I'm starting a new crate that parses .env files and we intend to publish it. Help me design its public API.", "design-api"],
-    ["Before we build it, attack this design. Give me the strongest case against it.", "brainstorm"],
+    ["We are considering taking a new dependency, `fast-validate 0.3.1`. I have pulled its source. Vet the crate and tell me whether we should add it.", "@dependency-manager"],
     ["The story: add a --json flag. Here is what the branch changed. Is this diff in scope? What ships, what gets split out?", "scope-check"],
     ["Nobody can follow apply_discount any more. Make it readable for a human — behavior must stay identical.", "refactor"],
     ["Review the exported C API in src/ffi.rs before the binding teams build on it.", "review"],
@@ -68,13 +68,21 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
   ];
   for (const [prompt, want] of cases) {
     test(`${want ?? "no route"}: ${prompt.slice(0, 50)}…`, () => {
-      expect(routeFor(prompt)?.skill ?? null).toBe(want);
+      const r = routeFor(prompt);
+      expect(r ? routeKey(r).replace(/^\//, "") : null).toBe(want);
     });
   }
 
   test("a prompt that already names a studio skill is left alone", () => {
     expect(routeFor("/review the diff before we merge it")).toBeNull();
     expect(routeFor("run /rust-studio:api-review against v1.2.0")).toBeNull();
+  });
+
+  test("an adversarial-critique prompt goes to the harsh-critic agent, not a facilitation skill", () => {
+    const r = routeFor("Before we build it, attack this design. Give me the strongest case against it.");
+    expect(r?.agent).toBe("harsh-critic");
+    expect(renderRoute(r!)).toContain("subagent_type `rust-studio:harsh-critic`");
+    expect(renderRoute(r!)).toContain("verdict line verbatim");
   });
 
   test("the hint names the skill, the verdict vocabulary, and says to invoke it", () => {

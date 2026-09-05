@@ -65,8 +65,9 @@ export function renderPointers(dir: string, picks: Ranked[], labelOf: (file: str
  *  specific lenses (unsafe, security, semver, perf) come before the general `/review`. Every
  *  target is model-invocable — a user-only skill (`/migrate`, `/publish`, `/commit`) would be a
  *  dead pointer, so those are named as "suggest to the user" in `/help` instead. */
-export const ROUTES: ReadonlyArray<{ skill: string; when: RegExp; why: string }> = [
+export const ROUTES: ReadonlyArray<{ skill?: string; agent?: string; when: RegExp; why: string }> = [
   { skill: "start", when: /\b(start|begin|bootstrap|scaffold|set up|kick off)\b[^\n]{0,40}\bnew\b[^\n]{0,30}\b(rust )?(project|crate|library|cli|service|binary)\b|\bnew (rust )?(project|crate)\b[^\n]{0,60}\b(how|where|begin|start)/i, why: "a new Rust project to orient and scaffold" },
+  { agent: "dependency-manager", when: /\b(vet|vetting|audit)\b[^\n]{0,60}\b(crate|dependency|dep)\b|\b(should we|can we|worth) (add|adopt|take|pull in)(ing)?\b[^\n]{0,40}\b(crate|dependency)\b|\bnew dependency\b/i, why: "a dependency to vet before it is added (`/add-dep` is the user-invoked skill for landing it)" },
   { skill: "flaky-hunt", when: /\bflak(y|iness|es)\b|fails? (about |roughly |~)?(one|1) (run )?in (\d+|two|three|four|five|six|seven|eight|nine|ten)\b|intermittent(ly)? fail/i, why: "an intermittently failing test suite" },
   { skill: "bloat", when: /\b(binary|wasm|executable)\b[^\n]{0,60}\b(size|\d+ ?mb|too (big|large)|shrink)|\b(shrink|reduce)\b[^\n]{0,40}\b(binary|size)\b/i, why: "binary size" },
   { skill: "fix-build", when: /\b(cargo (build|check)|the build|compil(e|ation))\b[^\n]{0,60}\b(fails?|failing|broken|error)|error\[E\d{4}\]/i, why: "a red build" },
@@ -77,27 +78,39 @@ export const ROUTES: ReadonlyArray<{ skill: string; when: RegExp; why: string }>
   { skill: "scope-check", when: /\b(in|out of|within) scope\b|scope creep|what ships,? what gets split|\bthe story\b[^\n]{0,80}\b(diff|branch|change)/i, why: "a scope adjudication" },
   { skill: "refactor", when: /\b(refactor|simplif(y|ied)|untangle|make (this|it) readable|readab(le|ility)|spaghetti|clean(er)? up)\b[^\n]{0,80}(code|function|module|file|this|it)\b|behaviou?r must (stay|remain)/i, why: "a behavior-preserving reshape" },
   { skill: "architecture", when: /\b(crate|module|layer(ing)?|dependency direction|boundar(y|ies)|in shape to extend|architect)/i, why: "a crate/module boundary question" },
-  { skill: "brainstorm", when: /\b(attack|critique|poke holes in|tear apart|strongest case against|does it survive)\b[^\n]{0,60}\b(design|plan|proposal|approach|idea)\b|\b(design|plan|proposal)\b[^\n]{0,40}\b(attack|critique)/i, why: "an adversarial pass over a design or plan (`harsh-critic`)" },
+  { agent: "harsh-critic", when: /\b(attack|critique|poke holes in|tear apart|strongest case against|does it survive)\b[^\n]{0,60}\b(design|plan|proposal|approach|idea)\b|\b(design|plan|proposal)\b[^\n]{0,40}\b(attack|critique)/i, why: "an adversarial pass over a design or plan" },
   { skill: "perf", when: /\b(slow|latency|throughput|hot ?path|allocat(es|ions?)|benchmark|profil(e|ing)|faster)\b[^\n]{0,60}\b(rust|code|function|loop|path|this|it)\b/i, why: "a performance question" },
   { skill: "review", when: /```rust|\b(review|audit)\b[^\n]{0,80}\b(code|diff|change|crate|module|file|function|handler|worker|this|it|before (we )?(merge|ship|land|tag))\b|\bbefore (i|we) merge\b|\bmergeable\b|\bmerge verdict\b/i, why: "a review of Rust code" },
 ];
 
-/** The one skill this prompt's shape points at, or null. Pure. */
-export function routeFor(prompt: string): { skill: string; why: string } | null {
+/** The one skill or agent this prompt's shape points at, or null. Pure. */
+export function routeFor(prompt: string): { skill?: string; agent?: string; why: string } | null {
   const text = String(prompt ?? "");
   if (text.trim().length < 12) return null;
   // A prompt that already names a studio skill is routed; say nothing.
   if (/(^|[\s(`])\/(rust-studio:)?[a-z][a-z-]+\b/.test(text)) return null;
-  for (const r of ROUTES) if (r.when.test(text)) return { skill: r.skill, why: r.why };
+  for (const r of ROUTES) if (r.when.test(text)) return { skill: r.skill, agent: r.agent, why: r.why };
   return null;
 }
 
-export function renderRoute(r: { skill: string; why: string }): string {
+/** Marker key for the dedupe: one hint per target per session. */
+export function routeKey(r: { skill?: string; agent?: string }): string {
+  return r.skill ? `/${r.skill}` : `@${r.agent}`;
+}
+
+export function renderRoute(r: { skill?: string; agent?: string; why: string }): string {
+  if (r.agent) {
+    return (
+      `Rust Code Studio routing: this prompt reads as ${r.why} — the studio path is the \`${r.agent}\` sub-agent. ` +
+      `Spawn it now with the Agent tool (subagent_type \`rust-studio:${r.agent}\`), hand it the full text the user gave, ` +
+      "and relay its findings and its verdict line verbatim; an inline answer skips the independent lens the studio exists for."
+    );
+  }
   return (
     `Rust Code Studio routing: this prompt reads as ${r.why} — the studio path is \`/${r.skill}\` ` +
     "(its agents, gates, evidence, and a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict). " +
-    "Invoke it now with the Skill tool unless the user asked for something narrower; an inline answer " +
-    "skips the independent lenses the studio exists for."
+    "Invoke it now with the Skill tool — also when no project is checked out here, since the skill's method is the " +
+    "deliverable — unless the user asked for something narrower; an inline answer skips the independent lenses the studio exists for."
   );
 }
 
@@ -174,8 +187,9 @@ if (import.meta.main) {
       const route = routeFor(data.prompt);
       if (route) {
         const routed = readRouted(sid);
-        if (!routed.has(route.skill)) {
-          routed.add(route.skill);
+        const key = routeKey(route);
+        if (!routed.has(key)) {
+          routed.add(key);
           writeRouted(sid, routed);
           out.push(renderRoute(route));
         }
