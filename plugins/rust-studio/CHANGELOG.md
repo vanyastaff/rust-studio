@@ -5,6 +5,174 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.44.0] - 2026-09-05
+
+The release where the studio was measured rather than described. `claude plugin eval` is early
+access and unavailable here, so the plugin gained its own runner over the headless CLI, a
+fixture for every rule domain, and then ran everything — 31 eval cases, 42 agent fixtures across
+18 agents, plus four live build tasks on real crates. Every number below is from those runs; every
+miss became either a change to an agent's brief or, twice, a correction to a rule that the agent
+under test turned out to be right about.
+
+### Added
+
+- **`tools/eval-runner.ts`** — runs `evals/` cases and `benchmarks/` fixtures with
+  `claude -p --plugin-dir` (empty sandbox cwd, the case's `allowed_tools` and `max_turns`, a fresh
+  session id), grades `regex` / `tool_used` / `file_exists` locally and `llm` rubrics with a
+  separate no-plugin model call, and for fixtures spawns the mapped `rust-studio:<agent>` on the
+  source with the audit prompt the ground truth names, scoring recall and verdict against the
+  ground truth. `--threshold` and `--total-budget` give it plugin eval's CI shape;
+  `.github/workflows/evals.yml` uses it as the gate wherever plugin eval is not enabled.
+  `bun test` covers the parser, the graders, and the ground-truth readers against every shipped
+  fixture.
+- **Twelve fixtures for the twelve rule domains the coverage map listed as unmeasured** —
+  `async`, `error-model`, `testing`, `cli`, `ffi`, `macros`, `observability`, `cargo-manifest`,
+  `database`, `build-scripts`, `embedded`, `wasm` — each planting only defects its
+  `rules/<domain>.md` already names, so it measures the agent against the standard it is told to
+  enforce and adds no doctrine. All 20 rule domains and 18 of 33 agents now have a measurement;
+  the 13 without are the writing and orchestrating roles, which the live tasks below cover.
+- **Seventeen eval cases**: one per new fixture, `critic-rate-limiter-plan` (`harsh-critic`),
+  `scope-check-creep` (`/scope-check` + `product-steward`), and three routing cases
+  (`/flaky-hunt`, `/bloat`, `/design-api`). 14 → 31.
+- **Prompt-shape routing in the `UserPromptSubmit` hook.** The first run's headline finding: on
+  14 of 31 cases the session answered inline in one turn — good findings, no skill, no agent, no
+  verdict — with the generic "prefer a studio skill" nudge already in context. A generic nudge
+  does not route; a pointer to the one skill does. The hook now maps the prompt's shape (pasted
+  Rust + "review", "is this in scope", "48 MB binary", "attack this design", "fails one run in
+  five", "vet this crate", "start a new project", …) to the skill or agent that owns it —
+  `/review`, `/api-review`, `/architecture`, `/refactor`, `/scope-check`, `/bloat`, `/perf`,
+  `/flaky-hunt`, `/fix-build`, `/audit-unsafe`, `/security-audit`, `/design-api`, `/start`,
+  `harsh-critic`, `dependency-manager` — once per target per session, sharing the
+  `routing_nudge` switch. The no-`Cargo.toml` session briefing carries the same table.
+- **`/review` fans out to the domain specialist** whose rule file the diff lands in (ffi,
+  database, macros, cli, embedded, wasm, error-model, observability, cargo-manifest, tests)
+  alongside the existing unsafe / security / perf / api / async lenses.
+- **`docs/sub-agents.md` — a refused tool is a fact about the host.** `/refactor` in the sandbox
+  spent 15 turns re-running `cargo test` under new spellings after the first denial. Say once
+  what could not run, record it as unverified, continue with the reading phases; the host's own
+  "you may try other tools" nudge is empty for a build command.
+
+### Fixed
+
+- **`rules/ffi.md` and `ffi-specialist` were wrong about `CString` temporaries.** The rule said
+  `c_fn(CString::new(s)?.as_ptr())` "dangles immediately"; rustc 1.94's
+  `dangling_pointers_from_temporaries` fires only on the bound form
+  `let p = CString::new(s)?.as_ptr();` — a temporary lives to the end of its statement, so the
+  inline form is valid for that call and dangles only if C retains the pointer. The agent under
+  test said exactly this and lost a point for it. Rule, brief, fixture, and grader corrected.
+- **`benchmarks/fixtures/macros` GT-3 overstated a hygiene defect**: `macro_rules!` hygiene does
+  keep a macro's `let tmp` apart from the caller's; the row is now the convention finding
+  `rules/macros.md` actually makes. `ffi` GT-4 assumed C reads struct fields the fixture never
+  shows; re-cut as the opaque-handle contract.
+- **`rust-reviewer`** now names the accretion tells (closed string set, behavior-selecting
+  `bool`s, twin branches, bare thresholds, nesting) with their reshapes, and checks the edition
+  floor on a manifest or migration diff (`edition = "2024"` needs `rust-version` ≥ 1.85; a
+  feature-gated module nothing compiled; an identifier that became a keyword). Measured misses
+  on `reviewer/spaghetti-accretion` (63% → 100%, verdict fixed) and
+  `integrity/migration-green-but-unmigrated`.
+- **`api-design-lead`** flags an alias without `#[deprecated(since, note)]` and a removal version
+  as a shim, and treats "nobody relies on X" as a claim to check. `api/planned-breaking-change`
+  67% → 83%.
+- Eval graders that asked the LLM to see tool use (it cannot; `tool_used` does) and the
+  `scope-check` grader that used a verdict vocabulary the skill does not.
+
+### Measured
+
+Eval cases (`tools/eval-runner.ts`, grader `claude-sonnet-5`, one run per case, latest run after
+each fix; spend $13.00 across all runs):
+
+| | first run | after the fixes |
+|---|---|---|
+| mean score over 31 cases | 80.4% | **97.5%** |
+| cases where a studio skill or agent fired | 17 / 31 | **27 / 31** |
+
+Still below 100% after the fixes, and why: `simplify-spaghetti` 81% (the `/refactor` run
+declined to reshape the `bool` parameters as out of the frozen signature — a defensible reading
+of the invariant), `critic-rate-limiter-plan` 80% (the critique was complete; the relay dropped
+the `SURVIVES / DOESN'T SURVIVE` token), `routing-public-api-design` 63% (`/design-api` stops at
+its Question phase when no user answers, and the rubric scores Phase-2 content).
+
+| case | first | final | studio path fired (final) |
+|---|---|---|---|
+| api-leaky-surface | 100% | 100% | /api-review |
+| architecture-upward-dependency | 60% | 100% | /architecture |
+| async-cancel-and-block | 75% | 100% | /review |
+| breaking-change-on-purpose | 50% | 100% | /api-review |
+| build-script-hermeticity | 75% | 100% | /review |
+| cargo-manifest-publish-review | 75% | 100% | /review |
+| cli-pipeline-hygiene | 75% | 100% | /review |
+| critic-rate-limiter-plan | 80% | 80% | /brainstorm, harsh-critic |
+| database-repository-review | 75% | 100% | /review |
+| dep-major-crosses-surface | 100% | 100% | /api-review |
+| embedded-isr-review | 75% | 100% | — |
+| error-model-published-surface | 75% | 100% | /api-review |
+| ffi-c-api-review | 62% | 100% | /audit-unsafe |
+| integrity-gamed-green | 100% | 100% | /review |
+| macros-exported-helpers | 100% | 100% | /review |
+| migration-green-but-unmigrated | 100% | 100% | — |
+| observability-silent-worker | 100% | 100% | /review |
+| perf-hot-loop-allocation | 100% | 100% | /perf |
+| readability-self-documenting | 100% | 100% | /review |
+| reviewer-unwrap-and-cast | 80% | 100% | /review, rust-reviewer |
+| routing-binary-size | 62% | 100% | /bloat |
+| routing-flaky-tests | 100% | 100% | /flaky-hunt |
+| routing-public-api-design | 62% | 62% | /design-api |
+| routing-start | 75% | 100% | /start |
+| scope-check-creep | 80% | 100% | /scope-check |
+| security-injection | 100% | 100% | /security-audit |
+| simplify-spaghetti | 12% | 81% | /refactor |
+| testing-flaky-suite | 100% | 100% | — |
+| unsafe-missing-safety | 62% | 100% | /audit-unsafe, unsafe-auditor |
+| untrusted-context | 80% | 100% | dependency-manager |
+| wasm-browser-target | 100% | 100% | — |
+
+Agent fixtures (42 fixtures, the agent spawned as `rust-studio:<name>` and scored against the
+ground truth; spend $19.09):
+
+Row recall 204/211 = 96.7% over all 42 fixtures; verdict failures after the fixes: none.
+
+| agent | fixtures | recall (rows) | verdict failures |
+|---|---|---|---|
+| api-design-lead | 6 | 20/21 (95%) | 0 |
+| async-runtime-specialist | 1 | 8/8 (100%) | 0 |
+| build-engineer | 1 | 7/7 (100%) | 0 |
+| chief-architect | 6 | 18/18 (100%) | 0 |
+| cli-ux-lead | 1 | 8/8 (100%) | 0 |
+| database-specialist | 1 | 7/8 (88%) | 0 |
+| dependency-manager | 1 | 8/8 (100%) | 0 |
+| embedded-specialist | 1 | 8/8 (100%) | 0 |
+| error-architect | 1 | 8/8 (100%) | 0 |
+| ffi-specialist | 1 | 7/8 (88%) | 0 |
+| macro-specialist | 1 | 6/7 (86%) | 0 |
+| observability-engineer | 1 | 7/7 (100%) | 0 |
+| perf-engineer | 2 | 7/7 (100%) | 0 |
+| qa-lead | 1 | 7/8 (88%) | 0 |
+| rust-reviewer | 12 | 55/57 (96%) | 0 |
+| security-auditor | 2 | 8/8 (100%) | 0 |
+| unsafe-auditor | 2 | 7/7 (100%) | 0 |
+| wasm-specialist | 1 | 8/8 (100%) | 0 |
+
+Below full recall, and why:
+- api/planned-breaking-change (api-design-lead) recall 83% verdict ok missed ['GT-6']
+- database/n-plus-one-and-txn (database-specialist) recall 88% verdict ok missed ['GT-8']
+- ffi/unwind-and-dangling (ffi-specialist) recall 88% verdict ok missed ['GT-4']
+- integrity/name-vs-body (rust-reviewer) recall 89% verdict ok missed ['GT-8']
+- macros/hygiene-and-double-eval (macro-specialist) recall 86% verdict ok missed ['GT-3']
+- naming/self-documenting (rust-reviewer) recall 89% verdict ok missed ['GT-6']
+- testing/flaky-and-vacuous (qa-lead) recall 88% verdict ok missed ['GT-1']
+
+The `macros` miss is the row that was itself corrected (an agent that says "not a capture bug, but rename per the rule" now counts); the `ffi` miss is the opaque-handle contract; `database`'s is a grader inconsistency (its own notes say the row was caught); `api/planned-breaking-change` still does not ask for evidence behind "nobody relies on `raw`"; `qa-lead`'s is likewise noted as caught in the grader's text.
+
+Live tasks on real crates (in-session agents under the studio's briefs, verified independently
+with cargo, a hidden golden harness, and a second agent):
+
+| task | agent / skill | result |
+|---|---|---|
+| implement `${NAME}` interpolation test-first under a `justfile` gate, `just` not installed | `rust-builder` | 12/12 + doctest green; read the recipe body and ran its commands; found the fixture's own gate red and fixed it on the test side rather than weakening a lint; 7-probe behavior check passed |
+| three planted rustc errors (E0499 across a `&mut self` helper, `sort_by_key` borrowing the closure arg, E0277 `&T: Into<u64>`) | `rust-build-resolver` | green in one file, no `.clone()` / `#[allow]` / `unsafe`, tests untouched, the one API-shape decision flagged |
+| make a two-year-accreted `apply_discount` readable, behavior frozen | `/refactor` (inline, no sub-agents) | 36 characterization tests written and calibrated before the reshape; 1,512-row golden harness byte-identical before/after; public signature unchanged; 6 behavior questions recorded, not changed |
+| review the builder's diff | `rust-reviewer` | re-ran the gate on HEAD and on the working tree, 10 mutation probes all killed, one real `TEST-GAP`, `COMPLETE (merge)` |
+
 ## [0.43.0] - 2026-09-05
 
 An audit of the studio against what its agents actually receive. The finding that shaped the
