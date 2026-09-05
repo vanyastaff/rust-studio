@@ -62,8 +62,11 @@ compiler and cargo errors and fix their root cause, one error at a time, without
      configured, otherwise docs.rs via WebFetch or `cargo doc` — never code from stale memory
      (cite-or-declare-version).
    - **Edition/cfg** → fix the `cfg`, edition idiom, or conditional compilation.
-5. Re-run `cargo check`; repeat from step 2 until clean. Then `cargo clippy -- -D warnings`
-   and `cargo nextest run` (fall back to `cargo test`) to confirm nothing regressed.
+5. Re-run `cargo check`; repeat from step 2 until clean. Then confirm nothing regressed with the
+   project's gate if it has one — its exact command, feature sets, and env
+   (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`) — otherwise `cargo clippy -- -D warnings` and
+   `cargo nextest run` (fall back to `cargo test`). A build that only compiles under flags the
+   gate does not use is not fixed.
 6. If a fix would change behavior or public API, stop and escalate (`/dev-task`, `api-design-lead`).
 
 ## Standards you enforce

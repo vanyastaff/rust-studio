@@ -40,9 +40,12 @@ nothing surfaces, proceed (`references/memory-protocol.md`).
    `unwrap`, or gratuitous `.clone()`.
 4. When a fix would change behavior or the public API (not just satisfy the type system),
    **stop and ask** — that is a feature change for `/dev-task`, not a build fix.
-5. Confirm green: `cargo clippy --all-targets --all-features -- -D warnings` and
-   `cargo nextest run` (fall back to `cargo test` if nextest isn't installed)
-   to ensure nothing regressed. Cite the output.
+5. Confirm green with the **project's gate** where it has one (`just`, `make`, `xtask`,
+   cargo-make, or the CI lint/test job, with its exact feature sets and env —
+   `references/project-gate.md`); otherwise `cargo clippy --all-targets --all-features
+   -- -D warnings` and `cargo nextest run` (fall back to `cargo test` if nextest isn't installed)
+   to ensure nothing regressed. Cite the output and name the command that produced it. A build
+   that only compiles under flags the gate never uses is not fixed.
 
 ## Output
 Per root error: the error code + one-line cause, the fix applied, and why. End with the

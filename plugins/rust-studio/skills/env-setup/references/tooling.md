@@ -76,11 +76,16 @@ Decisions want data, not opinion (`working-preferences.md`). Use the **exa** MCP
   upstream issue audits. (`gh` CLI for GitHub issues/PRs.)
 
 ## Cargo & Rust toolchain (by job)
+
+**The project's gate outranks this table.** Where the repo owns a `justfile`, `Makefile`,
+`xtask`, cargo-make target, lefthook hook, or a CI lint/test job, run *that* — with its feature
+sets, env, and wrappers — and treat the rows below as the fallback for a project that has none.
+A green under different flags is a green about a different build: `project-gate.md`.
 | Job | Tool(s) |
 |-----|---------|
 | Run tests (fast, isolated) | `cargo nextest run` (fall back to `cargo test`); doc-tests via `cargo test --doc` |
 | Coverage | `cargo llvm-cov` |
-| Lints / format | `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt` |
+| Lints / format | the project's lint target if it has one; else `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt` |
 | Security / advisories | `cargo audit`, `cargo deny check` |
 | Semver / public API | `cargo semver-checks`, `cargo public-api` |
 | Unused/misplaced deps | `cargo shear` (AST-based via rust-analyzer's parser; `--fix`; `--expand` on nightly for macro-heavy code) — `cargo machete` (regex, fast) / `cargo udeps` (nightly, compiler-based) as fallbacks |

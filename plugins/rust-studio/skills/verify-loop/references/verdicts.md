@@ -86,12 +86,14 @@ must dig the deliverable out of the output file. The `SubagentStop` hook enforce
 ---
 ## 7. Evidence over assertion
 
-Claims about correctness or performance must be backed by command output:
+Claims about correctness or performance must be backed by command output — and by the command
+that **governs merging** where the project owns a gate (`project-gate.md`):
 - "tests pass" → paste the `cargo test` / `cargo nextest` summary.
 - "faster" → paste criterion's before/after.
 - "clippy-clean" → `cargo clippy --all-targets --all-features -D warnings` exit 0.
 - "no UB" → `cargo +nightly miri test` output (where feasible).
 
-If something was skipped, say so. Never substitute "probably" for checking.
+Name the command behind each claim. If something was skipped, say so. Never substitute
+"probably" for checking.
 
 ---

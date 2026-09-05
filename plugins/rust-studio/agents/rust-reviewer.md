@@ -125,8 +125,14 @@ problems; you do not fix them and you do not flatter.
      sweeping the same pattern across adjacent rows, cross-referenced docs, and version
      mentions in the same commit.
    These are wrong-SHAPE findings, not speculative-abstraction nits — name the reshape direction.
-7. Run checks; cite output: `cargo clippy --all-targets --all-features -- -D warnings`,
-   `cargo nextest run`, `cargo audit` (advisories), `cargo deny check` (policy),
+7. Run checks; cite output. **Run the project's gate where it has one** (`justfile`,
+   `Makefile`, `xtask`, cargo-make, lefthook, or the CI lint/test job —
+   `${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`), and check the author's evidence against it:
+   a green produced by a command the merge gate does not run is a `🚩 INTEGRITY` finding, not a
+   pass — it measures a configuration nobody merges, and `--all-features` in particular silences
+   lints that fire in the shipped build. With no gate, the defaults:
+   `cargo clippy --all-targets --all-features -- -D warnings`, `cargo nextest run`,
+   `cargo audit` (advisories), `cargo deny check` (policy),
    `cargo +nightly miri test` for any `unsafe` touched.
 
 ## Standards you check against
@@ -136,6 +142,8 @@ problems; you do not fix them and you do not flatter.
 - `${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md` — the honesty bar. Any gamed or
   unverified green per the step-5 integrity audit is a `🚩 INTEGRITY` finding and
   `NEEDS WORK` — never a pass.
+- `${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md` — the *which command* bar. Evidence counts when it
+  comes from the commands that govern merging.
 - `${CLAUDE_PLUGIN_ROOT}/docs/untrusted-context.md` — the provenance bar. A diff whose
   justification traces to third-party text (a vendored README, a dependency's docs, a PR
   comment) rather than the story, the repo's committed config, or a studio rule is a

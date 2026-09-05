@@ -5,6 +5,58 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.0] - 2026-09-05
+
+Two reports from the same session, both about `rust-builder`, both about the gap between what an
+agent brief *says* and what actually happens on a real workspace. One is a false green; the other
+is an hour of work that wrote nothing to disk. Neither is a bug in a script — both are missing
+sentences in a prompt.
+
+### Added
+
+- **`docs/project-gate.md` — the project's gate is the oracle** (#5). A prescribed cargo command
+  set is evidence about a hand-rolled configuration, not about the one that governs merging, and
+  in a workspace whose gate is a `justfile` it was wrong twice in one session, in opposite
+  directions: `cargo clippy --all-targets --all-features` passed while `just clippy` (default
+  features) failed on `type_complexity` and `missing_fields_in_debug` — enabling every feature
+  changed which code paths compiled and silenced lints that fire in the shipped build; and the
+  same gate runs clippy **twice**, the second time with `--features enable-wgpu-tests`, so a
+  single default-feature pass never compiled the GPU suites and sixteen broken call sites stayed
+  invisible. In the other direction, `cargo nextest run --workspace` reported ten failures in a
+  crate that passes under the gate, which supplies `FLUI_HEADLESS=1` and `xvfb-run`.
+  The new doc carries the discovery order (`justfile`, `Makefile`, `xtask`, cargo-make, lefthook,
+  the CI lint/test job), the rules — read the recipe *body*, run every invocation it makes, copy
+  its exact flags and env, never add `--all-features` to a gate that doesn't use it — and the
+  studio defaults as the explicit fallback for a project with no gate.
+- **`Off-gate green` in the Cheat Catalog** (`docs/integrity-and-evidence.md`). Distinct from
+  *Gate disabling*: nothing was weakened, the check simply measured a configuration nobody
+  merges. It is now an `INTEGRITY` finding and appears in the Integrity Rejection Test.
+
+### Changed
+
+- **`rust-builder` applies changes as targeted edits** (#4). Asked to reshape a 1212-line
+  augmented B+-tree, the agent ran for an hour, wrote **zero files**, and died on
+  `max_output_tokens` — it was composing a whole-file rewrite in one response. The brief said a
+  great deal about *what* to change and nothing about *how to apply it*. New step 4: `Edit` for
+  existing files, `Write` only for new ones, never re-emit a file wholesale, a size heuristic at
+  ~400 lines, and land something on disk early so a late failure costs the last edit rather than
+  the whole attempt.
+- **`rust-builder` verifies with the project's gate** before falling back to cargo, and names the
+  command behind its green in the report.
+- **`rust-reviewer` checks the author's evidence against the gate** — a green from a command the
+  merge gate does not run is a `🚩 INTEGRITY` finding, not a pass.
+- **The gate-holding roles follow the project's gate**: `qa-lead` (QA-GATE) wants the project's
+  test-command summary, `tooling-lead` (BUILD-GATE) signs the project's lint/build job,
+  `build-engineer` treats the `cargo hack` feature matrix as a superset probe rather than a
+  substitute, and `rust-build-resolver` confirms green against the gate — a build that only
+  compiles under flags the gate never uses is not fixed.
+- **Skills that drive a tree green discover the gate first**: `/lint` (new step 0), `/verify-loop`
+  (the existing *Repo gate first* note now says which invocations and why the gate wins on
+  disagreement), `/dev-task`, `/fix-build`, `/review`, and `/ci-gate` (which now installs missing
+  mechanisms *into* an existing gate instead of beside it). `/lint` and `/verify-loop` gained
+  `just`/`make`/`cargo xtask` in `allowed-tools` so the guidance is actually runnable.
+- `docs/tooling.md` and `docs/verdicts.md` §7 defer to the project's gate over the cargo table.
+
 ## [0.41.0] - 2026-09-04
 
 The status line was reading 16 of the payload's fields. Reading the rest meant not trusting the

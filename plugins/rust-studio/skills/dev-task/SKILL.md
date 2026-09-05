@@ -161,8 +161,13 @@ written) passes — not merely when the unit tests do.
      diff,
    - reshape touched code when the approved plan requires it; no compatibility shims or
      half-migrations in active-dev mode,
-   - run `cargo test`/`nextest`, `cargo clippy --all-targets --all-features -- -D warnings`,
-     and `cargo fmt`, and fix issues,
+   - verify with the **project's own gate** where it has one — `justfile`, `Makefile`, `xtask`,
+     cargo-make, lefthook, or the CI lint/test job, run with its exact feature sets and env
+     (`references/project-gate.md`); `cargo test`/`nextest`, `cargo clippy --all-targets
+     --all-features -- -D warnings` and `cargo fmt` are the fallback for a project with none,
+     and fix issues,
+   - apply the change as targeted `Edit`s, not a whole-file rewrite — re-emitting a file of a few
+     hundred lines and up exhausts the response budget and loses the task with nothing written,
    - add `// SAFETY:` notes to any `unsafe` and flag it.
 11. The builder reports a diff summary + command output. Show it to the user.
 

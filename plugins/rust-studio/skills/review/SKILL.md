@@ -189,7 +189,11 @@ surviving assertions actually check.
    - `perf-engineer` if it touches hot paths or benches (PERF-GATE).
    - `api-design-lead` if it changes the public surface (API-GATE / semver).
    - `async-systems-lead` if it touches async/handlers (ASYNC-GATE).
-5. Run evidence commands and cite output:
+5. Run evidence commands and cite output. **Where the repo owns a gate** — `justfile`,
+   `Makefile`, `xtask`, cargo-make, lefthook, or the CI lint/test job — run *that*, with its
+   feature sets and env, and check the author's evidence against it: a green from a command the
+   merge gate does not run is an `Off-gate green` (🚩 INTEGRITY), not a pass
+   (`references/project-gate.md`). With no gate, the defaults:
    - `cargo clippy --all-targets --all-features -- -D warnings`
    - `cargo nextest run` (fall back to `cargo test`)
    - `cargo +nightly miri test` when `unsafe` is involved (if available)

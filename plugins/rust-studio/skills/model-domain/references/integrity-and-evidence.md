@@ -35,6 +35,7 @@ Three corollaries, each a hard rule:
 | **Uncalibrated oracle** | Offered a green suite as proof that behavior *survived* a change — a refactor, an edition or dependency migration, a rewrite — without ever establishing that the suite can go **red** for the class of breakage that change can cause. Green-before and green-after are then two readings of an instrument nobody calibrated, and a suite that would have stayed green either way measured nothing. Distinct from *Vacuous test* (one test that cannot fail, and you can see it in the source): here every test is real, and the gap is between what they observe and what this change moves. |
 | **Self-authored as proof** | Presented a test you wrote to match your own code as the *correctness* proof. A self-written test is a **regression guard**; correctness is proven against the spec's acceptance criteria, an independent/upstream oracle, or a property law. |
 | **Denominator gaming** | Reported "N% pass" / "X% coverage" with skipped, ignored, timed-out, or out-of-scope cases silently removed from the denominator. |
+| **Off-gate green** | Reported a green from a command the project's merge gate does not run: `cargo clippy --all-features` where the gate lints default features, one clippy pass where the gate runs two over two feature sets, `cargo nextest run` without the env the gate supplies (`FLUI_HEADLESS=1`, `xvfb-run`). Distinct from *Gate disabling* (edits the gate): nothing was weakened — the check simply measured a configuration nobody merges, and it fails in both directions, hiding real lints and inventing failures that do not exist under the gate. `project-gate.md`. |
 | **Gate disabling** | `#[allow(...)]` with no one-line justification; a crate-level `[lints]` table that redefines a lint and thereby **replaces** (not merges) the inherited `[workspace.lints]` — silently re-opening a workspace `forbid`/`deny`; or editing the gate config itself (`clippy.toml`, `.config/nextest.toml`, CI, `lefthook.yml`) to drop a ban or raise a timeout so failing code passes — fixing the gate instead of the code. |
 | **Skipped discipline** | Wrote the implementation with no failing test first for a behavior change; shipped a non-trivial change with no pre-code shape verdict and no pre-merge review; claimed success without running the check. |
 | **Unread assertion** | Asserted a property of code from a *proxy* for reading it — a grep hit, a symbol name, a section heading, a search snippet, a file listing, a doc comment — rather than the body itself. The tell: asked "which lines did you read?", you cannot answer. Reading a file's headings and describing what it does is this move. |
@@ -73,6 +74,11 @@ check in `skills/review/SKILL.md` does.
 
 - **Show the command and its real output.** No "tests pass" without the `cargo nextest run`
   summary; no "X% coverage" without the `llvm-cov` line; no "clippy clean" without the run.
+- **Run the command that governs merging, and name it.** Where the project owns a gate — a
+  `justfile`, `Makefile`, `xtask`, cargo-make target, lefthook hook, or the CI lint/test job —
+  that is the command; a hand-rolled `cargo` invocation is evidence about a hand-rolled
+  configuration. Copy the gate's exact flags, env, and wrappers, and run every invocation it
+  runs. `project-gate.md` has the discovery order and the fallback for a project with no gate.
 - **Report the full denominator and name what is excluded and why.** `412/420 pass — 8 skipped
   (6 require-network, gated; 2 known-fail, #123)`, never `412/412 ✓` after dropping the 8.
 - **A skip carries a reason and a tracking reference, and appears in the result.** Never hidden.
@@ -126,6 +132,7 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
 - skipped the disciplined path (no failing-test-first for a behavior change, no pre-code verdict,
   no pre-merge review) and cannot say so explicitly;
 - claims success it did not verify (no command output, "should pass");
+- reports a green from a command the project's gate does not run, where a gate exists;
 - asserts a property of code the author did not read, or reports an inference as a check;
 - leaves an earlier claim standing after learning it was wrong.
 
