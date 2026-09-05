@@ -12,7 +12,7 @@ The release that made the measurement repeatable and turned it on the agents tha
 times and fixtures twice (so a 25% is a miss and a 100% is a habit), puts `rust-builder`,
 `rust-build-resolver` and `/refactor` on real crates with a `check.sh` oracle instead of an LLM
 grader, drives `/design-api` through its question phase with scripted replies, and pins the
-prompt-shape router to a 70-prompt corpus in `bun test`. Every miss below was found by that
+prompt-shape router to a 76-prompt corpus in `bun test`. Every miss below was found by that
 loop; every fix was re-measured.
 
 ### Added
@@ -45,7 +45,7 @@ loop; every fix was re-measured.
   publishes in reverse dependency order with `--no-verify --allow-dirty`, three disagreeing
   MSRVs, no changelog entry). Fixtures may now be whole crates or workspaces; the runner copies
   everything but the answer key.
-- **Routing corpus** (`hooks/scripts/routing-corpus.json`, 70 prompts incl. 17 negatives)
+- **Routing corpus** (`hooks/scripts/routing-corpus.json`, 76 prompts incl. 18 negatives)
   asserted as a deterministic test, and the router tightened by it: `architecture` no longer
   fires on `crates/`, `layer` or `boundary` in passing; FFI reviews go to `/audit-unsafe`;
   a `Cargo.toml` review goes to `dependency-manager`; "fails intermittently", "help me get
