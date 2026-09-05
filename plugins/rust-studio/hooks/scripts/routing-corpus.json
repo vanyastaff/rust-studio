@@ -286,5 +286,13 @@
  {
   "prompt": "How do I add a dependency with cargo add and pin its version?",
   "route": null
+ },
+ {
+  "prompt": "Before we build it, attack this design. Give me the strongest case against it and whether it survives.\n\n# Plan: per-tenant rate limiter for the public API\n- One Arc<Mutex<HashMap>> shared by all handlers.",
+  "route": "@harsh-critic"
+ },
+ {
+  "prompt": "Our public API has a rate limiter; explain how token buckets work in general.",
+  "route": null
  }
 ]
