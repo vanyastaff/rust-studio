@@ -370,5 +370,21 @@
  {
   "prompt": "Describe how the unsafe ring buffer works, I'm reading the code.",
   "route": null
+ },
+ {
+  "prompt": "Review the exported C API in /home/me/proj/src/ffi.rs before the binding teams build on it.",
+  "route": "audit-unsafe"
+ },
+ {
+  "prompt": "cargo build fails with error[E0502] in /workspace/crates/core, help me fix it.",
+  "route": "fix-build"
+ },
+ {
+  "prompt": "Our test suite fails about one run in five on CI, see the logs at /tmp/ci.log.",
+  "route": "flaky-hunt"
+ },
+ {
+  "prompt": "/rust-studio:audit-unsafe src/raw.rs",
+  "route": null
  }
 ]
