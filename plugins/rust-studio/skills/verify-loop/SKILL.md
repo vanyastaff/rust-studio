@@ -1,7 +1,7 @@
 ---
 name: verify-loop
 description: "Use when driving a Rust change green with cargo fmt, clippy, and tests in a bounded auto-fix loop."
-allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(cargo test*) Bash(cargo nextest*)"
+allowed-tools: "Bash(cargo fmt*) Bash(cargo clippy*) Bash(cargo check*) Bash(cargo test*) Bash(cargo nextest*) Bash(cargo xtask*) Bash(just*) Bash(make*)"
 ---
 
 # /verify-loop — check → fix → re-run (bounded)
@@ -21,9 +21,15 @@ not a license for a junior shape.
 
 **Repo gate first.** The cargo trio below is the studio floor, not necessarily the repo's
 gate. Discover the repo's own pre-PR gate — `just --list` (justfile), `make help`,
-`scripts/check-*.sh`, an xtask — and run it in the same loop. A red LOCAL gate blocks even
-when hosted CI is green (CI may not see what the local gate sees); a gate failure caused by
-untracked or ignored local artifacts is an environment defect to fix or report — never a
+`scripts/check-*.sh`, an xtask, the CI lint/test job — and run it in the same loop; the
+discovery order and the rules are `references/project-gate.md`. **Read the recipe body, not just
+its name**: a `clippy` recipe that runs clippy twice over two feature sets is two checks, and the
+one you skip is where feature-gated code lives. Copy its exact flags, env (`RUSTFLAGS`, headless
+vars), and wrappers (`xvfb-run`) when narrowing a failure. Where the gate and the trio disagree,
+**the gate wins** — `--all-features` green over a gate that lints default features is a false
+green, and a cargo-only red in a crate the gate runs with extra env is a false red. A red LOCAL
+gate blocks even when hosted CI is green (CI may not see what the local gate sees); a gate failure
+caused by untracked or ignored local artifacts is an environment defect to fix or report — never a
 reason to fall back to "CI is green". No repo gate defined → the trio stands alone.
 
 ## When NOT this skill

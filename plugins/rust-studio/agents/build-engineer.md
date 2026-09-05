@@ -56,9 +56,12 @@ in your domain — do not edit `src/` files; delegate source changes to `rust-bu
 4. For non-trivial changes, present 2–4 options with trade-offs (e.g. `build.rs` vs `xtask`
    vs proc-macro for codegen; narrow `rerun-if-changed` vs full rebuild). Note CI cache impact
    and build-time cost. Decide and proceed unless a genuine direction fork requires escalation.
-5. Write the change. After writing, verify: `cargo build --all-features`,
+5. Write the change. After writing, verify with the project's build/lint gate where it has one
+   (`just`, `make`, `xtask`, cargo-make, or the CI job — `${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`),
+   then the feature-matrix checks this agent owns: `cargo build --all-features`,
    `cargo build --no-default-features`, `cargo hack --feature-powerset check`, and the
-   relevant cross target. Paste output as evidence.
+   relevant cross target. The matrix is a *superset* probe, never a substitute for the gate's own
+   configuration. Paste output as evidence.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/rules/build-scripts.md` — determinism, `rerun-if-*` discipline,

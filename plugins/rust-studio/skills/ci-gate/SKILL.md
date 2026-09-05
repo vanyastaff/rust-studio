@@ -52,7 +52,11 @@ modern (0.16+) schema — pre-0.14 keys hard-error.
 
 ## Steps
 
-1. **Detect** (read-only): is this a workspace? Does it use `tokio`/async (so timeouts matter)?
+1. **Detect** (read-only): does the project **already own a gate** — `justfile`, `Makefile`,
+   `xtask`, cargo-make, lefthook, a CI lint/test job? If so it is the gate of record: read its
+   recipe bodies (`references/project-gate.md`), install the missing mechanisms **into** it, and
+   never replace it with a parallel one the contributors don't run.
+   Then: is this a workspace? Does it use `tokio`/async (so timeouts matter)?
    Is `cargo-nextest` available (`cargo nextest --version`); is `lefthook` installed
    (`lefthook version`)? What already exists: `clippy.toml`, `.config/nextest.toml`, `lefthook.yml`,
    `.github/workflows/`, and `[workspace.lints]` in the root `Cargo.toml`.
@@ -76,7 +80,8 @@ modern (0.16+) schema — pre-0.14 keys hard-error.
    `scripts/check-gate.sh` (`chmod +x`), and the CI job. Adapt async projects to ban the right
    sleep and prefer `tokio::time::timeout`.
 
-6. **Verify** (evidence, not assertion):
+6. **Verify** (evidence, not assertion) — run the project's gate first where one exists, with
+   its own feature sets and env, then:
    - `cargo clippy --all-targets --all-features -- -D warnings` — must be clean on the real code
      (if it now errors, that is a real footgun the gate just caught — fix the code, do **not** drop
      the ban).
