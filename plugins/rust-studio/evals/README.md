@@ -55,6 +55,25 @@ in an empty sandbox cwd, the case's `allowed_tools` and `max_turns`, `regex`/`to
 `file_exists` graders evaluated locally and `llm` graders by a separate model call with no plugin
 loaded. It writes `summary.md` next to per-run JSON. Results land in `evals/results/` (ignored).
 
+```bash
+bun tools/eval-runner.ts --dry-run                                  # list what would run
+bun tools/eval-runner.ts --case security-injection --runs 3          # min / mean / max per case
+bun tools/eval-runner.ts --fixtures --runs 2 --parallel 3 --budget 4 --total-budget 60
+bun tools/eval-runner.ts --live                                      # writing agents on real crates
+bun tools/eval-runner.ts --fixture scout/trait-map --fixture release/workspace-publish-order
+```
+
+- **`--runs N`** repeats every selected item N times (a case may also set `runs:` in its
+  frontmatter); `summary.md` reports mean / min / max, and the `--threshold` gate uses the mean.
+- **Follow-ups.** A case that drives a question-phase skill (`/design-api`, `/brainstorm`) may
+  ship `follow-ups.md`: the user's scripted replies, separated by `---` lines. The runner sends
+  the opening prompt with `--session-id`, then each reply with `--resume`, and grades the merged
+  transcript (last message = the final turn; tools / skills / cost summed across turns).
+- **Live tasks** (`benchmarks/live/<name>/`) test the agents that *write*: a real crate is copied
+  to a temp dir, committed as a baseline, the target skill or agent runs on it, and
+  `check.sh` — the crate's own gate plus a golden harness or probe — decides pass / fail. The
+  runner never reads the agent's prose to score a live task.
+
 ## Editing
 
 Keep prompts and graders free of absolute paths and `~/` (cases run in a sandbox cwd), set
