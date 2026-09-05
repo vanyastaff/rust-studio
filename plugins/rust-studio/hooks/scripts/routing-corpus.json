@@ -302,5 +302,73 @@
  {
   "prompt": "Run bindgen over vendor/sqlite3.h and review the generated FFI layer before we depend on it.",
   "route": "audit-unsafe"
+ },
+ {
+  "prompt": "How do I profile a node.js app?",
+  "route": null
+ },
+ {
+  "prompt": "Refactor this bash script for readability.",
+  "route": null
+ },
+ {
+  "prompt": "Clean up the whitespace in this markdown file.",
+  "route": null
+ },
+ {
+  "prompt": "Bump the version in package.json to 2.0.0 and publish it.",
+  "route": null
+ },
+ {
+  "prompt": "Review this and tell me what's wrong:\n```python\ndef f(x): return x[1]\n```",
+  "route": null
+ },
+ {
+  "prompt": "The deploy is slow because of the npm install step, not the code.",
+  "route": null
+ },
+ {
+  "prompt": "The CI job is called benchmark — where is it defined?",
+  "route": null
+ },
+ {
+  "prompt": "Give me a one-line summary of the architecture.",
+  "route": null
+ },
+ {
+  "prompt": "Does the ffi module in this repo exist, or did we drop it?",
+  "route": null
+ },
+ {
+  "prompt": "Which files implement the retry policy?",
+  "route": null
+ },
+ {
+  "prompt": "How many unsafe blocks are left in the crate?",
+  "route": null
+ },
+ {
+  "prompt": "Summarize what the public API of this crate looks like today.",
+  "route": null
+ },
+ {
+  "prompt": "build.rs shells out to a python script to generate the headers — review the FFI layer it produces.",
+  "route": "audit-unsafe"
+ },
+ {
+  "prompt": "Our npm package ships a wasm module built from this crate and the bundle is 5 MB. Where does the size come from?",
+  "route": "bloat"
+ },
+ {
+  "prompt": "The python bindings call into this crate over the C API; audit the unsafe boundary before we ship them.",
+  "route": "audit-unsafe"
+ },
+ {
+  "prompt": "Explain the architecture of this repo to me.",
+  "route": null
+ },
+ {
+  "prompt": "Describe how the unsafe ring buffer works, I'm reading the code.",
+  "route": null
  }
 ]

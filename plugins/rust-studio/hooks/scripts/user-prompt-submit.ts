@@ -84,12 +84,41 @@ export const ROUTES: ReadonlyArray<{ skill?: string; agent?: string; when: RegEx
   { skill: "review", when: /```rust|\bwasm(32|-bindgen|-pack)?\b[^\n]{0,80}\b(review|audit|panics?|browser|target)\b|\b(review|audit)\b[^\n]{0,80}\b(code|diff|change|crate|module|file|function|handler|worker|pr|implementation|before (we )?(merge|ship|land|tag))\b|\bbefore (i|we) merge\b|\bmergeable\b|\bmerge verdict\b|\bbefore it lands\b/i, why: "a review of Rust code" },
 ];
 
+/** Another language's ecosystem, named outright: a fence in that language, one of its
+ *  manifests or tools, or "<lang> script/file". Every studio skill operates on Rust, so a
+ *  keyword that also exists elsewhere ("refactor", "benchmark", "bump the version") is a
+ *  routing MISS when the prompt is plainly about a bash script or a package.json. C and C++
+ *  are deliberately absent — C beside Rust is FFI, which IS studio work. */
+const FOREIGN_ECOSYSTEM =
+  /```(?:py(?:thon)?|js|jsx|ts|tsx|javascript|typescript|go|golang|java|kotlin|swift|rb|ruby|php|cs|csharp|sh|bash|zsh|sql)\b|\b(?:node\.?js|nodejs|npm|yarn|pnpm|deno|python|pip|pyproject\.toml|requirements\.txt|package\.json|node_modules|go\.mod|Gemfile|pom\.xml|composer\.json)\b|\b(?:bash|shell|python|node|js|ts|markdown|yaml|sql)\s+(?:script|file|code|module)\b/i;
+
+/** Anything that says this prompt IS about Rust. It rescues a prompt that names another
+ *  ecosystem for a reason the studio owns — a Cargo.toml pasted in a ```toml fence, an FFI
+ *  review that shows the C side. Never used on its own: 31 of the corpus's routed prompts
+ *  carry no Rust token at all ("Untangle this module", "Is this fast enough?"), so requiring
+ *  a Rust signal would silence the router on exactly the shapes it exists for. */
+const RUST_SIGNAL =
+  /```rust|\brust\b|\bcargo\b|\bcrates?\b|\bclippy\b|\brustc\b|\bCargo\.toml\b|\.rs\b|\bunsafe\b|\bimpl\b|\btrait\b|\bborrow checker\b|\btokio\b|\bserde\b|\bno_std\b|\bMSRV\b|\bsemver\b|\bwasm\b|extern "C"|\bffi\b/i;
+
+/** A question that asks where something IS, or for a description of it — not for work on it.
+ *  "where is it defined", "does the ffi in this repo exist?", "give me a one-line summary of
+ *  the architecture" carry a routing keyword but request a lookup, and a skill that opens a
+ *  seven-phase workflow is the wrong answer to a lookup whatever the language. Unconditional:
+ *  "where is `apply_discount` defined?" is a Rust prompt and still not skill work. Kept narrow
+ *  on purpose — bare "where does" would swallow the corpus's "Where does the size come from?" */
+const LOOKUP_ONLY =
+  /\bwhere (is|are)\b[^\n]{0,60}\b(defined|declared|implemented|located|lives?)\b|\bwhich files?\b|\bdoes\b[^\n]{0,40}\bexist\b|\b(give me|write|need) an? [^\n]{0,30}summary\b|\bsummari[sz]e\b|\bhow many\b|^\s*(please\s+)?(explain|describe|tell me about)\b/i;
+
 /** The one skill or agent this prompt's shape points at, or null. Pure. */
 export function routeFor(prompt: string): { skill?: string; agent?: string; why: string } | null {
   const text = String(prompt ?? "");
   if (text.trim().length < 12) return null;
   // A prompt that already names a studio skill is routed; say nothing.
   if (/(^|[\s(`])\/(rust-studio:)?[a-z][a-z-]+\b/.test(text)) return null;
+  // Vetoes before the table: a keyword match is not a route when the prompt is about
+  // another ecosystem, or is asking a lookup question rather than for work.
+  if (LOOKUP_ONLY.test(text)) return null;
+  if (FOREIGN_ECOSYSTEM.test(text) && !RUST_SIGNAL.test(text)) return null;
   for (const r of ROUTES) if (r.when.test(text)) return { skill: r.skill, agent: r.agent, why: r.why };
   return null;
 }
