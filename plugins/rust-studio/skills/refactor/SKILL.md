@@ -62,8 +62,8 @@ The line is observable behavior, not the shape of the code.
 The first refused `Bash`/`Write`/`Edit` call, or code that arrives pasted with no crate to
 build, switches this skill to its **reading mode** — say so once and do not try the command
 again under another spelling, through another tool, or "just to check" (eight denials in one
-session is the measured failure). Reading mode still runs every phase, in order, in the reply
-itself: the shape findings with line numbers (Phase 3), the characterization tests written out
+session is the measured failure). Reading mode still runs every phase, in order, inside the
+reply — the shape findings with line numbers (Phase 3), the characterization tests written out
 as code and marked `UNRUN` **before** any reshape (Phase 2), the step plan (Phase 4), the
 reshaped code as a diff or full listing (Phase 5), the Phase 7 summary and the verdict. The
 deliverable is that report in the message — never a file sent for the user to run, never
