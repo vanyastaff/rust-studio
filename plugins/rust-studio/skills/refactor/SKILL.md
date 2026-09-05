@@ -88,7 +88,11 @@ usually arrives with a suite that cannot say that, so establish the oracle first
    failure is ambiguous. Only a project with no gate falls back to the studio defaults
    (`cargo nextest run`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt`).
    If no command can run here at all (no shell, a denied tool), say so once, write `BASELINE:
-   unverified — <why>`, and carry on with the reading phases; never retry the command
+   unverified — <why>`, and carry on with the reading phases **in this order**: steps 6–8 still
+   come before the first reshape. Unrunnable characterization tests are still written first —
+   they are the behavioral spec the reshape must satisfy, marked `UNRUN`, with the deliberate
+   break of step 8 described rather than executed. A rewrite with tests appended afterward is
+   not a refactor under this skill, whatever the host allowed. Never retry the command
    (`references/sub-agents.md`).
 6. **Measure what the suite observes in scope.** Ask the scout which public behaviors of the
    scope have a test that asserts a *value or effect* (not `is_ok()`); `cargo llvm-cov` when
