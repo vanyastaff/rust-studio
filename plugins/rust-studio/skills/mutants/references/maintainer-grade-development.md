@@ -265,3 +265,16 @@ regress to junior behavior:
   canned-return stub, an `#[ignore]`-silenced real test, and an unjustified lint suppression — and
   return `NEEDS WORK`, not wave it through as "compiles + tests green" (see
   `references/integrity-and-evidence.md`).
+- `reviewer/spaghetti-accretion`: agent must treat a two-year accretion (closed string set,
+  behavior-selecting bools, five copies of one cap, magic numbers, I/O inside the decision) as
+  `REDO-TO-BAR` — and must **pin the behavior first**: the only test cannot fail, so
+  characterization tests and a calibration break come before any reshape, and a latent
+  asymmetry between branches is preserved and flagged, never silently normalized.
+- `architecture/upward-dependency`: agent must refuse to extend a domain crate that imports
+  transport (`axum`) and storage (`sqlx`) types and returns the API crate's error through a
+  dev-dependency back-edge — re-cut the dependency direction (domain-owned status and error
+  types, persistence behind a trait) before the new flow is added.
+- `api/planned-breaking-change`: agent must ship a **correct** breaking improvement on a
+  published crate properly — a major (with `### Breaking` and migration notes) or a deprecation
+  cycle, `cargo semver-checks`'s findings reconciled rather than waved off, and no undeprecated
+  alias as the "compatibility" path — instead of approving the minor tag.

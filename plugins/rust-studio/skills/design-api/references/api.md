@@ -71,6 +71,35 @@ Applies to crate roots (`lib.rs`), public surface modules, and anything re-expor
   output, or grep the `pub` items for its paths). If it does, the bump is breaking, whatever
   the tool says.
 
+### Making a breaking change on purpose
+A break is a product decision, not an accident to hide. The defect is never the break itself;
+it is a break that ships quietly — under the wrong version, behind a permanent alias, or
+without a path from the old shape to the new one.
+- **Classify before you cut.** `cargo public-api --diff <last-tag>` and `cargo semver-checks`
+  name the mechanical breaks; add the classes the tools miss — a dependency's types crossing
+  the surface (above), a contract change under an unchanged signature (a new error variant
+  callers match on, a changed ordering guarantee, a raised MSRV). The union is the set you
+  are announcing, and the highest class sets the bump (`0.x`: a minor is the major).
+- **Prefer a deprecation cycle when the old shape can stand for one more release.** Add the
+  new item beside the old one; mark the old one
+  `#[deprecated(since = "<next version>", note = "use `new_name`: <what changed and why>")]`;
+  remove it in the next major. A `#[deprecated]` whose note does not name the replacement is
+  a warning, not a migration path.
+- **When a hard break is right** — the old shape is unsound, or every caller must change
+  anyway — batch every planned break into **one** major rather than a trickle, and finish the
+  ripple in the same change: examples, doc-tests, README snippets, downstream workspace
+  members, and a `### Breaking` (or `Removed`) CHANGELOG entry with before → after code for
+  each item.
+- **Tag only after the tools confirm the announced set.** `cargo semver-checks` should report
+  exactly the breaks the CHANGELOG lists — an unlisted break is a finding to fix or announce;
+  a listed break the tool cannot see (the classes above) is called out in the release entry so
+  a reader knows the tool's green did not cover it.
+- **Never keep a permanent alias "to be safe".** `pub type Old = New;` or a forwarding `fn`
+  with no `#[deprecated]` and no removal version is the shim `active-dev.md` forbids in
+  unpublished code and the ongoing debt `/api-review` flags in published code. An unpublished /
+  `0.0.x` crate skips the cycle entirely: change the real API and update the callers
+  (`active-dev.md`).
+
 ## Ergonomics
 - Accept `impl Into<...>` / `impl AsRef<...>` at boundaries; return concrete types.
 - Borrow the target, not the wrapper, in parameters: `&str`/`&[T]`/`&T`, not

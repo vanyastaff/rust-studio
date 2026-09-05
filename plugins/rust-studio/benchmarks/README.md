@@ -53,6 +53,16 @@ session. It is the last rung of the promotion ladder in `../docs/memory-protocol
 The same fixtures back the `claude plugin eval` cases in `../evals/`, which CI runs whenever
 the studio's own configuration changes (`skills/`, `agents/`, `rules/`, `hooks/`, `docs/`).
 
+## Requested-scenario fixtures (2026-09-05)
+Three fixtures were added on the maintainer's explicit direction rather than from an escape,
+and are recorded as that exception so the rule above stays the rule: `reviewer/spaghetti-accretion`
+(a two-year accretion whose only test cannot fail — measures pin-then-reshape, not just the
+shape findings), `architecture/upward-dependency` (a domain crate depending upward on transport,
+storage, and the API crate's error type through a dev-dependency back-edge), and
+`api/planned-breaking-change` (a correct breaking improvement on a published crate shipped as a
+minor, with `cargo semver-checks` waved off and an undeprecated alias as the "compatibility"
+path). Each backs an `evals/` case of the same scenario.
+
 ## Honesty
 A missed planted defect is a **real gap in the agent's prompt**, not a test to relax. Fix the
 agent, not the fixture. This is the studio's own "when it looks clean, look harder" applied to

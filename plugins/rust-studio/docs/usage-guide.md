@@ -22,7 +22,7 @@ Five moving parts:
   demand, so it has the right bar in front of it without bloating the window (`core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `ffi.md` on C-ABI boundaries,
   `macros.md` in proc/declarative macros, …).
-- **Hooks** (8 events) — deterministic automation: stack briefing **+ memory recall** at session
+- **Hooks** (9 events) — deterministic automation: stack briefing **+ memory recall** at session
   start, path-scoped rule pointers after edits, a lint nudge **and a memory-capture nudge** when
   you stop, a sub-agent verdict check that blocks a verdict-less finish once, a note when the
   model switches (a classifier fallback or `/model`) so you know which model now judges, and

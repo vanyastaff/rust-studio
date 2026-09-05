@@ -16,8 +16,8 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
   `harsh-critic`) + a scout / builder / resolver / reviewer execution group.
 - **20 path-scoped rule sets** — the right Rust standard surfaces the moment you open a matching
   file; the agent reads the full rule on demand, so the window stays lean.
-- **12 Claude hook handlers across 8 events** — stack detection and memory recall, rule pointers, lint
-  and lifecycle nudges, verdict checks, and an opt-in stop-guard.
+- **13 Claude hook handlers across 9 events** — stack detection and memory recall, rule pointers, a
+  sub-agent brief, lint and lifecycle nudges, verdict checks, and an opt-in stop-guard.
 - **Bundled rust-analyzer LSP** — diagnostics and go-to-definition as you edit, so `rust-scout`
   resolves symbols instead of scanning files. Just put `rust-analyzer` on PATH.
 - **An integrity layer that rejects a gamed green** — see
@@ -184,6 +184,13 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable
   learning. Blocks the stop a single time and never re-blocks (`stop_hook_active` breaks the loop),
   so it's far gentler than Stop-guard. On by default (`auto_capture`); fails open.
+- **SubagentStart** — a studio sub-agent starts with an empty window, so it gets the facts the
+  session already holds, in a handful of lines: the project gate files found at the root
+  (`justfile`, `Makefile`, `xtask/`, cargo-make, lefthook, CI workflows — or a plain "none
+  found, studio defaults apply"), the crate/workspace line, gate intensity and test runner, a
+  pointer to the memory store, and the verdict it owes. Facts only, never a second copy of the
+  doctrine; built-in agents get nothing. Rule pointers are likewise announced per sub-agent
+  window, not once per session, so the builder is never the one agent running without them.
 - **SubagentStop** — a studio sub-agent that finishes without an explicit verdict
   (COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED) is stopped **once** and told to re-send its
   deliverable with the verdict and evidence appended; built-in agents and anything not on the

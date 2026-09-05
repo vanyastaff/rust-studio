@@ -5,6 +5,85 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.0] - 2026-09-05
+
+An audit of the studio against what its agents actually receive. The finding that shaped the
+release: the one agent that writes source was the one running without the standards. Every fix
+here is either a fact the session already held and a sub-agent never saw, or a scenario the
+maintainer named and the fixtures did not cover — tangled legacy code, a wrong dependency
+direction, an intended break on a published crate, and plain readability.
+
+### Fixed
+
+- **Sub-agents were the one context without rule pointers.** The PreToolUse injector deduped its
+  announcements by `session_id`, and a sub-agent shares the session's id while starting from an
+  empty window — so once the orchestrator had touched `src/lib.rs`, the `rust-builder` it spawned
+  to edit the same tree got no standards at all; the marker said "already announced", into a
+  window the builder never sees. Claude Code stamps `agent_id` on every hook payload a sub-agent's
+  tool call produces (verified in the 2.1.261 bundle's base hook-input schema, absent on the main
+  thread), so markers are now keyed by session **and** agent; the main thread keeps its
+  historical marker name and `PreCompact` clears both shapes. Tests cover the fresh-window,
+  repeat, second-agent, and post-compaction cases.
+- **`/refactor` opened with a dangling sentence** ("Gate with / Prompt the user…") and still
+  prescribed `cargo clippy --all-features` where 0.42.0 made the project's gate the oracle
+  everywhere else. `/tech-debt` had the same hardcoded clippy line.
+
+### Added
+
+- **`SubagentStart` brief** (`hooks/scripts/subagent-start.ts`, Claude Code only). A studio
+  sub-agent now starts with the facts the session already established, in a handful of lines:
+  the gate files present at the root (`justfile`, `Makefile`, `xtask/`, cargo-make, lefthook,
+  CI workflows — or an explicit "none found, studio defaults apply"), the crate/workspace line
+  with edition and MSRV, gate intensity and test runner, a pointer to the memory store, and the
+  verdict it owes. Facts only, never a second copy of the doctrine the agent brief carries;
+  roster-gated like `SubagentStop`, so built-in agents get nothing; read-only, no child
+  processes, fails open. `SubagentStart` and its `hookSpecificOutput.additionalContext` are in
+  the 2.1.261 bundle's hook schemas. Cargo.toml reading moved to `hooks/scripts/cargo-manifest.ts`,
+  shared with the session-start briefing.
+- **The built-in `LSP` tool is now in the tooling doctrine.** `docs/tooling.md` said serena and
+  only serena; Claude Code ships an `LSP` tool (`goToDefinition`, `findReferences`, `hover`,
+  `documentSymbol`, `workspaceSymbol`, `goToImplementation`, `prepareCallHierarchy`,
+  `incomingCalls`, `outgoingCalls` — the operation list is from the bundle) that the plugin's
+  `.lsp.json` already drives through rust-analyzer, with nothing to configure. The navigation
+  table now has a column for each, `rust-scout`, `rust-builder`, `rust-reviewer`, and
+  `chief-architect` name whichever the session has, and the scout is told not to retry a tool
+  that did not answer — go to `rg`.
+- **`rules/api.md` §"Making a breaking change on purpose".** A break is a product decision, not
+  an accident to hide: classify with `cargo public-api` + `cargo semver-checks` plus the classes
+  they miss; prefer a deprecation cycle with a `note` naming the replacement and a removal
+  version; when a hard break is right, batch every planned break into one major and finish the
+  ripple (examples, doc-tests, downstream members, `### Breaking` with before → after code); tag
+  only when the tool's findings equal the changelog's list; never keep a permanent alias "to be
+  safe". `/api-review`'s mitigation options now execute against it.
+- **Three fixtures and four eval cases for the scenarios the maintainer named** (recorded in
+  `evals/README.md` and `benchmarks/README.md` as a directed exception to the "escaped defect"
+  rule, so it does not become a precedent): `reviewer/spaghetti-accretion` → `simplify-spaghetti`
+  (a two-year accretion whose only test cannot fail — scored on *pin then reshape*, not just the
+  shape findings, and on preserving a latent branch asymmetry rather than "fixing" it),
+  `architecture/upward-dependency` → `architecture-upward-dependency` (a domain crate importing
+  axum and sqlx and returning the API crate's error through a dev-dependency back-edge),
+  `api/planned-breaking-change` → `breaking-change-on-purpose` (a correct improvement shipped as
+  1.3.0 with semver-checks waved off and an undeprecated alias), and the existing
+  `naming/self-documenting` fixture → `readability-self-documenting`. 10 → 14 cases.
+
+### Changed
+
+- **`/refactor` is now the skill for legacy and tangled code.** New Phase 2 — *Pin the
+  behavior*: discover and run the project's gate as the baseline, measure which behaviors in
+  scope have a test that asserts a value, write characterization tests (snapshots where the
+  output is large) for the rest, and calibrate the oracle by breaking one behavior on purpose
+  before the first reshape. Signals gained a one-off `-W` probe for the readability lints most
+  gates leave off (`cognitive_complexity`, `too_many_lines`, `too_many_arguments`,
+  `fn_params_excessive_bools`, …) — a command-line probe, never an edit to the gate — and the
+  reading tells no lint fires on (design drift, accretion, misplacement). The plan phase lists
+  the readability moves that preserve behavior by construction (early return / `let-else`,
+  extract-and-name, bool → enum, magic number → `const`, collapse duplicated branches, separate
+  the decision from the I/O, delete a branch only when a type or a test proves it dead). A
+  characterization test that turns red is a behavior change, never a test to update. The
+  verdict carries `BASELINE / PINNED / AFTER` lines like `/migrate`. Five neighbours are now
+  named under *When NOT this skill*. Description: "refactoring or simplifying tangled Rust
+  code".
+
 ## [0.42.0] - 2026-09-05
 
 Two reports from the same session, both about `rust-builder`, both about the gap between what an

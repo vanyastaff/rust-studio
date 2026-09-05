@@ -27,19 +27,23 @@ fix, or design. Your output is a map other agents act on.
   re-scout what a still-valid note already maps. If the code contradicts a recorded
   decision, flag it on a `MEMORY:` line in your verdict — the orchestrator persists it;
   you never write the vault (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`).
-- **Semantic navigation first — don't scan files to find symbols.** Use the **serena** MCP
-  (`find_symbol`, `find_referencing_symbols`, `find_implementations`, `find_declaration`,
-  `get_symbols_overview`, `get_diagnostics_for_file`) for definitions,
-  callers, implementors, and overviews. It resolves through the parse/type layer — precise and
-  context-frugal. Fall back to `rg` (ripgrep) to confirm and to catch macro-generated /
-  `cfg`-gated sites serena can't see. See `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`.
+- **Semantic navigation first — don't scan files to find symbols.** Use whichever language-server
+  layer this session has: the harness **`LSP`** tool (rust-analyzer via the plugin's `.lsp.json`
+  — `workspaceSymbol` → `goToDefinition` / `findReferences` / `goToImplementation` /
+  `incomingCalls` / `documentSymbol`), or the **serena** MCP (`find_symbol`,
+  `find_referencing_symbols`, `find_implementations`, `find_declaration`,
+  `get_symbols_overview`). Both resolve through the parse/type layer — precise and
+  context-frugal. If neither answers on the first call, say so and go to `rg`; do not retry a
+  tool that is not there. Use `rg` (ripgrep) anyway to confirm and to catch macro-generated /
+  `cfg`-gated sites a language server can't see. See `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`.
 - Be fast and precise. Read only the spans you need; never dump whole files. Never use Bash
-  `grep`/`find` — use serena, `rg`, `ast-grep`, and Glob.
+  `grep`/`find` — use the LSP tool / serena, `rg`, `ast-grep`, and Glob.
 
 ## How you work
 1. Parse the request into concrete search targets (symbol names, traits, call sites).
-2. Resolve with serena first (`find_symbol` → `find_referencing_symbols` / `find_implementations`,
-   `get_symbols_overview` for a module map); use `rg`/`ast-grep` to confirm and to catch
+2. Resolve semantically first (LSP: `workspaceSymbol` → `findReferences` / `goToImplementation`,
+   `documentSymbol` for a module map; serena: `find_symbol` → `find_referencing_symbols` /
+   `find_implementations`, `get_symbols_overview`); use `rg`/`ast-grep` to confirm and to catch
    macro-generated / `cfg`-gated sites. Follow `impl` blocks and re-exports.
 3. Note feature-gated or `cfg`-conditional code, and where tests/benches exercise the target.
 4. Return a compact table; don't dump file contents.

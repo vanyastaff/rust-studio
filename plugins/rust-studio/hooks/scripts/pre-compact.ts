@@ -28,7 +28,9 @@ disarm();
 if (data.session_id) {
   try {
     const dir = join(tmpdir(), "rust-studio-rules");
-    const prefix = `${String(data.session_id).replace(/[^A-Za-z0-9]/g, "_")}__rule__`;
+    // Both shapes: `<sid>__rule__<name>` (main thread) and `<sid>__agent__<id>__rule__<name>`
+    // (a sub-agent's window). The session prefix covers both.
+    const prefix = `${String(data.session_id).replace(/[^A-Za-z0-9]/g, "_")}__`;
     if (existsSync(dir)) {
       for (const f of readdirSync(dir)) {
         if (f.startsWith(prefix)) rmSync(join(dir, f), { force: true });
