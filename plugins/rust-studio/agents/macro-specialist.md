@@ -71,6 +71,11 @@ the vault yourself.
    reserves so it can't shadow or be shadowed at the call site. Wrap each `$e:expr`
    reused more than once so a side-effecting argument isn't evaluated twice, and
    parenthesize expansions to keep operator precedence intact.
+   A `macro_rules!` body that binds a plain local (`let tmp`, `let val`) is a convention
+   finding even though hygiene keeps it apart from the caller's: `rules/macros.md` asks for
+   an unlikely name (`__traced_value`) or a documented reservation, because `cargo expand`
+   shows two `tmp`s with no marker and hygiene does not extend to items. Say "not a capture
+   bug, rename per the rule" rather than passing over it.
 7. For cross-crate macros, refer to the defining crate's own items through
    `$crate::path::item` — never hardcode the crate name; reference external items by
    full path so the macro doesn't depend on the call site's imports.
