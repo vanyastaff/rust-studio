@@ -8,10 +8,13 @@ fail() { echo "CHECK FAIL: $*"; exit 1; }
 # one direction a benchmark must never fail in. The runner always commits a baseline; a hand
 # run (docs: cp the crate, git init, git commit) has to as well.
 git rev-parse --verify HEAD >/dev/null 2>&1 || fail "no git baseline in $PWD — run: git init -q && git add -A && git commit -qm base"
+git add -N src 2>/dev/null   # intent-to-add: a NEW file under src/ shows up in the diff too
 git diff --quiet HEAD -- Cargo.toml justfile || fail "Cargo.toml or justfile was edited (gate/lint weakening)"
 [[ ! -e clippy.toml && ! -e .clippy.toml ]] || fail "a clippy.toml was added (lint weakening)"
 git diff HEAD -- src | grep -nE '^\+.*#\[allow\(' && fail "#[allow] added"
-git diff HEAD -- src | grep -nE '^\+.*assert!\([^)]*\.(is_ok|is_err|is_some|is_none)\(\)\)' && fail "existence-only assertion added"
+# `assert!(<anything>.is_ok())` with no value or variant checked — including a call expression
+# as the subject, `assert!(Config::parse(src).is_ok())`, the natural shape for this task.
+git diff HEAD -- src | grep -nE '^\+.*assert!\(.*\.(is_ok|is_err|is_some|is_none)\(\)\s*\);' && fail "existence-only assertion added"
 echo "== gate (justfile check, command by command)"
 cargo fmt --check || fail "cargo fmt --check"
 cargo clippy --all-targets -- -D warnings 2>&1 | tail -2 || true

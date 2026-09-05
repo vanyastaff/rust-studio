@@ -14,7 +14,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readInput, emit, watchdog, option, optionBool, pluginRoot } from "./_lib.ts";
-import { classify, field, section } from "./cargo-manifest.ts";
+import { summarizeManifest } from "./cargo-manifest.ts";
 import {
   INDEX_FILE,
   bodyReader,
@@ -188,29 +188,17 @@ if (!manifestExists) {
     "a reshape that must not change behavior → `/refactor`; scope questions → `/scope-check`. Each ends " +
     "in a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict with the evidence behind it.";
 } else {
-  let text = "";
-  try {
-    text = readFileSync(manifest, "utf8");
-  } catch {
-    text = "";
-  }
-
-  const pkg = section(text, "package");
-  const name = field(pkg, "name") || "?";
+  // One manifest reader for both briefs (`cargo-manifest.ts`); the sub-agent brief shows the
+  // same facts, so a parsing fix lands in both or neither.
+  const m = summarizeManifest(cwd);
+  const name = m?.name ?? "?";
   if (name !== "?") title = `🦀 ${name}`;
-  const edition = field(pkg, "edition") || "?";
+  const edition = m?.edition ?? "?";
   const msrvDefault = option("default_msrv");
-  const msrv = field(pkg, "rust-version") || (msrvDefault ? `${msrvDefault} (studio default)` : "(unset)");
-
-  const isWorkspace = /^\[workspace\]\s*$/m.test(text);
-  let members = 0;
-  if (isWorkspace) {
-    const ws = section(text, "workspace");
-    const mm = /members\s*=\s*\[([\s\S]*?)\]/.exec(ws);
-    if (mm) members = (mm[1].match(/["'][^"']+["']/g) || []).length;
-  }
-
-  const domains = classify(text.toLowerCase());
+  const msrv = m?.msrv ?? (msrvDefault ? `${msrvDefault} (studio default)` : "(unset)");
+  const isWorkspace = m?.isWorkspace ?? false;
+  const members = m?.members ?? 0;
+  const domains = m?.domains ?? [];
 
   const testRunner = option("test_runner") || "nextest";
   const gates = option("gate_intensity") || "full";

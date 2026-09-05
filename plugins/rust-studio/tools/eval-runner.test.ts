@@ -54,6 +54,13 @@ describe("graders", () => {
   const trace = parseStream(line({ type: "assistant", message: { content: [{ type: "tool_use", name: "Skill", input: { skill: "rust-studio:bloat" } }] } }) + line({ type: "result", result: "Verdict: NEEDS WORK — see above" }));
   const g = (fm: Record<string, string>, body: string) => ({ file: "g.md", type: fm.type, weight: 1, fm, body });
 
+  test("regex flags m/s/u pass through, unknown ones are dropped", () => {
+    const multi = parseStream(line({ type: "result", result: "Findings above.\nVerdict: NEEDS WORK" }));
+    expect(gradeRegex(g({ type: "regex", flags: "m" }, "^Verdict: (NEEDS WORK|BLOCKED)"), multi).score).toBe(1);
+    expect(gradeRegex(g({ type: "regex" }, "^Verdict: (NEEDS WORK|BLOCKED)"), multi).score).toBe(0);
+    expect(gradeRegex(g({ type: "regex", flags: "gxi" }, "verdict: needs work"), multi).score).toBe(1);
+  });
+
   test("regex contains / not_contains", () => {
     expect(gradeRegex(g({ type: "regex" }, "\\b(NEEDS WORK|BLOCKED)\\b"), trace).score).toBe(1);
     expect(gradeRegex(g({ type: "regex", match: "not_contains", flags: "i" }, "looks good to merge"), trace).score).toBe(1);

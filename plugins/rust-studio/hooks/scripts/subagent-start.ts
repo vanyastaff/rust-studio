@@ -80,6 +80,9 @@ export interface BriefInput {
   gateIntensity: string;
   testRunner: string;
   docsDir: string;
+  /** The plugin's `default_msrv` option, applied when the manifest declares no `rust-version`
+   *  — the same fallback the session brief shows, so the two briefs agree. */
+  msrvDefault?: string | null;
 }
 
 /** The brief. Facts only — the agent's own file carries the doctrine. */
@@ -92,7 +95,7 @@ export function buildBrief(b: BriefInput): string {
     const m = b.manifest;
     const ws = m.isWorkspace ? ` (workspace, ${m.members} member globs)` : "";
     lines.push(
-      `- Project: **${m.name}**${ws} at \`${b.cwd}\` · edition ${m.edition} · MSRV ${m.msrv ?? "(unset)"} · domain(s): ${m.domains.join(", ")}.`,
+      `- Project: **${m.name}**${ws} at \`${b.cwd}\` · edition ${m.edition} · MSRV ${m.msrv ?? (b.msrvDefault ? `${b.msrvDefault} (studio default)` : "(unset)")} · domain(s): ${m.domains.join(", ")}.`,
     );
   } else {
     lines.push(`- No \`Cargo.toml\` at \`${b.cwd}\` — if the crate lives in a subdirectory, work from there.`);
@@ -153,6 +156,7 @@ if (import.meta.main) {
       agentType: normalizeAgentType(data.agent_type),
       cwd,
       manifest: summarizeManifest(cwd),
+      msrvDefault: option("default_msrv"),
       gates: gateCandidates(cwd),
       memory,
       gateIntensity: option("gate_intensity") || "full",

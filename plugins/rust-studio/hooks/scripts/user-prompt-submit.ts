@@ -23,8 +23,8 @@
 // Never blocks (no decision:block) and never fails the session. Codex delivers the
 // same event; if its payload carries no `prompt`, only the nudge runs.
 
-import { readInput, watchdog, optionBool } from "./_lib.ts";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readInput, watchdog, optionBool, pluginRoot } from "./_lib.ts";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -109,12 +109,36 @@ const RUST_SIGNAL =
 const LOOKUP_ONLY =
   /\bwhere (is|are)\b[^\n]{0,60}\b(defined|declared|implemented|located|lives?)\b|\bwhich files?\b|\bdoes\b[^\n]{0,40}\bexist\b|\b(give me|write|need) an? [^\n]{0,30}summary\b|\bsummari[sz]e\b|\bhow many\b|^\s*(please\s+)?(explain|describe|tell me about)\b/i;
 
+let skillNames: Set<string> | null = null;
+/** The plugin's skill directory names, read once; null when the plugin root is not readable. */
+function knownSkills(): Set<string> | null {
+  if (skillNames) return skillNames;
+  try {
+    skillNames = new Set(readdirSync(join(pluginRoot(), "skills")));
+  } catch {
+    skillNames = null;
+  }
+  return skillNames;
+}
+
+/** Does the prompt invoke a studio skill (`/review`, `/rust-studio:review`)? A slash token that
+ *  continues as a path (`/home/me`, `/src/lib.rs`) or names no shipped skill is not an
+ *  invocation. Without a readable skills directory, fall back to "not followed by `/` or `.`". */
+export function namesStudioSkill(text: string): boolean {
+  const skills = knownSkills();
+  for (const m of text.matchAll(/(^|[\s(`])\/(rust-studio:)?([a-z][a-z-]+)\b(?![\/.])/g)) {
+    if (m[2] || !skills || skills.has(m[3])) return true;
+  }
+  return false;
+}
+
 /** The one skill or agent this prompt's shape points at, or null. Pure. */
 export function routeFor(prompt: string): { skill?: string; agent?: string; why: string } | null {
   const text = String(prompt ?? "");
   if (text.trim().length < 12) return null;
-  // A prompt that already names a studio skill is routed; say nothing.
-  if (/(^|[\s(`])\/(rust-studio:)?[a-z][a-z-]+\b/.test(text)) return null;
+  // A prompt that already names a studio skill is routed; say nothing. Only a real skill
+  // name counts: `/home/me/proj`, `/src/ring.rs`, `/tmp/ci.log` are paths, not invocations.
+  if (namesStudioSkill(text)) return null;
   // Vetoes before the table: a keyword match is not a route when the prompt is about
   // another ecosystem, or is asking a lookup question rather than for work.
   if (LOOKUP_ONLY.test(text)) return null;
@@ -146,43 +170,35 @@ export function renderRoute(r: { skill?: string; agent?: string; why: string }):
   );
 }
 
-/** Skills already pointed at this session (JSON array in a per-session marker). */
-export function readRouted(sid: string): Set<string> {
-  try {
-    return new Set(JSON.parse(readFileSync(join(markerDir("rust-studio-route"), sid), "utf8")));
-  } catch {
-    return new Set();
-  }
-}
-export function writeRouted(sid: string, skills: Set<string>): void {
-  try {
-    mkdirSync(markerDir("rust-studio-route"), { recursive: true });
-    writeFileSync(join(markerDir("rust-studio-route"), sid), JSON.stringify([...skills]));
-  } catch {
-    /* non-fatal */
-  }
-}
-
 function markerDir(name: string): string {
   return join(tmpdir(), name);
 }
 
-/** Files already surfaced this session (JSON array in a per-session marker). */
-export function readSurfaced(sid: string): Set<string> {
+/** A per-session set persisted as a JSON array in `<tmpdir>/<name>/<sid>`; unreadable or
+ *  malformed → empty. One scheme for recall pointers, route hints and the routing nudge. */
+export function readMarkerSet(name: string, sid: string): Set<string> {
   try {
-    return new Set(JSON.parse(readFileSync(join(markerDir("rust-studio-recall"), sid), "utf8")));
+    const parsed = JSON.parse(readFileSync(join(markerDir(name), sid), "utf8"));
+    return new Set(Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : []);
   } catch {
     return new Set();
   }
 }
-export function writeSurfaced(sid: string, files: Set<string>): void {
+export function writeMarkerSet(name: string, sid: string, items: Set<string>): void {
   try {
-    mkdirSync(markerDir("rust-studio-recall"), { recursive: true });
-    writeFileSync(join(markerDir("rust-studio-recall"), sid), JSON.stringify([...files]));
+    mkdirSync(markerDir(name), { recursive: true });
+    writeFileSync(join(markerDir(name), sid), JSON.stringify([...items]));
   } catch {
     /* non-fatal */
   }
 }
+
+/** Skills already pointed at this session. */
+export const readRouted = (sid: string): Set<string> => readMarkerSet("rust-studio-route", sid);
+export const writeRouted = (sid: string, skills: Set<string>): void => writeMarkerSet("rust-studio-route", sid, skills);
+/** Files already surfaced this session. */
+export const readSurfaced = (sid: string): Set<string> => readMarkerSet("rust-studio-recall", sid);
+export const writeSurfaced = (sid: string, files: Set<string>): void => writeMarkerSet("rust-studio-recall", sid, files);
 
 if (import.meta.main) {
   const disarm = watchdog(6_000);
@@ -234,11 +250,9 @@ if (import.meta.main) {
   // 2) routing nudge, once per session
   if (sid && optionBool("routing_nudge", true)) {
     try {
-      const dir = markerDir("rust-studio-nudge");
-      const marker = join(dir, sid);
-      if (!existsSync(marker)) {
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(marker, "1");
+      const nudged = readMarkerSet("rust-studio-nudge", sid);
+      if (!nudged.has("shown")) {
+        writeMarkerSet("rust-studio-nudge", sid, new Set(["shown"]));
         out.push(
           "Rust Code Studio: for any non-trivial task, prefer a studio skill (`/help` " +
             "for the catalog) over ad-hoc steps, and run `/recall <area>` before " +
