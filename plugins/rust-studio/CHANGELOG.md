@@ -5,6 +5,173 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.45.0] - 2026-09-05
+
+The release that made the measurement repeatable and turned it on the agents that *write*.
+0.44.0 ran every case once and the auditors on planted defects; this one runs cases three
+times and fixtures twice (so a 25% is a miss and a 100% is a habit), puts `rust-builder`,
+`rust-build-resolver` and `/refactor` on real crates with a `check.sh` oracle instead of an LLM
+grader, drives `/design-api` through its question phase with scripted replies, and pins the
+prompt-shape router to a 70-prompt corpus in `bun test`. Every miss below was found by that
+loop; every fix was re-measured.
+
+### Added
+
+- **Live tasks (`benchmarks/live/`)** — the writing half of the roster, measured on real
+  crates. A task copies its crate to a temp dir, commits a baseline, runs the target
+  (`/rust-studio:<skill> <task>` or a spawned `rust-studio:<agent>`), then runs the task's own
+  `check.sh`: the crate's gate (`justfile` recipe, `clippy -D warnings`, tests, `fmt --check`),
+  a probe binary or golden harness, and greps for forbidden constructs in the diff. Three ship:
+  `builder-interpolation` (`rust-builder` adds `${NAME}` interpolation to a parser test-first,
+  under `unwrap_used = "deny"`), `resolver-red-build` (`rust-build-resolver` fixes three
+  planted borrow/trait errors without `clone`/`allow`/`unwrap`, tests untouched), and
+  `refactor-spaghetti` (`/refactor` makes a 200-line `apply_discount` readable; a
+  1512-row golden harness and the public signature decide). `bun tools/eval-runner.ts --live`.
+- **`--runs N`** in the runner: every item repeated, `summary.md` with mean / min / max per
+  case and per fixture, the `--threshold` gate on the mean. A case may pin its own `runs:`.
+- **Scripted follow-ups**: a case ships `follow-ups.md` (replies separated by `---`); the
+  runner opens with `--session-id`, continues with `--resume`, and grades the merged
+  transcript — every assistant turn with the scripted replies between them, so a design skill
+  is judged on the questions it asked *and* the surface it drafted.
+  `routing-public-api-design` uses it.
+- **Three fixtures for the agents that had none**: `scout/trait-map` (`rust-scout`, the first
+  *map-recall* fixture — a trait with a blanket impl, a macro-stamped impl, a
+  feature-gated impl, a `#[cfg(test)]` impl and an inherent-method decoy; the map is graded row
+  by row, no verdict token), `docs/rustdoc-contract` (`docs-engineer` — two doc-tests that fail
+  under `cargo test --doc`, a broken intra-doc link, missing `# Errors` / `# Panics` /
+  `# Safety`, a README showing an API that does not exist), and
+  `release/workspace-publish-order` (`release-lead` — a patch bump on a breaking change,
+  path-only workspace deps that make `cargo publish --dry-run` fail, a release script that
+  publishes in reverse dependency order with `--no-verify --allow-dirty`, three disagreeing
+  MSRVs, no changelog entry). Fixtures may now be whole crates or workspaces; the runner copies
+  everything but the answer key.
+- **Routing corpus** (`hooks/scripts/routing-corpus.json`, 70 prompts incl. 17 negatives)
+  asserted as a deterministic test, and the router tightened by it: `architecture` no longer
+  fires on `crates/`, `layer` or `boundary` in passing; FFI reviews go to `/audit-unsafe`;
+  a `Cargo.toml` review goes to `dependency-manager`; "fails intermittently", "help me get
+  this compiling", "is this fast enough", "did this PR creep", "so large after adding reqwest"
+  all route.
+- **A relayed verdict is quoted, not paraphrased** (`docs/delegation.md` §8,
+  `docs/verdicts.md` §5, the routing hint): the last line of the orchestrator's reply is the
+  worker's own verdict line.
+
+### Fixed
+
+- **`rust-build-resolver`** runs `cargo fmt` before reporting green. The live task's first run
+  fixed all three errors correctly and left one reshaped line past the width limit; the
+  crate's gate stayed red.
+- **The memory closing step no longer buries the deliverable.** Both passing live tasks ended
+  their turn with `/remember`'s index-integrity bookkeeping instead of the report. The
+  protocol now says: persist first, one `Saved:` line inside the report above the verdict,
+  the report is the last message. Re-measured on the resolver task: `Saved: … **COMPLETE**`.
+- **`/api-review`** flags a compatibility shim without `#[deprecated(since, note)]` and a
+  removal version as a finding regardless of its semver class, and treats "nobody relies on X"
+  as a claim to verify. All three runs of `breaking-change-on-purpose` had classified the
+  `pub type Cfg = Config` alias as PATCH. 50–100% → 100% ×3.
+- **`/perf` Phase 0**: pasted code or a refused tool means a reading pass against
+  `rules/perf.md`, not a scaffolded crate and Criterion harness. All three runs of
+  `perf-hot-loop-allocation` had spent their 15 turns scaffolding and ended with no verdict.
+  0% ×3 → 100% ×3, three turns each.
+- **`/review`** spawns `rust-reviewer` wherever the Agent tool exists (inline is for hosts with
+  no sub-agents) and, for pasted code that no hook injected a rule for, reads the domain rule
+  before ruling. `reviewer-unwrap-and-cast` had run inline on all three runs; one run in
+  three of `cli-pipeline-hygiene` missed the stdout/stderr split.
+- **`harsh-critic`** attacks testability as a design property — a wall-clock read,
+  randomness or the network inside the unit under test, and the injected seam the design
+  owes. All three runs of `critic-rate-limiter-plan` missed the `Instant::now()` item, and all
+  three relays dropped the `DOESN'T SURVIVE` line.
+- **`async-runtime-specialist`** names the clock read in library logic and the
+  recreated-per-iteration `sleep` inside `select!` as findings of their own (the two rows the
+  second `async/cancel-and-block` run skipped while catching every hard defect).
+- **`/flaky-hunt`** states its quarantine policy in the verdict even when nothing was
+  quarantined.
+- Graders: `breaking-change-on-purpose` no longer counts "ship 1.3.0 as purely additive"
+  as an approval; `migration-green-but-unmigrated` gives partial credit when the drop-order
+  dependence is flagged without the `cargo fix` attribution.
+
+### Measured
+
+Every number is from `tools/eval-runner.ts` with grader `claude-sonnet-5`; cases ran **three
+times**, fixtures **twice**, live tasks once and again after each fix. Total spend for the
+release ≈ $85.
+
+**Live tasks (real crates, `check.sh` decides):**
+
+| task | target | first run | after the fix |
+|---|---|---|---|
+| builder-interpolation | `rust-builder` | PASS (gate green, 11 tests, probe ok) | — |
+| resolver-red-build | `rust-build-resolver` | FAIL (`cargo fmt --check`; three errors fixed correctly, tests untouched) | PASS |
+| refactor-spaghetti | `/refactor` | PASS (22 tests, 1512-row golden identical, signature unchanged) | — |
+
+**Eval cases** — mean over 31 cases, 3 runs each: **88%** on the first pass, **97%** after the
+fixes (re-run ×3 for every case whose brief, skill, router or grader changed; `*` marks those):
+
+| case | ×3 first pass: mean (min–max) | final: mean (min–max) | studio path (final) |
+|---|---|---|---|
+| api-leaky-surface | 100% (100%–100%) | 100% (100%–100%) | /api-review |
+| architecture-upward-dependency | 100% (100%–100%) | 100% (100%–100%) | /architecture, chief-architect |
+| async-cancel-and-block | 100% (100%–100%) | 100% (100%–100%) | /review, async-runtime-specialist, harsh-critic, rust-reviewer |
+| breaking-change-on-purpose | 73% (50%–100%) | 100% (100%–100%) * | /api-review, api-design-lead |
+| build-script-hermeticity | 100% (100%–100%) | 100% (100%–100%) | /review |
+| cargo-manifest-publish-review | 79% (62%–100%) | 100% (100%–100%) * | — |
+| cli-pipeline-hygiene | 75% (25%–100%) | 100% (100%–100%) * | /review, harsh-critic, rust-reviewer |
+| critic-rate-limiter-plan | 50% (50%–50%) | 90% (70%–100%) * | harsh-critic |
+| database-repository-review | 100% (100%–100%) | 100% (100%–100%) | /review |
+| dep-major-crosses-surface | 100% (100%–100%) | 100% (100%–100%) | /api-review |
+| embedded-isr-review | 100% (100%–100%) | 100% (100%–100%) | — |
+| error-model-published-surface | 100% (100%–100%) | 100% (100%–100%) | /api-review |
+| ffi-c-api-review | 100% (100%–100%) | 100% (100%–100%) | /audit-unsafe, unsafe-auditor |
+| integrity-gamed-green | 100% (100%–100%) | 100% (100%–100%) | /review |
+| macros-exported-helpers | 88% (62%–100%) | 88% (62%–100%) | /review |
+| migration-green-but-unmigrated | 73% (20%–100%) | 73% (20%–100%) | /review |
+| observability-silent-worker | 100% (100%–100%) | 100% (100%–100%) | /review |
+| perf-hot-loop-allocation | 0% (0%–0%) | 100% (100%–100%) * | /perf |
+| readability-self-documenting | 100% (100%–100%) | 100% (100%–100%) | /refactor |
+| reviewer-unwrap-and-cast | 80% (80%–80%) | 100% (100%–100%) * | /review, harsh-critic, rust-reviewer |
+| routing-binary-size | 100% (100%–100%) | 100% (100%–100%) | /bloat |
+| routing-flaky-tests | 88% (62%–100%) | 100% (100%–100%) * | /flaky-hunt |
+| routing-public-api-design | 75% (62%–100%) | 100% (100%–100%) * | /design-api, api-designer, error-architect |
+| routing-start | 100% (100%–100%) | 100% (100%–100%) | /start |
+| scope-check-creep | 100% (100%–100%) | 100% (100%–100%) | /scope-check, product-steward |
+| security-injection | 100% (100%–100%) | 100% (100%–100%) | /security-audit |
+| simplify-spaghetti | 56% (25%–81%) | 69% (44%–81%) * | /refactor |
+| testing-flaky-suite | 100% (100%–100%) | 100% (100%–100%) | /flaky-hunt |
+| unsafe-missing-safety | 100% (100%–100%) | 100% (100%–100%) | /audit-unsafe |
+| untrusted-context | 100% (100%–100%) | 100% (100%–100%) | dependency-manager |
+| wasm-browser-target | 88% (62%–100%) | 100% (100%–100%) * | wasm-specialist |
+
+Still short of 100% and why: `simplify-spaghetti` 69% — in a sandbox that denies every command
+the session still retries `Bash`, writes files, and the "names the shape" rubric wants five of
+six tells named while the tests are being written out by hand; the same skill on a real crate
+(`refactor-spaghetti` live) passes its golden harness. `critic-rate-limiter-plan` 90% — one run
+in three still skips the injected-clock item. `macros-exported-helpers` and
+`migration-green-but-unmigrated` were left at their first-pass numbers: one run in three misses
+a sub-item of a finding it made (`square!`'s precedence half; the `cargo fix` attribution of a
+drop-order dependence it flagged) — grader tiers were widened where the response had the
+substance, and the briefs carry the item now.
+
+**Agent fixtures** — 45 fixtures, 2 runs each (89 scored runs), 21 agents: mean recall **97%**
+first pass, **99%** after the fixes; **0** verdict failures after; 34 fixtures perfect on both
+runs. The three new fixtures scored 100% on both runs for `rust-scout` (map-recall),
+`docs-engineer` and `release-lead`. Every fixture that was not perfect on both runs:
+
+| fixture | agent | mode | recall run1 / run2 (→ after fix) | verdict failures |
+|---|---|---|---|---|
+| async/cancel-and-block | async-runtime-specialist | defect-recall | 100% / 75% | 0→0 |
+| cargo-manifest/loose-and-unified | dependency-manager | defect-recall | 88% / 100% | 0→0 |
+| database/n-plus-one-and-txn | database-specialist | defect-recall | 88% / 100% | 0→0 |
+| error-model/stringly-and-lost-source | error-architect | defect-recall | 100% / 88% | 0→0 |
+| ffi/unwind-and-dangling | ffi-specialist | defect-recall | 88% / 88% → 88% / 88% | 0→0 |
+| integrity/migration-green-but-unmigrated | rust-reviewer | defect-recall | 67% / 67% → 100% / 100% | 1→0 |
+| integrity/name-vs-body | rust-reviewer | defect-recall | 100% / 89% | 0→0 |
+| macros/hygiene-and-double-eval | macro-specialist | defect-recall | 86% / 86% → 100% / 100% | 0→0 |
+| observability/silent-state-change | observability-engineer | defect-recall | 100% / 86% | 0→0 |
+| reviewer/spaghetti-accretion | rust-reviewer | first-pass | 75% / 88% → 100% / 100% | 0→0 |
+
+`ffi/unwind-and-dangling` stays at 88%: the grader's own note on the re-run says the
+opaque-handle row "was actually addressed" — the disagreement is in the grading, not the review.
+The rest are single-run misses of one soft row with the verdict correct.
+
 ## [0.44.0] - 2026-09-05
 
 The release where the studio was measured rather than described. `claude plugin eval` is early
