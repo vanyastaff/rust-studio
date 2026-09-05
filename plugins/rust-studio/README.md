@@ -178,7 +178,11 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
 - **UserPromptSubmit** — prompt-scoped recall: the prompt is matched against the memory index
   and a note that scores a strong hit is surfaced once per session (title, kind/age, path);
   plus a once-per-session nudge to `/recall` before working in a known area and to prefer a
-  studio skill when one fits.
+  studio skill when one fits. It also **routes by prompt shape**: Rust code pasted with "review
+  it", "is this in scope", "the binary is 48 MB", "attack this design" each get a one-line pointer
+  to the skill that owns that work (`/review`, `/scope-check`, `/bloat`, `/brainstorm`, …), once
+  per skill per session. Measured with the eval runner: without it, six of the first seven
+  review-shaped prompts were answered inline in one turn — no skill, no agent, no verdict.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
 - **Auto-capture (Stop)** — after a turn that finished a real unit of work (a completion summary +
   uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable

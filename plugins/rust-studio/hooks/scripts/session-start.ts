@@ -181,7 +181,12 @@ if (!manifestExists) {
     "## Rust Code Studio active\n\n" +
     "Rust Code Studio plugin is active, but no Cargo.toml was found at the session root. " +
     "If this is a Rust project, run /detect-stack from its root. " +
-    "Studio protocol: Question → Options → Decision → Draft → Approval.";
+    "Studio protocol: Question → Options → Decision → Draft → Approval.\n\n" +
+    "**Rust work without a checkout still routes through the studio:** code pasted for review → " +
+    "`/review` (add `/audit-unsafe`, `/security-audit`, `/api-review` for their lenses); a design or " +
+    "plan to attack → `/brainstorm` (spawns `harsh-critic`); crate/module boundaries → `/architecture`; " +
+    "a reshape that must not change behavior → `/refactor`; scope questions → `/scope-check`. Each ends " +
+    "in a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict with the evidence behind it.";
 } else {
   let text = "";
   try {
