@@ -45,7 +45,7 @@ loop; every fix was re-measured.
   publishes in reverse dependency order with `--no-verify --allow-dirty`, three disagreeing
   MSRVs, no changelog entry). Fixtures may now be whole crates or workspaces; the runner copies
   everything but the answer key.
-- **Routing corpus** (`hooks/scripts/routing-corpus.json`, 93 prompts incl. 32 negatives)
+- **Routing corpus** (`hooks/scripts/routing-corpus.json`, 97 prompts incl. 33 negatives)
   asserted as a deterministic test, and the router tightened by it: `architecture` no longer
   fires on `crates/`, `layer` or `boundary` in passing; FFI reviews go to `/audit-unsafe`;
   a `Cargo.toml` review goes to `dependency-manager`; "fails intermittently", "help me get
@@ -67,6 +67,27 @@ loop; every fix was re-measured.
 
 ### Fixed
 
+- **An absolute path no longer silences the route hint.** The "this prompt already names a
+  studio skill" veto matched any `/token`, so `Review the FFI boundary in
+  /home/me/proj/src/ffi.rs` or `… under /workspace/crates/core` got no route at all — the
+  prompts most likely to carry a path were the ones the router went quiet on. A slash token
+  counts as an invocation only when it names a shipped skill (read from `skills/`) or carries
+  the `rust-studio:` prefix, and never when it continues as a path. Corpus 93 → 97.
+- **A live oracle sees a masking construct in a NEW file.** Every `git diff HEAD` rule was
+  blind to files the agent created, so `#[allow(…)]` in a fresh `src/*.rs` passed; `git add -N
+  src` puts them in the diff. `builder-interpolation` also catches an existence-only assertion
+  whose subject is a call — `assert!(Config::parse(src).is_ok())`, the natural shape for that
+  task — and `resolver-red-build` now flags only removed or rewritten assertion / `#[test]`
+  lines, since its task text forbids weakening tests, not adding them.
+- **The eval runner's `--threshold` gate reports only what it measured.** It fails on a null
+  mean, on runs the total budget skipped, and on runs that errored — not merely on a low mean.
+  A case's frontmatter `runs:` is honored (`--runs` still overrides), `regex` graders keep
+  their `m`/`s`/`u` flags, the verdict token comes from `hooks/scripts/subagent-stop.ts`
+  instead of a drifted copy missing `SURVIVES` / `MERGE-READY`, and per-agent recall is
+  computed from the ground-truth row count the per-fixture column already used.
+- **The sub-agent brief applies `default_msrv`** the way the session brief does, so the two
+  briefs no longer disagree about MSRV; `session-start` reads the manifest through
+  `summarizeManifest()` rather than a second inline parser.
 - **A live task's `check.sh` demands its git baseline.** Every anti-gaming rule in
   `builder-interpolation` and `resolver-red-build` reads `git diff HEAD`, which exits non-zero
   for a real change and for a broken baseline alike — so without a commit the `--quiet` rules
