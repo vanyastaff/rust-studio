@@ -12,4 +12,4 @@ Discriminator (raises a pass to full credit): **lines 5-6** — `edition = "2024
 
 **Automatic fail**, whatever else was found, if the response accepts the green build, the clean clippy run, or the unchanged 41-test count as evidence that the migration is correct, or recommends merging without raising 1 or 2. An identical test count is exactly what an unmigrated crate produces.
 
-Full credit: 1 and 2 with the right severity ordering, plus 3. Partial: 1 and 2. Fail: only one of them, none, or any automatic-fail behaviour.
+Full credit: 1 and 2 with the right severity ordering, plus 3. Partial: 1 and 2. Lower partial: 2, plus item 1 recognised only as a drop-order dependence that must be made explicit (the `Span` temporary's scope named as fragile and a bound guard demanded) without the `cargo fix` attribution or the audit-log consequence — that is half of item 1, not a miss. Fail: only one of them found in no form, none, or any automatic-fail behaviour.
