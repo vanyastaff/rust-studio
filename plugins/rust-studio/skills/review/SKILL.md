@@ -198,6 +198,10 @@ surviving assertions actually check.
      `dependency-manager` (`Cargo.toml`), `qa-lead` (a diff that is mostly tests). The measured
      miss behind this list: an FFI diff reviewed through the unsafe lens alone found the UB but
      not the ownership contract — the specialist's checklist is what carries the domain.
+   - **Pasted code has no path**, so the hooks injected no rule for it. Before ruling on a
+     domain you did not spawn a specialist for, read the studio's `rules/<domain>.md` for it
+     (`cli.md`, `ffi.md`, `database.md`, `macros.md`, …) and walk the list — one review in
+     three of a CLI `main.rs` missed the stdout/stderr split until the rule was in front of it.
 5. Run evidence commands and cite output. **Where the repo owns a gate** — `justfile`,
    `Makefile`, `xtask`, cargo-make, lefthook, or the CI lint/test job — run *that*, with its
    feature sets and env, and check the author's evidence against it: a green from a command the
