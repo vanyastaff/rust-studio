@@ -270,5 +270,21 @@
  {
   "prompt": "I reviewed your plan and it looks fine; proceed.",
   "route": null
+ },
+ {
+  "prompt": "This is the Cargo.toml of a published workspace member. Review it before we publish 0.4.2.",
+  "route": "@dependency-manager"
+ },
+ {
+  "prompt": "Check our manifest: are the feature flags and default-features sane for a library?",
+  "route": "@dependency-manager"
+ },
+ {
+  "prompt": "Does the member crate inherit the workspace lints correctly, or does its [lints] table replace them?",
+  "route": "@dependency-manager"
+ },
+ {
+  "prompt": "How do I add a dependency with cargo add and pin its version?",
+  "route": null
  }
 ]
