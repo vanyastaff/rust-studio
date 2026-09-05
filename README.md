@@ -219,7 +219,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 | Irreversible-action guard | no | yes | yes |
 | Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
 | LSP, status line, background monitors | no | no | yes |
-| `claude plugin eval` suite (10 cases, no-plugin baseline arm) | no | no | yes |
+| Eval suite — 31 `claude plugin eval` cases + 30 agent fixtures (`tools/eval-runner.ts` runs them without early access) | no | no | yes |
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities, and explicit-invocation-only
@@ -261,7 +261,11 @@ frontmatter, description-budget regressions, skill descriptions that overlap wit
 boundary, unsafe patterns in shipped scripts, stale metadata or references, section citations
 that resolve to nothing, missing inline fallbacks, vendor-only APIs leaking into the 60 portable
 skills, catalog drift, and malformed eval cases. CI also runs `claude plugin validate --strict`
-and the [agnix](https://github.com/agent-sh/agnix) agent-config linter.
+and the [agnix](https://github.com/agent-sh/agnix) agent-config linter. The prompts themselves
+are measured, not just parsed: `plugins/rust-studio/tools/eval-runner.ts` runs every eval case and
+every agent fixture over the headless CLI and scores them against their rubrics and ground truth
+(`bun tools/eval-runner.ts --fixtures`); CI uses it as the gate wherever `claude plugin eval` is
+not enabled.
 
 ### Releasing
 

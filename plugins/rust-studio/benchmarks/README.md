@@ -54,14 +54,90 @@ The same fixtures back the `claude plugin eval` cases in `../evals/`, which CI r
 the studio's own configuration changes (`skills/`, `agents/`, `rules/`, `hooks/`, `docs/`).
 
 ## Requested-scenario fixtures (2026-09-05)
-Three fixtures were added on the maintainer's explicit direction rather than from an escape,
-and are recorded as that exception so the rule above stays the rule: `reviewer/spaghetti-accretion`
+Fifteen fixtures were added on the maintainer's explicit direction rather than from an escape,
+and are recorded as that exception so the rule above stays the rule. Three cover named
+scenarios: `reviewer/spaghetti-accretion`
 (a two-year accretion whose only test cannot fail — measures pin-then-reshape, not just the
 shape findings), `architecture/upward-dependency` (a domain crate depending upward on transport,
 storage, and the API crate's error type through a dev-dependency back-edge), and
 `api/planned-breaking-change` (a correct breaking improvement on a published crate shipped as a
 minor, with `cargo semver-checks` waved off and an undeprecated alias as the "compatibility"
-path). Each backs an `evals/` case of the same scenario.
+path). Twelve more cover the rule domains the coverage map listed as unmeasured — one fixture
+per domain under `async/`, `error-model/`, `testing/`, `cli/`, `ffi/`, `macros/`,
+`observability/`, `cargo-manifest/`, `database/`, `build-scripts/`, `embedded/`, `wasm/` —
+each planting only defects its `rules/<domain>.md` already names, so the fixture measures the
+agent against the standard it is told to enforce and adds no new doctrine. Each backs an
+`evals/` case of the same scenario, and `bun tools/eval-runner.ts --fixtures` runs them all.
+
+## Honesty
+A missed planted defect is a **real gap in the agent's prompt**, not a test to relax. Fix the
+agent, not the fixture. This is the studio's own "when it looks clean, look harder" applied to
+itself.
+
+## Ground-truth coverage map
+This is **a map, not a backlog**. It records what fixtures actually exercise today so the gap is
+visible — it does not authorize filling the gap by invention. §"What earns a new fixture" above
+still governs: a fixture is born from a defect that actually escaped, never from imagination. The
+map's job is to make an escape in an uncovered domain recognizable as the trigger it is, the
+moment it happens.
+
+Measured 2026-09-05 (re-derive commands below):
+
+**Agent coverage — 18 of 33 agents have fixtures**, via the mapping table in
+`skills/eval-agents/SKILL.md` (mirrored in `tools/eval-runner.ts`): `api-design-lead`,
+`async-runtime-specialist`, `build-engineer`, `chief-architect`, `cli-ux-lead`,
+`database-specialist`, `dependency-manager`, `embedded-specialist`, `error-architect`,
+`ffi-specialist`, `macro-specialist`, `observability-engineer`, `perf-engineer`, `qa-lead`,
+`rust-reviewer`, `security-auditor`, `unsafe-auditor`, `wasm-specialist`. Two more —
+`harsh-critic` and `product-steward` — are exercised by prompt-only eval cases
+(`evals/critic-rate-limiter-plan`, `evals/scope-check-creep`) rather than fixtures. The 13 with
+neither: `api-designer`, `async-systems-lead`, `cli-specialist`, `concurrency-specialist`,
+`docs-engineer`, `release-lead`, `rust-build-resolver`, `rust-builder`, `rust-scout`,
+`systems-perf-lead`, `test-engineer`, `tooling-lead`, `web-framework-specialist` — mostly the
+writing and orchestrating roles, which a read-only fixture cannot measure; a live build task in a
+real crate is the instrument for those.
+
+Re-derive:
+```bash
+cd plugins/rust-studio
+ls agents/*.md | wc -l                                                              # 33 total
+sed -n '/Agent folder/,/^`tools\/eval-runner/p' skills/eval-agents/SKILL.md \
+  | grep -E '^\| `' | awk -F'|' '{print $3}' | tr -d ' `' | tr ',' '\n' | sort -u    # 18 unique, named
+```
+
+**Rule-domain coverage — every one of the 20 domains now has a fixture family behind it.**
+`active-dev`, `api`, `architecture`, `core`, `perf`, `security`, `unsafe` from the first pass;
+`types` through `reviewer/spaghetti-accretion` (the design-drift tells) and
+`architecture/upward-dependency`; and one fixture each for `async`, `build-scripts`,
+`cargo-manifest`, `cli`, `database`, `embedded`, `error-model`, `ffi`, `macros`,
+`observability`, `testing`, `wasm`, added 2026-09-05 (see the next section for why). Depth is
+uneven — most of the new domains have exactly one fixture — so a green here means "measured
+once", not "covered".
+
+Re-derive:
+```bash
+cd plugins/rust-studio
+ls rules/*.md | xargs -n1 basename -s .md | sort                                   # 20 domains
+ls benchmarks/fixtures/ | sort                                                     # 25 fixture folders
+comm -23 <(ls rules/*.md | xargs -n1 basename -s .md | sort) \
+         <(ls benchmarks/fixtures/ | sort)                                         # → core, types (covered via reviewer/, architecture/), perf ✓ … see text
+```
+
+## Requested-scenario fixtures (2026-09-05)
+Fifteen fixtures were added on the maintainer's explicit direction rather than from an escape,
+and are recorded as that exception so the rule above stays the rule. Three cover named
+scenarios: `reviewer/spaghetti-accretion`
+(a two-year accretion whose only test cannot fail — measures pin-then-reshape, not just the
+shape findings), `architecture/upward-dependency` (a domain crate depending upward on transport,
+storage, and the API crate's error type through a dev-dependency back-edge), and
+`api/planned-breaking-change` (a correct breaking improvement on a published crate shipped as a
+minor, with `cargo semver-checks` waved off and an undeprecated alias as the "compatibility"
+path). Twelve more cover the rule domains the coverage map listed as unmeasured — one fixture
+per domain under `async/`, `error-model/`, `testing/`, `cli/`, `ffi/`, `macros/`,
+`observability/`, `cargo-manifest/`, `database/`, `build-scripts/`, `embedded/`, `wasm/` —
+each planting only defects its `rules/<domain>.md` already names, so the fixture measures the
+agent against the standard it is told to enforce and adds no new doctrine. Each backs an
+`evals/` case of the same scenario, and `bun tools/eval-runner.ts --fixtures` runs them all.
 
 ## Honesty
 A missed planted defect is a **real gap in the agent's prompt**, not a test to relax. Fix the

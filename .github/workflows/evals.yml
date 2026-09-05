@@ -85,8 +85,24 @@ jobs:
             --threshold 0.8 \
             --max-cost-usd 15
 
+      # Where plugin eval is not enabled, the in-repo runner measures the same cases over the
+      # headless CLI (`claude -p --plugin-dir`), with the same shape of gate: a mean score below
+      # the threshold fails the job, and a total-spend cap bounds the bill. It does not run the
+      # no-plugin baseline arm — its number is absolute, not a delta — which is why the two
+      # steps are not interchangeable and both are kept.
+      - uses: oven-sh/setup-bun@v2
+        if: steps.key.outputs.present == 'true' && steps.probe.outputs.enabled != 'true'
+      - name: Run the eval suite (in-repo runner fallback)
+        if: steps.key.outputs.present == 'true' && steps.probe.outputs.enabled != 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        working-directory: plugins/rust-studio
+        run: |
+          bun tools/eval-runner.ts --parallel 3 --budget 4 --total-budget 15 --threshold 0.8 \
+            --out evals/results/ci
+
       - name: Upload results
-        if: always() && steps.probe.outputs.enabled == 'true'
+        if: always() && steps.key.outputs.present == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: eval-results

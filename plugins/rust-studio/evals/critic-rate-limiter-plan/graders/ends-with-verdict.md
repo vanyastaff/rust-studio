@@ -1,0 +1,5 @@
+---
+type: regex
+target: last_message
+---
+\b(SURVIVES|DOESN'?T SURVIVE|INSUFFICIENT INFO|NEEDS WORK|RESHAPE NEEDED|BLOCKED)\b
