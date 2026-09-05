@@ -98,6 +98,10 @@ language boundary.
    iteration over a handle, store the iterator **index/cursor in the parent** and rebuild the
    iterator per call — never stash a live borrowed iterator behind a `'static` transmute
    (that aliases the parent and is UB).
+   An opaque handle is a *stated* contract, not an inference: a `repr(Rust)` type handed out as
+   `*mut T` with `pub` fields, and no header comment or doc saying "opaque — never read fields,
+   use the accessors", is a finding even when the accessors exist. A binding author will reach
+   for `frame->width`. Make the fields private or say it where the header is generated.
 9. Run `cargo build` (with cross-compilation targets if relevant),
    `cargo nextest run` (including `bindgen` layout tests), and
    `cargo clippy --all-targets --all-features -- -D warnings` — cite the output.
