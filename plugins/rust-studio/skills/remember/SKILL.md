@@ -69,6 +69,10 @@ source — it is not a project fact until the repo confirms it.
    and every note file an index line — list `<store>/*.md`, diff against the index, fix on the
    spot: re-add the line for an unindexed file; REPORT (never silently delete) a line whose
    file is missing. Then confirm what was saved and where. **COMPLETE**.
+6. **When invoked as the closing step of other work**, the confirmation is one line
+   (`Saved: <note path>` or `Nothing durable`) folded into that work's report above its
+   verdict. The user's last message of the turn is the report and its verdict — never the
+   index-integrity bookkeeping.
 
 ## Notes
 - Atomic — one concept per note; filename = the concept's plain-English name (no date prefix).
