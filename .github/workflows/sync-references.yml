@@ -40,7 +40,10 @@ jobs:
           claude plugin validate --strict --json .
       - uses: dtolnay/rust-toolchain@stable
       - uses: cargo-bins/cargo-binstall@main
+      # Pinned: an unpinned agnix turned main red on a tool bump, not a repo change
+      # (0.52.1 started reading the `$8.42` in /progress-bar's example as an indexed
+      # $ARGUMENTS use). Bump this deliberately, so a new rule arrives in its own commit.
       - name: agnix --strict
         run: |
-          cargo binstall -y agnix-cli
+          cargo binstall -y agnix-cli@0.52.1
           agnix --strict plugins/rust-studio

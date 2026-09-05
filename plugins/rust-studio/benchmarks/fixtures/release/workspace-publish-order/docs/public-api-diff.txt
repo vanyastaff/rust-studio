@@ -1,0 +1,26 @@
+$ cargo public-api -p acme-core diff v0.2.0..HEAD
+
+Removed items from the public API
+=================================
+-pub fn acme_core::open(path: &std::path::Path) -> acme_core::Store
+-pub acme_core::Config::timeout: core::time::Duration
+
+Changed items in the public API
+===============================
+-pub struct acme_core::Config { pub durable: bool, pub timeout: Duration }
++pub struct acme_core::Config { pub durable: bool }
+
+Added items to the public API
+=============================
++pub fn acme_core::open(path: &std::path::Path) -> core::result::Result<acme_core::Store, acme_core::OpenError>
++pub enum acme_core::OpenError
++pub acme_core::OpenError::Missing(std::path::PathBuf)
++pub acme_core::OpenError::Unreadable(std::io::Error)
++impl core::error::Error for acme_core::OpenError
++impl core::fmt::Display for acme_core::OpenError
+
+$ cargo public-api -p acme-store diff v0.2.0..HEAD
+
+Added items to the public API
+=============================
++pub fn acme_store::TypedStore::accepts_key_len(&self, len: usize, cap: core::option::Option<usize>) -> bool

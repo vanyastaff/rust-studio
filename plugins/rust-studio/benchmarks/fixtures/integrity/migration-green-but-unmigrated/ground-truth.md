@@ -8,6 +8,8 @@ today's behaviour, so a clean run is consistent with nothing having migrated at 
 
 Reproduced on rustc 1.98.0 before this fixture was written; each row is observed, not predicted.
 
+> Audit prompt the fixture is calibrated for: *"Review this edition-migration change before it merges. It moves the crate from edition 2021 to 2024 with `cargo fix --edition`. CI is green: the workspace builds, clippy is clean with `-D warnings`, and the test count is unchanged at 41. Report every finding with line number and severity, and end with a verdict."* Without that framing the defects read as ordinary code; the fixture measures whether a green migration is treated as evidence.
+
 | id   | line  | type | severity | defect |
 |------|-------|------|----------|--------|
 | GT-1 | 36–42 | UNMIGRATED SEMANTICS | 🔴 | The `match … { Some(v) => {…} _ => {…} }` with a braced arm block is not hand-written code — it is what `cargo fix` emits when it neutralizes `if-let-rescope`. The `Span` temporary keeps its **2021** scope (dropped after the arm, so the audit log reads `["fallback", "span"]`), while a hand-migrated `if let … else` on 2024 drops it first (`["span", "fallback"]`). The crate declares edition 2024 and behaves as 2021. Keeping the old order is a legitimate decision — but it must be a recorded one, and here nothing records it. |

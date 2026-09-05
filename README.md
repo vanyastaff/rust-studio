@@ -180,8 +180,9 @@ and what lies, with reproductions, is in
 - **Rules (20)** — path-scoped standards. Edit a matching file and a *pointer* to the relevant
   rule is injected automatically; the agent pulls the full text on demand. `core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `macros.md` inside macros.
-- **Hooks (8 events)** — stack briefing and memory recall at session start, rule pointers after
-  edits, a lint nudge when you stop, a check that blocks a verdict-less finish, and a note when
+- **Hooks (9 events)** — stack briefing and memory recall at session start, rule pointers after
+  edits (per window, so a sub-agent gets them too), a fact brief for every studio sub-agent it
+  spawns, a lint nudge when you stop, a check that blocks a verdict-less finish, and a note when
   the model switches so you know who is judging now.
 - **Gates** — named checkpoints: `ARCH / API / ASYNC / CLI / PERF / SAFETY / QA / RELEASE /
   BUILD`, run at **lean** (one crate), **full** (public API, unsafe, releases), or **solo**
@@ -218,7 +219,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 | Irreversible-action guard | no | yes | yes |
 | Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
 | LSP, status line, background monitors | no | no | yes |
-| `claude plugin eval` suite (10 cases, no-plugin baseline arm) | no | no | yes |
+| Eval suite — 31 `claude plugin eval` cases + 45 agent fixtures + 3 live tasks on real crates (`tools/eval-runner.ts` runs them without early access, `--runs N` for repeatability) | no | no | yes |
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities, and explicit-invocation-only
@@ -260,7 +261,11 @@ frontmatter, description-budget regressions, skill descriptions that overlap wit
 boundary, unsafe patterns in shipped scripts, stale metadata or references, section citations
 that resolve to nothing, missing inline fallbacks, vendor-only APIs leaking into the 60 portable
 skills, catalog drift, and malformed eval cases. CI also runs `claude plugin validate --strict`
-and the [agnix](https://github.com/agent-sh/agnix) agent-config linter.
+and the [agnix](https://github.com/agent-sh/agnix) agent-config linter. The prompts themselves
+are measured, not just parsed: `plugins/rust-studio/tools/eval-runner.ts` runs every eval case and
+every agent fixture over the headless CLI and scores them against their rubrics and ground truth
+(`bun tools/eval-runner.ts --fixtures`); CI uses it as the gate wherever `claude plugin eval` is
+not enabled.
 
 ### Releasing
 

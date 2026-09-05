@@ -11,6 +11,14 @@
 //    ≤25 KB file read; silent when nothing matches or the note was already surfaced.
 // 2) ROUTING NUDGE — once per session: prefer a studio skill over ad-hoc steps and
 //    /recall the area before implementing.
+// 3) ROUTE HINT — per prompt: when the prompt has the SHAPE of work a studio skill owns
+//    (Rust code pasted with "review it", "is it in scope", "the binary is 48 MB", "attack
+//    this design"), name that one skill. Measured 2026-09-05 with the eval runner: on 6 of
+//    the first 7 review-shaped cases the session answered inline in one turn — good
+//    findings, no skill, no agent, no verdict — while the generic nudge above was in
+//    context. A generic "prefer a skill" does not route; a pointer to the skill does.
+//    Once per (session, skill) so a long review session is not told about /review on every
+//    prompt.
 //
 // Never blocks (no decision:block) and never fails the session. Codex delivers the
 // same event; if its payload carries no `prompt`, only the nudge runs.
@@ -51,6 +59,108 @@ export function renderPointers(dir: string, picks: Ranked[], labelOf: (file: str
     "(read before re-deriving; verify a note still holds before it steers):\n" +
     picks.map((p) => `- **${p.title}**${labelOf(p.file)}${p.hook ? ` — ${p.hook}` : ""} → \`${d}/${p.file}\``).join("\n")
   );
+}
+
+/** Prompt SHAPE → the studio skill that owns it. Order matters: the first match wins, so the
+ *  specific lenses (unsafe, security, semver, perf) come before the general `/review`. Every
+ *  target is model-invocable — a user-only skill (`/migrate`, `/publish`, `/commit`) would be a
+ *  dead pointer, so those are named as "suggest to the user" in `/help` instead. */
+export const ROUTES: ReadonlyArray<{ skill?: string; agent?: string; when: RegExp; why: string }> = [
+  { skill: "start", when: /\b(start|begin|bootstrap|scaffold|set up|kick off)\b[^\n]{0,40}\bnew\b[^\n]{0,30}\b(rust )?(project|crate|library|cli|service|binary)\b|\bnew (rust )?(project|crate)\b[^\n]{0,60}\b(how|where|begin|start)/i, why: "a new Rust project to orient and scaffold" },
+  { agent: "dependency-manager", when: /\b(vet|vetting|audit)\b[^\n]{0,60}\b(crate|dependency|dep)\b|\b(should we|can we|worth) (add|adopt|take|pull in)(ing)?\b[^\n]{0,40}\b(crate|dependency)\b|\bnew dependency\b/i, why: "a dependency to vet before it is added (`/add-dep` is the user-invoked skill for landing it)" },
+  { agent: "dependency-manager", when: /\bcargo\.toml\b[^\n]{0,80}\b(review|audit|check|publish|before|hygiene|lints?)\b|\b(review|audit|check|vet)\b[^\n]{0,60}\b(manifest|cargo\.toml|\[dependencies\]|feature flags?)\b|\bworkspace (inheritance|lints)\b/i, why: "a Cargo manifest to review — features, pins, lints inheritance, publish metadata (`rules/cargo-manifest.md`)" },
+  { skill: "flaky-hunt", when: /\bflak(y|iness|es)\b|fails? (about |roughly |~)?(one|1) (run )?in (\d+|two|three|four|five|six|seven|eight|nine|ten)\b|intermittent(ly)? fail|fails? intermittently|passes locally (and|but) fails/i, why: "an intermittently failing test suite" },
+  { skill: "bloat", when: /\b(binary|wasm|executable)\b[^\n]{0,60}\b(size|\d+ ?mb|(too|so|that) (big|large)|shrink)|\b(shrink|reduce)\b[^\n]{0,40}\b(binary|size)\b/i, why: "binary size" },
+  { skill: "fix-build", when: /\b(cargo (build|check)|the build|compil(e|ation))\b[^\n]{0,60}\b(fails?|failing|broken|error|red)|error\[E\d{4}\]|\bE\d{4}\b|get (this|it) (compiling|building)|(won'?t|doesn'?t|does not|will not) (compile|build)|\bmay not live long enough\b/i, why: "a red build" },
+  { skill: "audit-unsafe", when: /\bunsafe\b[^\n]{0,80}\b(review|audit|sound|miri|ub\b|undefined behavio|hold|correct|check)|\bunsafe impl\b|\bSAFETY comment|\bffi\b|extern "C"|(?<![\w-])bindgen\b|\bc api\b|\braw pointers?\b[^\n]{0,60}\b(review|audit|check|safe)/i, why: "unsafe or FFI code to audit" },
+  { skill: "security-audit", when: /\b(security|vulnerab|inject(ion)?|untrusted input|auth(oriz|entic)ation|secrets?|rustsec|cargo audit)\b[^\n]{0,80}\b(review|audit|check|find)|\b(review|audit)\b[^\n]{0,60}\b(security|vulnerab)|\bvulnerable to\b|\b(path traversal|dos\b|denial of service|xss|csrf|ssrf|timing attack)/i, why: "a security review" },
+  { skill: "design-api", when: /\bdesign\b[^\n]{0,60}\b(api|interface|crate|trait|surface)\b|\b(what|how) should\b[^\n]{0,60}\blook like\b[^\n]{0,60}\b(public (api|surface)|library|crate)/i, why: "an API design session" },
+  { agent: "harsh-critic", when: /\b(attack|critique|poke holes in|tear apart|strongest case against|does it survive|devil'?s advocate)\b[^\n]{0,60}\b(design|plan|proposal|approach|idea|architecture)\b|\b(design|plan|proposal)\b[^\n]{0,40}\b(attack|critique)/i, why: "an adversarial pass over a design or plan" },
+  { skill: "api-review", when: /\b(semver|breaking change)\b|\b(public api|public surface|api surface|public contract)\b[^\n]{0,60}\b(review|audit|break|chang|bump|version|semver|stable|release|publish|tag|cut)|\b(review|audit|chang|break)[^\n]{0,60}\b(public api|public surface|api surface|public contract)\b|\b(tag|publish|release|ship|cut)\b[^\n]{0,40}\b\d+\.\d+(\.\d+)?\b|\bbump(ed|ing)? (the )?version|\bversion bump\b|semver-checks/i, why: "a public-API or release-version question" },
+  { skill: "scope-check", when: /\b(in|out of|within|beyond) scope\b|scope creep|\bcreep(s|ed|ing)? (beyond|past|outside)\b|beyond the (ticket|story|issue)|what ships,? what gets split|\bthe story\b[^\n]{0,80}\b(diff|branch|change)/i, why: "a scope adjudication" },
+  { skill: "refactor", when: /\b(refactor|simplif(y|ied)|untangle|make (this|it) readable|readab(le|ility)|spaghetti|clean(er)? up)\b[^\n]{0,80}(code|function|module|file|naming|this|it)\b|behaviou?r must (stay|remain)|without changing what it does/i, why: "a behavior-preserving reshape" },
+  { skill: "architecture", when: /\barchitect(ure|ural)?\b|\blayering\b|\bdependency direction\b|\bcrate (boundar|graph|split|layout|structure)|\bmodule (boundar|structure|layout|tree)|\bboundar(y|ies) between\b|\bsplit\b[^\n]{0,40}\binto crates\b|\b(which|what) crate should\b|\b(live|belong) in its own crate\b|\bown crate or\b|\bin shape to extend\b/i, why: "a crate/module boundary question" },
+  { skill: "perf", when: /\b(p9\d|p50|latency|throughput|benchmark|profil(e|ing))\b|\b(slow|allocat(es|ions?)|faster|hot ?path)\b[^\n]{0,60}\b(rust|code|function|loop|handler|this|it)\b|\bfast enough\b|\bper second\b/i, why: "a performance question" },
+  { skill: "review", when: /```rust|\bwasm(32|-bindgen|-pack)?\b[^\n]{0,80}\b(review|audit|panics?|browser|target)\b|\b(review|audit)\b[^\n]{0,80}\b(code|diff|change|crate|module|file|function|handler|worker|pr|implementation|before (we )?(merge|ship|land|tag))\b|\bbefore (i|we) merge\b|\bmergeable\b|\bmerge verdict\b|\bbefore it lands\b/i, why: "a review of Rust code" },
+];
+
+/** Another language's ecosystem, named outright: a fence in that language, one of its
+ *  manifests or tools, or "<lang> script/file". Every studio skill operates on Rust, so a
+ *  keyword that also exists elsewhere ("refactor", "benchmark", "bump the version") is a
+ *  routing MISS when the prompt is plainly about a bash script or a package.json. C and C++
+ *  are deliberately absent — C beside Rust is FFI, which IS studio work. */
+const FOREIGN_ECOSYSTEM =
+  /```(?:py(?:thon)?|js|jsx|ts|tsx|javascript|typescript|go|golang|java|kotlin|swift|rb|ruby|php|cs|csharp|sh|bash|zsh|sql)\b|\b(?:node\.?js|nodejs|npm|yarn|pnpm|deno|python|pip|pyproject\.toml|requirements\.txt|package\.json|node_modules|go\.mod|Gemfile|pom\.xml|composer\.json)\b|\b(?:bash|shell|python|node|js|ts|markdown|yaml|sql)\s+(?:script|file|code|module)\b/i;
+
+/** Anything that says this prompt IS about Rust. It rescues a prompt that names another
+ *  ecosystem for a reason the studio owns — a Cargo.toml pasted in a ```toml fence, an FFI
+ *  review that shows the C side. Never used on its own: 31 of the corpus's routed prompts
+ *  carry no Rust token at all ("Untangle this module", "Is this fast enough?"), so requiring
+ *  a Rust signal would silence the router on exactly the shapes it exists for. */
+const RUST_SIGNAL =
+  /```rust|\brust\b|\bcargo\b|\bcrates?\b|\bclippy\b|\brustc\b|\bCargo\.toml\b|\.rs\b|\bunsafe\b|\bimpl\b|\btrait\b|\bborrow checker\b|\btokio\b|\bserde\b|\bno_std\b|\bMSRV\b|\bsemver\b|\bwasm\b|extern "C"|\bffi\b/i;
+
+/** A question that asks where something IS, or for a description of it — not for work on it.
+ *  "where is it defined", "does the ffi in this repo exist?", "give me a one-line summary of
+ *  the architecture" carry a routing keyword but request a lookup, and a skill that opens a
+ *  seven-phase workflow is the wrong answer to a lookup whatever the language. Unconditional:
+ *  "where is `apply_discount` defined?" is a Rust prompt and still not skill work. Kept narrow
+ *  on purpose — bare "where does" would swallow the corpus's "Where does the size come from?" */
+const LOOKUP_ONLY =
+  /\bwhere (is|are)\b[^\n]{0,60}\b(defined|declared|implemented|located|lives?)\b|\bwhich files?\b|\bdoes\b[^\n]{0,40}\bexist\b|\b(give me|write|need) an? [^\n]{0,30}summary\b|\bsummari[sz]e\b|\bhow many\b|^\s*(please\s+)?(explain|describe|tell me about)\b/i;
+
+/** The one skill or agent this prompt's shape points at, or null. Pure. */
+export function routeFor(prompt: string): { skill?: string; agent?: string; why: string } | null {
+  const text = String(prompt ?? "");
+  if (text.trim().length < 12) return null;
+  // A prompt that already names a studio skill is routed; say nothing.
+  if (/(^|[\s(`])\/(rust-studio:)?[a-z][a-z-]+\b/.test(text)) return null;
+  // Vetoes before the table: a keyword match is not a route when the prompt is about
+  // another ecosystem, or is asking a lookup question rather than for work.
+  if (LOOKUP_ONLY.test(text)) return null;
+  if (FOREIGN_ECOSYSTEM.test(text) && !RUST_SIGNAL.test(text)) return null;
+  for (const r of ROUTES) if (r.when.test(text)) return { skill: r.skill, agent: r.agent, why: r.why };
+  return null;
+}
+
+/** Marker key for the dedupe: one hint per target per session. */
+export function routeKey(r: { skill?: string; agent?: string }): string {
+  return r.skill ? `/${r.skill}` : `@${r.agent}`;
+}
+
+export function renderRoute(r: { skill?: string; agent?: string; why: string }): string {
+  if (r.agent) {
+    return (
+      `Rust Code Studio routing: this prompt reads as ${r.why} — the studio path is the \`${r.agent}\` sub-agent. ` +
+      `Spawn it now with the Agent tool (subagent_type \`rust-studio:${r.agent}\`), hand it the full text the user gave, ` +
+      "and relay its findings; the LAST line of your reply is the sub-agent's own verdict line quoted verbatim " +
+      "(e.g. `DOESN'T SURVIVE — use ALT-2`, `NEEDS WORK — 3 blockers`) — a summary that paraphrases it away is incomplete. " +
+      "An inline answer skips the independent lens the studio exists for."
+    );
+  }
+  return (
+    `Rust Code Studio routing: this prompt reads as ${r.why} — the studio path is \`/${r.skill}\` ` +
+    "(its agents, gates, evidence, and a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict). " +
+    "Invoke it now with the Skill tool — also when no project is checked out here, since the skill's method is the " +
+    "deliverable — unless the user asked for something narrower; an inline answer skips the independent lenses the studio exists for."
+  );
+}
+
+/** Skills already pointed at this session (JSON array in a per-session marker). */
+export function readRouted(sid: string): Set<string> {
+  try {
+    return new Set(JSON.parse(readFileSync(join(markerDir("rust-studio-route"), sid), "utf8")));
+  } catch {
+    return new Set();
+  }
+}
+export function writeRouted(sid: string, skills: Set<string>): void {
+  try {
+    mkdirSync(markerDir("rust-studio-route"), { recursive: true });
+    writeFileSync(join(markerDir("rust-studio-route"), sid), JSON.stringify([...skills]));
+  } catch {
+    /* non-fatal */
+  }
 }
 
 function markerDir(name: string): string {
@@ -99,6 +209,25 @@ if (import.meta.main) {
       }
     } catch {
       /* recall is best-effort */
+    }
+  }
+
+  // 3) route hint — the skill this prompt's shape points at, once per (session, skill).
+  //    Shares the routing_nudge switch: someone who turned the nudge off wants no routing.
+  if (sid && optionBool("routing_nudge", true) && typeof data.prompt === "string") {
+    try {
+      const route = routeFor(data.prompt);
+      if (route) {
+        const routed = readRouted(sid);
+        const key = routeKey(route);
+        if (!routed.has(key)) {
+          routed.add(key);
+          writeRouted(sid, routed);
+          out.push(renderRoute(route));
+        }
+      }
+    } catch {
+      /* routing is best-effort */
     }
   }
 

@@ -68,9 +68,9 @@ locator maps, research digests, answers) the **data IS the deliverable**: return
 - **The builder** (`rust-builder`): full tools. It is the only agent that routinely writes source.
 - **Directors & leads**: may Write design docs/ADRs/plans, but delegate *source* edits to `rust-builder`.
 - Reference rules by path; don't paste standards into the agent (single source of truth).
-- **Prefer the studio's tools** (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`): serena (semantic code
-  nav) and `rg`/`ast-grep` over Bash `grep`/`find`; exa for external evidence; purpose-built
-  `cargo` subcommands. Bash runs things — it isn't a search tool.
+- **Prefer the studio's tools** (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`): the harness `LSP` tool
+  or serena (semantic code nav) and `rg`/`ast-grep` over Bash `grep`/`find`; exa for external
+  evidence; purpose-built `cargo` subcommands. Bash runs things — it isn't a search tool.
 - Bodies describe behavior, not Rust tutorials. Assume Rust expertise; encode judgment + boundaries.
 - **Never ask an agent to echo its reasoning.** Instructions like "show your thinking",
   "transcribe your reasoning", or "explain your chain of thought in the output" trigger the

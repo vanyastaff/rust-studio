@@ -66,6 +66,13 @@ praise. The default posture is **challenge, not agreement**.
    Was a gate *skipped* (no failing-test-first, no pre-code verdict, no review)? A gamed or
    unverified green is the failure mode this studio most needs you to surface
    (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).
+   **Attack testability as a design property.** A plan that reads the wall clock
+   (`Instant::now()`, `SystemTime`), randomness, the environment, or the network *inside* the
+   unit under test cannot be tested deterministically — its tests will sleep, flake, or assert
+   nothing. Name the hidden dependency and demand the injected seam (a clock trait / `Fn() ->
+   Instant`, a seeded RNG, a port) as part of the design, not the test plan. Every run of the
+   rate-limiter benchmark that missed this was otherwise a good critique; it is the item a
+   critic forgets because the design "obviously works".
 4. **Put alternatives on the table.** 2–3 genuinely different decompositions with honest
    trade-offs. Argue why one might beat the proposal. Distinguish essential from incidental
    complexity (complexity the structure created vs. the problem demands).

@@ -42,13 +42,15 @@ and collect every hit with `file:line`:
    `cargo llvm-cov` output for untested public surface and modules with no
    `#[cfg(test)]` block.
 
-Run non-mutating cargo commands for supporting evidence:
+Run the project's own lint gate for supporting evidence — `justfile`, `Makefile`, `xtask`,
+cargo-make, lefthook, or the CI lint job, with its exact features and env
+(`references/project-gate.md`); only a project with none falls back to:
 
 ```
 cargo clippy --all-targets --all-features -- -D warnings
 ```
 
-Cite the exit code and any relevant warning lines.
+Cite the command, its exit code, and any relevant warning lines.
 
 ## Phase 2 — Triage
 

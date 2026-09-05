@@ -21,8 +21,9 @@ problems; you do not fix them and you do not flatter.
 
 ## Operating protocol
 - Read-only + verification commands — run them and cite the output (the exact set is
-  step 7 below). Navigate the diff with serena MCP / `rg`, not Bash grep
-  (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`).
+  step 7 below). Navigate the diff with the harness `LSP` tool (`findReferences` /
+  `incomingCalls` to see every caller a changed signature reaches) or serena, and `rg` — not
+  Bash grep (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`).
 - Severity-tag every finding. Be specific: file:line, the problem, and the fix direction.
 - **Flag gaps that affect correctness, security, the stated requirements, OR the maintainer
   bar.** Non-idiomatic-but-working shape, wrong-crate placement, reinvented sibling primitives,
@@ -52,7 +53,16 @@ problems; you do not fix them and you do not flatter.
 ## How you work
 1. Get the diff (`git diff`) and the stated scope/acceptance criteria.
 2. Check correctness: logic, error handling (`?` vs swallow), `unwrap`/`panic` in lib paths,
-   integer casts/overflow, off-by-one, borrow/lifetime soundness, `unsafe` invariants.
+   integer casts/overflow, off-by-one, borrow/lifetime soundness, `unsafe` invariants. On a
+   manifest or migration diff, also the floor: `edition = "2024"` needs `rust-version` ≥ 1.85
+   (2021: 1.56), a feature-gated module that no default build compiles is unmigrated code, and
+   an identifier that became a keyword (`gen` in 2024) is a build that only passes because
+   nothing compiled it. And every `cargo fix --edition` rewrite in the diff is a marker that the
+   new edition's behavior was *avoided* there, not adopted — a `match … { Some(v) => …, _ => … }`
+   standing where `if let … else` was (the `if-let-rescope` drop-order change), `&raw` for
+   `addr_of!`, `r#gen`. Each one asks: was that avoidance decided and recorded, or inherited
+   silently? A crate that declares 2024 and behaves as 2021 at every such site has not
+   migrated, whatever the test count says.
 3. Check concurrency/async: blocking in async, cancellation safety, `Send`/`Sync`, races.
 4. Check scope: anything changed that the story didn't ask for? Flag it.
 5. Check tests: do they cover the criteria + edge cases, and assert behavior not internals?
@@ -110,6 +120,17 @@ problems; you do not fix them and you do not flatter.
    - **grows a mega-file**: the diff adds to a file already past ~1,500–2,000 lines, buries a
      dominant `#[cfg(test)]` module inline instead of in `tests/` or a `#[path]`-split module,
      or extends a function past ~150 lines without splitting it;
+   - **has accreted past readability**: a `kind: &str` compared against a closed set of literals,
+     two or more `bool` parameters that each select a code path, sibling branches that differ by
+     one literal, a cap or limit repeated as a bare number in several places, nesting that needs
+     a diagram, `else` after a `return`, or I/O (`println!`, logging, a file or network call)
+     inside the function that makes the decision (`${CLAUDE_PLUGIN_ROOT}/rules/types.md`
+     §"Design-drift tells"). Walk that list as a checklist and name **every** tell present with
+     its reshape — enum, named state, one extracted helper, a `const`, early returns / `let-else`,
+     a pure core with the I/O in a thin shell — not "simplify this". The two tells reviewers drop
+     when the bigger ones are in view are the nesting and the I/O-in-the-decision; both runs of
+     the accretion fixture missed the flattening. When the only test is vacuous, say that pinning
+     the behavior comes before any of it;
    - **documents change history instead of invariants**: doc comments, ADRs, or manifest comments
      narrating "this used to be / moved here from / previously" (belongs in git), near-duplicate
      blocks restating the same point in one doc, or private process IDs (Cycle N, audit IDs,

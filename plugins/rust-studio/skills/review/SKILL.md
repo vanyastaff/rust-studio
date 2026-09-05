@@ -175,7 +175,11 @@ surviving assertions actually check.
 1. Get the diff. Determine scope from context; proceed without asking unless the
    change's goal is truly opaque.
 2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit, applying the
-   Shape audit, the Accretion check, and the Oracle-weakening checklist above.
+   Shape audit, the Accretion check, and the Oracle-weakening checklist above. This step is
+   not optional where the Agent tool exists: the reviewer's value is that it is not the
+   session that has been reading the code, so "I can review this inline faster" forfeits the
+   independence the verdict rests on. Inline is for hosts with no sub-agents — and there, say
+   so in the report. Pasted code is still a diff: hand the sub-agent the full text.
 3. **`harsh-critic` is a DEFAULT lens** — spawn it (not only under `--full`) whenever the
    change embeds a non-trivial design/approach decision, to attack the SHAPE (wrong crate,
    reinvented sibling primitive, stale idiom, clone-to-appease, stringly/`bool` API) rather
@@ -189,6 +193,19 @@ surviving assertions actually check.
    - `perf-engineer` if it touches hot paths or benches (PERF-GATE).
    - `api-design-lead` if it changes the public surface (API-GATE / semver).
    - `async-systems-lead` if it touches async/handlers (ASYNC-GATE).
+   - the domain specialist whose rule file the diff lands in, when one exists —
+     `ffi-specialist` (`extern "C"`, `repr(C)`, a `-sys` crate), `database-specialist` (SQL,
+     sqlx/diesel, migrations), `macro-specialist` (`macro_rules!`, proc-macros),
+     `cli-ux-lead` (`main.rs`, clap, exit codes), `embedded-specialist` (`no_std`, ISRs, MMIO),
+     `wasm-specialist` (`wasm-bindgen`, a `cdylib` for wasm32), `error-architect` (error types
+     on a library surface), `observability-engineer` (workers, jobs, services),
+     `dependency-manager` (`Cargo.toml`), `qa-lead` (a diff that is mostly tests). The measured
+     miss behind this list: an FFI diff reviewed through the unsafe lens alone found the UB but
+     not the ownership contract — the specialist's checklist is what carries the domain.
+   - **Pasted code has no path**, so the hooks injected no rule for it. Before ruling on a
+     domain you did not spawn a specialist for, read the studio's `rules/<domain>.md` for it
+     (`cli.md`, `ffi.md`, `database.md`, `macros.md`, …) and walk the list — one review in
+     three of a CLI `main.rs` missed the stdout/stderr split until the rule was in front of it.
 5. Run evidence commands and cite output. **Where the repo owns a gate** — `justfile`,
    `Makefile`, `xtask`, cargo-make, lefthook, or the CI lint/test job — run *that*, with its
    feature sets and env, and check the author's evidence against it: a green from a command the

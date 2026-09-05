@@ -11,6 +11,10 @@
   Codex). All three carry the same `version`.
 - `plugins/rust-studio/evals/` — the `claude plugin eval` suite (one `prompt.md` + `graders/`
   per case, derived from `benchmarks/fixtures/`). Keep prompts free of absolute paths.
+  `plugins/rust-studio/tools/eval-runner.ts` runs the suite (`--fixtures` for the benchmarks, `--live` for the
+  writing agents on real crates, `--runs 3` to see variance)
+  over `claude -p --plugin-dir` for accounts without early access — a prompt edit to an agent,
+  skill, or rule is not done until its fixtures still score.
 
 ## The one invariant
 
@@ -47,7 +51,8 @@ Read it before adding or reshaping a skill. The mechanics below are what CI enfo
 ```sh
 cd plugins/rust-studio
 ./scripts/validate-distribution.sh   # manifests, skills, metadata, references, catalog, evals
-bun test                             # hooks and status-line scripts
+bun test                             # hooks, status line, and the eval runner's graders
+bun tools/eval-runner.ts --fixture <folder>/<case>   # re-score an agent after editing its brief (spends API budget)
 claude plugin validate --strict .    # the host's own validator (also run in CI)
 agnix .                              # cross-host agent-config linter (cargo binstall agnix-cli)
 ```

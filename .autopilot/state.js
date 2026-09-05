@@ -9,7 +9,7 @@ window.STATE =
   "briefFile": "2026-09-04-brief.md",
   "memoryFile": "CLAUDE.md",
   "startedAt": "2026-09-04T12:03:34-05:00",
-  "updatedAt": "2026-09-04T12:48:27-05:00",
+  "updatedAt": "2026-09-05T11:30:00-05:00",
   "finishedAt": null,
   "stages": [
     {
@@ -79,14 +79,18 @@ window.STATE =
       "id": "T02",
       "title": "Каталог перестаёт путать соседние скиллы",
       "wave": 2,
-      "status": "in-progress",
-      "startedAt": "2026-09-04T12:48:27-05:00"
+      "status": "done",
+      "startedAt": "2026-09-04T12:48:27-05:00",
+      "finishedAt": "2026-09-05T00:00:00-05:00",
+      "note": "гейт Jaccard≥0.20 + «When NOT this skill» в validate-distribution.sh; сверено с деревом 2026-09-05"
     },
     {
       "id": "T03",
       "title": "Плагин доказывает, что его скрипты безопасны",
       "wave": 3,
-      "status": "pending"
+      "status": "done",
+      "finishedAt": "2026-09-05T00:00:00-05:00",
+      "note": "script-safety gate (4 класса) в validate-distribution.sh + раздел README; сверено с деревом 2026-09-05"
     },
     {
       "id": "T04",
@@ -108,21 +112,25 @@ window.STATE =
       "id": "T07",
       "title": "Гейт на frontmatter агентов (валидатор его не смотрит)",
       "wave": 2,
-      "status": "pending"
+      "status": "done",
+      "finishedAt": "2026-09-05T00:00:00-05:00",
+      "note": "ALLOWED_KEYS из Zod-схемы бандла 2.1.260 в validate-distribution.sh; сверено с деревом 2026-09-05"
     }
   ],
   "singlePass": null,
   "tests": {
-    "pass": 295,
+    "pass": 478,
     "fail": 0,
-    "at": "2026-09-04T12:48:27-05:00"
+    "at": "2026-09-05T11:30:00-05:00"
   },
   "debt": {
     "placeholders": [],
     "assumptions": [],
     "emptyEnv": []
   },
-  "additions": [],
+  "additions": [
+    "v0.43.0–v0.45.0 (2026-09-05) выпущены вне автопилота: измерительный контур (tools/eval-runner.ts, 31 eval-кейс, 45 фикстур, 3 live-задачи), роутинг по форме промпта с корпусом из 74 промптов в bun test, брифы для субагентов, прогоны ×3/×2 с min/mean/max; state.js приведён к дереву, T06 остаётся открытым"
+  ],
   "coverage": {
     "rounds": 3,
     "round1": "FAIL — domain-neutral work",

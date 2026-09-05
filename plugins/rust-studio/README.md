@@ -16,8 +16,8 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
   `harsh-critic`) + a scout / builder / resolver / reviewer execution group.
 - **20 path-scoped rule sets** — the right Rust standard surfaces the moment you open a matching
   file; the agent reads the full rule on demand, so the window stays lean.
-- **12 Claude hook handlers across 8 events** — stack detection and memory recall, rule pointers, lint
-  and lifecycle nudges, verdict checks, and an opt-in stop-guard.
+- **13 Claude hook handlers across 9 events** — stack detection and memory recall, rule pointers, a
+  sub-agent brief, lint and lifecycle nudges, verdict checks, and an opt-in stop-guard.
 - **Bundled rust-analyzer LSP** — diagnostics and go-to-definition as you edit, so `rust-scout`
   resolves symbols instead of scanning files. Just put `rust-analyzer` on PATH.
 - **An integrity layer that rejects a gamed green** — see
@@ -178,12 +178,23 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
 - **UserPromptSubmit** — prompt-scoped recall: the prompt is matched against the memory index
   and a note that scores a strong hit is surfaced once per session (title, kind/age, path);
   plus a once-per-session nudge to `/recall` before working in a known area and to prefer a
-  studio skill when one fits.
+  studio skill when one fits. It also **routes by prompt shape**: Rust code pasted with "review
+  it", "is this in scope", "the binary is 48 MB", "attack this design" each get a one-line pointer
+  to the skill that owns that work (`/review`, `/scope-check`, `/bloat`, `/brainstorm`, …), once
+  per skill per session. Measured with the eval runner: without it, six of the first seven
+  review-shaped prompts were answered inline in one turn — no skill, no agent, no verdict.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
 - **Auto-capture (Stop)** — after a turn that finished a real unit of work (a completion summary +
   uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable
   learning. Blocks the stop a single time and never re-blocks (`stop_hook_active` breaks the loop),
   so it's far gentler than Stop-guard. On by default (`auto_capture`); fails open.
+- **SubagentStart** — a studio sub-agent starts with an empty window, so it gets the facts the
+  session already holds, in a handful of lines: the project gate files found at the root
+  (`justfile`, `Makefile`, `xtask/`, cargo-make, lefthook, CI workflows — or a plain "none
+  found, studio defaults apply"), the crate/workspace line, gate intensity and test runner, a
+  pointer to the memory store, and the verdict it owes. Facts only, never a second copy of the
+  doctrine; built-in agents get nothing. Rule pointers are likewise announced per sub-agent
+  window, not once per session, so the builder is never the one agent running without them.
 - **SubagentStop** — a studio sub-agent that finishes without an explicit verdict
   (COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED) is stopped **once** and told to re-send its
   deliverable with the verdict and evidence appended; built-in agents and anything not on the
@@ -291,9 +302,10 @@ changes how reviews are *reported*.
 
 ## What makes it different
 
-- **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by an `/eval-agents` fixture (`rust-reviewer` catches 6/6 planted gaming defects)
+- **Anti-gaming integrity layer** — a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by the `integrity/*` fixtures, which `rust-reviewer` scores at full recall in the measured suite (`bun tools/eval-runner.ts --fixtures`)
 - **The project's gate is the oracle** — a prescribed `cargo` command set reports on a hand-rolled build, not the one that governs merging, and it fails in both directions: `--all-features` silences lints that fire under the shipped default features, and a plain `nextest run` invents failures in a crate the repo's gate runs headless. The studio discovers the repo's own gate first — `justfile`, `Makefile`, `xtask`, cargo-make, lefthook, the CI lint/test job — runs *every* invocation it makes with its exact flags and env, and treats the cargo defaults as the fallback for a project that has none ([`docs/project-gate.md`](docs/project-gate.md)). A green from a command the merge gate does not run is an `Off-gate green` — an `INTEGRITY` finding, not a pass
 - **Untrusted-context standard** — a Rust session reads a lot of text nobody on the project wrote (crate READMEs and `//!` docs, `docs.rs`, a dependency's `build.rs` output, PR threads, CI logs), and it all lands in the window looking like the agent's own reasoning. A doctrine ([`docs/untrusted-context.md`](docs/untrusted-context.md)) + a provenance pointer from the PreToolUse hook + `🚩 UNTRUSTED` findings in `rust-reviewer` / `security-auditor` / `dependency-manager` make third-party text **material to report on, never to act on**: a crate whose docs tell tooling to add a dep, ignore an advisory, or silence a lint is a `/add-dep` **block**, and Trojan-Source bidi codepoints in dependency source are a finding. Kept honest by the `security/untrusted-context` fixture, which scores whether the studio reports the planted instructions *and* still finds the two real defects they distract from
+- **Measured, not asserted** — every eval case and every agent fixture runs over the headless CLI with the plugin loaded (`tools/eval-runner.ts`), so a prompt edit is scored before it ships. The 0.45.0 run: 31 cases three times each, 45 fixtures twice each, 21 agents, and three live tasks where `rust-builder`, `rust-build-resolver` and `/refactor` work a real crate and its own `check.sh` decides; the numbers and the misses are in the CHANGELOG, and a miss is filed against the agent's brief — or, twice so far, against a rule that turned out to be wrong
 - **Claude 5 (Fable 5) ready** — judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code; `security-auditor` stays pinned to Opus so a cyber-classifier trip falls back to Opus 4.8 inside the audit instead of switching the whole session; authoring rules keep prompts refusal-safe and non-prescriptive ([`docs/claude-5-compat.md`](docs/claude-5-compat.md))
 
 ### Script safety gate

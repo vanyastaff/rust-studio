@@ -1,0 +1,1512 @@
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 237500
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 237500
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 237500
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 237500
+dry run: 0 -> 0
+dry run: 10000 -> 9000
+dry run: 250000 -> 225000
+dry run: 0 -> 0
+dry run: 10000 -> 9000
+dry run: 250000 -> 225000
+dry run: 0 -> 0
+dry run: 10000 -> 9000
+dry run: 250000 -> 225000
+dry run: 0 -> 0
+dry run: 10000 -> 9000
+dry run: 250000 -> 225000
+dry run: 0 -> 0
+dry run: 10000 -> 8500
+dry run: 250000 -> 212500
+dry run: 0 -> 0
+dry run: 10000 -> 8500
+dry run: 250000 -> 212500
+dry run: 0 -> 0
+dry run: 10000 -> 8500
+dry run: 250000 -> 212500
+dry run: 0 -> 0
+dry run: 10000 -> 8500
+dry run: 250000 -> 212500
+dry run: 0 -> 0
+dry run: 10000 -> 5000
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 5000
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 5000
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 5000
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 4500
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 4500
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 4500
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 4500
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 10000
+dry run: 250000 -> 250000
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 249500
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 249500
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 249500
+dry run: 0 -> 0
+dry run: 10000 -> 9500
+dry run: 250000 -> 249500
+dry run: 0 -> 0
+dry run: 10000 -> 9990
+dry run: 250000 -> 249990
+dry run: 0 -> 0
+dry run: 10000 -> 9990
+dry run: 250000 -> 249990
+dry run: 0 -> 0
+dry run: 10000 -> 9990
+dry run: 250000 -> 249990
+dry run: 0 -> 0
+dry run: 10000 -> 9990
+dry run: 250000 -> 249990
+dry run: 0 -> 0
+dry run: 10000 -> 9490
+dry run: 250000 -> 249490
+dry run: 0 -> 0
+dry run: 10000 -> 9490
+dry run: 250000 -> 249490
+dry run: 0 -> 0
+dry run: 10000 -> 9490
+dry run: 250000 -> 249490
+dry run: 0 -> 0
+dry run: 10000 -> 9490
+dry run: 250000 -> 249490
+dry run: 0 -> 0
+dry run: 10000 -> 9950
+dry run: 250000 -> 249950
+dry run: 0 -> 0
+dry run: 10000 -> 9950
+dry run: 250000 -> 249950
+dry run: 0 -> 0
+dry run: 10000 -> 9950
+dry run: 250000 -> 249950
+dry run: 0 -> 0
+dry run: 10000 -> 9950
+dry run: 250000 -> 249950
+dry run: 0 -> 0
+dry run: 10000 -> 9450
+dry run: 250000 -> 249450
+dry run: 0 -> 0
+dry run: 10000 -> 9450
+dry run: 250000 -> 249450
+dry run: 0 -> 0
+dry run: 10000 -> 9450
+dry run: 250000 -> 249450
+dry run: 0 -> 0
+dry run: 10000 -> 9450
+dry run: 250000 -> 249450
+dry run: 0 -> 0
+dry run: 10000 -> 9899
+dry run: 250000 -> 249899
+dry run: 0 -> 0
+dry run: 10000 -> 9899
+dry run: 250000 -> 249899
+dry run: 0 -> 0
+dry run: 10000 -> 9899
+dry run: 250000 -> 249899
+dry run: 0 -> 0
+dry run: 10000 -> 9899
+dry run: 250000 -> 249899
+dry run: 0 -> 0
+dry run: 10000 -> 9399
+dry run: 250000 -> 249399
+dry run: 0 -> 0
+dry run: 10000 -> 9399
+dry run: 250000 -> 249399
+dry run: 0 -> 0
+dry run: 10000 -> 9399
+dry run: 250000 -> 249399
+dry run: 0 -> 0
+dry run: 10000 -> 9399
+dry run: 250000 -> 249399
+dry run: 0 -> 0
+dry run: 10000 -> 9300
+dry run: 250000 -> 249300
+dry run: 0 -> 0
+dry run: 10000 -> 9300
+dry run: 250000 -> 249300
+dry run: 0 -> 0
+dry run: 10000 -> 9300
+dry run: 250000 -> 249300
+dry run: 0 -> 0
+dry run: 10000 -> 9300
+dry run: 250000 -> 249300
+dry run: 0 -> 0
+dry run: 10000 -> 8800
+dry run: 250000 -> 248800
+dry run: 0 -> 0
+dry run: 10000 -> 8800
+dry run: 250000 -> 248800
+dry run: 0 -> 0
+dry run: 10000 -> 8800
+dry run: 250000 -> 248800
+dry run: 0 -> 0
+dry run: 10000 -> 8800
+dry run: 250000 -> 248800
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+dry run: 0 -> 0
+dry run: 10000 -> 0
+dry run: 250000 -> 200000
+percent|0|false|false|false|0|0 => Ok(0) uses=Some(1)
+percent|0|false|false|false|0|10000 => Ok(10000) uses=Some(1)
+percent|0|false|false|false|0|250000 => Ok(250000) uses=Some(1)
+percent|0|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+percent|0|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+percent|0|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+percent|0|false|false|true|0|0 => Ok(0) uses=None
+percent|0|false|false|true|0|10000 => Ok(10000) uses=None
+percent|0|false|false|true|0|250000 => Ok(250000) uses=None
+percent|0|false|false|true|3|0 => Ok(0) uses=Some(3)
+percent|0|false|false|true|3|10000 => Ok(10000) uses=Some(3)
+percent|0|false|false|true|3|250000 => Ok(250000) uses=Some(3)
+percent|0|false|true|false|0|0 => Ok(0) uses=Some(1)
+percent|0|false|true|false|0|10000 => Ok(10000) uses=Some(1)
+percent|0|false|true|false|0|250000 => Ok(250000) uses=Some(1)
+percent|0|false|true|false|3|0 => Ok(0) uses=Some(4)
+percent|0|false|true|false|3|10000 => Ok(10000) uses=Some(4)
+percent|0|false|true|false|3|250000 => Ok(250000) uses=Some(4)
+percent|0|false|true|true|0|0 => Ok(0) uses=None
+percent|0|false|true|true|0|10000 => Ok(10000) uses=None
+percent|0|false|true|true|0|250000 => Ok(250000) uses=None
+percent|0|false|true|true|3|0 => Ok(0) uses=Some(3)
+percent|0|false|true|true|3|10000 => Ok(10000) uses=Some(3)
+percent|0|false|true|true|3|250000 => Ok(250000) uses=Some(3)
+percent|0|true|false|false|0|0 => Ok(0) uses=Some(1)
+percent|0|true|false|false|0|10000 => Ok(9500) uses=Some(1)
+percent|0|true|false|false|0|250000 => Ok(237500) uses=Some(1)
+percent|0|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+percent|0|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+percent|0|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+percent|0|true|false|true|0|0 => Ok(0) uses=None
+percent|0|true|false|true|0|10000 => Ok(9500) uses=None
+percent|0|true|false|true|0|250000 => Ok(237500) uses=None
+percent|0|true|false|true|3|0 => Ok(0) uses=Some(3)
+percent|0|true|false|true|3|10000 => Ok(9500) uses=Some(3)
+percent|0|true|false|true|3|250000 => Ok(237500) uses=Some(3)
+percent|0|true|true|false|0|0 => Ok(0) uses=Some(1)
+percent|0|true|true|false|0|10000 => Ok(9500) uses=Some(1)
+percent|0|true|true|false|0|250000 => Ok(237500) uses=Some(1)
+percent|0|true|true|false|3|0 => Ok(0) uses=Some(4)
+percent|0|true|true|false|3|10000 => Ok(9500) uses=Some(4)
+percent|0|true|true|false|3|250000 => Ok(237500) uses=Some(4)
+percent|0|true|true|true|0|0 => Ok(0) uses=None
+percent|0|true|true|true|0|10000 => Ok(9500) uses=None
+percent|0|true|true|true|0|250000 => Ok(237500) uses=None
+percent|0|true|true|true|3|0 => Ok(0) uses=Some(3)
+percent|0|true|true|true|3|10000 => Ok(9500) uses=Some(3)
+percent|0|true|true|true|3|250000 => Ok(237500) uses=Some(3)
+percent|10|false|false|false|0|0 => Ok(0) uses=Some(1)
+percent|10|false|false|false|0|10000 => Ok(9000) uses=Some(1)
+percent|10|false|false|false|0|250000 => Ok(225000) uses=Some(1)
+percent|10|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+percent|10|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+percent|10|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+percent|10|false|false|true|0|0 => Ok(0) uses=None
+percent|10|false|false|true|0|10000 => Ok(9000) uses=None
+percent|10|false|false|true|0|250000 => Ok(225000) uses=None
+percent|10|false|false|true|3|0 => Ok(0) uses=Some(3)
+percent|10|false|false|true|3|10000 => Ok(9000) uses=Some(3)
+percent|10|false|false|true|3|250000 => Ok(225000) uses=Some(3)
+percent|10|false|true|false|0|0 => Ok(0) uses=Some(1)
+percent|10|false|true|false|0|10000 => Ok(9000) uses=Some(1)
+percent|10|false|true|false|0|250000 => Ok(225000) uses=Some(1)
+percent|10|false|true|false|3|0 => Ok(0) uses=Some(4)
+percent|10|false|true|false|3|10000 => Ok(9000) uses=Some(4)
+percent|10|false|true|false|3|250000 => Ok(225000) uses=Some(4)
+percent|10|false|true|true|0|0 => Ok(0) uses=None
+percent|10|false|true|true|0|10000 => Ok(9000) uses=None
+percent|10|false|true|true|0|250000 => Ok(225000) uses=None
+percent|10|false|true|true|3|0 => Ok(0) uses=Some(3)
+percent|10|false|true|true|3|10000 => Ok(9000) uses=Some(3)
+percent|10|false|true|true|3|250000 => Ok(225000) uses=Some(3)
+percent|10|true|false|false|0|0 => Ok(0) uses=Some(1)
+percent|10|true|false|false|0|10000 => Ok(8500) uses=Some(1)
+percent|10|true|false|false|0|250000 => Ok(212500) uses=Some(1)
+percent|10|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+percent|10|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+percent|10|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+percent|10|true|false|true|0|0 => Ok(0) uses=None
+percent|10|true|false|true|0|10000 => Ok(8500) uses=None
+percent|10|true|false|true|0|250000 => Ok(212500) uses=None
+percent|10|true|false|true|3|0 => Ok(0) uses=Some(3)
+percent|10|true|false|true|3|10000 => Ok(8500) uses=Some(3)
+percent|10|true|false|true|3|250000 => Ok(212500) uses=Some(3)
+percent|10|true|true|false|0|0 => Ok(0) uses=Some(1)
+percent|10|true|true|false|0|10000 => Ok(8500) uses=Some(1)
+percent|10|true|true|false|0|250000 => Ok(212500) uses=Some(1)
+percent|10|true|true|false|3|0 => Ok(0) uses=Some(4)
+percent|10|true|true|false|3|10000 => Ok(8500) uses=Some(4)
+percent|10|true|true|false|3|250000 => Ok(212500) uses=Some(4)
+percent|10|true|true|true|0|0 => Ok(0) uses=None
+percent|10|true|true|true|0|10000 => Ok(8500) uses=None
+percent|10|true|true|true|0|250000 => Ok(212500) uses=None
+percent|10|true|true|true|3|0 => Ok(0) uses=Some(3)
+percent|10|true|true|true|3|10000 => Ok(8500) uses=Some(3)
+percent|10|true|true|true|3|250000 => Ok(212500) uses=Some(3)
+percent|50|false|false|false|0|0 => Ok(0) uses=Some(1)
+percent|50|false|false|false|0|10000 => Ok(5000) uses=Some(1)
+percent|50|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+percent|50|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+percent|50|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+percent|50|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+percent|50|false|false|true|0|0 => Ok(0) uses=None
+percent|50|false|false|true|0|10000 => Ok(5000) uses=None
+percent|50|false|false|true|0|250000 => Ok(200000) uses=None
+percent|50|false|false|true|3|0 => Ok(0) uses=Some(3)
+percent|50|false|false|true|3|10000 => Ok(5000) uses=Some(3)
+percent|50|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+percent|50|false|true|false|0|0 => Ok(0) uses=Some(1)
+percent|50|false|true|false|0|10000 => Ok(5000) uses=Some(1)
+percent|50|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+percent|50|false|true|false|3|0 => Ok(0) uses=Some(4)
+percent|50|false|true|false|3|10000 => Ok(5000) uses=Some(4)
+percent|50|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+percent|50|false|true|true|0|0 => Ok(0) uses=None
+percent|50|false|true|true|0|10000 => Ok(5000) uses=None
+percent|50|false|true|true|0|250000 => Ok(200000) uses=None
+percent|50|false|true|true|3|0 => Ok(0) uses=Some(3)
+percent|50|false|true|true|3|10000 => Ok(5000) uses=Some(3)
+percent|50|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+percent|50|true|false|false|0|0 => Ok(0) uses=Some(1)
+percent|50|true|false|false|0|10000 => Ok(4500) uses=Some(1)
+percent|50|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+percent|50|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+percent|50|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+percent|50|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+percent|50|true|false|true|0|0 => Ok(0) uses=None
+percent|50|true|false|true|0|10000 => Ok(4500) uses=None
+percent|50|true|false|true|0|250000 => Ok(200000) uses=None
+percent|50|true|false|true|3|0 => Ok(0) uses=Some(3)
+percent|50|true|false|true|3|10000 => Ok(4500) uses=Some(3)
+percent|50|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+percent|50|true|true|false|0|0 => Ok(0) uses=Some(1)
+percent|50|true|true|false|0|10000 => Ok(4500) uses=Some(1)
+percent|50|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+percent|50|true|true|false|3|0 => Ok(0) uses=Some(4)
+percent|50|true|true|false|3|10000 => Ok(4500) uses=Some(4)
+percent|50|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+percent|50|true|true|true|0|0 => Ok(0) uses=None
+percent|50|true|true|true|0|10000 => Ok(4500) uses=None
+percent|50|true|true|true|0|250000 => Ok(200000) uses=None
+percent|50|true|true|true|3|0 => Ok(0) uses=Some(3)
+percent|50|true|true|true|3|10000 => Ok(4500) uses=Some(3)
+percent|50|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+percent|101|false|false|false|0|0 => Err("bad percent: 101") uses=None
+percent|101|false|false|false|0|10000 => Err("bad percent: 101") uses=None
+percent|101|false|false|false|0|250000 => Err("bad percent: 101") uses=None
+percent|101|false|false|false|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|false|false|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|false|false|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|false|true|0|0 => Err("bad percent: 101") uses=None
+percent|101|false|false|true|0|10000 => Err("bad percent: 101") uses=None
+percent|101|false|false|true|0|250000 => Err("bad percent: 101") uses=None
+percent|101|false|false|true|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|false|true|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|false|true|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|true|false|0|0 => Err("bad percent: 101") uses=None
+percent|101|false|true|false|0|10000 => Err("bad percent: 101") uses=None
+percent|101|false|true|false|0|250000 => Err("bad percent: 101") uses=None
+percent|101|false|true|false|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|true|false|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|true|false|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|true|true|0|0 => Err("bad percent: 101") uses=None
+percent|101|false|true|true|0|10000 => Err("bad percent: 101") uses=None
+percent|101|false|true|true|0|250000 => Err("bad percent: 101") uses=None
+percent|101|false|true|true|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|true|true|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|false|true|true|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|false|false|0|0 => Err("bad percent: 101") uses=None
+percent|101|true|false|false|0|10000 => Err("bad percent: 101") uses=None
+percent|101|true|false|false|0|250000 => Err("bad percent: 101") uses=None
+percent|101|true|false|false|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|false|false|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|false|false|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|false|true|0|0 => Err("bad percent: 101") uses=None
+percent|101|true|false|true|0|10000 => Err("bad percent: 101") uses=None
+percent|101|true|false|true|0|250000 => Err("bad percent: 101") uses=None
+percent|101|true|false|true|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|false|true|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|false|true|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|true|false|0|0 => Err("bad percent: 101") uses=None
+percent|101|true|true|false|0|10000 => Err("bad percent: 101") uses=None
+percent|101|true|true|false|0|250000 => Err("bad percent: 101") uses=None
+percent|101|true|true|false|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|true|false|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|true|false|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|true|true|0|0 => Err("bad percent: 101") uses=None
+percent|101|true|true|true|0|10000 => Err("bad percent: 101") uses=None
+percent|101|true|true|true|0|250000 => Err("bad percent: 101") uses=None
+percent|101|true|true|true|3|0 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|true|true|3|10000 => Err("bad percent: 101") uses=Some(3)
+percent|101|true|true|true|3|250000 => Err("bad percent: 101") uses=Some(3)
+percent|700|false|false|false|0|0 => Err("bad percent: 700") uses=None
+percent|700|false|false|false|0|10000 => Err("bad percent: 700") uses=None
+percent|700|false|false|false|0|250000 => Err("bad percent: 700") uses=None
+percent|700|false|false|false|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|false|false|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|false|false|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|false|true|0|0 => Err("bad percent: 700") uses=None
+percent|700|false|false|true|0|10000 => Err("bad percent: 700") uses=None
+percent|700|false|false|true|0|250000 => Err("bad percent: 700") uses=None
+percent|700|false|false|true|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|false|true|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|false|true|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|true|false|0|0 => Err("bad percent: 700") uses=None
+percent|700|false|true|false|0|10000 => Err("bad percent: 700") uses=None
+percent|700|false|true|false|0|250000 => Err("bad percent: 700") uses=None
+percent|700|false|true|false|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|true|false|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|true|false|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|true|true|0|0 => Err("bad percent: 700") uses=None
+percent|700|false|true|true|0|10000 => Err("bad percent: 700") uses=None
+percent|700|false|true|true|0|250000 => Err("bad percent: 700") uses=None
+percent|700|false|true|true|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|true|true|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|false|true|true|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|false|false|0|0 => Err("bad percent: 700") uses=None
+percent|700|true|false|false|0|10000 => Err("bad percent: 700") uses=None
+percent|700|true|false|false|0|250000 => Err("bad percent: 700") uses=None
+percent|700|true|false|false|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|false|false|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|false|false|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|false|true|0|0 => Err("bad percent: 700") uses=None
+percent|700|true|false|true|0|10000 => Err("bad percent: 700") uses=None
+percent|700|true|false|true|0|250000 => Err("bad percent: 700") uses=None
+percent|700|true|false|true|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|false|true|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|false|true|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|true|false|0|0 => Err("bad percent: 700") uses=None
+percent|700|true|true|false|0|10000 => Err("bad percent: 700") uses=None
+percent|700|true|true|false|0|250000 => Err("bad percent: 700") uses=None
+percent|700|true|true|false|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|true|false|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|true|false|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|true|true|0|0 => Err("bad percent: 700") uses=None
+percent|700|true|true|true|0|10000 => Err("bad percent: 700") uses=None
+percent|700|true|true|true|0|250000 => Err("bad percent: 700") uses=None
+percent|700|true|true|true|3|0 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|true|true|3|10000 => Err("bad percent: 700") uses=Some(3)
+percent|700|true|true|true|3|250000 => Err("bad percent: 700") uses=Some(3)
+percent|60000|false|false|false|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|false|false|false|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|false|false|false|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|false|false|false|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|false|false|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|false|false|3|250000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|false|true|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|false|false|true|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|false|false|true|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|false|false|true|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|false|true|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|false|true|3|250000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|true|false|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|false|true|false|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|false|true|false|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|false|true|false|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|true|false|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|true|false|3|250000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|true|true|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|false|true|true|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|false|true|true|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|false|true|true|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|true|true|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|false|true|true|3|250000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|false|false|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|true|false|false|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|true|false|false|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|true|false|false|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|false|false|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|false|false|3|250000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|false|true|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|true|false|true|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|true|false|true|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|true|false|true|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|false|true|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|false|true|3|250000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|true|false|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|true|true|false|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|true|true|false|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|true|true|false|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|true|false|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|true|false|3|250000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|true|true|0|0 => Err("bad percent: 60000") uses=None
+percent|60000|true|true|true|0|10000 => Err("bad percent: 60000") uses=None
+percent|60000|true|true|true|0|250000 => Err("bad percent: 60000") uses=None
+percent|60000|true|true|true|3|0 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|true|true|3|10000 => Err("bad percent: 60000") uses=Some(3)
+percent|60000|true|true|true|3|250000 => Err("bad percent: 60000") uses=Some(3)
+fixed|0|false|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|0|false|false|false|0|10000 => Ok(10000) uses=Some(1)
+fixed|0|false|false|false|0|250000 => Ok(250000) uses=Some(1)
+fixed|0|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|0|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|0|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|0|false|false|true|0|0 => Ok(0) uses=None
+fixed|0|false|false|true|0|10000 => Ok(10000) uses=None
+fixed|0|false|false|true|0|250000 => Ok(250000) uses=None
+fixed|0|false|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|0|false|false|true|3|10000 => Ok(10000) uses=Some(3)
+fixed|0|false|false|true|3|250000 => Ok(250000) uses=Some(3)
+fixed|0|false|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|0|false|true|false|0|10000 => Ok(10000) uses=Some(1)
+fixed|0|false|true|false|0|250000 => Ok(250000) uses=Some(1)
+fixed|0|false|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|0|false|true|false|3|10000 => Ok(10000) uses=Some(4)
+fixed|0|false|true|false|3|250000 => Ok(250000) uses=Some(4)
+fixed|0|false|true|true|0|0 => Ok(0) uses=None
+fixed|0|false|true|true|0|10000 => Ok(10000) uses=None
+fixed|0|false|true|true|0|250000 => Ok(250000) uses=None
+fixed|0|false|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|0|false|true|true|3|10000 => Ok(10000) uses=Some(3)
+fixed|0|false|true|true|3|250000 => Ok(250000) uses=Some(3)
+fixed|0|true|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|0|true|false|false|0|10000 => Ok(9500) uses=Some(1)
+fixed|0|true|false|false|0|250000 => Ok(249500) uses=Some(1)
+fixed|0|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|0|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|0|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|0|true|false|true|0|0 => Ok(0) uses=None
+fixed|0|true|false|true|0|10000 => Ok(9500) uses=None
+fixed|0|true|false|true|0|250000 => Ok(249500) uses=None
+fixed|0|true|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|0|true|false|true|3|10000 => Ok(9500) uses=Some(3)
+fixed|0|true|false|true|3|250000 => Ok(249500) uses=Some(3)
+fixed|0|true|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|0|true|true|false|0|10000 => Ok(9500) uses=Some(1)
+fixed|0|true|true|false|0|250000 => Ok(249500) uses=Some(1)
+fixed|0|true|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|0|true|true|false|3|10000 => Ok(9500) uses=Some(4)
+fixed|0|true|true|false|3|250000 => Ok(249500) uses=Some(4)
+fixed|0|true|true|true|0|0 => Ok(0) uses=None
+fixed|0|true|true|true|0|10000 => Ok(9500) uses=None
+fixed|0|true|true|true|0|250000 => Ok(249500) uses=None
+fixed|0|true|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|0|true|true|true|3|10000 => Ok(9500) uses=Some(3)
+fixed|0|true|true|true|3|250000 => Ok(249500) uses=Some(3)
+fixed|10|false|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|10|false|false|false|0|10000 => Ok(9990) uses=Some(1)
+fixed|10|false|false|false|0|250000 => Ok(249990) uses=Some(1)
+fixed|10|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|10|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|10|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|10|false|false|true|0|0 => Ok(0) uses=None
+fixed|10|false|false|true|0|10000 => Ok(9990) uses=None
+fixed|10|false|false|true|0|250000 => Ok(249990) uses=None
+fixed|10|false|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|10|false|false|true|3|10000 => Ok(9990) uses=Some(3)
+fixed|10|false|false|true|3|250000 => Ok(249990) uses=Some(3)
+fixed|10|false|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|10|false|true|false|0|10000 => Ok(9990) uses=Some(1)
+fixed|10|false|true|false|0|250000 => Ok(249990) uses=Some(1)
+fixed|10|false|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|10|false|true|false|3|10000 => Ok(9990) uses=Some(4)
+fixed|10|false|true|false|3|250000 => Ok(249990) uses=Some(4)
+fixed|10|false|true|true|0|0 => Ok(0) uses=None
+fixed|10|false|true|true|0|10000 => Ok(9990) uses=None
+fixed|10|false|true|true|0|250000 => Ok(249990) uses=None
+fixed|10|false|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|10|false|true|true|3|10000 => Ok(9990) uses=Some(3)
+fixed|10|false|true|true|3|250000 => Ok(249990) uses=Some(3)
+fixed|10|true|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|10|true|false|false|0|10000 => Ok(9490) uses=Some(1)
+fixed|10|true|false|false|0|250000 => Ok(249490) uses=Some(1)
+fixed|10|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|10|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|10|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|10|true|false|true|0|0 => Ok(0) uses=None
+fixed|10|true|false|true|0|10000 => Ok(9490) uses=None
+fixed|10|true|false|true|0|250000 => Ok(249490) uses=None
+fixed|10|true|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|10|true|false|true|3|10000 => Ok(9490) uses=Some(3)
+fixed|10|true|false|true|3|250000 => Ok(249490) uses=Some(3)
+fixed|10|true|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|10|true|true|false|0|10000 => Ok(9490) uses=Some(1)
+fixed|10|true|true|false|0|250000 => Ok(249490) uses=Some(1)
+fixed|10|true|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|10|true|true|false|3|10000 => Ok(9490) uses=Some(4)
+fixed|10|true|true|false|3|250000 => Ok(249490) uses=Some(4)
+fixed|10|true|true|true|0|0 => Ok(0) uses=None
+fixed|10|true|true|true|0|10000 => Ok(9490) uses=None
+fixed|10|true|true|true|0|250000 => Ok(249490) uses=None
+fixed|10|true|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|10|true|true|true|3|10000 => Ok(9490) uses=Some(3)
+fixed|10|true|true|true|3|250000 => Ok(249490) uses=Some(3)
+fixed|50|false|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|50|false|false|false|0|10000 => Ok(9950) uses=Some(1)
+fixed|50|false|false|false|0|250000 => Ok(249950) uses=Some(1)
+fixed|50|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|50|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|50|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|50|false|false|true|0|0 => Ok(0) uses=None
+fixed|50|false|false|true|0|10000 => Ok(9950) uses=None
+fixed|50|false|false|true|0|250000 => Ok(249950) uses=None
+fixed|50|false|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|50|false|false|true|3|10000 => Ok(9950) uses=Some(3)
+fixed|50|false|false|true|3|250000 => Ok(249950) uses=Some(3)
+fixed|50|false|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|50|false|true|false|0|10000 => Ok(9950) uses=Some(1)
+fixed|50|false|true|false|0|250000 => Ok(249950) uses=Some(1)
+fixed|50|false|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|50|false|true|false|3|10000 => Ok(9950) uses=Some(4)
+fixed|50|false|true|false|3|250000 => Ok(249950) uses=Some(4)
+fixed|50|false|true|true|0|0 => Ok(0) uses=None
+fixed|50|false|true|true|0|10000 => Ok(9950) uses=None
+fixed|50|false|true|true|0|250000 => Ok(249950) uses=None
+fixed|50|false|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|50|false|true|true|3|10000 => Ok(9950) uses=Some(3)
+fixed|50|false|true|true|3|250000 => Ok(249950) uses=Some(3)
+fixed|50|true|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|50|true|false|false|0|10000 => Ok(9450) uses=Some(1)
+fixed|50|true|false|false|0|250000 => Ok(249450) uses=Some(1)
+fixed|50|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|50|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|50|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|50|true|false|true|0|0 => Ok(0) uses=None
+fixed|50|true|false|true|0|10000 => Ok(9450) uses=None
+fixed|50|true|false|true|0|250000 => Ok(249450) uses=None
+fixed|50|true|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|50|true|false|true|3|10000 => Ok(9450) uses=Some(3)
+fixed|50|true|false|true|3|250000 => Ok(249450) uses=Some(3)
+fixed|50|true|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|50|true|true|false|0|10000 => Ok(9450) uses=Some(1)
+fixed|50|true|true|false|0|250000 => Ok(249450) uses=Some(1)
+fixed|50|true|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|50|true|true|false|3|10000 => Ok(9450) uses=Some(4)
+fixed|50|true|true|false|3|250000 => Ok(249450) uses=Some(4)
+fixed|50|true|true|true|0|0 => Ok(0) uses=None
+fixed|50|true|true|true|0|10000 => Ok(9450) uses=None
+fixed|50|true|true|true|0|250000 => Ok(249450) uses=None
+fixed|50|true|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|50|true|true|true|3|10000 => Ok(9450) uses=Some(3)
+fixed|50|true|true|true|3|250000 => Ok(249450) uses=Some(3)
+fixed|101|false|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|101|false|false|false|0|10000 => Ok(9899) uses=Some(1)
+fixed|101|false|false|false|0|250000 => Ok(249899) uses=Some(1)
+fixed|101|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|101|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|101|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|101|false|false|true|0|0 => Ok(0) uses=None
+fixed|101|false|false|true|0|10000 => Ok(9899) uses=None
+fixed|101|false|false|true|0|250000 => Ok(249899) uses=None
+fixed|101|false|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|101|false|false|true|3|10000 => Ok(9899) uses=Some(3)
+fixed|101|false|false|true|3|250000 => Ok(249899) uses=Some(3)
+fixed|101|false|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|101|false|true|false|0|10000 => Ok(9899) uses=Some(1)
+fixed|101|false|true|false|0|250000 => Ok(249899) uses=Some(1)
+fixed|101|false|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|101|false|true|false|3|10000 => Ok(9899) uses=Some(4)
+fixed|101|false|true|false|3|250000 => Ok(249899) uses=Some(4)
+fixed|101|false|true|true|0|0 => Ok(0) uses=None
+fixed|101|false|true|true|0|10000 => Ok(9899) uses=None
+fixed|101|false|true|true|0|250000 => Ok(249899) uses=None
+fixed|101|false|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|101|false|true|true|3|10000 => Ok(9899) uses=Some(3)
+fixed|101|false|true|true|3|250000 => Ok(249899) uses=Some(3)
+fixed|101|true|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|101|true|false|false|0|10000 => Ok(9399) uses=Some(1)
+fixed|101|true|false|false|0|250000 => Ok(249399) uses=Some(1)
+fixed|101|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|101|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|101|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|101|true|false|true|0|0 => Ok(0) uses=None
+fixed|101|true|false|true|0|10000 => Ok(9399) uses=None
+fixed|101|true|false|true|0|250000 => Ok(249399) uses=None
+fixed|101|true|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|101|true|false|true|3|10000 => Ok(9399) uses=Some(3)
+fixed|101|true|false|true|3|250000 => Ok(249399) uses=Some(3)
+fixed|101|true|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|101|true|true|false|0|10000 => Ok(9399) uses=Some(1)
+fixed|101|true|true|false|0|250000 => Ok(249399) uses=Some(1)
+fixed|101|true|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|101|true|true|false|3|10000 => Ok(9399) uses=Some(4)
+fixed|101|true|true|false|3|250000 => Ok(249399) uses=Some(4)
+fixed|101|true|true|true|0|0 => Ok(0) uses=None
+fixed|101|true|true|true|0|10000 => Ok(9399) uses=None
+fixed|101|true|true|true|0|250000 => Ok(249399) uses=None
+fixed|101|true|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|101|true|true|true|3|10000 => Ok(9399) uses=Some(3)
+fixed|101|true|true|true|3|250000 => Ok(249399) uses=Some(3)
+fixed|700|false|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|700|false|false|false|0|10000 => Ok(9300) uses=Some(1)
+fixed|700|false|false|false|0|250000 => Ok(249300) uses=Some(1)
+fixed|700|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|700|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|700|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|700|false|false|true|0|0 => Ok(0) uses=None
+fixed|700|false|false|true|0|10000 => Ok(9300) uses=None
+fixed|700|false|false|true|0|250000 => Ok(249300) uses=None
+fixed|700|false|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|700|false|false|true|3|10000 => Ok(9300) uses=Some(3)
+fixed|700|false|false|true|3|250000 => Ok(249300) uses=Some(3)
+fixed|700|false|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|700|false|true|false|0|10000 => Ok(9300) uses=Some(1)
+fixed|700|false|true|false|0|250000 => Ok(249300) uses=Some(1)
+fixed|700|false|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|700|false|true|false|3|10000 => Ok(9300) uses=Some(4)
+fixed|700|false|true|false|3|250000 => Ok(249300) uses=Some(4)
+fixed|700|false|true|true|0|0 => Ok(0) uses=None
+fixed|700|false|true|true|0|10000 => Ok(9300) uses=None
+fixed|700|false|true|true|0|250000 => Ok(249300) uses=None
+fixed|700|false|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|700|false|true|true|3|10000 => Ok(9300) uses=Some(3)
+fixed|700|false|true|true|3|250000 => Ok(249300) uses=Some(3)
+fixed|700|true|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|700|true|false|false|0|10000 => Ok(8800) uses=Some(1)
+fixed|700|true|false|false|0|250000 => Ok(248800) uses=Some(1)
+fixed|700|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|700|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|700|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|700|true|false|true|0|0 => Ok(0) uses=None
+fixed|700|true|false|true|0|10000 => Ok(8800) uses=None
+fixed|700|true|false|true|0|250000 => Ok(248800) uses=None
+fixed|700|true|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|700|true|false|true|3|10000 => Ok(8800) uses=Some(3)
+fixed|700|true|false|true|3|250000 => Ok(248800) uses=Some(3)
+fixed|700|true|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|700|true|true|false|0|10000 => Ok(8800) uses=Some(1)
+fixed|700|true|true|false|0|250000 => Ok(248800) uses=Some(1)
+fixed|700|true|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|700|true|true|false|3|10000 => Ok(8800) uses=Some(4)
+fixed|700|true|true|false|3|250000 => Ok(248800) uses=Some(4)
+fixed|700|true|true|true|0|0 => Ok(0) uses=None
+fixed|700|true|true|true|0|10000 => Ok(8800) uses=None
+fixed|700|true|true|true|0|250000 => Ok(248800) uses=None
+fixed|700|true|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|700|true|true|true|3|10000 => Ok(8800) uses=Some(3)
+fixed|700|true|true|true|3|250000 => Ok(248800) uses=Some(3)
+fixed|60000|false|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|60000|false|false|false|0|10000 => Ok(0) uses=Some(1)
+fixed|60000|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+fixed|60000|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|60000|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|60000|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|60000|false|false|true|0|0 => Ok(0) uses=None
+fixed|60000|false|false|true|0|10000 => Ok(0) uses=None
+fixed|60000|false|false|true|0|250000 => Ok(200000) uses=None
+fixed|60000|false|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|60000|false|false|true|3|10000 => Ok(0) uses=Some(3)
+fixed|60000|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+fixed|60000|false|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|60000|false|true|false|0|10000 => Ok(0) uses=Some(1)
+fixed|60000|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+fixed|60000|false|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|60000|false|true|false|3|10000 => Ok(0) uses=Some(4)
+fixed|60000|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+fixed|60000|false|true|true|0|0 => Ok(0) uses=None
+fixed|60000|false|true|true|0|10000 => Ok(0) uses=None
+fixed|60000|false|true|true|0|250000 => Ok(200000) uses=None
+fixed|60000|false|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|60000|false|true|true|3|10000 => Ok(0) uses=Some(3)
+fixed|60000|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+fixed|60000|true|false|false|0|0 => Ok(0) uses=Some(1)
+fixed|60000|true|false|false|0|10000 => Ok(0) uses=Some(1)
+fixed|60000|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+fixed|60000|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+fixed|60000|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+fixed|60000|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+fixed|60000|true|false|true|0|0 => Ok(0) uses=None
+fixed|60000|true|false|true|0|10000 => Ok(0) uses=None
+fixed|60000|true|false|true|0|250000 => Ok(200000) uses=None
+fixed|60000|true|false|true|3|0 => Ok(0) uses=Some(3)
+fixed|60000|true|false|true|3|10000 => Ok(0) uses=Some(3)
+fixed|60000|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+fixed|60000|true|true|false|0|0 => Ok(0) uses=Some(1)
+fixed|60000|true|true|false|0|10000 => Ok(0) uses=Some(1)
+fixed|60000|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+fixed|60000|true|true|false|3|0 => Ok(0) uses=Some(4)
+fixed|60000|true|true|false|3|10000 => Ok(0) uses=Some(4)
+fixed|60000|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+fixed|60000|true|true|true|0|0 => Ok(0) uses=None
+fixed|60000|true|true|true|0|10000 => Ok(0) uses=None
+fixed|60000|true|true|true|0|250000 => Ok(200000) uses=None
+fixed|60000|true|true|true|3|0 => Ok(0) uses=Some(3)
+fixed|60000|true|true|true|3|10000 => Ok(0) uses=Some(3)
+fixed|60000|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|0|false|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|0|false|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|0|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|0|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|0|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|0|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|0|false|false|true|0|0 => Ok(0) uses=None
+bogo|0|false|false|true|0|10000 => Ok(0) uses=None
+bogo|0|false|false|true|0|250000 => Ok(200000) uses=None
+bogo|0|false|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|0|false|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|0|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|0|false|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|0|false|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|0|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|0|false|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|0|false|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|0|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|0|false|true|true|0|0 => Ok(0) uses=None
+bogo|0|false|true|true|0|10000 => Ok(0) uses=None
+bogo|0|false|true|true|0|250000 => Ok(200000) uses=None
+bogo|0|false|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|0|false|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|0|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|0|true|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|0|true|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|0|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|0|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|0|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|0|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|0|true|false|true|0|0 => Ok(0) uses=None
+bogo|0|true|false|true|0|10000 => Ok(0) uses=None
+bogo|0|true|false|true|0|250000 => Ok(200000) uses=None
+bogo|0|true|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|0|true|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|0|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|0|true|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|0|true|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|0|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|0|true|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|0|true|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|0|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|0|true|true|true|0|0 => Ok(0) uses=None
+bogo|0|true|true|true|0|10000 => Ok(0) uses=None
+bogo|0|true|true|true|0|250000 => Ok(200000) uses=None
+bogo|0|true|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|0|true|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|0|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|10|false|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|10|false|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|10|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|10|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|10|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|10|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|10|false|false|true|0|0 => Ok(0) uses=None
+bogo|10|false|false|true|0|10000 => Ok(0) uses=None
+bogo|10|false|false|true|0|250000 => Ok(200000) uses=None
+bogo|10|false|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|10|false|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|10|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|10|false|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|10|false|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|10|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|10|false|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|10|false|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|10|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|10|false|true|true|0|0 => Ok(0) uses=None
+bogo|10|false|true|true|0|10000 => Ok(0) uses=None
+bogo|10|false|true|true|0|250000 => Ok(200000) uses=None
+bogo|10|false|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|10|false|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|10|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|10|true|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|10|true|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|10|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|10|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|10|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|10|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|10|true|false|true|0|0 => Ok(0) uses=None
+bogo|10|true|false|true|0|10000 => Ok(0) uses=None
+bogo|10|true|false|true|0|250000 => Ok(200000) uses=None
+bogo|10|true|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|10|true|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|10|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|10|true|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|10|true|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|10|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|10|true|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|10|true|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|10|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|10|true|true|true|0|0 => Ok(0) uses=None
+bogo|10|true|true|true|0|10000 => Ok(0) uses=None
+bogo|10|true|true|true|0|250000 => Ok(200000) uses=None
+bogo|10|true|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|10|true|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|10|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|50|false|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|50|false|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|50|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|50|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|50|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|50|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|50|false|false|true|0|0 => Ok(0) uses=None
+bogo|50|false|false|true|0|10000 => Ok(0) uses=None
+bogo|50|false|false|true|0|250000 => Ok(200000) uses=None
+bogo|50|false|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|50|false|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|50|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|50|false|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|50|false|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|50|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|50|false|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|50|false|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|50|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|50|false|true|true|0|0 => Ok(0) uses=None
+bogo|50|false|true|true|0|10000 => Ok(0) uses=None
+bogo|50|false|true|true|0|250000 => Ok(200000) uses=None
+bogo|50|false|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|50|false|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|50|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|50|true|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|50|true|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|50|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|50|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|50|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|50|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|50|true|false|true|0|0 => Ok(0) uses=None
+bogo|50|true|false|true|0|10000 => Ok(0) uses=None
+bogo|50|true|false|true|0|250000 => Ok(200000) uses=None
+bogo|50|true|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|50|true|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|50|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|50|true|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|50|true|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|50|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|50|true|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|50|true|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|50|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|50|true|true|true|0|0 => Ok(0) uses=None
+bogo|50|true|true|true|0|10000 => Ok(0) uses=None
+bogo|50|true|true|true|0|250000 => Ok(200000) uses=None
+bogo|50|true|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|50|true|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|50|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|101|false|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|101|false|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|101|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|101|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|101|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|101|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|101|false|false|true|0|0 => Ok(0) uses=None
+bogo|101|false|false|true|0|10000 => Ok(0) uses=None
+bogo|101|false|false|true|0|250000 => Ok(200000) uses=None
+bogo|101|false|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|101|false|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|101|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|101|false|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|101|false|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|101|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|101|false|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|101|false|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|101|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|101|false|true|true|0|0 => Ok(0) uses=None
+bogo|101|false|true|true|0|10000 => Ok(0) uses=None
+bogo|101|false|true|true|0|250000 => Ok(200000) uses=None
+bogo|101|false|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|101|false|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|101|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|101|true|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|101|true|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|101|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|101|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|101|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|101|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|101|true|false|true|0|0 => Ok(0) uses=None
+bogo|101|true|false|true|0|10000 => Ok(0) uses=None
+bogo|101|true|false|true|0|250000 => Ok(200000) uses=None
+bogo|101|true|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|101|true|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|101|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|101|true|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|101|true|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|101|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|101|true|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|101|true|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|101|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|101|true|true|true|0|0 => Ok(0) uses=None
+bogo|101|true|true|true|0|10000 => Ok(0) uses=None
+bogo|101|true|true|true|0|250000 => Ok(200000) uses=None
+bogo|101|true|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|101|true|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|101|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|700|false|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|700|false|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|700|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|700|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|700|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|700|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|700|false|false|true|0|0 => Ok(0) uses=None
+bogo|700|false|false|true|0|10000 => Ok(0) uses=None
+bogo|700|false|false|true|0|250000 => Ok(200000) uses=None
+bogo|700|false|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|700|false|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|700|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|700|false|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|700|false|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|700|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|700|false|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|700|false|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|700|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|700|false|true|true|0|0 => Ok(0) uses=None
+bogo|700|false|true|true|0|10000 => Ok(0) uses=None
+bogo|700|false|true|true|0|250000 => Ok(200000) uses=None
+bogo|700|false|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|700|false|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|700|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|700|true|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|700|true|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|700|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|700|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|700|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|700|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|700|true|false|true|0|0 => Ok(0) uses=None
+bogo|700|true|false|true|0|10000 => Ok(0) uses=None
+bogo|700|true|false|true|0|250000 => Ok(200000) uses=None
+bogo|700|true|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|700|true|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|700|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|700|true|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|700|true|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|700|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|700|true|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|700|true|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|700|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|700|true|true|true|0|0 => Ok(0) uses=None
+bogo|700|true|true|true|0|10000 => Ok(0) uses=None
+bogo|700|true|true|true|0|250000 => Ok(200000) uses=None
+bogo|700|true|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|700|true|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|700|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|60000|false|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|60000|false|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|60000|false|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|60000|false|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|60000|false|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|60000|false|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|60000|false|false|true|0|0 => Ok(0) uses=None
+bogo|60000|false|false|true|0|10000 => Ok(0) uses=None
+bogo|60000|false|false|true|0|250000 => Ok(200000) uses=None
+bogo|60000|false|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|60000|false|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|60000|false|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|60000|false|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|60000|false|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|60000|false|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|60000|false|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|60000|false|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|60000|false|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|60000|false|true|true|0|0 => Ok(0) uses=None
+bogo|60000|false|true|true|0|10000 => Ok(0) uses=None
+bogo|60000|false|true|true|0|250000 => Ok(200000) uses=None
+bogo|60000|false|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|60000|false|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|60000|false|true|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|60000|true|false|false|0|0 => Ok(0) uses=Some(1)
+bogo|60000|true|false|false|0|10000 => Ok(0) uses=Some(1)
+bogo|60000|true|false|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|60000|true|false|false|3|0 => Err("coupon C exhausted") uses=Some(3)
+bogo|60000|true|false|false|3|10000 => Err("coupon C exhausted") uses=Some(3)
+bogo|60000|true|false|false|3|250000 => Err("coupon C exhausted") uses=Some(3)
+bogo|60000|true|false|true|0|0 => Ok(0) uses=None
+bogo|60000|true|false|true|0|10000 => Ok(0) uses=None
+bogo|60000|true|false|true|0|250000 => Ok(200000) uses=None
+bogo|60000|true|false|true|3|0 => Ok(0) uses=Some(3)
+bogo|60000|true|false|true|3|10000 => Ok(0) uses=Some(3)
+bogo|60000|true|false|true|3|250000 => Ok(200000) uses=Some(3)
+bogo|60000|true|true|false|0|0 => Ok(0) uses=Some(1)
+bogo|60000|true|true|false|0|10000 => Ok(0) uses=Some(1)
+bogo|60000|true|true|false|0|250000 => Ok(200000) uses=Some(1)
+bogo|60000|true|true|false|3|0 => Ok(0) uses=Some(4)
+bogo|60000|true|true|false|3|10000 => Ok(0) uses=Some(4)
+bogo|60000|true|true|false|3|250000 => Ok(200000) uses=Some(4)
+bogo|60000|true|true|true|0|0 => Ok(0) uses=None
+bogo|60000|true|true|true|0|10000 => Ok(0) uses=None
+bogo|60000|true|true|true|0|250000 => Ok(200000) uses=None
+bogo|60000|true|true|true|3|0 => Ok(0) uses=Some(3)
+bogo|60000|true|true|true|3|10000 => Ok(0) uses=Some(3)
+bogo|60000|true|true|true|3|250000 => Ok(200000) uses=Some(3)
+weird|0|false|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|0|false|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|false|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|false|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|0|false|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|false|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|false|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|0|false|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|false|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|false|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|0|false|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|false|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|false|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|false|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|0|true|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|true|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|true|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|0|true|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|true|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|true|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|0|true|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|true|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|true|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|0|true|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|0|true|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|0|true|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|0|true|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|10|false|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|false|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|false|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|10|false|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|false|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|false|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|10|false|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|false|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|false|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|10|false|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|false|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|false|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|false|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|10|true|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|true|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|true|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|10|true|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|true|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|true|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|10|true|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|true|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|true|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|10|true|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|10|true|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|10|true|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|10|true|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|50|false|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|false|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|false|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|50|false|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|false|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|false|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|50|false|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|false|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|false|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|50|false|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|false|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|false|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|false|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|50|true|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|true|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|true|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|50|true|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|true|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|true|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|50|true|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|true|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|true|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|50|true|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|50|true|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|50|true|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|50|true|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|101|false|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|false|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|false|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|101|false|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|false|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|false|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|101|false|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|false|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|false|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|101|false|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|false|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|false|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|false|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|101|true|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|true|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|true|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|101|true|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|true|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|true|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|101|true|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|true|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|true|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|101|true|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|101|true|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|101|true|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|101|true|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|700|false|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|false|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|false|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|700|false|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|false|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|false|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|700|false|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|false|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|false|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|700|false|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|false|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|false|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|false|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|700|true|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|true|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|true|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|700|true|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|true|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|true|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|700|true|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|true|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|true|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|700|true|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|700|true|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|700|true|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|700|true|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|false|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|false|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|false|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|false|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|false|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|false|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|false|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|false|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|false|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|false|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|false|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|false|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|false|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|false|false|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|true|false|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|true|false|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|true|false|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|false|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|false|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|false|true|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|true|false|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|true|false|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|true|false|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|false|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|false|true|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|true|false|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|true|true|false|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|true|true|false|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|true|true|false|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|true|false|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|true|false|3|250000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|true|true|0|0 => Err("unknown kind: weird") uses=None
+weird|60000|true|true|true|0|10000 => Err("unknown kind: weird") uses=None
+weird|60000|true|true|true|0|250000 => Err("unknown kind: weird") uses=None
+weird|60000|true|true|true|3|0 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|true|true|3|10000 => Err("unknown kind: weird") uses=Some(3)
+weird|60000|true|true|true|3|250000 => Err("unknown kind: weird") uses=Some(3)

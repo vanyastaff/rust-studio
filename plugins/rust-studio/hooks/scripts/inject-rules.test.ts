@@ -8,7 +8,7 @@
 // rather than quietly disarming the injector.
 
 import { test, expect, describe } from "bun:test";
-import { applyPatchTargets, pathMatches, untrustedSource } from "./inject-rules.ts";
+import { applyPatchTargets, markerName, pathMatches, untrustedSource } from "./inject-rules.ts";
 
 const ADD = `*** Begin Patch
 *** Add File: /repo/crates/storage/src/domain/credential.rs
@@ -128,6 +128,45 @@ describe("announces each standard once per session, re-arming on compaction", ()
     const b = `test-iso-b-${Math.random().toString(36).slice(2)}`;
     expect(edit(a, "/r/src/lib.rs")).toContain("core");
     expect(edit(b, "/r/src/lib.rs")).toContain("core");
+  });
+
+  // A sub-agent starts from an empty window. The orchestrator having read core.md tells
+  // the builder nothing — and the builder is the one agent that writes source. Claude Code
+  // stamps `agent_id` on every hook payload a sub-agent's tool call produces (absent on the
+  // main thread), so that is the context key.
+  const editAs = (session: string, agent: string | undefined, file: string) => {
+    const r = Bun.spawnSync(["bun", HOOK], {
+      stdin: Buffer.from(
+        JSON.stringify({ session_id: session, ...(agent ? { agent_id: agent } : {}), tool_input: { file_path: file } }),
+      ),
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: root },
+    });
+    const out = new TextDecoder().decode(r.stdout).trim();
+    if (!out) return [];
+    const ctx = JSON.parse(out).hookSpecificOutput.additionalContext as string;
+    return [...ctx.matchAll(/^- \*\*([a-z-]+)\*\*/gm)].map((m) => m[1]);
+  };
+
+  test("a sub-agent is announced the rules its orchestrator already consumed", () => {
+    const s = `test-agent-${Math.random().toString(36).slice(2)}`;
+    expect(editAs(s, undefined, "/r/src/lib.rs")).toContain("core"); // main thread
+    expect(editAs(s, undefined, "/r/src/lib.rs")).toEqual([]); // main thread, repeat
+    expect(editAs(s, "agent-builder-1", "/r/src/lib.rs")).toContain("core"); // fresh window
+    expect(editAs(s, "agent-builder-1", "/r/src/lib.rs")).toEqual([]); // same window, repeat
+    expect(editAs(s, "agent-reviewer-2", "/r/src/lib.rs")).toContain("core"); // another window
+  });
+
+  test("compaction clears the sub-agent markers too", () => {
+    const s = `test-agent-rearm-${Math.random().toString(36).slice(2)}`;
+    editAs(s, "agent-x", "/r/src/lib.rs");
+    expect(editAs(s, "agent-x", "/r/src/lib.rs")).toEqual([]);
+    compact(s);
+    expect(editAs(s, "agent-x", "/r/src/lib.rs")).toContain("core");
+  });
+
+  test("marker names keep the main-thread shape and scope sub-agents under the session", () => {
+    expect(markerName("sess 1", undefined, "core")).toBe("sess_1__rule__core");
+    expect(markerName("sess 1", "agent/7", "core")).toBe("sess_1__agent__agent_7__rule__core");
   });
 });
 

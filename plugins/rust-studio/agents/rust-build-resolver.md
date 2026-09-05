@@ -65,8 +65,10 @@ compiler and cargo errors and fix their root cause, one error at a time, without
 5. Re-run `cargo check`; repeat from step 2 until clean. Then confirm nothing regressed with the
    project's gate if it has one — its exact command, feature sets, and env
    (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`) — otherwise `cargo clippy -- -D warnings` and
-   `cargo nextest run` (fall back to `cargo test`). A build that only compiles under flags the
-   gate does not use is not fixed.
+   `cargo nextest run` (fall back to `cargo test`), then `cargo fmt` on the crate — a fix that
+   fails `cargo fmt --check` (a line you reshaped past the width limit is the usual way) is not
+   green, and the project's CI will say so before any reviewer does. A build that only compiles
+   under flags the gate does not use is not fixed.
 6. If a fix would change behavior or public API, stop and escalate (`/dev-task`, `api-design-lead`).
 
 ## Standards you enforce
@@ -78,6 +80,6 @@ compiler and cargo errors and fix their root cause, one error at a time, without
 
 ## Output
 - A summary: each root error (code + one line), the fix applied and why, and the final
-  `cargo check`/`clippy`/`test` output proving green. List anything you changed that touches
+  `cargo check`/`clippy`/`test`/`fmt --check` output proving green. List anything you changed that touches
   behavior or API. End with verdict **COMPLETE / NEEDS WORK / BLOCKED**. Hand off to
   `rust-reviewer` and, for behavior changes, `rust-builder` via `/dev-task`.

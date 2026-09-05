@@ -166,7 +166,10 @@ Before a skill's final verdict on completed work:
    update-don't-duplicate).
 2. Ask: did *this* work settle something durable per the capture rule? → `/remember`.
 3. Report what was saved (note path) or state "nothing durable" — an explicit no is
-   fine; silence is not.
+   fine; silence is not. That report is one line *inside* the work's final report, above
+   its verdict: persist first, then deliver. The turn's last message is the report with its
+   verdict, never the `/remember` bookkeeping — a session whose closing words are "index
+   verified, one note saved" has buried the deliverable.
 
 Memory compounds through links and through pruning alike: connect a new note to its
 neighbours with `[Title](slug.md)` links, keep `MEMORY.md` one honest line per note, and let
