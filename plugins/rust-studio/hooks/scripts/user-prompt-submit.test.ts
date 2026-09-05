@@ -1,6 +1,7 @@
 // Tests for prompt-scoped recall (UserPromptSubmit): each pins which notes a prompt
 // surfaces and that a surfaced note is not repeated.
 import { test, expect, describe } from "bun:test";
+import { readFileSync } from "node:fs";
 import { pickPromptPointers, renderPointers, MIN_PROMPT_SCORE, readSurfaced, writeSurfaced, routeFor, renderRoute, routeKey, readRouted, writeRouted } from "./user-prompt-submit.ts";
 import { parseIndex } from "./memory-store.ts";
 
@@ -59,7 +60,7 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     ["We are considering taking a new dependency, `fast-validate 0.3.1`. I have pulled its source. Vet the crate and tell me whether we should add it.", "@dependency-manager"],
     ["The story: add a --json flag. Here is what the branch changed. Is this diff in scope? What ships, what gets split out?", "scope-check"],
     ["Nobody can follow apply_discount any more. Make it readable for a human — behavior must stay identical.", "refactor"],
-    ["Review the exported C API in src/ffi.rs before the binding teams build on it.", "review"],
+    ["Review the exported C API in src/ffi.rs before the binding teams build on it.", "audit-unsafe"],
     ["cargo build fails with error[E0502] after my change, help", "fix-build"],
     ["Audit the unsafe blocks in the ring buffer for soundness", "audit-unsafe"],
     ["I want to start a new Rust project in this directory — a small CLI that deduplicates lines. How should we begin?", "start"],
@@ -77,6 +78,24 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     expect(routeFor("/review the diff before we merge it")).toBeNull();
     expect(routeFor("run /rust-studio:api-review against v1.2.0")).toBeNull();
   });
+
+  // routing-corpus.json is the routing table's contract: realistic prompts with the route each
+  // must take, and prompts that must take none. Extend the corpus before extending ROUTES, and
+  // never make a regex match a corpus prompt it is not meant to catch.
+  const corpus: Array<{ prompt: string; route: string | null }> = JSON.parse(
+    readFileSync(new URL("./routing-corpus.json", import.meta.url), "utf8"),
+  );
+  test("the routing corpus has both directions and no duplicates", () => {
+    expect(corpus.filter((c) => c.route).length).toBeGreaterThanOrEqual(40);
+    expect(corpus.filter((c) => !c.route).length).toBeGreaterThanOrEqual(12);
+    expect(new Set(corpus.map((c) => c.prompt)).size).toBe(corpus.length);
+  });
+  for (const c of corpus) {
+    test(`corpus: ${c.prompt.slice(0, 60).replace(/\n/g, " ")} → ${c.route ?? "(none)"}`, () => {
+      const r = routeFor(c.prompt);
+      expect(r ? routeKey(r).replace(/^\//, "") : null).toBe(c.route);
+    });
+  }
 
   test("an adversarial-critique prompt goes to the harsh-critic agent, not a facilitation skill", () => {
     const r = routeFor("Before we build it, attack this design. Give me the strongest case against it.");

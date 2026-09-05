@@ -257,7 +257,12 @@ durable `AGENTS.md` context across tasks instead of re-deriving scope per spawn 
 zone is that outcome-first brief applied to the one property that makes two spawns unsafe together.
 
 **Results and cleanup.** Collect results through the host's worker-result or messaging channel.
-Wait only on workers whose output blocks the next phase. When the host supports explicit worker
+Wait only on workers whose output blocks the next phase. **Relay a worker's verdict line
+verbatim.** The orchestrator's final message carries every gate lens's verdict token exactly as
+the lens wrote it — `NEEDS WORK`, `REDO-TO-BAR`, `DOESN'T SURVIVE`, `OVER SCOPE` — beside the
+orchestrator's own; a paraphrase ("the critic had concerns") is not a verdict, and a measured
+run lost three verdicts this way: the critique was complete and the token never reached the
+user. Summarize the findings if you must; never the verdict. When the host supports explicit worker
 shutdown, close workers after their result is integrated; otherwise let the host manage their
 lifecycle.
 

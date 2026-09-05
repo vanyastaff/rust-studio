@@ -75,6 +75,12 @@ verdict so you always know where things stand:
   the blocker is named with a suggested next step. Completed work is never discarded for
   NEEDS WORK.
 
+**A relayed verdict is quoted, not paraphrased.** When a skill spawns a lens (`rust-reviewer`,
+`harsh-critic`, `product-steward`, a domain specialist), its verdict token appears verbatim in the
+message the user reads, attributed to the lens, next to the orchestrator's own verdict. Dropping
+it to a summary ("the reviewer flagged some issues") is the one edit that turns a gate result
+into an opinion.
+
 **The verdict supplements the deliverable; it never replaces it.** A sub-agent's final message is
 what the caller receives — put the actual deliverable (code map, digest, findings, answer) there
 in full and add the verdict as a trailing line. Never close with a verdict-only "I did the work"

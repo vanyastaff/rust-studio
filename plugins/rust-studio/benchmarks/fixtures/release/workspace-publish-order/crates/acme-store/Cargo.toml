@@ -1,0 +1,11 @@
+[package]
+name = "acme-store"
+version.workspace = true
+edition.workspace = true
+rust-version = "1.86"
+license.workspace = true
+repository.workspace = true
+description = "Typed key-value store on top of acme-core"
+
+[dependencies]
+acme-core = { workspace = true }

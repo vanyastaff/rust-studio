@@ -5,7 +5,7 @@
 import { test, expect, describe } from "bun:test";
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { auditPrompt, fixtureMode, gtIds, gradeRegex, gradeToolUsed, parseList, parseStream, splitFrontmatter, FIXTURE_AGENTS } from "./eval-runner.ts";
+import { auditPrompt, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, splitFrontmatter, FIXTURE_AGENTS } from "./eval-runner.ts";
 
 const line = (o: unknown) => JSON.stringify(o) + "\n";
 
@@ -31,6 +31,22 @@ describe("stream-json parsing", () => {
   test("falls back to the last assistant text when no result arrives (timeout / kill)", () => {
     const cut = stream.split("\n").filter((l) => !l.includes('"result"')).join("\n");
     expect(parseStream(cut).lastMessage).toBe("interim");
+  });
+
+  test("a multi-turn conversation merges into one trace: sums cost/turns, keeps the last answer", () => {
+    const a = parseStream(stream);
+    const b = parseStream(line({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: {} }] } }) + line({ type: "result", subtype: "success", total_cost_usd: 0.5, num_turns: 2, duration_ms: 800, result: "Verdict: COMPLETE" }));
+    const m = mergeTraces(a, b);
+    expect(m.costUsd).toBe(1.75);
+    expect(m.turns).toBe(9);
+    expect(m.toolsUsed).toEqual(["Skill", "Agent", "Read"]);
+    expect(m.skills).toEqual(["rust-studio:review"]);
+    expect(m.lastMessage).toBe("Verdict: COMPLETE");
+  });
+
+  test("follow-ups.md splits on --- separators and drops blanks", () => {
+    expect(parseFollowUps("First reply.\n\n---\n\nSecond reply,\ntwo lines.\n---\n")).toEqual(["First reply.", "Second reply,\ntwo lines."]);
+    expect(parseFollowUps("")).toEqual([]);
   });
 });
 
@@ -78,7 +94,7 @@ describe("ground-truth readers, against every shipped fixture", () => {
     for (const f of fixtures) {
       const gt = readFileSync(join(root, f, "ground-truth.md"), "utf8");
       expect(gtIds(gt).length, `${f} has no GT-n rows`).toBeGreaterThan(0);
-      expect(existsSync(join(root, f, "input.rs")) || existsSync(join(root, f, "src")), `${f} has neither input.rs nor src/`).toBe(true);
+      expect(existsSync(join(root, f, "input.rs")) || existsSync(join(root, f, "src")) || existsSync(join(root, f, "Cargo.toml")), `${f} has neither input.rs, src/ nor Cargo.toml`).toBe(true);
     }
   });
 
@@ -90,8 +106,10 @@ describe("ground-truth readers, against every shipped fixture", () => {
     expect(auditPrompt("# Ground truth — x\n\n| id | line |\n")).toBeNull();
   });
 
-  test("first-pass fixtures are recognised from the title line", () => {
+  test("first-pass and map-recall fixtures are recognised from the title line", () => {
     expect(fixtureMode("# Ground truth — naming/self-documenting (verdict: REDO-TO-BAR)\n")).toBe("first-pass");
+    expect(fixtureMode("# Ground truth — scout/trait-map (agent: `rust-scout`, mode: map-recall, verdict: COMPLETE)\n")).toBe("map-recall");
+    expect(fixtures.filter((f) => fixtureMode(readFileSync(join(root, f, "ground-truth.md"), "utf8")) === "map-recall")).toEqual(["scout/trait-map"]);
     expect(fixtureMode("# Ground truth — api/x (agent: `api-design-lead`, verdict: NEEDS WORK)\n")).toBe("defect-recall");
     const firstPass = fixtures.filter((f) => fixtureMode(readFileSync(join(root, f, "ground-truth.md"), "utf8")) === "first-pass");
     expect(firstPass).toContain("architecture/wrong-crate-helper");
