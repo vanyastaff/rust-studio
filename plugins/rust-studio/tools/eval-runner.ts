@@ -162,6 +162,8 @@ export function loadGraders(dir: string): Grader[] {
 
 export interface RunTrace {
   lastMessage: string;
+  /** Multi-turn cases only: every assistant turn with the scripted user replies between them. */
+  transcript?: string;
   toolsUsed: string[]; // tool names in order
   skills: string[]; // Skill tool `skill` inputs
   agents: string[]; // Agent tool `subagent_type` inputs
@@ -331,13 +333,17 @@ async function runConversation(a: Omit<SessionRunArgs, "sessionId" | "resume">, 
   const sessionId = crypto.randomUUID();
   let acc = await runSession({ ...a, sessionId });
   let raw = acc.raw;
-  for (const reply of followUps) {
+  // A multi-turn case is graded on the whole exchange, not on its last turn alone: the
+  // questions a design skill asks live in turn 1, the drafted surface in turn 3.
+  const transcript: string[] = [`[assistant, turn 1]\n${acc.lastMessage}`];
+  for (const [i, reply] of followUps.entries()) {
     if (acc.isError) break;
     const next = await runSession({ ...a, prompt: reply, sessionId, resume: true });
     raw += "\n" + next.raw;
+    transcript.push(`[user, scripted reply ${i + 1}]\n${reply}`, `[assistant, turn ${i + 2}]\n${next.lastMessage}`);
     acc = { ...mergeTraces(acc, next), raw };
   }
-  return { ...acc, raw };
+  return { ...acc, raw, transcript: followUps.length ? transcript.join("\n\n") : undefined };
 }
 
 const GRADER_SYSTEM =
@@ -370,7 +376,7 @@ async function llmJson(prompt: string, graderModel: string, timeoutMs = 240_000)
 
 async function gradeLlm(g: Grader, trace: RunTrace, graderModel: string): Promise<GraderResult> {
   const prompt =
-    `RUBRIC:\n${g.body}\n\nAGENT RESPONSE (final message):\n<<<\n${trace.lastMessage.slice(0, 60_000)}\n>>>\n\n` +
+    `RUBRIC:\n${g.body}\n\nAGENT RESPONSE (${trace.transcript ? "multi-turn transcript; the user's replies were scripted, judge the assistant turns together" : "final message"}):\n<<<\n${(trace.transcript ?? trace.lastMessage).slice(0, 60_000)}\n>>>\n\n` +
     `Score the response against the rubric. Return {"score": <1 for full credit, 0.5 for partial, 0 for fail>, "verdict": "PASS"|"PARTIAL"|"FAIL", "reason": "<one or two sentences naming which rubric items were met and which were missed>"}.`;
   const j = await llmJson(prompt, graderModel);
   if (j?.error) return { file: g.file, type: g.type, weight: g.weight, score: null, detail: j.error };
