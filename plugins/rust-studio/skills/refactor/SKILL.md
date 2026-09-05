@@ -190,6 +190,11 @@ usually arrives with a suite that cannot say that, so establish the oracle first
 15. For each approved step, spawn **`rust-builder`** with:
     - the single approved step description and its scope boundary,
     - the instruction to **make no other changes** — not even "while I'm here" cleanups,
+    - the twin-branch rule: two paths that differ in one detail (a floor on one and not the
+      other, an off-by-one, a different error string) are **not** duplication to unify — the
+      difference is behavior, and "this normalization is safe" is exactly the argument a
+      refactor is not allowed to make. Extract what is identical, keep what differs, and
+      record the asymmetry under `DEFERRED` as a `/dev-task` question for the owner,
     - the instruction to apply the change as targeted edits and run the **project's gate**
       (step 5's exact command) after the step; `cargo fmt` as well,
     - if `unsafe` is in scope: also `cargo +nightly miri test` where feasible.
