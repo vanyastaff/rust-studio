@@ -294,5 +294,13 @@
  {
   "prompt": "Our public API has a rate limiter; explain how token buckets work in general.",
   "route": null
+ },
+ {
+  "prompt": "This wasm-bindgen crate compiles for the host and its tests pass natively, but it panics in the browser on the first call. Review it for the wasm32 target; list findings with line numbers.",
+  "route": "review"
+ },
+ {
+  "prompt": "Run bindgen over vendor/sqlite3.h and review the generated FFI layer before we depend on it.",
+  "route": "audit-unsafe"
  }
 ]
