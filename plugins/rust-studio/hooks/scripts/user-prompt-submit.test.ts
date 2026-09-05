@@ -86,8 +86,8 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     readFileSync(new URL("./routing-corpus.json", import.meta.url), "utf8"),
   );
   test("the routing corpus has both directions and no duplicates", () => {
-    expect(corpus.filter((c) => c.route).length).toBeGreaterThanOrEqual(40);
-    expect(corpus.filter((c) => !c.route).length).toBeGreaterThanOrEqual(12);
+    expect(corpus.filter((c) => c.route).length).toBeGreaterThanOrEqual(55);
+    expect(corpus.filter((c) => !c.route).length).toBeGreaterThanOrEqual(25);
     expect(new Set(corpus.map((c) => c.prompt)).size).toBe(corpus.length);
   });
   for (const c of corpus) {

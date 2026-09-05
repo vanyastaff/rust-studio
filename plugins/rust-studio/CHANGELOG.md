@@ -45,18 +45,35 @@ loop; every fix was re-measured.
   publishes in reverse dependency order with `--no-verify --allow-dirty`, three disagreeing
   MSRVs, no changelog entry). Fixtures may now be whole crates or workspaces; the runner copies
   everything but the answer key.
-- **Routing corpus** (`hooks/scripts/routing-corpus.json`, 76 prompts incl. 18 negatives)
+- **Routing corpus** (`hooks/scripts/routing-corpus.json`, 93 prompts incl. 32 negatives)
   asserted as a deterministic test, and the router tightened by it: `architecture` no longer
   fires on `crates/`, `layer` or `boundary` in passing; FFI reviews go to `/audit-unsafe`;
   a `Cargo.toml` review goes to `dependency-manager`; "fails intermittently", "help me get
   this compiling", "is this fast enough", "did this PR creep", "so large after adding reqwest"
   all route.
+- **Two vetoes before the routing table** (`routeFor`), because a keyword match is not a
+  route. A prompt that names another ecosystem — a ````python` fence, `package.json`,
+  "this bash script" — and carries no Rust token takes no route; the Rust signal is a rescue,
+  never a requirement, since 31 of the corpus's routed prompts carry no Rust token at all
+  ("Untangle this module", "Is this fast enough?"). And a lookup question ("where is it
+  defined", "does the ffi in this repo exist?", "give me a one-line summary of the
+  architecture", a leading "explain") asks where something IS, not for work on it, so it takes
+  no route in any language. Measured on an adversarial probe set: 9 false positives → 3, with
+  all 31 eval-case prompts and all 76 prior corpus entries routing exactly as before. C and C++
+  are deliberately absent from the foreign list — C beside Rust is FFI, which is studio work.
 - **A relayed verdict is quoted, not paraphrased** (`docs/delegation.md` §8,
   `docs/verdicts.md` §5, the routing hint): the last line of the orchestrator's reply is the
   worker's own verdict line.
 
 ### Fixed
 
+- **`agnix` is pinned in CI** (`agnix-cli@0.52.1`). Unpinned, it turned `main` red on a tool
+  bump rather than a repo change — 0.52.1 began reading the `$8.42` in `/progress-bar`'s
+  status-line example as an indexed `$ARGUMENTS` use. A new lint rule now arrives in its own
+  commit.
+- **The frontmatter allowlist is back to what skills use.** The `argument-hint` fix widened it
+  by five keys (`context`, `agent`, `user-invocable`, `paths`, `hooks`) that no skill declares;
+  the check exists to catch a typo in frontmatter, and speculative keys blunt it.
 - **`rust-build-resolver`** runs `cargo fmt` before reporting green. The live task's first run
   fixed all three errors correctly and left one reshaped line past the width limit; the
   crate's gate stayed red.

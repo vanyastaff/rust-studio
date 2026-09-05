@@ -176,7 +176,7 @@ unknown_keys=$(awk '
   yaml && /^[A-Za-z0-9_-]+:/ {
     key = $1
     sub(/:.*/, "", key)
-    if (key !~ /^(name|description|license|compatibility|metadata|allowed-tools|disable-model-invocation|argument-hint|context|agent|user-invocable|paths|hooks)$/) {
+    if (key !~ /^(name|description|license|compatibility|metadata|allowed-tools|disable-model-invocation|argument-hint)$/) {
       print FILENAME ":" FNR ":" key
     }
   }
