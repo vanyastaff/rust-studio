@@ -6,23 +6,14 @@ name: agent evals
 # distribution validator and `bun test` check that the files are well-formed; nothing until
 # this job checked that they still do their job.
 #
-# Gate, not decoration: a config change that drops the suite below the threshold fails the PR.
+# MANUAL ONLY, on purpose. Every run of this suite bills real model calls, and the maintainer
+# runs it locally instead — the deterministic gates (`bun test`, validate-distribution.sh,
+# `claude plugin validate --strict`, `agnix --strict`) are the ones that guard a PR, and they
+# cost nothing. Measured 2026-09-05: one run of each of the 31 cases is ~$60 (routing cases
+# ~$0.75, review cases $1.08-$3.76); at the frontmatter default of `runs: 3` the full suite is
+# ~$180. Neither belongs on a per-PR trigger. Dispatch it deliberately, or run the same cases
+# locally with `bun tools/eval-runner.ts`.
 on:
-  pull_request:
-    paths:
-      - 'plugins/rust-studio/skills/**'
-      - 'plugins/rust-studio/agents/**'
-      - 'plugins/rust-studio/rules/**'
-      - 'plugins/rust-studio/hooks/**'
-      - 'plugins/rust-studio/docs/**'
-      - 'plugins/rust-studio/evals/**'
-      - 'plugins/rust-studio/benchmarks/**'
-      - '.github/workflows/evals.yml'
-  schedule:
-    # The paths filter above runs the suite against what a PR touched. This runs the whole
-    # thing nightly, so a regression that arrives through an untouched path — a model
-    # change, a host update — surfaces on its own rather than on the next unlucky PR.
-    - cron: '17 4 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -98,8 +89,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         working-directory: plugins/rust-studio
         run: |
-          bun tools/eval-runner.ts --parallel 3 --budget 4 --total-budget 15 --threshold 0.8 \
-            --out evals/results/ci
+          # The gate fails on a budget-truncated suite, so the cap has to cover what actually
+          # runs: `--runs 1` over 31 cases measured ~$60, so $75 leaves headroom. Raise both
+          # together if you want the frontmatter `runs: 3` (~$180) instead.
+          bun tools/eval-runner.ts --runs 1 --parallel 3 --budget 4 --total-budget 75 \
+            --threshold 0.8 --out evals/results/ci
 
       - name: Upload results
         if: always() && steps.key.outputs.present == 'true'

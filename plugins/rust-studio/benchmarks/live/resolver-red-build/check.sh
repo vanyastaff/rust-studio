@@ -7,8 +7,11 @@ fail() { echo "CHECK FAIL: $*"; exit 1; }
 # one direction a benchmark must never fail in. The runner always commits a baseline; a hand
 # run (docs: cp the crate, git init, git commit) has to as well.
 git rev-parse --verify HEAD >/dev/null 2>&1 || fail "no git baseline in $PWD — run: git init -q && git add -A && git commit -qm base"
+git add -N src 2>/dev/null   # intent-to-add: a NEW file under src/ shows up in the diff too
 git diff HEAD -- src | grep -nE '^\+.*(\.clone\(\)|#\[allow\(|\bunsafe\b|transmute|\.unwrap\(\))' && fail "masking construct added"
-git diff HEAD -- src/lib.rs | grep -nE '^[-+]\s*(#\[test\]|assert)' && fail "tests were edited"
+# Adding a test is allowed (the task says do not weaken or delete); a removed or rewritten
+# assertion / #[test] line is the edit this guards against.
+git diff HEAD -- src/lib.rs | grep -nE '^-\s*(#\[test\]|assert)' && fail "existing tests were edited or removed"
 git diff --quiet HEAD -- Cargo.toml || fail "Cargo.toml edited"
 echo "== gate"
 cargo build 2>&1 | tail -1 || true
