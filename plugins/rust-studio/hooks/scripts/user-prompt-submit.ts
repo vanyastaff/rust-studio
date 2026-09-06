@@ -72,16 +72,33 @@ export const ROUTES: ReadonlyArray<{ skill?: string; agent?: string; when: RegEx
   { skill: "flaky-hunt", when: /\bflak(y|iness|es)\b|fails? (about |roughly |~)?(one|1) (run )?in (\d+|two|three|four|five|six|seven|eight|nine|ten)\b|intermittent(ly)? fail|fails? intermittently|passes locally (and|but) fails/i, why: "an intermittently failing test suite" },
   { skill: "bloat", when: /\b(binary|wasm|executable)\b[^\n]{0,60}\b(size|\d+ ?mb|(too|so|that) (big|large)|shrink)|\b(shrink|reduce)\b[^\n]{0,40}\b(binary|size)\b/i, why: "binary size" },
   { skill: "fix-build", when: /\b(cargo (build|check)|the build|compil(e|ation))\b[^\n]{0,60}\b(fails?|failing|broken|error|red)|error\[E\d{4}\]|\bE\d{4}\b|get (this|it) (compiling|building)|(won'?t|doesn'?t|does not|will not) (compile|build)|\bmay not live long enough\b/i, why: "a red build" },
-  { skill: "audit-unsafe", when: /\bunsafe\b[^\n]{0,80}\b(review|audit|sound|miri|ub\b|undefined behavio|hold|correct|check)|\bunsafe impl\b|\bSAFETY comment|\bffi\b|extern "C"|(?<![\w-])bindgen\b|\bc api\b|\braw pointers?\b[^\n]{0,60}\b(review|audit|check|safe)/i, why: "unsafe or FFI code to audit" },
-  { skill: "security-audit", when: /\b(security|vulnerab|inject(ion)?|untrusted input|auth(oriz|entic)ation|secrets?|rustsec|cargo audit)\b[^\n]{0,80}\b(review|audit|check|find)|\b(review|audit)\b[^\n]{0,60}\b(security|vulnerab)|\bvulnerable to\b|\b(path traversal|dos\b|denial of service|xss|csrf|ssrf|timing attack)/i, why: "a security review" },
+  { skill: "audit-unsafe", when: /\bunsafe\b[^\n]{0,80}\b(review|audit\b|sound|miri|ub\b|undefined behavio|hold|correct|check)|\bunsafe impl\b|\bSAFETY comment|(?<![\w-])ffi(?![\w-])|extern "C"|(?<![\w-])bindgen\b|\bc api\b|\braw pointers?\b[^\n]{0,60}\b(review|audit|check|safe)/i, why: "unsafe or FFI code to audit" },
+  { skill: "security-audit", when: /\b(security|vulnerab|inject(ion)?|untrusted input|auth(oriz|entic)ation|secrets?|rustsec|cargo audit)\b[^\n]{0,80}\b(review|audit\b|check|find)|\b(review|audit)\b[^\n]{0,60}\b(security|vulnerab)|\bvulnerable to\b|\b(path traversal|dos\b|denial of service|xss|csrf|ssrf|timing attack)/i, why: "a security review" },
   { skill: "design-api", when: /\bdesign\b[^\n]{0,60}\b(api|interface|crate|trait|surface)\b|\b(what|how) should\b[^\n]{0,60}\blook like\b[^\n]{0,60}\b(public (api|surface)|library|crate)/i, why: "an API design session" },
   { agent: "harsh-critic", when: /\b(attack|critique|poke holes in|tear apart|strongest case against|does it survive|devil'?s advocate)\b[^\n]{0,60}\b(design|plan|proposal|approach|idea|architecture)\b|\b(design|plan|proposal)\b[^\n]{0,40}\b(attack|critique)/i, why: "an adversarial pass over a design or plan" },
   { skill: "api-review", when: /\b(semver|breaking change)\b|\b(public api|public surface|api surface|public contract)\b[^\n]{0,60}\b(review|audit|break|chang|bump|version|semver|stable|release|publish|tag|cut)|\b(review|audit|chang|break)[^\n]{0,60}\b(public api|public surface|api surface|public contract)\b|\b(tag|publish|release|ship|cut)\b[^\n]{0,40}\b\d+\.\d+(\.\d+)?\b|\bbump(ed|ing)? (the )?version|\bversion bump\b|semver-checks/i, why: "a public-API or release-version question" },
   { skill: "scope-check", when: /\b(in|out of|within|beyond) scope\b|scope creep|\bcreep(s|ed|ing)? (beyond|past|outside)\b|beyond the (ticket|story|issue)|what ships,? what gets split|\bthe story\b[^\n]{0,80}\b(diff|branch|change)/i, why: "a scope adjudication" },
   { skill: "refactor", when: /\b(refactor|simplif(y|ied)|untangle|make (this|it) readable|readab(le|ility)|spaghetti|clean(er)? up)\b[^\n]{0,80}(code|function|module|file|naming|this|it)\b|behaviou?r must (stay|remain)|without changing what it does/i, why: "a behavior-preserving reshape" },
-  { skill: "architecture", when: /\barchitect(ure|ural)?\b|\blayering\b|\bdependency direction\b|\bcrate (boundar|graph|split|layout|structure)|\bmodule (boundar|structure|layout|tree)|\bboundar(y|ies) between\b|\bsplit\b[^\n]{0,40}\binto crates\b|\b(which|what) crate should\b|\b(live|belong) in its own crate\b|\bown crate or\b|\bin shape to extend\b/i, why: "a crate/module boundary question" },
+  { skill: "architecture", when: /(?<![\w-])architect(ure|ural)?(?![\w-])|\blayering\b|\bdependency direction\b|\bcrate (boundar|graph|split|layout|structure)|\bmodule (boundar|structure|layout|tree)|\bboundar(y|ies) between\b|\bsplit\b[^\n]{0,40}\binto crates\b|\b(which|what) crate should\b|\b(live|belong) in its own crate\b|\bown crate or\b|\bin shape to extend\b/i, why: "a crate/module boundary question" },
   { skill: "perf", when: /\b(p9\d|p50|latency|throughput|benchmark|profil(e|ing))\b|\b(slow|allocat(es|ions?)|faster|hot ?path)\b[^\n]{0,60}\b(rust|code|function|loop|handler|this|it)\b|\bfast enough\b|\bper second\b/i, why: "a performance question" },
   { skill: "review", when: /```rust|\bwasm(32|-bindgen|-pack)?\b[^\n]{0,80}\b(review|audit|panics?|browser|target)\b|\b(review|audit)\b[^\n]{0,80}\b(code|diff|change|crate|module|file|function|handler|worker|pr|implementation|before (we )?(merge|ship|land|tag))\b|\bbefore (i|we) merge\b|\bmergeable\b|\bmerge verdict\b|\bbefore it lands\b/i, why: "a review of Rust code" },
+
+  // --- work shapes -------------------------------------------------------------------
+  // The table above is entirely REVIEW lenses, because it was derived from measuring
+  // review-shaped prompts. The most common shape of all — "build me this" — had no entry,
+  // so the highest-traffic request arrived with no pointer while `rust-builder` sat in the
+  // agent list at every turn. The shortest path won, and the scout/plan/gate phases that
+  // /dev-task exists to run were skipped. These four are last: every lens above wins first,
+  // and only a prompt nothing else claimed reaches them.
+  { skill: "debug", when: /\b(panics?|panicked|panicking)\b[^\n]{0,60}\b(at|in|when|with|on|because)\b|\b(deadlocks?|livelock|segfaults?|stack overflow|index out of bounds|double free|use after free)\b|\b(hangs?|hung|freezes?|never returns?|gets? stuck)\b[^\n]{0,50}\b(when|on|at|after|in|if)\b|\b(wrong|incorrect|unexpected|garbage) (output|result|value|answer|bytes)\b|\bwhy (does|is|do)\b[^\n]{0,50}\b(fail|panic|hang|crash|return|produce)/i, why: "a failure to diagnose down to its cause" },
+  { skill: "tdd", when: /\b(tdd|test[- ]first|test[- ]driven|red[- ]green)\b|\bwrite the tests? first\b/i, why: "a behavior to build test-first" },
+  { skill: "spec", when: /\b(plan|planning|spec out|write (a|the) spec|design doc|break (this|it) down)\b[^\n]{0,70}\b(feature|change|migration|rewrite|rollout|epic|across|between|crates?)\b|\bhow should\b[^\n]{0,60}\b(work|behave|propagate|flow|be structured)\b/i, why: "a non-trivial change to plan before building" },
+  // Two guards, both written from corpus negatives this route failed on first: a lookup
+  // ("how do I add a dependency") asks what a command is, not for the work; and a one-line
+  // edit (a doc comment, a local rename) is not a unit of work — opening a scout/plan/gate
+  // workflow on it costs more than the edit. `rename` is absent from the verbs for the same
+  // reason: a rename worth a process is a reshape, and /refactor claims it earlier.
+  { skill: "dev-task", when: /^(?![\s\S]{0,240}\b(how (do|can|should|would) (i|we|you)|haiku|poem|limerick|joke)\b)(?![\s\S]{0,240}\b(add|write)\b[^\n]{0,30}\bcomments?\b)(?![\s\S]{0,240}\b(docstring|typo)\b)[\s\S]{0,240}?\b(add|implement|write|build|create|introduce|wire up|hook up|port|extend|migrate|expose)\b/i, why: "one scoped unit of implementation work" },
 ];
 
 /** Another language's ecosystem, named outright: a fence in that language, one of its
@@ -132,6 +149,9 @@ export function namesStudioSkill(text: string): boolean {
   return false;
 }
 
+/** A namespaced studio agent or skill name, e.g. `rust-studio:ffi-specialist`. */
+export const STUDIO_IDENT = /(?<![\w-])rust-studio:[a-z][a-z0-9-]*/gi;
+
 /** The one skill or agent this prompt's shape points at, or null. Pure. */
 export function routeFor(prompt: string): { skill?: string; agent?: string; why: string } | null {
   const text = String(prompt ?? "");
@@ -143,7 +163,12 @@ export function routeFor(prompt: string): { skill?: string; agent?: string; why:
   // another ecosystem, or is asking a lookup question rather than for work.
   if (LOOKUP_ONLY.test(text)) return null;
   if (FOREIGN_ECOSYSTEM.test(text) && !RUST_SIGNAL.test(text)) return null;
-  for (const r of ROUTES) if (r.when.test(text)) return { skill: r.skill, agent: r.agent, why: r.why };
+  // A studio identifier is a NAME, not a request about the thing it names. `ffi-specialist`
+  // contains "ffi" and `chief-architect` contains "architect", so a pasted roster, a
+  // "not found" error, or `/help` output routed on the names themselves. Strip them before
+  // the table: someone who has already named an agent is not asking to be routed to one.
+  const body = text.replace(STUDIO_IDENT, " ");
+  for (const r of ROUTES) if (r.when.test(body)) return { skill: r.skill, agent: r.agent, why: r.why };
   return null;
 }
 
