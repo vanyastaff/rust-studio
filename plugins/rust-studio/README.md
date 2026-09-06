@@ -194,6 +194,13 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   to the skill that owns that work (`/review`, `/scope-check`, `/bloat`, `/brainstorm`, …), once
   per skill per session. Measured with the eval runner: without it, six of the first seven
   review-shaped prompts were answered inline in one turn — no skill, no agent, no verdict.
+  The table covers **work** shapes as well as review lenses — "add a retry layer", "it panics on
+  empty input", "test-first", "plan how cancellation propagates" reach `/dev-task`, `/debug`,
+  `/tdd` and `/spec` — and the general ones sort last, so every lens claims a prompt first. A
+  studio identifier in the prompt is stripped before the table: `ffi-specialist` contains "ffi"
+  and `chief-architect` contains "architect", and naming an agent is not a request to be routed
+  to one. All 20 routes are pinned by a 111-prompt corpus in `bun test`, 38 of them prompts that
+  must route nowhere.
 - **Stop** — nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
 - **Auto-capture (Stop)** — after a turn that finished a real unit of work (a completion summary +
   uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable

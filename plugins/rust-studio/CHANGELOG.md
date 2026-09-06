@@ -5,6 +5,55 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.0] - 2026-09-06
+
+The release that measured the router against its own roster and found it routing on names.
+`ffi-specialist` contains "ffi" and `chief-architect` contains "architect", so a pasted agent
+list — an "agent type not found" error, `/help` output — steered the session into
+`/audit-unsafe` or `/architecture`. Sweeping all 16 routes against all 95 agent and skill names
+turned up five such collisions. The same sweep exposed the larger gap: every route in the table
+was a **review lens**, because the table was derived from measuring review-shaped prompts. The
+most common request of all — "build me this" — had no entry, so implementation prompts arrived
+with no pointer while `rust-builder` sat in the agent list at every turn. The shortest path won
+and the scout/plan/gate phases that `/dev-task` exists to run were skipped.
+
+### Added
+
+- **Four work-shape routes** — `/debug` (a panic, deadlock, hang, or wrong output),
+  `/tdd` (an explicit test-first request), `/spec` (a change to plan before building), and
+  `/dev-task` (one scoped unit of implementation). They sort **last**, so every specialized lens
+  claims a prompt first: "should we add the `dashmap` crate" still reaches `dependency-manager`
+  and a `error[E0308]` still reaches `/fix-build`. Measured: work-shaped prompts routed 0 of 4
+  before, 4 of 4 after.
+- **14 corpus cases** pinning the new routes, the precedence against the lenses above them, and
+  the prompts that must route nowhere. The corpus is now 111 prompts, 38 of which must stay
+  unrouted.
+
+### Changed
+
+- **A studio identifier is stripped before the routing table.** Naming an agent is not a request
+  to be routed to one, and this closes the whole class rather than one pattern at a time —
+  including patterns not yet written. Measured: 5 of 95 roster names produced a false route
+  before, 0 of 95 after.
+- **`/dev-task` leads every domain in the session brief.** It appeared only for `cli`; an async
+  or library project was offered `/team-async`, `/design-api` and `/team-api` — all *heavier*
+  entries — so when the work was one scoped change rather than a cross-cutting feature, none of
+  the offers fit. `team-*` is now explicitly labelled for work that spans runtime + web + db.
+
+### Fixed
+
+- **Three regex boundaries that matched inside a hyphenated identifier.** `\bffi\b` and
+  `\barchitect\b` matched inside `ffi-specialist` and `chief-architect` (a hyphen is not a word
+  character), and the verb group in the `audit-unsafe` and `security-audit` patterns had no
+  closing `\b`, so "audit" matched inside "auditor". The guard is the one already standing next
+  to `bindgen` after the same lesson. It is applied per-alternative, not to the whole group:
+  `undefined behavio` is deliberately truncated to catch both spellings, and a boundary there
+  would break it.
+- **`/dev-task` no longer claims a one-line edit or a lookup.** The corpus caught the first
+  version taking "add a doc comment", "rename the variable", and "how do I add a dependency";
+  the guards are written from those failures. `rename` is absent from the verbs because a rename
+  worth a process is a reshape, and `/refactor` claims it earlier.
+
 ## [0.46.0] - 2026-09-06
 
 The release that stopped asserting version-keyed facts it could not check. `rules/core.md`
