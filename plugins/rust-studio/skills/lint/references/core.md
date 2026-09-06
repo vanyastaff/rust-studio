@@ -103,28 +103,20 @@ Applies to every `.rs` file.
   enforces, not the plan id that schedules it.
 
 ## Modern idioms & recurring misses
-- Verify idioms against the **current** toolchain (edition 2024; check official Rust
-  release notes/std docs for the current stable version) — prefer native async-fn-in-trait /
-  RPITIT over `async-trait`, `OnceLock`/`LazyLock`, `let-else`/`let-chains`.
-- Recent stabilizations worth reaching for, each gated on the crate's MSRV: **`if let` guards**
-  on match arms (**1.95**) — `Foo(a) if let Some(b) = lookup(a) => …` collapses the
-  match-then-nested-if shape; **`Vec::push_mut` / `insert_mut`** and the `VecDeque`/`LinkedList
-  push_*_mut` family (**1.95**), which hand back `&mut T` instead of the push-then-`last_mut()
-  .unwrap()` dance; **`assert_matches!`** (**1.96**, see testing.md); and the integer bit helpers
-  `bit_width` / `highest_one` / `isolate_lowest_one` (**1.97**) in place of hand-rolled
-  `leading_zeros` arithmetic; **`bool::ok_or` / `ok_or_else`** (**1.98**) —
-  `cond.ok_or(Error::Invalid)?` replaces the `if !cond { return Err(..) }` guard;
-  **`str::substr_range` / `[T]::subslice_range`** (**1.98**) to recover the offset of a
-  sub-slice instead of pointer arithmetic; **`strip_circumfix`** (**1.98**) for the
-  `strip_prefix` + `strip_suffix` pair; **`NonZero::from_str_radix`** (**1.98**) instead of
-  parse-then-check; **`Atomic<T>::from_mut` / `get_mut_slice`** (**1.98**) to borrow plain
-  data as atomics without a copy. Rust **1.98** also turned some `ambiguous_glob_imports`
-  into hard errors, rejects `T = T` where-bounds, and denies
-  `invalid_runtime_symbol_definitions` — a build that was warning-clean on 1.97 can go red
-  on 1.98 for those alone, which is a toolchain fact to report, not code to work around.
-  Don't default to `Arc<Mutex<_>>` / `Rc<RefCell<_>>`. Prefer making the wrong path
-  *syntactically absent* (visibility, scoped borrows, newtypes) over a "remember to call me" helper.
-- `map.entry(k).or_default()` — one lookup, not `get(&k)` then `entry()` on miss.
+- Gate idioms on the toolchain **this crate supports**, not on habit. The version-keyed
+  set — which stabilizations the crate's `rust-version` allows, the older shape each one
+  displaces, and the clippy lint that mechanizes the swap — is computed from the crate's
+  MSRV and injected when you edit a Rust file. That injected set is authoritative over
+  anything you recall about release history. Reaching above the floor is a build break,
+  not a modernization; `clippy::incompatible_msrv` catches it, and a floor that is genuinely
+  too low is a `rust-version` decision (`/msrv-check`), never a silent bump.
+- Standing preferences that hold at any recent floor: native async-fn-in-trait / RPITIT
+  over `async-trait` (which still earns its place when the trait must be `dyn`-safe),
+  `OnceLock`/`LazyLock` over `lazy_static!`/`once_cell`, `let-else` over the ladder that
+  exists only to return. Don't default to `Arc<Mutex<_>>` / `Rc<RefCell<_>>`. Prefer making
+  the wrong path *syntactically absent* (visibility, scoped borrows, newtypes) over a
+  "remember to call me" helper.
+- `map.entry(k).or_default()` — one lookup, not `get(&k)` then `entry()` on miss (`clippy::map_entry`).
 - `expect`/`panic!`/`unreachable!` messages name the **broken invariant and how to avoid it**,
   not the function name.
 - `Vec` has **no** small-buffer optimization — `push` heap-allocates; the struct field holds

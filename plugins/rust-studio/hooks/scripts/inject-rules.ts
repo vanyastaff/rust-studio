@@ -23,9 +23,11 @@
 // the tool name.
 
 import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import { readInput, emit, done, watchdog, pluginRoot } from "./_lib.ts";
+import { readInput, emit, done, watchdog, pluginRoot, option } from "./_lib.ts";
+import { crateFloor } from "./cargo-manifest.ts";
+import { loadTimeline, resolveFloor, renderTimeline } from "./stdlib-timeline.ts";
 
 export function globToRegex(pattern: string): RegExp {
   pattern = pattern.trim().replace(/\\/g, "/");
@@ -95,6 +97,9 @@ export function pathMatches(globs: string, path: string): boolean {
 interface Input {
   hook_event_name?: string;
   session_id?: string;
+  /** Session working directory — the base for a relative tool path, and the fallback root
+   *  when an edit carries no path this hook can resolve. */
+  cwd?: string;
   /** Present only when the tool call comes from inside a sub-agent (Claude Code sets it
    *  on every hook payload a sub-agent's tool call produces; absent on the main thread). */
   agent_id?: string;
@@ -293,6 +298,15 @@ if (import.meta.main) {
   // announces the standard once, not twenty times.
   let fresh = matched;
   let showUntrusted = untrusted !== null;
+  // The MSRV-gated idiom set rides the same namespace under `stdlib-timeline`. It is keyed
+  // to Rust files because that is where the idioms land, and it is worth its lines exactly
+  // once per context: the floor does not change mid-session, and after a compaction
+  // discards it the marker is gone too, so it comes back with everything else.
+  //
+  // Never for a third-party path. The floor would be resolved from the DEPENDENCY's own
+  // manifest — a real number about the wrong crate, which is the most misleading kind — and
+  // the agent is reading that source, not writing it.
+  let showTimeline = norms.some((n) => n.endsWith(".rs")) && untrusted === null;
   try {
     if (!data.session_id) throw new Error("no session key");
     const dir = join(tmpdir(), "rust-studio-rules");
@@ -300,10 +314,12 @@ if (import.meta.main) {
     mkdirSync(dir, { recursive: true });
     fresh = matched.filter((r) => !existsSync(marker(r.name)));
     if (showUntrusted && existsSync(marker("untrusted-context"))) showUntrusted = false;
+    if (showTimeline && existsSync(marker("stdlib-timeline"))) showTimeline = false;
     // every applicable standard is already in context
-    if (!fresh.length && !showUntrusted) done();
+    if (!fresh.length && !showUntrusted && !showTimeline) done();
     for (const r of fresh) writeFileSync(marker(r.name), "1");
     if (showUntrusted) writeFileSync(marker("untrusted-context"), "1");
+    if (showTimeline) writeFileSync(marker("stdlib-timeline"), "1");
   } catch {
     /* inject anyway */
   }
@@ -334,6 +350,27 @@ if (import.meta.main) {
 
   const sections: string[] = [];
   if (fresh.length) sections.push(header + "\n" + bullets.join("\n"));
+
+  // The idiom set that is actually true for THIS crate. core.md carries the principle;
+  // the version-keyed half is computed here, because only the crate's floor decides which
+  // half of it exists. Resolved from the edited file's own crate, not the session cwd — in
+  // a workspace those differ, and the member's floor is the one that governs the edit.
+  if (showTimeline) {
+    try {
+      const first = norms.find((n) => n.endsWith(".rs")) ?? "";
+      const base = isAbsolute(first)
+        ? dirname(first)
+        : dirname(resolve(data.cwd || process.cwd(), first));
+      const crate = crateFloor(base);
+      const block = renderTimeline(
+        loadTimeline(root),
+        resolveFloor({ msrv: crate.msrv, edition: crate.edition, defaultMsrv: option("default_msrv") }),
+      );
+      if (block) sections.push(block);
+    } catch {
+      /* the standards pointer above is the part that must not be lost */
+    }
+  }
   // Stated as a provenance fact, not a warning to weigh: the content is about to
   // arrive, and what the agent needs is the rule for how to treat it.
   if (showUntrusted) {

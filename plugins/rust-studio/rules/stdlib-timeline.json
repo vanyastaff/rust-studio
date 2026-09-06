@@ -1,0 +1,161 @@
+{
+  "$comment": [
+    "Version-keyed Rust stabilizations, gated on the crate's MSRV before they reach an agent.",
+    "",
+    "Why this is data and not prose: a model's training data lags the toolchain, and even when",
+    "it knows the new API it writes the old shape out of habit. Naming the new API in a rule",
+    "fixes the first half and makes the second half worse — an agent told about `bool::ok_or`",
+    "on a crate whose `rust-version` is 1.70 writes code that does not compile. So the list",
+    "lives here, `hooks/scripts/stdlib-timeline.ts` filters it to the crate's floor, and",
+    "`inject-rules.ts` emits only what that crate can actually use.",
+    "",
+    "Maintaining it: add an entry per release for stabilizations that REPLACE a shape a model",
+    "still reaches for by default. Not a changelog — an entry earns its place by displacing a",
+    "habit. `instead` is the habit; keep it concrete enough to recognize in a diff.",
+    "`clippy` names the lint that mechanizes the swap (verify with `clippy-driver -Whelp`,",
+    "which prints hyphenated names) or is omitted when no lint exists.",
+    "`kind` is \"idiom\" (reach for this) or \"breakage\" (expect this, do not work around it)."
+  ],
+  "entries": [
+    {
+      "version": "1.65",
+      "kind": "idiom",
+      "item": "`let … else`",
+      "instead": "the `match` / `if let` ladder that exists only to `return` on the miss",
+      "clippy": "manual_let_else"
+    },
+    {
+      "version": "1.70",
+      "kind": "idiom",
+      "item": "`OnceLock`",
+      "instead": "`lazy_static!` or `once_cell::sync::OnceCell` for one-shot init",
+      "clippy": "non_std_lazy_statics"
+    },
+    {
+      "version": "1.70",
+      "kind": "idiom",
+      "item": "`Option::is_some_and` / `Result::is_ok_and`",
+      "instead": "`map_or(false, …)`",
+      "clippy": "manual_is_variant_and"
+    },
+    {
+      "version": "1.73",
+      "kind": "idiom",
+      "item": "`div_ceil`",
+      "instead": "the `(a + b - 1) / b` rounding trick",
+      "clippy": "manual_div_ceil"
+    },
+    {
+      "version": "1.75",
+      "kind": "idiom",
+      "item": "native `async fn` in trait / RPITIT",
+      "instead": "`#[async_trait]` — which still earns its place when the trait must be `dyn`-safe"
+    },
+    {
+      "version": "1.76",
+      "kind": "idiom",
+      "item": "`Result::inspect_err` / `Option::inspect`",
+      "instead": "`map_err(|e| { log(&e); e })` — a side effect wearing a transform's clothes",
+      "clippy": "manual_inspect"
+    },
+    {
+      "version": "1.77",
+      "kind": "idiom",
+      "item": "C-string literals `c\"…\"`",
+      "instead": "`CString::new(\"…\").unwrap()` — a runtime panic path for a compile-time constant",
+      "clippy": "manual_c_str_literals"
+    },
+    {
+      "version": "1.80",
+      "kind": "idiom",
+      "item": "`LazyLock`",
+      "instead": "`once_cell::sync::Lazy`",
+      "clippy": "non_std_lazy_statics"
+    },
+    {
+      "version": "1.80",
+      "kind": "idiom",
+      "item": "`Option::take_if`",
+      "instead": "take, inspect, then put the value back on the reject path"
+    },
+    {
+      "version": "1.81",
+      "kind": "idiom",
+      "item": "`#[expect(lint, reason = \"…\")]`",
+      "instead": "bare `#[allow]` — `expect` fires when the suppression stops being needed, so it cannot rot silently"
+    },
+    {
+      "version": "1.82",
+      "kind": "idiom",
+      "item": "`Option::is_none_or`",
+      "instead": "`map_or(true, …)`"
+    },
+    {
+      "version": "1.88",
+      "kind": "idiom",
+      "item": "let-chains (`if let … && let …`, edition 2024)",
+      "instead": "the nested `if let` pyramid"
+    },
+    {
+      "version": "1.95",
+      "kind": "idiom",
+      "item": "`if let` guards on match arms",
+      "instead": "the match-arm-then-nested-`if let` shape — `Foo(a) if let Some(b) = lookup(a) => …`"
+    },
+    {
+      "version": "1.95",
+      "kind": "idiom",
+      "item": "`Vec::push_mut` / `insert_mut` (and the `VecDeque` / `LinkedList` `push_*_mut` family)",
+      "instead": "push, then `last_mut().unwrap()` to get the reference back"
+    },
+    {
+      "version": "1.96",
+      "kind": "idiom",
+      "item": "`assert_matches!`",
+      "instead": "`assert!(matches!(…))`, which prints no value when it fails (see testing.md)"
+    },
+    {
+      "version": "1.97",
+      "kind": "idiom",
+      "item": "`bit_width` / `highest_one` / `isolate_lowest_one`",
+      "instead": "hand-rolled `leading_zeros` arithmetic",
+      "clippy": "manual_isolate_lowest_one"
+    },
+    {
+      "version": "1.98",
+      "kind": "idiom",
+      "item": "`bool::ok_or` / `ok_or_else`",
+      "instead": "the `if !cond { return Err(…) }` guard — `cond.ok_or(Error::Invalid)?`"
+    },
+    {
+      "version": "1.98",
+      "kind": "idiom",
+      "item": "`str::substr_range` / `[T]::subslice_range`",
+      "instead": "pointer arithmetic to recover a sub-slice's offset"
+    },
+    {
+      "version": "1.98",
+      "kind": "idiom",
+      "item": "`strip_circumfix`",
+      "instead": "the `strip_prefix` + `strip_suffix` pair"
+    },
+    {
+      "version": "1.98",
+      "kind": "idiom",
+      "item": "`NonZero::from_str_radix`",
+      "instead": "parse-then-check"
+    },
+    {
+      "version": "1.98",
+      "kind": "idiom",
+      "item": "`Atomic<T>::from_mut` / `get_mut_slice`",
+      "instead": "copying plain data to borrow it as atomics"
+    },
+    {
+      "version": "1.98",
+      "kind": "breakage",
+      "item": "some `ambiguous_glob_imports` are hard errors, `T = T` where-bounds are rejected, and `invalid_runtime_symbol_definitions` is denied",
+      "instead": "A build that was warning-clean on 1.97 can go red on these alone; that is a toolchain fact to report, not code to work around."
+    }
+  ]
+}

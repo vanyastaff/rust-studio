@@ -57,6 +57,12 @@ claude plugin validate --strict .    # the host's own validator (also run in CI)
 agnix .                              # cross-host agent-config linter (cargo binstall agnix-cli)
 ```
 
+`validate-distribution.sh` reports a failure as a structured finding — a stable
+`RS-<AREA>-<NNN>` code, the exact subject, what was measured, and the repair — so it can be
+acted on without a second round trip. `--json` emits that as one object for CI and for
+agents. Codes are never reused; the registry at the top of the script says which number is
+next in each area, and the script fails itself if two checks ever share one.
+
 Both run in CI (`.github/workflows/sync-references.yml`); a PR that fails either does not
 merge. Bump the version in **both** manifests and add a `CHANGELOG.md` entry when behavior
 changes.

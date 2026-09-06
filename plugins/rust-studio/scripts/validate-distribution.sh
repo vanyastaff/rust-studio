@@ -1,13 +1,78 @@
 #!/usr/bin/env bash
 # Validate the dual-host distribution without requiring Claude Code or Codex to be installed.
+#
+#   ./scripts/validate-distribution.sh          human-readable
+#   ./scripts/validate-distribution.sh --json   one JSON object, for CI and for agents
+#
+# A failure is reported as a STRUCTURED FINDING, not a sentence: a stable code, the exact
+# subject it is about, what was measured, and the repair. The reader is usually an agent
+# that must fix this without a second round trip, and "validation failed: manifest versions
+# differ" tells it neither which manifests nor what to write. Codes are stable across
+# releases — cite them in commit messages and issues.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+JSON=0
+[[ ${1:-} == --json ]] && JSON=1
+
+# Progress chatter. Silent under --json so stdout stays a single parseable object.
+say() { (( JSON )) || echo "$@"; }
+
+_json_escape() { # minimal JSON string escaping for the fields below
+  local s=$1
+  s=${s//\\/\\\\}
+  s=${s//\"/\\\"}
+  s=${s//$'\n'/\\n}
+  s=${s//$'\t'/\\t}
+  printf '%s' "$s"
+}
+
+# Code registry. Numbers are never reused: a code that appears in an old issue must keep
+# meaning what it meant. Take the next free number in the area you are adding to.
+#
+#   RS-DIST-0xx      required files, and this script itself    next: 003
+#   RS-CODEX-0xx     Codex hooks and manifest wiring           next: 017
+#   RS-HOOK-0xx      hook config shared across hosts           next: 022
+#   RS-SCRIPT-0xx    shipped scripts and their contracts       next: 037
+#   RS-MEM-0xx       memory-store contract                     next: 041
+#   RS-MANIFEST-0xx  plugin manifests and version agreement    next: 058
+#   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 077
+#   RS-DATA-0xx      rules/*.json data files                   next: 076
+#   RS-AGENT-0xx     agent briefs and their generation         next: 083
+#   RS-DOC-0xx       docs and README staying true to the tree  next: 094
+#   RS-EVAL-0xx      eval cases                                next: 106
+#   RS-REF-1xx       bundled skill references                  next: 111
+#
+# fail <code> <subject> <problem> [fix]
+#   code     stable RS-<AREA>-<NNN> identifier
+#   subject  the exact thing at fault — a path, ideally with the key inside it
+#   problem  what was measured, not a category
+#   fix      the repair, when there is one specific enough to name
 fail() {
-  echo "validation failed: $*" >&2
+  local code=$1 subject=$2 problem=$3 fix=${4:-}
+  if (( JSON )); then
+    printf '{"ok":false,"finding":{"code":"%s","subject":"%s","problem":"%s","fix":"%s"}}\n' \
+      "$(_json_escape "$code")" "$(_json_escape "$subject")" \
+      "$(_json_escape "$problem")" "$(_json_escape "$fix")"
+  else
+    {
+      echo "validation failed"
+      echo
+      printf '  %-14s %s\n' "$code" "$subject"
+      printf '  %-14s %s\n' "problem" "$problem"
+      [[ -n $fix ]] && printf '  %-14s %s\n' "fix" "$fix"
+    } >&2
+  fi
   exit 1
 }
+
+# This script's own promise first: a finding code is a stable identifier, so two checks
+# must never share one. A copy-pasted code is the easy way to break that silently.
+dup_codes=$(grep -oE 'fail RS-[A-Z]+-[0-9]+' scripts/validate-distribution.sh | awk '{print $2}' | sort | uniq -d)
+[[ -z $dup_codes ]] || fail RS-DIST-002 "scripts/validate-distribution.sh" \
+  "duplicate finding code(s): $(echo "$dup_codes" | tr '\n' ' ')" \
+  "codes are never reused — take the next free number from the registry at the top of this file"
 
 for file in \
   .claude-plugin/plugin.json \
@@ -18,18 +83,18 @@ for file in \
   agents/openai.yaml \
   hooks/claude-hooks.json \
   hooks/codex-hooks.json; do
-  [[ -f $file ]] || fail "missing $file"
+  [[ -f $file ]] || fail RS-DIST-001 "$file" "required distribution file is missing" "restore the file, or drop it from the required list in this script"
 done
 
 # The Codex hook file must stay host-clean: PLUGIN_ROOT only, and every script it
 # runs must exist (a typo here fails silently at session start otherwise).
-! grep -q 'CLAUDE_' hooks/codex-hooks.json || fail "codex-hooks.json references Claude-only variables"
-jq -e '.hooks | type == "object"' hooks/codex-hooks.json >/dev/null || fail "codex-hooks.json is not a hook config"
+! grep -q 'CLAUDE_' hooks/codex-hooks.json || fail RS-CODEX-010 "hooks/codex-hooks.json" "references a CLAUDE_ variable, which Codex never sets" "use \${PLUGIN_ROOT} instead"
+jq -e '.hooks | type == "object"' hooks/codex-hooks.json >/dev/null || fail RS-CODEX-011 "hooks/codex-hooks.json#hooks" "not an object, so Codex does not read it as a hook config" "make .hooks an object keyed by event name"
 while IFS= read -r script; do
-  [[ -f $script ]] || fail "codex-hooks.json runs missing script $script"
+  [[ -f $script ]] || fail RS-CODEX-012 "hooks/codex-hooks.json -> $script" "the script it runs does not exist; the hook fails silently at session start" "add the script, or correct the path in the hook config"
 done < <(grep -oE '\$\{PLUGIN_ROOT\}/[a-z/._-]+\.ts' hooks/codex-hooks.json | sed 's#^\${PLUGIN_ROOT}/##')
 jq -e '.hooks == "./hooks/codex-hooks.json"' .codex-plugin/plugin.json >/dev/null ||
-  fail "Codex manifest does not wire hooks/codex-hooks.json"
+  fail RS-CODEX-013 ".codex-plugin/plugin.json#hooks" "does not point at ./hooks/codex-hooks.json, so no Codex hook runs at all" "set \"hooks\": \"./hooks/codex-hooks.json\""
 
 # Codex parses this file strictly: one unknown top-level key rejects the WHOLE
 # config, so every hook goes silent with a single startup warning. A `_comment`
@@ -37,20 +102,20 @@ jq -e '.hooks == "./hooks/codex-hooks.json"' .codex-plugin/plugin.json >/dev/nul
 # `hooks` are accepted.
 bad_keys=$(jq -r 'keys[] | select(. != "description" and . != "hooks")' hooks/codex-hooks.json)
 [[ -z $bad_keys ]] ||
-  fail "codex-hooks.json has top-level keys Codex rejects (whole file is dropped): $(echo "$bad_keys" | tr '\n' ' ')"
+  fail RS-CODEX-014 "hooks/codex-hooks.json (top level)" "unknown key(s): $(echo "$bad_keys" | tr '\n' ' ') — Codex rejects the WHOLE file, silencing every hook with one startup warning" "keep only description and hooks"
 
 # Codex clamps a SessionEnd hook to 3s whatever the file declares. Declaring more
 # is not a bigger budget — it is a script written for time it will never get, and
 # the mismatch only surfaces as a startup warning nobody reads.
 session_end_timeout=$(jq -r '.hooks.SessionEnd[0].hooks[0].timeout // 0' hooks/codex-hooks.json)
 (( session_end_timeout <= 3 )) ||
-  fail "codex-hooks.json declares SessionEnd timeout ${session_end_timeout}s; Codex clamps it to 3s"
+  fail RS-CODEX-015 "hooks/codex-hooks.json#SessionEnd.timeout" "declares ${session_end_timeout}s; Codex clamps SessionEnd to 3s" "set the timeout to 3 or less, and write the script for 3s"
 
 # Event names Codex recognizes. A typo here is silent too — the hook simply never
 # fires. Verified against the Codex binary's hook dispatcher.
 codex_events="PreToolUse PostToolUse PermissionRequest PreCompact PostCompact SessionStart SessionEnd SubagentStart SubagentStop Stop UserPromptSubmit Notification"
 while IFS= read -r event; do
-  [[ " $codex_events " == *" $event "* ]] || fail "codex-hooks.json declares unknown event $event"
+  [[ " $codex_events " == *" $event "* ]] || fail RS-CODEX-016 "hooks/codex-hooks.json#$event" "not an event Codex dispatches, so the hook never fires" "use one of: $codex_events"
 done < <(jq -r '.hooks | keys[]' hooks/codex-hooks.json)
 
 # Every hook the Codex file omits should be omitted because it cannot work there,
@@ -60,43 +125,101 @@ codex_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/codex-hooks.json | sort -u)
 expected_claude_only=$'/auto-capture.ts\n/model-switch.ts\n/statusline-install.ts\n/subagent-start.ts\n/subagent-stop.ts'
 actual_claude_only=$(comm -23 <(echo "$claude_scripts") <(echo "$codex_scripts"))
 [[ $actual_claude_only == "$expected_claude_only" ]] ||
-  fail "Claude-only hook set changed — port it to Codex or update the expected list. Got: $(echo "$actual_claude_only" | tr '\n' ' ')"
+  fail RS-HOOK-020 "hooks/claude-hooks.json vs hooks/codex-hooks.json" "the Claude-only hook set is now: $(echo "$actual_claude_only" | tr '\n' ' ')" "port the new hook to Codex, or add it to expected_claude_only in this script once that is a deliberate gap"
 
-[[ -x skills/env-setup/scripts/env-setup.sh ]] || fail "env-setup portable script is missing or not executable"
+[[ -x skills/env-setup/scripts/env-setup.sh ]] || fail RS-SCRIPT-030 "skills/env-setup/scripts/env-setup.sh" "missing, or present without the executable bit" "run ./scripts/sync-references.sh, then chmod +x the bundled copy"
 for f in memory-doctor.ts memory-store.ts _lib.ts; do
-  [[ -f skills/memory-doctor/scripts/$f ]] || fail "memory-doctor portable bundle is missing $f"
+  [[ -f skills/memory-doctor/scripts/$f ]] || fail RS-SCRIPT-031 "skills/memory-doctor/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so it breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
 done
 grep -q 'bun "scripts/memory-doctor.ts"' skills/memory-doctor/SKILL.md ||
-  fail "memory-doctor skill must run its bundled CLI, not a plugin-root path"
+  fail RS-SCRIPT-032 "skills/memory-doctor/SKILL.md" "does not invoke bun \"scripts/memory-doctor.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
 ! grep -rqE 'OBSIDIAN_VAULT_PATH|vault_path|note_create|search_semantic|obsidian MCP|`obsidian`' \
     skills/*/SKILL.md docs/*.md README.md $(ls hooks/scripts/*.ts | grep -v '\.test\.ts$') ||
-  fail "Obsidian-era memory contract remnants: memory is the host's auto-memory store since 0.36.0"
+  fail RS-MEM-040 "skills/*/SKILL.md, docs/*.md, README.md, hooks/scripts/*.ts" "Obsidian-era memory contract remnants (vault path / MCP note tools) survive" "memory has been the host auto-memory store since 0.36.0 — remove the reference or rewrite it against docs/memory-protocol.md"
+
+# --- shipped-script contract ------------------------------------------------------
+# A skill that ships scripts/ ships a CLI, and it is run by two callers with different
+# needs: an agent following SKILL.md, and a person deciding whether to let the agent run
+# it at all. The second one has no way in except `--help`, so a shipped entry point that
+# cannot introduce itself is not finished. And a bundled script with no test is code that
+# reaches a user machine having never been executed by CI — env-setup.sh, which provisions
+# the machine, was in exactly that state.
+#
+# An entry point is an executable .sh or a .ts with `import.meta.main`; the library modules
+# bundled next to one (_lib.ts, memory-store.ts) are exempt from both rules.
+entry_points=()
+for scripts_dir in skills/*/scripts; do
+  [[ -d $scripts_dir ]] || continue
+  skill=${scripts_dir%/scripts}; skill=${skill##*/}
+  found=0
+  for f in "$scripts_dir"/*; do
+    [[ -f $f ]] || continue
+    case $f in
+      *.sh) [[ -x $f ]] || continue ;;
+      *.ts) grep -q 'import\.meta\.main' "$f" || continue ;;
+      *) continue ;;
+    esac
+    found=1
+    entry_points+=("$f")
+  done
+  (( found )) || fail RS-SCRIPT-036 "$scripts_dir" \
+    "ships a scripts/ directory with no runnable entry point (no executable .sh, no .ts with import.meta.main)" \
+    "make the CLI executable, or drop the directory — a bundle nothing can run is dead weight in every install of /$skill"
+done
+
+for f in "${entry_points[@]}"; do
+  base=${f##*/}; stem=${base%.*}
+
+  # --help. Skipped for a .ts entry point when bun is absent (a bare image can still run the
+  # rest of this validator) — but only this check, never the test-coverage one below.
+  help_rc=0; help_out=""; checked_help=1
+  case $f in
+    *.sh) help_out=$(bash "$f" --help </dev/null 2>/dev/null) || help_rc=$? ;;
+    *.ts)
+      if command -v bun >/dev/null 2>&1; then
+        help_out=$(bun "$f" --help </dev/null 2>/dev/null) || help_rc=$?
+      else
+        checked_help=0
+      fi ;;
+  esac
+  if (( checked_help )); then
+    (( help_rc == 0 )) && [[ -n ${help_out//[[:space:]]/} ]] || fail RS-SCRIPT-034 "$f --help" \
+      "exits $help_rc, and prints $( [[ -n ${help_out//[[:space:]]/} ]] && echo "output" || echo "nothing" )" \
+      "make --help print usage and exit 0 — it is the only way a person can review what an agent is about to run"
+  fi
+
+  # The bundled copy is generated; the test covers the source it is generated from, so the
+  # test is looked up by basename anywhere in the tree rather than beside the bundle.
+  [[ -n $(find . -name "$stem.test.ts" -not -path './skills/*' -print -quit) ]] || fail RS-SCRIPT-035 "$f" \
+    "a shipped CLI with no $stem.test.ts anywhere outside skills/" \
+    "add tests for the source this bundle is generated from — it reaches user machines otherwise untested"
+done
 
 # hooks/hooks.json is auto-discovered by both hosts. Keep the Claude-only lifecycle file
 # under an explicit name until every hook is intentionally ported and tested on Codex.
-[[ ! -e hooks/hooks.json ]] || fail "hooks/hooks.json would expose Claude-only hooks to Codex"
+[[ ! -e hooks/hooks.json ]] || fail RS-HOOK-021 "hooks/hooks.json" "both hosts auto-discover this filename, so Claude-only hooks would run on Codex untested" "keep the Claude set in hooks/claude-hooks.json until each hook is ported and tested"
 
 claude_name=$(jq -r '.name' .claude-plugin/plugin.json)
 codex_name=$(jq -r '.name' .codex-plugin/plugin.json)
-[[ $claude_name == rust-studio && $codex_name == rust-studio ]] || fail "manifest name mismatch"
+[[ $claude_name == rust-studio && $codex_name == rust-studio ]] || fail RS-MANIFEST-050 ".claude-plugin/plugin.json#name, .codex-plugin/plugin.json#name" "names are '$claude_name' and '$codex_name'; both must be rust-studio" "set both to rust-studio"
 
 claude_version=$(jq -r '.version' .claude-plugin/plugin.json)
 codex_version=$(jq -r '.version' .codex-plugin/plugin.json)
-[[ $claude_version == "$codex_version" ]] || fail "manifest versions differ"
+[[ $claude_version == "$codex_version" ]] || fail RS-MANIFEST-051 ".claude-plugin/plugin.json#version vs .codex-plugin/plugin.json#version" "versions are $claude_version and $codex_version" "bump both manifests and plugin.json together"
 
 # The Agent Plugins 1.0 manifest (agent-plugins.org) is what Codex >= 0.147, Cursor, Copilot
 # CLI and Kiro load. Its schema is closed: $schema + name are required, the component
 # locations are fixed (flat skills/), and it must not drift from the host manifests.
-[[ -f plugin.json ]] || fail "missing plugin.json (Agent Plugins 1.0 manifest)"
+[[ -f plugin.json ]] || fail RS-MANIFEST-052 "plugin.json" "the Agent Plugins 1.0 manifest is missing; Codex >= 0.147, Cursor, Copilot CLI and Kiro load this file" "add plugin.json with \$schema, name and version matching the host manifests"
 jq -e '
   ."$schema" == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json" and
   .name == "rust-studio" and
   (.description | length > 0) and
   (keys - ["$schema","name","version","description","author","homepage","repository","license","keywords","extensions"] | length == 0)
-' plugin.json >/dev/null || fail "plugin.json is not a valid Agent Plugins 1.0 manifest (schema, name, or an unknown key)"
-[[ $(jq -r '.version' plugin.json) == "$claude_version" ]] || fail "plugin.json version differs from the host manifests"
+' plugin.json >/dev/null || fail RS-MANIFEST-053 "plugin.json" "fails the Agent Plugins 1.0 schema: wrong \$schema, wrong name, empty description, or a key outside the closed set" "the allowed keys are \$schema, name, version, description, author, homepage, repository, license, keywords, extensions"
+[[ $(jq -r '.version' plugin.json) == "$claude_version" ]] || fail RS-MANIFEST-054 "plugin.json#version" "is $(jq -r '.version' plugin.json); the host manifests say $claude_version" "bump all three together"
 for skill_dir in skills/*/; do
-  [[ -f $skill_dir/SKILL.md ]] || fail "${skill_dir%/} has no SKILL.md — Agent Plugins clients read only immediate children of skills/"
+  [[ -f $skill_dir/SKILL.md ]] || fail RS-SKILL-060 "${skill_dir%/}" "no SKILL.md; Agent Plugins clients read only immediate children of skills/, so this directory is invisible" "add SKILL.md, or move the directory out of skills/"
 done
 
 jq -e '
@@ -107,7 +230,48 @@ jq -e '
   (.homepage | startswith("https://")) and
   (.interface.privacyPolicyURL | startswith("https://")) and
   (.interface.termsOfServiceURL | startswith("https://"))
-' .codex-plugin/plugin.json >/dev/null || fail "incomplete Codex manifest"
+' .codex-plugin/plugin.json >/dev/null || fail RS-MANIFEST-055 ".codex-plugin/plugin.json#interface" "incomplete: needs skills=./skills/, displayName \"Rust Code Studio\", category \"Developer Tools\", a non-empty defaultPrompt, and https homepage / privacyPolicyURL / termsOfServiceURL" "fill the missing field(s); the Codex store rejects the plugin without them"
+
+# --- rules/stdlib-timeline.json: the MSRV-gated idiom set -------------------------
+# Version-keyed stabilizations live here as data so `inject-rules.ts` can filter them to
+# the crate's `rust-version` before an agent sees them. A malformed entry is worse than a
+# missing one: the loader drops it silently, and the crate quietly stops being told about
+# an idiom nobody notices is gone.
+timeline=rules/stdlib-timeline.json
+[[ -f $timeline ]] || fail RS-DATA-070 "$timeline" "missing; the MSRV-gated idiom set has no data and inject-rules.ts falls silent" "restore the file (see hooks/scripts/stdlib-timeline.ts for the shape)"
+jq -e '.entries | type == "array" and length > 0' "$timeline" >/dev/null \
+  || fail RS-DATA-071 "$timeline#entries" "not a non-empty array" "add at least one stabilization entry"
+bad=$(jq -r '
+  .entries
+  | to_entries[]
+  | select(
+      (.value.version | type != "string" or test("^[0-9]+\\.[0-9]+") | not)
+      or (.value.kind | IN("idiom", "breakage") | not)
+      or (.value.item | type != "string" or length == 0)
+      or (.value.instead | type != "string" or length == 0)
+      or (.value.clippy != null and (.value.clippy | type != "string" or test("clippy::|^$")))
+    )
+  | "entry \(.key) (\(.value.item // "no item"))"
+' "$timeline")
+[[ -z $bad ]] || fail RS-DATA-072 "$timeline" "entries the loader would silently drop: $bad" "each entry needs version (N.N), kind (idiom|breakage), non-empty item and instead; clippy must be a bare lint name without the clippy:: prefix"
+sorted=$(jq -r '[.entries[].version] | map(split(".") | map(tonumber))' "$timeline")
+[[ $sorted == "$(jq -r '[.entries[].version] | map(split(".") | map(tonumber)) | sort' "$timeline")" ]] \
+  || fail RS-DATA-073 "$timeline#entries" "not in ascending version order" "sort entries chronologically so a new release appends to the end"
+# Every lint named must exist, or the suggested `cargo clippy -W ...` command errors out.
+# Only checkable where clippy is installed; skipped rather than assumed in a bare CI image.
+if command -v clippy-driver >/dev/null 2>&1; then
+  probe=$(mktemp -d)/probe.rs
+  echo 'fn main(){}' > "$probe"
+  known=$(clippy-driver -Whelp "$probe" 2>/dev/null | sed 's/^ *//' | awk '{print $1}' \
+    | grep '^clippy::' | sed 's/^clippy:://' | tr '-' '_' | sort -u)
+  for lint in $(jq -r '.entries[].clippy // empty' "$timeline" | sort -u); do
+    grep -qx "$lint" <<<"$known" || fail RS-DATA-074 "$timeline -> clippy::$lint" "this toolchain ($(rustc --version 2>/dev/null | cut -d\" \" -f2)) does not define that lint, so the suggested cargo clippy command would error out" "check the name with clippy-driver -Whelp (it prints hyphenated names), or drop the clippy field"
+  done
+fi
+# Regression guard: the version-keyed list moved OUT of core.md. Prose cannot be gated on a
+# crate's MSRV, which is how a 1.70 crate ended up being told to use a 1.98 API.
+! grep -qE '\*\*1\.[0-9]+\*\*' rules/core.md \
+  || fail RS-DATA-075 "rules/core.md" "enumerates Rust versions in prose again" "prose cannot be gated on a crate MSRV, which is how a 1.70 crate got told to use a 1.98 API — move the entry into $timeline"
 
 jq -e '
   .name == "rust-studio" and
@@ -118,7 +282,7 @@ jq -e '
     .policy.installation == "AVAILABLE" and
     .policy.authentication == "ON_INSTALL" and
     .category == "Developer Tools")
-' ../../.agents/plugins/marketplace.json >/dev/null || fail "invalid Codex marketplace entry"
+' ../../.agents/plugins/marketplace.json >/dev/null || fail RS-MANIFEST-056 "../../.agents/plugins/marketplace.json" "the rust-studio entry is missing or malformed: needs source local at ./plugins/rust-studio, installation AVAILABLE, authentication ON_INSTALL, category \"Developer Tools\"" "fix the entry; Codex cannot install the plugin without it"
 
 skill_count=0
 description_chars=0
@@ -129,16 +293,16 @@ for skill_dir in skills/*/; do
   skill_count=$((skill_count + 1))
 
   declared=$(awk -F': ' '/^name:/ { print $2; exit }' "$skill_dir/SKILL.md")
-  [[ $declared == "$skill" ]] || fail "$skill: frontmatter name does not match directory"
+  [[ $declared == "$skill" ]] || fail RS-SKILL-061 "skills/$skill/SKILL.md#name" "declares '$declared'; the directory is '$skill'" "make the frontmatter name equal the directory name — hosts address the skill by directory"
 
   description=$(awk '/^description:/ { sub(/^description:[[:space:]]*/, ""); gsub(/^"|"$/, ""); print; exit }' "$skill_dir/SKILL.md")
-  [[ -n $description ]] || fail "$skill: missing description"
+  [[ -n $description ]] || fail RS-SKILL-062 "skills/$skill/SKILL.md#description" "empty or absent" "add a one-line description starting with \"Use when …\" — it is the only text the router sees"
   description_chars=$((description_chars + ${#description}))
 
   lines=$(wc -l < "$skill_dir/SKILL.md")
-  (( lines < 500 )) || fail "$skill: SKILL.md exceeds 500 lines"
-  [[ -f $skill_dir/agents/openai.yaml ]] || fail "$skill: missing agents/openai.yaml"
-  grep -Fq "\$$skill" "$skill_dir/agents/openai.yaml" || fail "$skill: default prompt does not mention \$$skill"
+  (( lines < 500 )) || fail RS-SKILL-063 "skills/$skill/SKILL.md" "$lines lines, over the 500-line ceiling" "move detail into references/ and cite it; the body is loaded in full every invocation"
+  [[ -f $skill_dir/agents/openai.yaml ]] || fail RS-SKILL-064 "skills/$skill/agents/openai.yaml" "missing, so the skill has no OpenAI-host metadata" "run node scripts/generate-openai-metadata.mjs"
+  grep -Fq "\$$skill" "$skill_dir/agents/openai.yaml" || fail RS-SKILL-065 "skills/$skill/agents/openai.yaml" "its default prompt does not mention \$$skill" "regenerate with node scripts/generate-openai-metadata.mjs"
 
   # A side-effecting skill (publishes, commits, scaffolds, rewrites machine config) is
   # user-invoked: only a human starts it. Both harnesses must agree, or the skill fires
@@ -157,18 +321,18 @@ for skill_dir in skills/*/; do
   esac
 
   (( claude_user_invoked == expected )) ||
-    fail "$skill: Claude invocation axis disagrees with the side-effecting roster (expected disable-model-invocation: $expected)"
+    fail RS-SKILL-066 "skills/$skill/SKILL.md#disable-model-invocation" "expected $expected for this skill's side-effecting classification" "set the key to $expected, or move the skill on the side-effecting roster in this script"
   (( codex_user_invoked == expected )) ||
-    fail "$skill: Codex invocation axis disagrees with the side-effecting roster (expected allow_implicit_invocation false: $expected)"
+    fail RS-SKILL-067 "skills/$skill/agents/openai.yaml#allow_implicit_invocation" "expected allow_implicit_invocation false to be $expected for this skill's side-effecting classification" "regenerate the metadata, or move the skill on the side-effecting roster in this script"
 done
 
-(( skill_count > 0 )) || fail "no skills found"
+(( skill_count > 0 )) || fail RS-SKILL-068 "skills/" "no skill directory contains a SKILL.md" "the distribution ships no skills at all — check that you are running from the plugin root"
 openai_metadata_count=$(find skills -path '*/agents/openai.yaml' -type f | wc -l)
-(( openai_metadata_count == skill_count )) || fail "OpenAI metadata count does not match skill count"
+(( openai_metadata_count == skill_count )) || fail RS-SKILL-069 "skills/*/agents/openai.yaml" "$openai_metadata_count metadata files for $skill_count skills" "run node scripts/generate-openai-metadata.mjs"
 
 # Codex budgets the initial skill catalog. Keep descriptions below this repo-level ceiling
 # so names and paths still have room inside the current 8,000-character product budget.
-(( description_chars <= 6500 )) || fail "skill descriptions use $description_chars characters (limit: 6500)"
+(( description_chars <= 6500 )) || fail RS-SKILL-070 "skills/*/SKILL.md#description (total)" "$description_chars characters against a 6500 budget" "shorten the longest descriptions; every one is loaded into the router context on every session"
 
 unknown_keys=$(awk '
   FNR == 1 { yaml = 0 }
@@ -181,7 +345,7 @@ unknown_keys=$(awk '
     }
   }
 ' skills/*/SKILL.md)
-[[ -z $unknown_keys ]] || fail "unknown skill frontmatter keys:\n$unknown_keys"
+[[ -z $unknown_keys ]] || fail RS-SKILL-071 "skills/*/SKILL.md frontmatter" "unknown key(s): $(echo "$unknown_keys" | tr '\n' ' ')" "hosts ignore unknown keys silently — remove them, or add the key to the allowed set in this script once a host documents it"
 
 # `claude plugin validate --strict` does not inspect agent frontmatter at all. Confirmed by
 # planting `totallyMadeUpKey: banana`, `permissionMode: not_a_real_mode`, and
@@ -207,7 +371,7 @@ unknown_keys=$(awk '
 # Extracted 2026-09-04 from Claude Code 2.1.260 (binary at
 # ~/.local/share/claude/versions/2.1.260): 20 keys, matched below. `agents/openai.yaml` is
 # Codex metadata, not an agent brief, and is skipped by the `*.md` glob below.
-python3 - <<'AGENTFRONTMATTER' || fail "an agent brief's frontmatter violates the agent frontmatter gate — see the class named above"
+python3 - <<'AGENTFRONTMATTER' || fail RS-AGENT-080 "agents/*.md frontmatter" "an agent brief violates the frontmatter gate — the failing class is printed above" "fix the brief named above; the gate detail is in the python block in this script"
 import re, pathlib, sys
 
 # Every key Claude Code 2.1.260's own agent-frontmatter schema recognizes (see the extraction
@@ -289,13 +453,13 @@ for skill in skills/*/SKILL.md; do
     portability_fail=1
   fi
 done
-(( portability_fail == 0 )) || fail "host-specific APIs leaked into portable skills"
+(( portability_fail == 0 )) || fail RS-SKILL-072 "skills/*/SKILL.md" "$portability_fail host-specific API reference(s), listed above" "cite references/<name>.md instead of a host plugin-root variable — a bundled skill must resolve on any host"
 
 if grep -R -n -F '[TODO:' \
   .claude-plugin .codex-plugin agents assets hooks scripts skills \
   --exclude=validate-distribution.sh \
   --exclude-dir=references; then
-  fail "scaffold placeholder text remains"
+  fail RS-SKILL-073 "skills/*/SKILL.md" "scaffold placeholder text survives, listed above" "replace the placeholder with real content before shipping"
 fi
 
 # Advertised skill counts drift every time a skill lands: the Codex manifest and
@@ -314,7 +478,7 @@ while IFS=$'\t' read -r want file phrase; do
     # the failure names what IS there instead of an empty string.
     escaped=$(printf '%s' "$phrase" | sed 's/[][\.*^$(){}?+|\\/]/\\&/g')
     found=$(grep -oE "${escaped//N/[0-9]+}" "$file" | sort -u | tr '\n' ' ')
-    fail "$file advertises a stale count: expected \"$literal\", found \"${found:-nothing matching}\""
+    fail RS-DOC-090 "$file" "advertises \"${found:-nothing matching}\" where the tree measures \"$literal\"" "update the sentence to \"$literal\""
   fi
 done <<EOF
 $skill_count	.codex-plugin/plugin.json	N focused skills
@@ -340,9 +504,9 @@ EOF
 # silently — the agent treats it as a path, cannot open it, and proceeds regardless.
 codex_agent_probe=$(mktemp -d)
 node scripts/generate-codex-agents.mjs "$codex_agent_probe" >/dev/null ||
-  fail "generate-codex-agents.mjs failed — a malformed brief would vanish from a user's Codex install"
+  fail RS-AGENT-081 "scripts/generate-codex-agents.mjs" "exited non-zero, so a malformed brief would vanish from a user Codex install rather than fail loudly" "run the script directly to see which brief it choked on"
 if grep -rlE '\$\{CLAUDE_[A-Z_]*\}' "$codex_agent_probe" >/dev/null 2>&1; then
-  fail "generated Codex agents still carry an unresolved \${CLAUDE_…} placeholder"
+  fail RS-AGENT-082 "generated Codex agents" "an unresolved \${CLAUDE_…} placeholder survives generation, so the path is dead on Codex" "resolve the variable in the source brief under agents/"
 fi
 rm -rf "$codex_agent_probe"
 
@@ -350,15 +514,15 @@ rm -rf "$codex_agent_probe"
 # Three skills had gone missing from the guide and one from /help before this gate existed.
 for skill_dir in skills/*/; do
   skill=${skill_dir%/}; skill=${skill##*/}
-  grep -qF "\`/$skill\`" docs/usage-guide.md || fail "docs/usage-guide.md does not list /$skill"
-  grep -qF "\`/$skill\`" skills/help/SKILL.md || fail "skills/help/SKILL.md does not list /$skill"
+  grep -qF "\`/$skill\`" docs/usage-guide.md || fail RS-DOC-091 "docs/usage-guide.md" "does not list /$skill" "add a \`/$skill\` entry — an unlisted skill is one a user never finds"
+  grep -qF "\`/$skill\`" skills/help/SKILL.md || fail RS-DOC-092 "skills/help/SKILL.md" "does not list /$skill" "add a \`/$skill\` entry to the catalog"
 done
 
 # The README's hook inventory is derived from the hook config, so it cannot drift.
 handlers=$(jq '[.hooks[][] | .hooks[]] | length' hooks/claude-hooks.json)
 events=$(jq '.hooks | keys | length' hooks/claude-hooks.json)
 grep -qF "**$handlers Claude hook handlers across $events events**" README.md ||
-  fail "README.md hook inventory is stale: hooks/claude-hooks.json has $handlers handlers across $events events"
+  fail RS-DOC-093 "README.md (hook inventory)" "hooks/claude-hooks.json measures $handlers handlers across $events events" "update the README sentence to those two numbers"
 
 # `claude plugin eval` cases: prompt.md with the execution frontmatter and a real prompt,
 # at least one grader with a known type, and nothing that assumes this machine — cases
@@ -371,28 +535,28 @@ for case_dir in evals/*/; do
   case=${case_dir%/}; case=${case##*/}
   fm=$(awk 'NR==1 && $0!="---" {exit} NR>1 && /^---$/ {exit} NR>1 {print}' "$case_dir/prompt.md")
   for key in max_turns timeout_seconds allowed_tools; do
-    grep -qE "^$key:" <<<"$fm" || fail "evals/$case/prompt.md frontmatter lacks $key"
+    grep -qE "^$key:" <<<"$fm" || fail RS-EVAL-100 "evals/$case/prompt.md frontmatter" "lacks the required key $key" "add $key to the frontmatter"
   done
   body=$(awk 'f {print} /^---$/ {n++; if (n==2) f=1}' "$case_dir/prompt.md")
-  [[ -n ${body//[[:space:]]/} ]] || fail "evals/$case/prompt.md has no prompt body"
+  [[ -n ${body//[[:space:]]/} ]] || fail RS-EVAL-101 "evals/$case/prompt.md" "frontmatter only, no prompt body" "write the prompt the case actually sends"
   graders=$(find "$case_dir/graders" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
-  (( graders >= 1 )) || fail "evals/$case has no graders"
+  (( graders >= 1 )) || fail RS-EVAL-102 "evals/$case" "no graders, so the case can never fail" "add at least one grader of type: $grader_types"
   for g in "$case_dir"/graders/*.md; do
     t=$(awk -F': *' '/^type:/ { print $2; exit }' "$g")
-    [[ " $grader_types " == *" $t "* ]] || fail "$g: grader type '${t:-missing}' is not one of: $grader_types"
+    [[ " $grader_types " == *" $t "* ]] || fail RS-EVAL-103 "$g" "grader type '${t:-missing}' is not recognized" "use one of: $grader_types"
   done
   if grep -rnE 'TODO|/home/|~/' "$case_dir" >/dev/null; then
-    fail "evals/$case carries a TODO placeholder or a machine-specific path"
+    fail RS-EVAL-104 "evals/$case" "carries a TODO placeholder or a machine-specific path, which passes here and fails on every other machine" "replace it with a repo-relative path or real content"
   fi
 done
-(( eval_cases >= 1 )) || fail "no eval cases under evals/"
+(( eval_cases >= 1 )) || fail RS-EVAL-105 "evals/" "no eval cases found" "the suite the manifest advertises does not exist — add a case or drop experimental.evals"
 jq -e '.experimental.evals == "./evals"' .claude-plugin/plugin.json >/dev/null ||
-  fail "plugin.json does not declare experimental.evals = ./evals"
+  fail RS-MANIFEST-057 ".claude-plugin/plugin.json#experimental.evals" "does not declare ./evals, so the shipped suite is never discovered" "set experimental.evals to ./evals"
 
 # A `references/x.md` §"Heading" pointer that names no heading sends the agent to look for a
 # section that isn't there. /review carried one for as long as the citation existed: it pointed
 # at "don't over-report", which is a bullet inside "Adversarial review, not echo chamber".
-python3 - <<'ANCHORS' || fail "a skill cites a section that does not exist in the bundled reference"
+python3 - <<'ANCHORS' || fail RS-SKILL-074 "skills/*/SKILL.md reference anchors" "a skill cites a section heading that does not exist in its bundled reference — the offender is printed above" "fix the citation, or add the section; a dangling anchor sends the agent looking for text that is not there"
 import re, pathlib, sys
 bad = 0
 for sk in sorted(pathlib.Path("skills").iterdir()):
@@ -450,7 +614,7 @@ ANCHORS
 # exception stops covering the pair and this gate goes back to requiring a boundary
 # section, exactly as if the exception did not exist. The defect this gate catches is a
 # confusable pair with nowhere to resolve the confusion.
-python3 - <<'BOUNDARIES' || fail "two skills have confusable descriptions and no boundary between them"
+python3 - <<'BOUNDARIES' || fail RS-SKILL-075 "skills/*/SKILL.md#description" "two descriptions are confusable with no boundary stated between them — the pair is printed above" "state the boundary in one of the two descriptions; the router picks by description alone"
 import re, pathlib, sys
 from itertools import combinations
 from collections import Counter
@@ -552,7 +716,7 @@ BOUNDARIES
 #   4. process spawning outside hooks/scripts/_lib.ts's timeout-guarded run() helper
 # It checks exactly these four literal patterns and nothing else — see README.md's "Script
 # safety gate" section for what that does and does not prove.
-python3 - <<'SCRIPTSAFETY' || fail "a shipped script violates the script-safety gate — see the class named above"
+python3 - <<'SCRIPTSAFETY' || fail RS-SCRIPT-033 "shipped scripts" "a script violates the script-safety gate — the failing class is printed above" "fix the script named above; the gate detail is in the python block in this script"
 import re, sys
 from pathlib import Path
 
@@ -651,7 +815,25 @@ for f in hook_files:
 sys.exit(1 if bad else 0)
 SCRIPTSAFETY
 
-node scripts/generate-openai-metadata.mjs --check
-./scripts/sync-references.sh --check
+# Both sub-checks report on stdout. Capture it so --json keeps stdout to one object, and
+# so a failure arrives as a finding with the drift folded in rather than as loose text.
+if ! sync_out=$(node scripts/generate-openai-metadata.mjs --check 2>&1); then
+  fail RS-SKILL-076 "skills/*/agents/openai.yaml" \
+    "OpenAI metadata is out of sync with the skills: ${sync_out//$'\n'/; }" \
+    "run node scripts/generate-openai-metadata.mjs"
+fi
+say "$sync_out"
 
-echo "distribution valid: $skill_count skills, $description_chars description characters, $eval_cases eval cases, version $codex_version"
+if ! ref_out=$(./scripts/sync-references.sh --check 2>&1); then
+  fail RS-REF-110 "skills/*/references/" \
+    "bundled references are stale against docs/ and rules/: ${ref_out//$'\n'/; }" \
+    "run ./scripts/sync-references.sh"
+fi
+say "$ref_out"
+
+if (( JSON )); then
+  printf '{"ok":true,"skills":%s,"descriptionChars":%s,"evalCases":%s,"version":"%s"}\n' \
+    "$skill_count" "$description_chars" "$eval_cases" "$codex_version"
+else
+  echo "distribution valid: $skill_count skills, $description_chars description characters, $eval_cases eval cases, version $codex_version"
+fi
