@@ -76,6 +76,15 @@ Present the findings:
 
 If declared == effective, state so and stop — no changes needed.
 
+**Price the floor before offering to move it.** Raising `rust-version` is a
+compatibility cost paid for a capability gain, and the options below are not a real choice
+until both sides are on the table. The studio injects the modern-idiom set gated to this
+crate's floor the first time you touch a `.rs` file, including a count of the
+stabilizations sitting above it; name what those are worth here — the shapes the crate is
+currently forced to write the long way — alongside the consumers a higher floor would
+drop. If that set is not in context yet, read a Rust file in the crate to bring it in
+rather than reciting release history from memory.
+
 If they differ, prompt the user with 2–4 options:
 
 1. **Update `rust-version` to `<effective>`** (recommended) — keeps the manifest honest.

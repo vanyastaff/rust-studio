@@ -4,7 +4,7 @@
 // print are extracted, and every function tolerates a manifest it cannot parse.
 
 import { readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 /** The body of `[name]` (top-level table only; array tables and dotted keys are not needed). */
 export function section(text: string, name: string): string {
@@ -24,6 +24,74 @@ export function section(text: string, name: string): string {
 export function field(body: string, key: string): string | null {
   const m = new RegExp(`^\\s*${key}\\s*=\\s*["']([^"']*)["']`, "m").exec(body);
   return m ? m[1] : null;
+}
+
+/** True when a field is inherited (`key.workspace = true`) rather than set here. */
+export function inherits(body: string, key: string): boolean {
+  return new RegExp(`^\\s*${key}\\.workspace\\s*=\\s*true`, "m").test(body);
+}
+
+/** A field read from `[package]`, falling back to `[workspace.package]` in the SAME file.
+ *  Covers the common root manifest that is both a package and the workspace, and the
+ *  virtual manifest where `[package]` is absent entirely. */
+function packageField(text: string, key: string): string | null {
+  const pkg = section(text, "package");
+  const direct = field(pkg, key);
+  if (direct !== null) return direct;
+  return field(section(text, "workspace.package"), key);
+}
+
+/** Directories from `start` up to the filesystem root, nearest first. Depth-capped so a
+ *  pathological path can never turn a hook into a long walk. */
+function ancestors(start: string, max = 24): string[] {
+  const out: string[] = [];
+  let dir = resolve(start);
+  for (let i = 0; i < max; i++) {
+    out.push(dir);
+    const up = dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  return out;
+}
+
+function readManifest(dir: string): string | null {
+  try {
+    const p = join(dir, "Cargo.toml");
+    if (!statSync(p).isFile()) return null;
+    return readFileSync(p, "utf8");
+  } catch {
+    return null;
+  }
+}
+
+export interface CrateFloor {
+  /** `rust-version`, following `workspace = true` inheritance to the workspace root. */
+  msrv: string | null;
+  edition: string | null;
+  /** Directory of the manifest the crate belongs to, or null when there is none. */
+  manifestDir: string | null;
+}
+
+/** The MSRV/edition floor that governs a file, resolved from the nearest enclosing crate.
+ *
+ *  Walking up matters in a workspace: the file being edited belongs to a member crate whose
+ *  floor is its own or the workspace's, and neither is necessarily what sits at the session
+ *  cwd. A field marked `workspace = true` — or simply absent — continues the walk to the
+ *  manifest that declares `[workspace.package]`. */
+export function crateFloor(startDir: string): CrateFloor {
+  const out: CrateFloor = { msrv: null, edition: null, manifestDir: null };
+  for (const dir of ancestors(startDir)) {
+    const text = readManifest(dir);
+    if (text === null) continue;
+    if (out.manifestDir === null) out.manifestDir = dir;
+    const pkg = section(text, "package");
+    if (out.msrv === null && !inherits(pkg, "rust-version")) out.msrv = packageField(text, "rust-version");
+    if (out.edition === null && !inherits(pkg, "edition")) out.edition = packageField(text, "edition");
+    // A workspace root ends the walk: nothing above it governs this crate.
+    if (/^\[workspace\]\s*$/m.test(text)) break;
+  }
+  return out;
 }
 
 /** Coarse domain classification from the lower-cased manifest text. */
@@ -78,8 +146,10 @@ export function summarizeManifest(cwd: string): ManifestSummary | null {
   }
   return {
     name: field(pkg, "name") || "?",
-    edition: field(pkg, "edition") || "?",
-    msrv: field(pkg, "rust-version"),
+    // Both are commonly declared once under `[workspace.package]` and inherited; reading
+    // only `[package]` reported "?" / unset for most real workspaces.
+    edition: packageField(text, "edition") || "?",
+    msrv: packageField(text, "rust-version"),
     isWorkspace,
     members,
     domains: classify(text.toLowerCase()),

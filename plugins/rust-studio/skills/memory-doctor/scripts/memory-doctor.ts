@@ -447,8 +447,35 @@ function arg(args: string[], flag: string): string | null {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 }
 
+/** `--help` output. A shipped CLI has two callers — an agent following the skill, and a
+ *  person checking what the agent is about to run before delegating to it — and the second
+ *  one has no other way in. Kept next to the dispatch below so they cannot drift apart. */
+export const HELP = `memory-doctor.ts — audit and repair the project memory store.
+
+usage: bun memory-doctor.ts [command] [options]
+
+commands:
+  audit                       report index budget, integrity, and stale notes (default)
+  import <vault-project-dir>  plan an import of an external note vault into the store
+  reindex                     list notes missing from MEMORY.md
+  archive <file.md>           move one note to archive/ and drop its index line
+
+options:
+  --cwd <dir>     resolve the store from <dir> instead of the working directory
+  --dir <memdir>  use <memdir> as the store, overriding host resolution
+  --apply         perform the change; without it every command is a dry run
+  --json          audit only: emit the report as JSON
+  --strict        audit only: exit 1 when the store is over budget or inconsistent
+  -h, --help      show this
+
+Every command is a dry run until --apply. See docs/memory-protocol.md for the contract.`;
+
 if (import.meta.main) {
   const args = process.argv.slice(2);
+  if (args.includes("--help") || args.includes("-h") || args[0] === "help") {
+    console.log(HELP);
+    process.exit(0);
+  }
   const cmd = args[0] ?? "audit";
   const cwd = resolve(arg(args, "--cwd") ?? process.cwd());
   const store = resolveStore(cwd);

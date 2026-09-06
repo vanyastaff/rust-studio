@@ -5,6 +5,72 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.0] - 2026-09-06
+
+The release that stopped asserting version-keyed facts it could not check. `rules/core.md`
+carried a paragraph naming the 1.95–1.98 stabilizations and injected it for every Rust edit,
+whatever the crate's floor — so a crate pinned to 1.70 was told to reach for `bool::ok_or`.
+That is not stale advice, it is advice that does not compile. The list is now data, filtered
+against the crate's real MSRV before an agent ever sees it. The same correction runs through
+the validator: a check that reported `manifest versions differ` told its reader neither which
+manifests nor what to write, so every failure is now a coded finding with the subject, the
+measurement, and the repair. Enforcing that on shipped scripts found `env-setup.sh` — the one
+script whose job is to change the user's machine — with no tests at all.
+
+### Added
+
+- **MSRV-gated modern-idiom set** (`rules/stdlib-timeline.json`,
+  `hooks/scripts/stdlib-timeline.ts`). Version-keyed stabilizations live as data: what to
+  reach for, the older shape it displaces, and the clippy lint that mechanizes the swap.
+  `inject-rules.ts` emits only the entries at or below the crate's floor, once per context,
+  next to the `core.md` pointer. Idioms above the floor are **counted, never named** — naming
+  them is the defect. The floor resolves from `rust-version`, then `workspace = true`
+  inheritance, then the `default_msrv` option, then the edition's minimum compiler (edition
+  2024 cannot build before 1.85); with none of those the version-keyed set is withheld and the
+  crate is told to declare one, because an ungated list is what this replaces. Toolchain
+  *breakage* notes are deliberately not MSRV-gated — they track the compiler running the
+  build, not the floor — and each prints its version so the condition stays visible.
+- **Shipped-script contract** (`RS-SCRIPT-034/035/036`). A skill that ships `scripts/` ships a
+  CLI with two callers: the agent following `SKILL.md`, and the person deciding whether to let
+  it run at all. The second has no way in but `--help`, so every entry point must answer it
+  with exit 0 and real output, must have a `<name>.test.ts` covering the source it is
+  generated from, and a `scripts/` directory with nothing runnable in it is rejected outright.
+  Library modules bundled beside an entry point are exempt.
+- **`scripts/env-setup.test.ts`** — the provisioning script had never been executed by CI.
+  Covers `--help`, refusal of an unknown flag, and the claim that matters: `--dry-run` installs
+  nothing. Asserted against a sandboxed `HOME` whose `.cargo/bin` must stay empty, which also
+  covers the two `curl | sh` bootstraps that sit outside the `run()` helper.
+- **`--help` for `memory-doctor.ts`** — it previously answered `unknown command: --help` and
+  exited 2.
+- **`--json` for `scripts/validate-distribution.sh`** — one object, for CI and for agents.
+
+### Changed
+
+- **Every validator failure is a structured finding**, not a sentence: a stable
+  `RS-<AREA>-<NNN>` code, the exact subject (a path, with the key inside it where there is
+  one), what was measured, and the repair. All 58 existing checks were migrated; there are 63
+  codes across 12 areas. Numbers are never reused — the registry at the top of the script
+  names the next free number per area, and the script **fails itself** (`RS-DIST-002`) if two
+  checks ever share a code, because a stable identifier that silently collides is not one.
+- **`rules/core.md` no longer enumerates Rust versions.** The section keeps the principles and
+  the standing preferences that hold at any recent floor; the version-keyed half moved to the
+  data file. A regression guard (`RS-DATA-075`) fails the build if prose starts listing
+  versions again, since prose cannot be gated on an MSRV.
+- **`/msrv-check` prices the floor before offering to move it** — raising `rust-version` is a
+  compatibility cost paid for a capability gain, and the options were being presented with only
+  the cost side visible.
+
+### Fixed
+
+- **`cargo-manifest.ts` read only `[package]`**, so a crate inheriting `edition` and
+  `rust-version` from `[workspace.package]` — the normal shape of a Cargo workspace — reported
+  `edition: ?` and `MSRV: (unset)` in both the session and sub-agent briefs. It now follows
+  `workspace = true` inheritance and walks up from the edited file, so the floor belongs to the
+  member crate being edited rather than to whatever sits at the session cwd.
+- **The idiom set is withheld for third-party paths.** A read under `~/.cargo/registry` would
+  otherwise have resolved a floor from the *dependency's* manifest — a real number about the
+  wrong crate, and the agent is reading that source, not writing it.
+
 ## [0.45.0] - 2026-09-05
 
 The release that made the measurement repeatable and turned it on the agents that *write*.

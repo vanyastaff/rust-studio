@@ -175,6 +175,17 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   `~/.cargo/git`, `vendor/`, `node_modules/`) or any web fetch is announced as third-party text
   with a pointer to [`docs/untrusted-context.md`](docs/untrusted-context.md) — once per session,
   not once per file.
+- **MSRV-gated modern idioms (same pass).** A model's training data lags the toolchain, and even
+  where it doesn't, it writes the older shape because the corpus is full of it. Naming recent
+  APIs in a rule fixes the first half and makes the second worse in the other direction: told
+  about a 1.98 API on a crate pinned to 1.70, an agent writes code that does not compile. So the
+  list is data (`rules/stdlib-timeline.json`) — what to reach for, the shape it displaces, the
+  clippy lint that mechanizes the swap — filtered to the crate's real floor before it is ever
+  asserted. Idioms above the floor are **counted, never named**, with `/msrv-check` offered to
+  price raising it. The floor comes from `rust-version`, `workspace = true` inheritance, the
+  `default_msrv` option, or the edition's minimum compiler; with none of those the version-keyed
+  set is withheld rather than guessed. Never emitted for a dependency's source, whose floor
+  belongs to a different crate.
 - **UserPromptSubmit** — prompt-scoped recall: the prompt is matched against the memory index
   and a note that scores a strong hit is surfaced once per session (title, kind/age, path);
   plus a once-per-session nudge to `/recall` before working in a known area and to prefer a
@@ -342,6 +353,19 @@ that last risk is what the untrusted-context doctrine
 ([`docs/untrusted-context.md`](docs/untrusted-context.md)) and `security-auditor` cover, not
 this gate. For the product-wide security posture and how to report a vulnerability, see
 [`../../SECURITY.md`](../../SECURITY.md).
+
+Alongside it, a **shipped-script contract**: a skill that ships `scripts/` ships a CLI, and it
+has two callers — the agent following `SKILL.md`, and the person deciding whether to let the
+agent run it at all. The second has no way in but `--help`, so every entry point must answer it
+with exit 0 and real output, must carry tests for the source it is generated from, and a
+`scripts/` directory with nothing runnable in it is rejected. Enforcing it found
+`scripts/env-setup.sh` — the one script whose job is to change your machine — with no tests at
+all; it now has them, including the one that matters, that `--dry-run` installs nothing.
+
+Every failure from `validate-distribution.sh` is a **structured finding**: a stable
+`RS-<AREA>-<NNN>` code, the exact subject, what was measured, and the repair — because its
+usual reader is an agent that has to fix it without a second round trip. `--json` emits that as
+one object. Codes are never reused, and the script fails itself if two checks ever collide.
 
 ## Requirements & tooling
 

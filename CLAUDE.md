@@ -9,7 +9,7 @@
 
 | Команда | Что делает |
 |---------|------------|
-| `cd plugins/rust-studio && ./scripts/validate-distribution.sh` | Полная валидация дистрибутива |
+| `cd plugins/rust-studio && ./scripts/validate-distribution.sh` | Полная валидация дистрибутива (`--json` — одна машинночитаемая находка: код, субъект, замер, починка) |
 | `cd plugins/rust-studio && bun test` | Тесты хуков и статус-линии |
 | `./scripts/sync-references.sh` | Пересобрать `skills/*/references/` из `docs/` и `rules/` |
 | `node scripts/generate-openai-metadata.mjs` | Пересобрать `skills/*/agents/openai.yaml` |

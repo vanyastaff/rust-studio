@@ -8,6 +8,9 @@
 // rather than quietly disarming the injector.
 
 import { test, expect, describe } from "bun:test";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { applyPatchTargets, markerName, pathMatches, untrustedSource } from "./inject-rules.ts";
 
 const ADD = `*** Begin Patch
@@ -242,5 +245,92 @@ describe("flags third-party sources (untrusted-context)", () => {
   test("an ordinary project edit says nothing about provenance", () => {
     const s = `test-clean-${Math.random().toString(36).slice(2)}`;
     expect(call(s, { file_path: "/repo/src/lib.rs" })).not.toContain("untrusted-context.md");
+  });
+});
+
+describe("MSRV-gated idiom set rides with the standards pointer", () => {
+  // The defect this covers: core.md used to enumerate 1.95–1.98 stabilizations in prose,
+  // injected for every Rust edit regardless of the crate's floor. On a crate pinned to an
+  // older `rust-version` that is not stale advice — it is advice that does not compile.
+  const HOOK = new URL("./inject-rules.ts", import.meta.url).pathname;
+  const root = new URL("../..", import.meta.url).pathname;
+
+  /** A crate with the given `[package]` body, and the context a Rust edit in it produces. */
+  const editInCrate = (pkg: string): string => {
+    const dir = mkdtempSync(join(tmpdir(), "rs-inject-"));
+    writeFileSync(join(dir, "Cargo.toml"), `[package]\nname = "probe"\n${pkg}`);
+    mkdirSync(join(dir, "src"));
+    const file = join(dir, "src", "lib.rs");
+    writeFileSync(file, "pub fn f() {}\n");
+    const r = Bun.spawnSync(["bun", HOOK], {
+      stdin: Buffer.from(
+        JSON.stringify({
+          session_id: `test-msrv-${Math.random().toString(36).slice(2)}`,
+          tool_input: { file_path: file },
+        }),
+      ),
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: root },
+    });
+    const out = new TextDecoder().decode(r.stdout).trim();
+    return out ? (JSON.parse(out).hookSpecificOutput.additionalContext as string) : "";
+  };
+
+  test("a low floor is told what it can use, and not what it cannot", () => {
+    const ctx = editInCrate('edition = "2021"\nrust-version = "1.70"\n');
+    expect(ctx).toContain("- **core**"); // the standards pointer is untouched
+    expect(ctx).toContain("MSRV 1.70");
+    expect(ctx).toContain("`OnceLock`");
+    expect(ctx).not.toContain("bool::ok_or"); // 1.98 — a build break on this crate
+    expect(ctx).toMatch(/sit \*\*above\*\* this floor/);
+  });
+
+  test("a current floor gets the recent set it would otherwise write the old way", () => {
+    const ctx = editInCrate('edition = "2024"\nrust-version = "1.98"\n');
+    expect(ctx).toContain("MSRV 1.98");
+    expect(ctx).toContain("bool::ok_or");
+  });
+
+  test("an undeclared floor withholds the version-keyed set rather than guessing", () => {
+    // edition 2024 still bounds the compiler at 1.85, so that much is asserted.
+    const ctx = editInCrate('edition = "2024"\n');
+    expect(ctx).toContain("MSRV 1.85");
+    expect(ctx).toContain("edition 2024");
+    expect(ctx).not.toContain("bool::ok_or");
+  });
+
+  test("a dependency's source gets no idiom set — its floor is not this project's", () => {
+    const s = `test-msrv-dep-${Math.random().toString(36).slice(2)}`;
+    const r = Bun.spawnSync(["bun", HOOK], {
+      stdin: Buffer.from(
+        JSON.stringify({
+          session_id: s,
+          tool_input: { file_path: "/home/u/.cargo/registry/src/idx/serde-1.0/src/lib.rs" },
+        }),
+      ),
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: root },
+    });
+    const ctx = JSON.parse(new TextDecoder().decode(r.stdout).trim()).hookSpecificOutput
+      .additionalContext as string;
+    expect(ctx).toContain("untrusted-context.md");
+    expect(ctx).not.toContain("Modern idioms available");
+    expect(ctx).not.toContain("No MSRV floor");
+  });
+
+  test("a non-Rust edit in the same crate says nothing about idioms", () => {
+    const dir = mkdtempSync(join(tmpdir(), "rs-inject-"));
+    writeFileSync(join(dir, "Cargo.toml"), '[package]\nname = "probe"\nrust-version = "1.98"\n');
+    const r = Bun.spawnSync(["bun", HOOK], {
+      stdin: Buffer.from(
+        JSON.stringify({
+          session_id: `test-msrv-${Math.random().toString(36).slice(2)}`,
+          tool_input: { file_path: join(dir, "Cargo.toml") },
+        }),
+      ),
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: root },
+    });
+    const out = new TextDecoder().decode(r.stdout).trim();
+    const ctx = out ? (JSON.parse(out).hookSpecificOutput.additionalContext as string) : "";
+    expect(ctx).toContain("- **cargo-manifest**");
+    expect(ctx).not.toContain("Modern idioms available");
   });
 });
