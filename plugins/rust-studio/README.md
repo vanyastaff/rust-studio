@@ -171,6 +171,11 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   dumping every rule body into the window on every file (the dominant context cost, see
   `tools/context-cost.ts`). An edit that introduces `unsafe` also points to the unsafe-code
   standard. `core` leads every list; safety/security-critical rules are flagged ⚠️ REQUIRED.
+  The file is found however the host names it: a `file_path`, a Codex `apply_patch` blob, or a
+  **shell command** — Codex has no Read tool at all (its surface is `shell` / `unified_exec`
+  and `apply_patch`), so `sed -n '1,240p' src/lib.rs` is how a file gets read there, and on
+  Claude the same shape arrives whenever the model greps or seds through Bash. Only tokens
+  carrying a source extension count, so `cargo test -p storage` names no file and stays silent.
   The same pass flags **provenance**: a read under a dependency root (`~/.cargo/registry`,
   `~/.cargo/git`, `vendor/`, `node_modules/`) or any web fetch is announced as third-party text
   with a pointer to [`docs/untrusted-context.md`](docs/untrusted-context.md) — once per session,

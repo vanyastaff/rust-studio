@@ -111,6 +111,8 @@ interface Input {
     old_string?: string;
     new_string?: string;
     edits?: Array<{ old_string?: string; new_string?: string }>;
+    /** Claude's Bash tool passes one string; Codex's `shell` passes argv. */
+    command?: string | string[];
     [key: string]: unknown;
   };
 }
@@ -144,6 +146,33 @@ export function applyPatchTargets(toolInput: Record<string, unknown> | undefined
     if (line.startsWith("+") && !line.startsWith("+++")) added.push(line.slice(1));
   }
   return { paths: [...new Set(paths)], added: added.join("\n") };
+}
+
+/** Source files named inside a shell command.
+ *
+ *  Codex has no Read tool. Its surface is `shell` / `unified_exec` for reading and
+ *  `apply_patch` for writing, so the command a model runs to read a file is
+ *  `sed -n '1,240p' crates/core/src/graph.rs` — a path this hook never saw, because it
+ *  looked only at `file_path` and at apply_patch blobs. The standards were therefore silent
+ *  on the dominant read path of one of the two hosts this plugin ships to. Claude reaches the
+ *  same shape through its Bash tool whenever the model greps or seds instead of reading.
+ *
+ *  Deliberately narrow: only tokens carrying a known source extension count. A command that
+ *  merely mentions a crate (`cargo test -p storage`) names no file and must stay silent, or
+ *  every build command would drag the standards in. */
+export function shellTargets(command: string | string[] | undefined): string[] {
+  if (!command) return [];
+  const text = Array.isArray(command) ? command.join(" ") : String(command);
+  const out: string[] = [];
+  // Strip surrounding quotes per token; keep `--flag=path` by splitting on `=` too.
+  for (const raw of text.split(/[\s;|&()<>]+/)) {
+    const tok = raw.replace(/^['"]+|['"]+$/g, "").split("=").pop() ?? "";
+    if (!tok || tok.startsWith("-")) continue;
+    if (!/(?:^|\/)(?:[\w.-]+\.rs|Cargo\.toml|build\.rs)$/.test(tok)) continue;
+    if (tok.includes("*") || tok.includes("?")) continue; // a glob names no one file
+    out.push(tok);
+  }
+  return [...new Set(out)];
 }
 
 /** Dedupe-marker basename for one rule in one CONTEXT.
@@ -201,7 +230,10 @@ if (import.meta.main) {
   const patch = applyPatchTargets(data.tool_input);
   // One path on Claude, potentially several on Codex — a single apply_patch can
   // rewrite a whole module. Rules are unioned over every file the edit touches.
-  const norms = (filePath ? [String(filePath)] : patch.paths).map((p) => p.replace(/\\/g, "/"));
+  const shell = shellTargets(data.tool_input?.command);
+  const norms = (filePath ? [String(filePath)] : patch.paths.length ? patch.paths : shell).map((p) =>
+    p.replace(/\\/g, "/"),
+  );
   const rawUrl = data.tool_input?.url;
   const url = typeof rawUrl === "string" ? rawUrl : "";
   const untrusted = untrustedSource(norms, url);
