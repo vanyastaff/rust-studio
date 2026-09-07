@@ -150,7 +150,9 @@ Prefer the modern form and justify if you don't:
 A change that adds/modifies a state, error variant, hot path, or cross-crate call ships its
 observability **in the same pass**: a typed error variant (`#[source]` chains, not `String`),
 a `#[tracing::instrument]`/span with the right fields, and an invariant turned into a
-`debug_assert!`/type-level guarantee where it lived only in prose. Shipping without is silent
+type-level guarantee or an assertion where it lived only in prose — `debug_assert!` only for
+what construction already guarantees (it is compiled out in release), `assert!` or a returned
+`Result` for anything input or a caller can violate. Shipping without is silent
 debt that only surfaces in prod (the "70% problem" / happy-path bias).
 
 ### Evidence over opinion

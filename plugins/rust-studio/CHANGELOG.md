@@ -5,6 +5,58 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.52.1] - 2026-09-07
+
+The studio told agents to encode invariants as `debug_assert!` — in `rules/core.md`'s Definition
+of done, in `rules/observability.md`, in `docs/working-preferences.md`, and, worst of all, in the
+`safety-review.md` template, where a `ptr::copy_nonoverlapping` precondition rested on one. No
+file said what `debug_assert!` does in a release build, which is nothing. An agent following the
+Definition of done to the letter could satisfy it and still ship a binary where the invariant is
+never checked.
+
+Two neighbouring gaps surfaced in the same review. `core.md` and `security.md` each state that
+release wraps integer overflow silently; neither mentioned `overflow-checks`, the one-line
+profile setting that stops it. And nothing in the testing standards mentioned release-mode runs,
+so the gate proved the debug build and said nothing about the one that ships.
+
+### Fixed
+
+- **`debug_assert!` guidance is now split by who can break the invariant** (`rules/core.md`,
+  `rules/observability.md`, `docs/working-preferences.md`). `debug_assert!` guards only what
+  construction already guarantees — a regression tripwire for the next author. An invariant that
+  untrusted input, a caller, or arithmetic can violate at runtime takes `assert!` or a returned
+  `Result`, or it does not exist in the binary that ships.
+- **`docs/templates/safety-review.md`** held the worst instance: the worked example enforced its
+  soundness precondition `len <= cap`, guarding a `ptr::copy_nonoverlapping`, with
+  `debug_assert!`. The template modelled unsafe code whose precondition goes unchecked in
+  release. Now `assert!`, with the reason stated inline.
+
+### Added
+
+- **`overflow-checks = true`** in `rules/cargo-manifest.md`, cross-linked from `rules/core.md`.
+  Framed as the net under per-call-site `checked_`/`saturating_` intent rather than a
+  replacement, and noted that it converts a silent wrap into a panic — which on a request path is
+  a DoS the caller must still not be able to reach.
+- **`rules/testing.md` § Test the program that ships.** Debug and release are different programs:
+  `debug_assert!` is compiled out, overflow wraps, `cfg(debug_assertions)` branches flip, and the
+  optimizer starts relying on the aliasing and validity rules that make latent UB observable.
+  `cargo test --release` runs *in addition to* the debug run, never instead — debug is the only
+  profile where `debug_assert!` and overflow panics fire at all. A release-only failure is a real
+  bug, and keeping the suite debug-only to dodge it is gate-disabling.
+
+### Notes
+
+- Sourced from checking 2026 Rust practice writing (corrode.dev's *Hardening Rust Code For
+  Production*, 2026-07-23, and *Pitfalls of Safe Rust*) against the standards already in tree.
+  Most of what those cover the studio already had, and in places had better — cancellation
+  safety, `as`-cast discipline, the orphan rule as an architectural tell, blanket impls as a
+  permanently closed extension point. These three were the real gaps.
+- **`docs/templates/ci-anti-hang.yml` was deliberately not changed.** A release job roughly
+  doubles test wall-clock for every project `/ci-gate` touches; the rule states the practice and
+  leaves that cost decision to the project rather than installing it for everyone.
+- `docs/testing-model.md` was left alone: it covers *what* to test — the two loops, acceptance
+  criteria, the spec chain — not which profile to run it in.
+
 ## [0.52.0] - 2026-09-07
 
 `/resolve-pr` could read a review bot and fix what it found. It could not finish the job. Posting

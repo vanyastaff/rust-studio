@@ -69,6 +69,13 @@ Applies to every `Cargo.toml`.
   see the one mistake that silently disables a check.
 - Multi-crate workspaces: set `lto = "thin"` in the release profile (no cross-crate
   LTO by default). At 20+ crates, run `cargo hakari` to unify features and cut rebuilds.
+- `overflow-checks = true` in `[profile.release]` keeps the debug build's overflow panic in the
+  shipped binary. The default is off, so release wraps silently (`core.md` §Ownership & types)
+  and an attacker-controlled length or count can wrap past a bounds check. Cost is a few percent
+  on integer-heavy work — buy it unless a benchmark on this crate says otherwise, and say so in
+  the manifest comment when you decline. It backstops per-call-site `checked_`/`saturating_`
+  intent; it does not replace it, and it converts a wrap into a panic, which on a request path
+  is a DoS the caller must still not be able to reach (`security.md`).
 - **`[lints.cargo]`** (stable from Cargo **1.100**; `-Zcargo-lints` on nightly before that):
   `unused_dependencies = "warn"` catches a dependency no target uses at `cargo check` time
   (the in-tree answer to `cargo shear`/`machete`), `missing_lints_inheritance` flags a

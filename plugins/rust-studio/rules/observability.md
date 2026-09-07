@@ -16,8 +16,11 @@ Applies to service, worker, job, server, and binary boundary code.
 - Do not log secrets or attacker-controlled payloads without redaction and size bounds.
 
 ## Make invariants visible
-- Convert prose-only invariants into types, `debug_assert!`, metrics, or structured errors
-  near the code that relies on them.
+- Convert prose-only invariants into types, assertions, metrics, or structured errors
+  near the code that relies on them. `debug_assert!` is compiled out in release: use it as a
+  regression tripwire for what construction already guarantees, and `assert!` / a returned
+  `Result` for an invariant that input or a caller can violate in production. A service whose
+  invariant is enforced only by `debug_assert!` ships with that check absent.
 - A failure path should leave enough diagnostic signal to reproduce the issue without reading
   the whole call graph.
 - Avoid println-style diagnostics in library/service code; use structured tracing.
