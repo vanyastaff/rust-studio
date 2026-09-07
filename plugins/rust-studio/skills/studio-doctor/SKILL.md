@@ -100,6 +100,12 @@ user should know which. Only a row with no fallback is ✗.
 runner, MSRV fallback, and which ambient toggles are off. A toggle someone disabled months ago
 explains more "why didn't it do X?" than any other row.
 
+Report the host's **delegation caps** on the same terms, because they change what the team
+skills can do and nothing else surfaces them: `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` and
+`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` where set (Claude Code 2.1.217+). Unset is the normal
+case and reports as a `·`, not a ✗ — the studio ships no value for either. A cap set low is the
+answer to "why did `/team-*` run its lenses one at a time?"
+
 ## Phase 2 — Report
 One line per row, worst first, each carrying its evidence and its fix:
 

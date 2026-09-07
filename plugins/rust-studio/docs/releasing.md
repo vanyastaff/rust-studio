@@ -19,7 +19,11 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
 
 ## Release steps
 
-1. **Bump the version** in all three manifests (`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and the Agent Plugins `plugin.json` at the plugin root).
+1. **Bump the version** in both manifests — `.claude-plugin/plugin.json` and
+   `.codex-plugin/plugin.json`. There is no third: the Agent Plugins root `plugin.json` was
+   withdrawn in 0.50.0 because its `$schema` silences every Codex hook
+   (`adr/0002-agent-plugins-manifest-withdrawn.md`), and `RS-MANIFEST-058` fails the build if it
+   comes back.
 2. **Update the changelog / README** if component counts or behavior changed.
 3. **Regenerate and validate** from the plugin root:
    ```sh

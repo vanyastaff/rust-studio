@@ -5,10 +5,11 @@ The org chart. Each agent's `model`, the domain it owns, what it explicitly does
 
 **Model policy** (rationale in `claude-5-compat.md`): judgment-heavy agents — the two
 directors, `harsh-critic`, `rust-reviewer`, `unsafe-auditor` — use `inherit`, so they run at
-the **session model** and never judge below the model that wrote the code (on a Claude 5
-session that's Fable 5, whose review recall exceeds Opus 4.8). Specialists stay `sonnet` and
-the scout `haiku` for cost. `security-auditor` stays **pinned to `opus`**: Fable 5's cyber
-safety classifiers can refuse vulnerability-hunting content mid-audit.
+the **session model** and never judge below the model that wrote the code. Specialists stay
+`sonnet` and the scout `haiku` for cost. `security-auditor` stays **pinned to `opus`** so that
+a cyber-classifier trip falls back inside the audit instead of switching the whole session.
+**No agent pins `effort`** — every one of them inherits the session's level, which is what
+makes effort the user's dial rather than the roster's.
 
 ```
                          ┌───────────────────────────────────┐

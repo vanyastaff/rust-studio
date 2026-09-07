@@ -1,33 +1,60 @@
-# Build / generation helpers (not part of the published plugin)
-.build/
-
-# Local caches / safety backups (not part of the published plugin)
-.fastembed_cache/
-plugins/.rust-studio.backup-pre-memory-unify/
-
-# MCP / tool-local state
-.serena/
-
-# claude plugin eval output
-plugins/rust-studio/evals/results/
-
-# Rust build artifacts (benchmark fixtures are source-only)
+# ── Build artifacts ───────────────────────────────────────────────────────────
+# Benchmark fixtures under plugins/rust-studio/benchmarks/ are source-only:
+# nothing in this repo is meant to be compiled into the tree.
 target/
 *.rlib
+*.rmeta
 
-# OS / editor junk
-.DS_Store
-Thumbs.db
-*.swp
+# Output of the studio's own tooling, when the plugin is dogfooded on this repo.
+# cargo-mutants and cargo-fuzz write these; /mutants and /fuzz both expect them ignored.
+mutants.out/
+fuzz/artifacts/
+fuzz/corpus/
 
-# secrets (autopilot preflight)
+# ── Studio / agent runtime state ──────────────────────────────────────────────
+# Per-agent scratch memory the host writes into a project tree. Agent state, not
+# plugin content — it must never ship in the distribution. Unanchored: the host writes
+# it next to whatever tree the session is rooted in, including inside plugins/.
+**/.claude/agent-memory/
+
+# Host-local settings: machine-specific paths, permissions, claudeMdExcludes.
+**/.claude/settings.local.json
+
+# Skill output written into the working project (`/research`, `/spec`, `/tech-debt`,
+# progress logs). Scratch by design: anything durable gets promoted into docs/adr/,
+# which is how the 2026-09 research survived its own autopilot run (ADR 0001).
+.rust-studio/
+
+# `claude plugin eval` scores — regenerated per run, and model-dependent.
+plugins/rust-studio/evals/results/
+
+# Autopilot working directory: one build run's brief, manifest, spec, tickets, live
+# dashboard and resume state. Local by design — it dies with the run that produced it,
+# and anything durable is promoted into docs/adr/ instead (ADR 0001). Untracked in
+# 0.51.0; the files stay on disk, so "продолжи автопилот" still resumes.
+.autopilot/
+
+# ── Local caches and one-off backups ──────────────────────────────────────────
+.build/
+.fastembed_cache/
+.serena/
+plugins/.rust-studio.backup-pre-memory-unify/
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
 .env
 .env.*
 !.env.example
 
-# autopilot runtime state (dashboard server port/pid)
-.autopilot/serve.pid
+# ── Toolchain / editor / OS junk ──────────────────────────────────────────────
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
 
-# per-agent scratch memory written into the plugin tree during a session —
-# agent state, not plugin content; must not ship in the distribution
-plugins/rust-studio/.claude/agent-memory/
+# Merge/rebase leftovers — /merge-conflicts and /resolve-pr both produce these.
+*.orig
+*.rej

@@ -14,8 +14,8 @@ tests-green + correct is the FLOOR (`references/maintainer-grade-development.md`
 Non-idiomatic-but-working shape, wrong-crate placement, reinvented sibling primitives, and
 clone-instead-of-borrow ARE in scope (they fail the maintainer bar). That is distinct from
 speculative abstraction / future-proofing, which stays OUT of scope — don't push extra
-abstraction or defensive code (`references/working-preferences.md` §"Adversarial review, not echo chamber" — *don't
-over-report*).
+abstraction or defensive code (`references/working-preferences.md` §"Adversarial review, not echo chamber" —
+*report everything, filter at the verdict*).
 
 ## Intensity
 Match the number of lenses to the blast radius, at the intensity the session briefing names
@@ -39,7 +39,14 @@ For a `--full` pass, run independent read-only lenses concurrently when the host
 otherwise run them sequentially. Mirror lenses in the host's task surface when available. Give
 every worker the complete diff and scope because workers may not inherit conversation context or
 tool configuration. The lead merges and de-duplicates results. Follow
-`references/delegation.md` §8 for host capability detection and cleanup.
+`references/delegation.md` §8 for host capability detection and cleanup, and
+§"The brief" for what a lens brief must carry.
+
+**Brief a lens with the diff, not with your reading of it.** "Review this — I think the lock
+ordering is wrong" returns a confirmation whether or not it is wrong, and independence was the
+entire reason the lens ran in its own process. Hand it the scope and the bar; where you need a
+specific question answered, ask it with both answers open rather than as a finding seeking a
+signature.
 
 A review lens is one of the two cases where a separate process is worth its cost, and the
 reason is **independence**, not throughput: an author re-reading their own diff re-derives why
@@ -218,6 +225,14 @@ surviving assertions actually check.
    - `cargo audit` / `cargo deny check` when dependencies change
 
 ## Output
+**Report what you found; the severity tag is the filter, and the verdict is where filtering
+happens.** Never withhold a finding because it looks minor — tag it and let the verdict rank
+it. A lens told to be selective returns less, and its marginal findings are mostly real
+(`references/working-preferences.md` §"Adversarial review, not echo chamber"). The restraint the
+studio asks for is on what you *demand be changed*, not on what you report: correctness,
+soundness, security, integrity, and requirement gaps block the merge; shape and idiom findings
+are recorded, ranked, and declinable in one line.
+
 Merge and de-duplicate findings, ordered by severity, one line each:
 
 ```

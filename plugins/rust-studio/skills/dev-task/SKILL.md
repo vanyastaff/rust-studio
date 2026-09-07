@@ -28,6 +28,14 @@ unfamiliar crate) or **independence** (the verdict must not come from the author
 your context buys neither — run that phase inline (`references/delegation.md` §"When a handoff
 earns its cost"). Skipping the *spawn* is a judgment call; skipping the *phase* is not.
 
+When you do spawn, the brief is the whole relationship — the worker has none of this
+conversation. Write it complete and let it run: goal, context as **paths not pasted text**,
+constraints, the options you already ruled out and why, the acceptance criterion and the command
+that checks it, the write zone, and the verdict you expect back
+(`references/delegation.md` §"The brief"). State what you observed, never what you concluded —
+a builder briefed with your answer implements your answer, and a reviewer briefed with your
+suspicion confirms your suspicion.
+
 When the host has a task or plan surface, keep one item per phase live and update it as results
 arrive. Otherwise maintain a concise in-message checklist. At every boundary surface the result
 in one line (edit-site map, plan verdict, diff summary, review findings) before moving on. The

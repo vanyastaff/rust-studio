@@ -5,6 +5,125 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.51.0] - 2026-09-07
+
+The studio's authoring rules were written against Claude Fable 5 and a Codex whose hooks did not
+run. Both premises expired. Anthropic has since published per-model prompting guides for Claude
+Opus 5 and Claude Fable 5.1, and OpenAI has published Codex prompting and best-practice guides;
+read against them, several of this plugin's own instructions turned out to be corrections for
+failure modes the current models no longer have — and one of them was actively costing review
+recall.
+
+The finding that changes behavior: `working-preferences.md` told every review lens to "flag only
+what affects correctness, security, or the stated requirements." Anthropic's Opus 5 guide names
+that exact shape as a recall suppressor — *"if your review prompt says 'only report high-severity
+issues' or 'be conservative,' the model may follow that instruction literally and report less; ask
+it to report everything and filter in a separate pass instead."* The studio already had the second
+pass. It was just telling the first one to be quiet.
+
+### Changed
+
+- **Review lenses report everything; the verdict filters.** `rust-reviewer` and `/review` no
+  longer suppress a finding for looking minor — it gets a severity tag and the verdict ranks it.
+  The restraint the studio asks for moves to where it belongs: on the **fix demanded**, not on
+  what is surfaced. Correctness, soundness, security, integrity and requirement gaps still gate
+  the merge; shape and idiom findings are recorded and declinable in one line. Speculative
+  abstraction, future-proofing and defensive code remain out of scope as *fix directions*.
+- **`docs/claude-5-compat.md` now covers the generation, not one model.** Opus 5 and Fable 5.1
+  are both current and several of their defaults point in opposite directions — Opus 5 narrates
+  readily, Fable 5.1 goes quiet; Opus 5 over-verifies when told to verify, Fable 5.1 rewrites
+  whole files and commits test code the task didn't ask for. The document tabulates the split and
+  prescribes describing the outcome rather than hardcoding a correction for one column. It also
+  corrects two claims that were true for Fable 5 and are not for Opus 5: thinking *can* be
+  disabled (at effort `high` or below, and it shouldn't be), and effort level names do not carry
+  across models — an `/eval-agents` sweep is model-scoped, not permanent.
+- **`docs/agent-roster.md`, `README.md`, `hooks/scripts/stop-guard.ts`** — model policy is stated
+  without naming one model generation, and now says the thing that was only implicit: **no agent
+  pins `effort`**, so it stays the user's dial for the whole roster.
+- **`docs/templates/agents-md.md`** told users Codex never runs plugin hooks. That was our own
+  root manifest (ADR 0002, fixed in 0.50.0), not a host limitation. It now says so, and adds
+  where the fragment goes in Codex's `AGENTS.md` merge order — repository level, with
+  per-directory files for a workspace whose crates genuinely differ.
+- **`agents/rust-builder.md`** — tests are sized like the neighbouring test files, roughly one per
+  stated behavior; scratch checks don't get promoted into permanent files; a pre-existing bug
+  found while working is a follow-up line, not an edit. Anthropic reports this instruction cuts
+  unrequested additions substantially with no measurable change in task success.
+- **`skills/studio-doctor/SKILL.md`** reports the host's delegation caps
+  (`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`) alongside the
+  other configuration rows. Unset is normal and reports as `·`; a low cap is the answer to "why
+  did `/team-*` run its lenses one at a time?"
+
+### Added
+
+- **A brief contract — `docs/delegation.md` §"The brief".** The studio had a delegation *model*
+  and no specification for the one artifact the whole model runs on: the text an orchestrator
+  hands a worker. §8 named its elements in a single sentence; a worker that came back with the
+  wrong thing looked like an underperforming worker rather than a brief that failed. It is now
+  seven named elements with the failure each one causes when it is missing, and three rules that
+  are the difference between a senior brief and a junior one: hand large inputs as **paths, not
+  pasted text**, so two workers in a wave read identical bytes; **say what you observed, never
+  what you concluded**, because "review this — I think the lock ordering is wrong" returns a
+  confirmation whether or not it is wrong and spends the independence the spawn was paid for;
+  and mark third-party text as third-party *inside* the brief, where it otherwise arrives at the
+  worker looking exactly like your instruction to it. The return is read as a verdict on the
+  brief: filtering that didn't happen, framing that came back, a question answered that nobody
+  asked. `/dev-task`, `/review`, `/spec-tasks` and the four `/team-*` skills point at it from the
+  paragraph where they spawn.
+- **`docs/codex-compat.md`** — the Codex-side counterpart to `claude-5-compat.md`: what actually
+  reaches the model on Codex, why the generated agent TOMLs drop the model pin and never emit
+  `model_reasoning_effort` (same decision as the Claude side — effort is the user's dial), the
+  `AGENTS.md` and `config.toml` merge orders, the overlap between Codex's own `/plan` and
+  `/review` and the studio's, and one standing rule: **no Codex model name is hardcoded anywhere
+  in this plugin.** The lineup and its naming have changed repeatedly and a drifted constant in a
+  prompt reads as authoritative.
+- **A named rot mode in `docs/writing-skills.md` §7: the weaker-model guardrail** — a correction
+  for a failure mode the current model doesn't have, which now overcorrects. "Double-check your
+  work" on a model that self-verifies; "never use bullets" on one that already under-formats;
+  "flag only the important findings" on one whose marginal findings are real. Worse than a no-op,
+  because it moves behavior the wrong way.
+- **`docs/agent-template.md`** gains three authoring rules: never tell an agent to verify or
+  re-check itself (the gates are separation of duties, which is a different thing and stays);
+  size the deliverable, because documents this generation writes run long by default; and
+  describe the narration you want rather than dialing it up or down, since "be terse" and
+  "narrate your progress" land on opposite defaults across current models.
+- **`skills/research/SKILL.md` §"Resolve the name before you verify it"** — search for the
+  artifact by the name you were given, then verify the identifier the search returns. Reading a
+  404 on a name reconstructed from memory as "no such thing exists" is a search-method error
+  reported as a finding. This studio shipped that mistake once and reversed a decision built on
+  it (ADR 0001); it is also the documented Fable 5.1 behavior at `low` effort, where the model
+  calls search less and answers from memory more.
+
+### Removed
+
+- **`.autopilot/` is no longer tracked** — 14 files, 133 KB of one build run's brief, manifest,
+  spec, tickets, live dashboard and resume state, published in a plugin repository where none of
+  it is installable content. ADR 0001 already called this directory scratch that dies with its
+  run, and acted on it: the 2026-09 research was migrated into `docs/adr/` precisely so it would
+  outlive the run. Untracked, not deleted — the files stay on disk, so «продолжи автопилот»
+  still resumes, and `CLAUDE.md` now says the directory is local-only.
+- **`libnull.rlib`** — a 6 KB `ar` archive left in the repository root by a toolchain probe.
+  Never tracked (`*.rlib` caught it), never referenced, now gone from the working tree.
+
+### Fixed
+
+- **`.gitignore` covers what this repository actually produces.** It listed `target/`, `*.rlib`
+  and a one-off migration backup, and missed every output the studio's own skills write when the
+  plugin is dogfooded here: `.rust-studio/` (`/research`, `/spec`, `/tech-debt`, progress logs),
+  `mutants.out/`, `fuzz/artifacts|corpus/`, and the host state two of the plugin's own docs
+  already tell users to ignore — `.claude/agent-memory/` and `.claude/settings.local.json`, both
+  now unanchored so they match at any depth rather than only under `plugins/rust-studio/`. Also
+  added: `node_modules/`, `*.log`, `*.orig`, `*.rej` (`/merge-conflicts` and `/resolve-pr`
+  produce those), `*~`, `.idea/`, `.vscode/`. Verified no currently-tracked file is shadowed by
+  a new rule: `git ls-files | git check-ignore --stdin` returns empty.
+- **`docs/releasing.md` step 1 contradicted the section above it**, telling the releaser to bump
+  "all three manifests (… and the Agent Plugins `plugin.json` at the plugin root)" — the manifest
+  0.50.0 withdrew two paragraphs earlier, and that `RS-MANIFEST-058` now fails the build over.
+  Two manifests, and the step says why there is no third.
+- Three prompt files used the mannered phrasing Anthropic's Fable 5.1 guide names by example
+  ("earns its place" / "earns its keep"). These files are prompts — an agent reads them and
+  matches register. `docs/templates/project-claude-md.md`, `docs/templates/crate-context.md`,
+  `agents/macro-specialist.md`.
+
 ## [0.50.0] - 2026-09-07
 
 Every studio hook was dead on Codex, and the cause was a file this repository added on purpose.

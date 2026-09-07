@@ -20,6 +20,8 @@ Protocol: `references/delegation.md` (§8 team execution).
 Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
 Use workers and a native task surface when available; otherwise run each named role inline and
 keep a concise checklist. Surface every phase result in one line before advancing.
+Every spawn carries a complete brief — goal, paths, constraints, prior decisions, acceptance,
+write zone, required verdict (`references/delegation.md` §"The brief").
 
 ## Team composition
 `api-design-lead` (owns API-GATE) · `api-designer` · `error-architect` · `docs-engineer`

@@ -15,6 +15,8 @@ of truth. Mirror its rows into the host's task surface when one exists (id ↔ `
 `owner`, dependency ↔ "Blocked by") and keep both views in sync. If the host has no task surface,
 drive the file directly. Run independent ready tasks concurrently only when workers are available;
 otherwise run them sequentially. Follow **`references/delegation.md` §8**.
+Every spawn carries a complete brief — goal, paths, constraints, prior decisions, acceptance,
+write zone, required verdict (`references/delegation.md` §"The brief").
 
 ## Input
 `input` is a spec slug or path. If empty, list available specs under

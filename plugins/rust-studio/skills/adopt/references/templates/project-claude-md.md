@@ -10,8 +10,8 @@ versioned, shared with the team, and read by every agent that opens the repo —
 that have never heard of this plugin. It is where the studio's understanding of a project
 becomes durable.
 
-**One page, hard limit.** Everything here is loaded on every turn, so a line earns its place by
-changing what an agent does. Anything longer belongs in `.claude/rules/<topic>.md` (path-scoped,
+**One page, hard limit.** Everything here is loaded on every turn, so a line stays only if it
+changes what an agent does. Anything longer belongs in `.claude/rules/<topic>.md` (path-scoped,
 loaded on demand) or in the repo's real docs. Delete every heading you have nothing true to put
 under — an empty section is worse than a missing one, because it reads as "nothing to know here".
 

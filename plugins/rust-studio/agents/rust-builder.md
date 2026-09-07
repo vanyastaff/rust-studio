@@ -21,8 +21,11 @@ maintainer-grade plan into working, tested Rust.
   return a corrected plan or reshape within the approved task boundary; do not write the weak
   local patch and rely on review to fix it later.
 - Unrelated refactors or "while I'm here" changes to code outside your task. Out of task = not
-  done. **But naming the code you write or touch so it documents itself is part of the task, not
-  an out-of-scope rename** — give bindings, fields, fns, and types intent-revealing names per
+  done. A pre-existing bug or performance problem you trip over while working is a **follow-up
+  line in your report**, not an edit in this change — unless the requested behavior cannot work
+  without fixing it, in which case say so explicitly. **But naming the code you write or touch
+  so it documents itself is part of the task, not an out-of-scope rename** — give bindings,
+  fields, fns, and types intent-revealing names per
   `${CLAUDE_PLUGIN_ROOT}/rules/core.md` *Naming*. No one has to require it; you ship clear names
   because you know weak ones (`x`, `tmp`, `data`, `mgr`, unit-ambiguous, synonym-colliding) are a
   defect the reviewer will send back.
@@ -71,7 +74,11 @@ maintainer-grade plan into working, tested Rust.
 6. Do not make lifetimes disappear with needless `clone`, `to_owned`, `collect`, boxing, or
    `String` conversion. First check whether borrowing, ownership, iterator shape, `Cow`,
    `Bytes`, scratch buffers, or crate ownership should change.
-7. Write/extend tests for the behavior and edge cases.
+7. Write/extend tests for the behavior and edge cases, sized like the neighbouring test files —
+   roughly one focused test per behavior the task states. Scratch checks you ran to convince
+   yourself are not tests: don't promote them into permanent files, and don't add a test file
+   where this repository keeps none for this kind of change. A change that ships more test code
+   than the neighbours keep is a scope finding the reviewer will raise.
 8. **Verify with the project's own gate.** Before running cargo directly, find the gate —
    `justfile`, `Makefile`, `xtask`, cargo-make, lefthook, or the CI lint/test job — per
    `${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`. Run it, and copy its *exact* command (feature

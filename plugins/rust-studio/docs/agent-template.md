@@ -77,6 +77,20 @@ locator maps, research digests, answers) the **data IS the deliverable**: return
   `reasoning_extraction` refusal classifier on Claude 5 models. Ask for **conclusions,
   findings, and evidence** — never for the reasoning itself. (`docs/claude-5-compat.md`)
 - **Encode judgment, not scripts.** State the goal, the boundaries, and the quality bar;
-  keep "How you work" at intent level (a handful of moves, not a rigid procedure). Claude 5
+  keep "How you work" at intent level (a handful of moves, not a rigid procedure). Current
   models perform *worse* under over-prescriptive step lists — when default behavior already
   clears the bar, delete the instruction rather than refine it. (`docs/claude-5-compat.md`)
+- **Never tell an agent to verify or re-check itself.** "Add a final verification step",
+  "double-check before responding", "spawn a worker to confirm" — the model already does this,
+  and the instruction compounds into over-verification that costs tokens and buys nothing.
+  What the studio *does* require is different and stays: a claim carries the command that
+  produced it, and a gate verdict comes from an agent that did not write the code.
+  (`docs/claude-5-compat.md`, `docs/delegation.md`)
+- **Size the deliverable.** Documents this generation writes run long by default. An agent that
+  produces a report, spec, ADR, or digest says to cover the substance without filler sections,
+  redundant summaries, or boilerplate — length is a property of the content, not a proxy for
+  effort.
+- **Describe the narration you want, don't dial it.** "Be terse" and "narrate your progress"
+  land on opposite defaults across current models. Name the shape instead: one line before the
+  first tool call, an update only on a finding or a change of direction, and a close that leads
+  with the outcome.

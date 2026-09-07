@@ -71,8 +71,8 @@ const SOFT_CATEGORIES = new Set([
   // path is untested" as a severity-tagged finding) — hard-blocking them punished honest
   // review deliverables. With evidence present they pass; evidence-free they still block.
   "untested-mention",
-  // Demoted from HARD for Claude 5 models (docs/claude-5-compat.md): Fable 5 asks far
-  // less, and the asks that remain are disproportionately the legitimate ones — a
+  // Demoted from HARD for Claude 5 models (docs/claude-5-compat.md): this generation asks
+  // far less, and the asks that remain are disproportionately the legitimate ones — a
   // strategic/irreversible fork the protocol itself says to escalate, or a session-wrap
   // handoff with completion evidence. Evidence-backed asks pass; evidence-free still block.
   "permission-seeking",
