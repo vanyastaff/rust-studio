@@ -36,7 +36,7 @@ _json_escape() { # minimal JSON string escaping for the fields below
 #   RS-HOOK-0xx      hook config shared across hosts           next: 022
 #   RS-SCRIPT-0xx    shipped scripts and their contracts       next: 037
 #   RS-MEM-0xx       memory-store contract                     next: 041
-#   RS-MANIFEST-0xx  plugin manifests and version agreement    next: 058
+#   RS-MANIFEST-0xx  plugin manifests and version agreement    next: 059
 #   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 078
 #   RS-DATA-0xx      rules/*.json data files                   next: 076
 #   RS-AGENT-0xx     agent briefs and their generation         next: 083
@@ -223,14 +223,23 @@ codex_version=$(jq -r '.version' .codex-plugin/plugin.json)
 # The Agent Plugins 1.0 manifest (agent-plugins.org) is what Codex >= 0.147, Cursor, Copilot
 # CLI and Kiro load. Its schema is closed: $schema + name are required, the component
 # locations are fixed (flat skills/), and it must not drift from the host manifests.
-[[ -f plugin.json ]] || fail RS-MANIFEST-052 "plugin.json" "the Agent Plugins 1.0 manifest is missing; Codex >= 0.147, Cursor, Copilot CLI and Kiro load this file" "add plugin.json with \$schema, name and version matching the host manifests"
-jq -e '
-  ."$schema" == "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json" and
-  .name == "rust-studio" and
-  (.description | length > 0) and
-  (keys - ["$schema","name","version","description","author","homepage","repository","license","keywords","extensions"] | length == 0)
-' plugin.json >/dev/null || fail RS-MANIFEST-053 "plugin.json" "fails the Agent Plugins 1.0 schema: wrong \$schema, wrong name, empty description, or a key outside the closed set" "the allowed keys are \$schema, name, version, description, author, homepage, repository, license, keywords, extensions"
-[[ $(jq -r '.version' plugin.json) == "$claude_version" ]] || fail RS-MANIFEST-054 "plugin.json#version" "is $(jq -r '.version' plugin.json); the host manifests say $claude_version" "bump all three together"
+# The root Agent Plugins 1.0 manifest is deliberately ABSENT, and this guard is why.
+# Measured on Codex CLI 0.153.4: when a root plugin.json carrying
+# `$schema: agent-plugins.org/.../plugin.schema.json` is present, Codex loads the plugin
+# through its Agent Plugins path — which parses skills, MCP servers and apps but NOT hooks
+# (openai/codex#16430) — and reports "No plugin hooks" in its own plugin panel with no
+# warning. Every studio hook goes silent: no briefing, no path-scoped standards, no
+# sub-agent brief. Removing the file restores all seven Codex hooks; so does removing just
+# the `$schema` key, but that key is REQUIRED by the standard (`required: ["$schema","name"]`)
+# and `additionalProperties: false` forbids declaring `hooks` there, so there is no compliant
+# way to have both. The `extensions` escape hatch was tried under `com.openai` and
+# `com.openai.codex`; Codex does not read hooks from it.
+#
+# Restore this manifest only together with evidence that Codex executes plugin hooks while it
+# is present — the marker-file probe in docs/adr/0002 answers that in one run.
+[[ ! -f plugin.json ]] || fail RS-MANIFEST-058 "plugin.json" \
+  "the root Agent Plugins 1.0 manifest is back; on Codex its \$schema switches loading to a path that silently drops every plugin hook" \
+  "delete it, or prove with the marker probe that Codex now runs plugin hooks alongside it (openai/codex#16430)"
 for skill_dir in skills/*/; do
   [[ -f $skill_dir/SKILL.md ]] || fail RS-SKILL-060 "${skill_dir%/}" "no SKILL.md; Agent Plugins clients read only immediate children of skills/, so this directory is invisible" "add SKILL.md, or move the directory out of skills/"
 done
@@ -506,7 +515,6 @@ $skill_count	../../INSTALL.md	The N skills are
 $skill_count	../../INSTALL.md	gets the N skills
 $skill_count	../../install.sh	(N skills, 
 $portable	../../install.sh	(N portable skills
-$skill_count	plugin.json	coding agents: N skills
 $skill_count	docs/usage-guide.md	**Skills** (N)
 $skill_count	docs/usage-guide.md	## The skills (N)
 EOF

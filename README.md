@@ -64,9 +64,15 @@ npx skills add . --skill dev-task --agent codex -y
 npx skills add . --skill '*' --agent '*' -y
 ```
 
-**Agent Plugins 1.0.** The plugin directory is also an [Agent Plugins 1.0](https://agent-plugins.org)
-package (root `plugin.json` + flat `skills/`), which Codex ≥ 0.147, Cursor, GitHub Copilot CLI
-≥ 1.0.74 and Kiro load directly — the same skills, one more door.
+**Agent Plugins 1.0 — withdrawn, on purpose.** The plugin used to ship a root `plugin.json`
+in the [Agent Plugins 1.0](https://agent-plugins.org) format as one more door for Cursor,
+Copilot CLI and Kiro. It also closed a bigger one: on Codex CLI 0.153 that manifest's `$schema`
+switches loading to a path that reads skills, MCP servers and apps but **not hooks**
+([openai/codex#16430](https://github.com/openai/codex/issues/16430)), so every studio hook went
+silent — no briefing, no path-scoped standards — while Codex's own panel just said "No plugin
+hooks". The standard requires `$schema` and forbids declaring `hooks`, so there is no compliant
+way to keep both; measured, not assumed. The manifest comes back when Codex runs plugin hooks
+alongside it. Those clients still install the skills through `npx skills add`.
 
 **Claude desktop app** has no `/plugin` command — add the marketplace from Customize → personal
 plugins → Add from repository.
@@ -296,7 +302,6 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .lsp.json                # bundled rust-analyzer LSP
 │       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
-│       ├── plugin.json              # Agent Plugins 1.0 manifest (Codex/Cursor/Copilot/Kiro)
 │       ├── skills/                  # 62 skills + references + OpenAI metadata
 │       ├── evals/                   # claude plugin eval suite (plugin only)
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript

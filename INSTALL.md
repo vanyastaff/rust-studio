@@ -32,13 +32,21 @@ utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall b
 that phase inline — see
 [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md).
 
-## Agent Plugins (Cursor, GitHub Copilot CLI, Kiro, Codex)
+## Agent Plugins (Cursor, GitHub Copilot CLI, Kiro)
 
-`plugins/rust-studio/` carries a root `plugin.json` in the cross-vendor
-[Agent Plugins 1.0](https://agent-plugins.org) format — `$schema` + `name`, skills discovered
-from the flat `skills/` directory. Any client that implements it (Codex ≥ 0.147, Cursor, Copilot
-CLI ≥ 1.0.74, Kiro) can install the plugin directory directly and gets the 62 skills; hooks,
-agents, LSP, and status line stay with the Claude Code and Codex manifests beside it.
+`plugins/rust-studio/` used to carry a root `plugin.json` in the cross-vendor
+[Agent Plugins 1.0](https://agent-plugins.org) format. It no longer does, and the reason is
+Codex: with that manifest present, Codex CLI 0.153 loads the plugin through its Agent Plugins
+path, which reads skills, MCP servers and apps but **not hooks**
+([openai/codex#16430](https://github.com/openai/codex/issues/16430)). Every studio hook went
+silent — no session briefing, no path-scoped standards — and Codex's plugin panel reported
+"No plugin hooks" without a warning. The standard makes `$schema` required and forbids a
+`hooks` key, so no manifest satisfies both; the file is withdrawn until Codex runs plugin hooks
+beside it.
+
+Clients that implement Agent Plugins install through `npx skills add` (below) instead, and a
+client that does gets the 62 skills all the same — that path reads the flat `skills/` directory
+and needs no manifest at all.
 
 ## Codex plugin
 

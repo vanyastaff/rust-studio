@@ -6,9 +6,10 @@
 - `plugins/rust-studio/docs/` and `rules/` are the **single source of truth** for standards.
 - `plugins/rust-studio/skills/*/references/` is **generated** — never edit it by hand.
 - `.claude-plugin/` + `.agents/plugins/marketplace.json` — Claude and Codex marketplaces;
-  `plugins/rust-studio/.codex-plugin/plugin.json` — the Codex manifest;
-  `plugins/rust-studio/plugin.json` — the Agent Plugins 1.0 manifest (Cursor, Copilot, Kiro,
-  Codex). All three carry the same `version`.
+  `plugins/rust-studio/.codex-plugin/plugin.json` — the Codex manifest. Both carry the same
+  `version`. There is deliberately **no** root `plugin.json`: the Agent Plugins 1.0 manifest
+  silently disables every plugin hook on Codex, and `RS-MANIFEST-058` fails the build if one
+  reappears — see `docs/adr/0002-agent-plugins-manifest-withdrawn.md`.
 - `plugins/rust-studio/evals/` — the `claude plugin eval` suite (one `prompt.md` + `graders/`
   per case, derived from `benchmarks/fixtures/`). Keep prompts free of absolute paths.
   `plugins/rust-studio/tools/eval-runner.ts` runs the suite (`--fixtures` for the benchmarks, `--live` for the
