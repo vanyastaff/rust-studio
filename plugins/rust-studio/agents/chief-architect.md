@@ -2,7 +2,7 @@
 name: chief-architect
 description: "Architecture decisions, crate/module boundaries, ADRs, ARCH-GATE. Tier-1 technical director for workspace structure, layering, big refactors, resolving cross-lead technical conflicts, or any change that ripples across many crates."
 model: inherit
-disallowedTools: NotebookEdit
+disallowedTools: Write, Edit, NotebookEdit
 memory: project
 color: purple
 ---

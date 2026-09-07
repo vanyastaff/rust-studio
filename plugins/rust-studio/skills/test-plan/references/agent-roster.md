@@ -42,6 +42,26 @@ makes effort the user's dial rather than the roster's.
 
 ---
 
+## Who can write
+
+Tool access is not a detail of the brief — it is the roster's load-bearing split. **Directors and
+leads never write.** They decide, hold a gate, and delegate; all nine declare
+`disallowedTools: Write, Edit, NotebookEdit`, as do the five read-only auditors
+(`rust-reviewer`, `harsh-critic`, `rust-scout`, `unsafe-auditor`, `security-auditor`) — 14 of 33.
+
+Implementation belongs to `rust-builder` and `rust-build-resolver`, plus the Tier-3 specialists
+whose briefs say they implement — `test-engineer`, `build-engineer`, `docs-engineer`,
+`cli-specialist`, `dependency-manager`, `perf-engineer` and `observability-engineer` (the last
+two edit the code they measure and instrument, by design).
+
+The rule this enforces: **an agent that can write is never a review lens.** A review that edits
+the tree it audits destroys the artifact under review — it races the verification run and, on
+uncommitted work, leaves no recovery point. `RS-AGENT-083` fails the build if `/review` ever
+names a write-capable agent again; the domain checklist a specialist would have carried is
+carried by `rules/<domain>.md`, read by the lens that owns the gate.
+
+---
+
 ## Tier 1 — Directors
 
 | Agent | Model | Owns | Does NOT own | Gate |

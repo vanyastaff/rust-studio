@@ -39,7 +39,7 @@ _json_escape() { # minimal JSON string escaping for the fields below
 #   RS-MANIFEST-0xx  plugin manifests and version agreement    next: 059
 #   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 078
 #   RS-DATA-0xx      rules/*.json data files                   next: 076
-#   RS-AGENT-0xx     agent briefs and their generation         next: 083
+#   RS-AGENT-0xx     agent briefs and their generation         next: 084
 #   RS-DOC-0xx       docs and README staying true to the tree  next: 094
 #   RS-EVAL-0xx      eval cases                                next: 106
 #   RS-REF-1xx       bundled skill references                  next: 111
@@ -530,6 +530,53 @@ if grep -rlE '\$\{CLAUDE_[A-Z_]*\}' "$codex_agent_probe" >/dev/null 2>&1; then
   fail RS-AGENT-082 "generated Codex agents" "an unresolved \${CLAUDE_…} placeholder survives generation, so the path is dead on Codex" "resolve the variable in the source brief under agents/"
 fi
 rm -rf "$codex_agent_probe"
+
+# A review lens must not be able to edit the thing it is reviewing. In 0.51.0 /review's step-4
+# fan-out named agents that ship with Edit/Write; one of them applied its own findings to the
+# working tree — ~38 files across ~57 minutes, on uncommitted work, while a whole-workspace
+# nextest run reported 7211/7211 green against a tree changing beneath it. The skill already
+# called its lenses "read-only"; nothing checked that the claim was true. This is that check.
+python3 - >&2 <<'REVIEWLENS' || fail RS-AGENT-083 "skills/review/SKILL.md" "names a write-capable agent as a review lens — the failing agent is printed above" "either declare 'disallowedTools: Write, Edit, NotebookEdit' in that agent's brief, or drop it from the lens list and let the owning gate lens walk references/<domain>.md instead"
+import pathlib, re, sys
+
+skill = pathlib.Path("skills/review/SKILL.md")
+agents = {p.stem for p in pathlib.Path("agents").glob("*.md")}
+
+def read_only(name):
+    fm = pathlib.Path("agents", name + ".md").read_text(encoding="utf-8").split("---")[1]
+    m = re.search(r"^disallowedTools:(.*)$", fm, re.M)
+    denied = {t.strip() for t in m.group(1).split(",")} if m else set()
+    return {"Write", "Edit"} <= denied
+
+# Prose wraps, so a per-line test splits a sentence from the word that exempts it. Group the
+# file into logical blocks — a bullet, a numbered step, or a paragraph — and judge each whole.
+blocks, cur, start = [], [], 1
+for lineno, line in enumerate(skill.read_text(encoding="utf-8").splitlines(), 1):
+    if not line.strip() or re.match(r"\s*([-*]|\d+\.)\s", line) or line.startswith("#"):
+        if cur:
+            blocks.append((start, " ".join(cur)))
+        cur, start = ([line], lineno) if line.strip() else ([], lineno + 1)
+    else:
+        cur.append(line)
+if cur:
+    blocks.append((start, " ".join(cur)))
+
+# A block that forbids an agent, or hands work off after the verdict, names it legitimately.
+EXEMPT = ("never", "/dev-task", "reviews nothing")
+
+bad = []
+for lineno, block in blocks:
+    if any(token in block for token in EXEMPT):
+        continue
+    for name in re.findall(r"`([a-z][a-z0-9-]+)`", block):
+        if name in agents and not read_only(name):
+            bad.append(f"  skills/review/SKILL.md:{lineno} spawns `{name}`, which ships with Edit/Write")
+
+if bad:
+    print("review lenses that can write to the tree they audit:", file=sys.stderr)
+    print("\n".join(sorted(set(bad))), file=sys.stderr)
+    sys.exit(1)
+REVIEWLENS
 
 # Catalog drift: a skill that /help and the usage guide never mention is one nobody finds.
 # Three skills had gone missing from the guide and one from /help before this gate existed.
