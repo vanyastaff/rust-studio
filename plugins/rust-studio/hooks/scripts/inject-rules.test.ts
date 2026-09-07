@@ -11,7 +11,7 @@ import { test, expect, describe } from "bun:test";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { applyPatchTargets, markerName, pathMatches, untrustedSource } from "./inject-rules.ts";
+import { applyPatchTargets, markerName, pathMatches, shellTargets, untrustedSource } from "./inject-rules.ts";
 
 const ADD = `*** Begin Patch
 *** Add File: /repo/crates/storage/src/domain/credential.rs
@@ -332,5 +332,53 @@ describe("MSRV-gated idiom set rides with the standards pointer", () => {
     const ctx = out ? (JSON.parse(out).hookSpecificOutput.additionalContext as string) : "";
     expect(ctx).toContain("- **cargo-manifest**");
     expect(ctx).not.toContain("Modern idioms available");
+  });
+});
+
+describe("files named inside a shell command", () => {
+  // Codex has no Read tool: it reads with `shell` and writes with `apply_patch`. A model
+  // reading a file therefore runs `sed -n '1,240p' path.rs`, which carried no path this hook
+  // could see — so the standards were silent on one host's entire read path.
+  test("Codex passes argv; Claude's Bash passes one string", () => {
+    expect(shellTargets(["bash", "-lc", "sed -n '1,240p' crates/core/src/graph.rs"])).toEqual([
+      "crates/core/src/graph.rs",
+    ]);
+    expect(shellTargets("cat src/lib.rs")).toEqual(["src/lib.rs"]);
+  });
+
+  test("a path inside a flag still counts", () => {
+    expect(shellTargets("cargo run --manifest-path=crates/b/Cargo.toml")).toEqual([
+      "crates/b/Cargo.toml",
+    ]);
+  });
+
+  test("a command that names no file stays silent", () => {
+    // The failure mode to avoid: every `cargo test` dragging the standards in.
+    expect(shellTargets("cargo test -p storage --all-features")).toEqual([]);
+    expect(shellTargets("rg --files-with-matches TODO src/")).toEqual([]);
+    expect(shellTargets(undefined)).toEqual([]);
+  });
+
+  test("a glob names no one file, so it names none", () => {
+    expect(shellTargets("sed -n 1,5p src/*.rs")).toEqual([]);
+  });
+
+  test("end to end: a shell read pulls in the path-scoped standards", () => {
+    const HOOK = new URL("./inject-rules.ts", import.meta.url).pathname;
+    const root = new URL("../..", import.meta.url).pathname;
+    const r = Bun.spawnSync(["bun", HOOK], {
+      stdin: Buffer.from(
+        JSON.stringify({
+          session_id: `test-shell-${Math.random().toString(36).slice(2)}`,
+          tool_input: { command: ["bash", "-lc", "sed -n '1,80p' /repo/src/lib.rs"] },
+        }),
+      ),
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: root },
+    });
+    const out = new TextDecoder().decode(r.stdout).trim();
+    expect(out).not.toBe("");
+    const ctx = JSON.parse(out).hookSpecificOutput.additionalContext as string;
+    expect(ctx).toContain("- **core**");
+    expect(ctx).toContain("lib.rs");
   });
 });

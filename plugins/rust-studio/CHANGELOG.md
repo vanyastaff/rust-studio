@@ -5,6 +5,27 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.1] - 2026-09-07
+
+Path-scoped standards were silent on an entire host's read path. Verified against Codex
+0.153.4: its tool surface is `shell` / `unified_exec` for reading and `apply_patch` for
+writing — there is no Read tool, so a model reading a file runs
+`sed -n '1,240p' crates/core/src/graph.rs`. `inject-rules.ts` looked only at `file_path` and
+at apply_patch blobs, so it saw no path and injected nothing. Edits on Codex were covered;
+reads never were. Claude reaches the same shape whenever the model greps or seds through Bash
+instead of using Read.
+
+### Fixed
+
+- **`inject-rules.ts` finds the file named inside a shell command**, in both forms the hosts
+  use: argv (Codex `shell`) and a single string (Claude Bash). Precedence is unchanged —
+  `file_path`, then an apply_patch blob, then the command. The provenance check rides along,
+  so `cat`-ing a dependency's source under `~/.cargo/registry` is still flagged third-party.
+- Extraction is deliberately narrow: only tokens carrying a known source extension
+  (`*.rs`, `Cargo.toml`, `build.rs`) count, and a glob names no one file. `cargo test -p
+  storage --all-features` names nothing and stays silent — without that, every build command
+  would drag the standards into context. Pinned by tests in both directions.
+
 ## [0.48.0] - 2026-09-07
 
 The release that made the maintainer's verdict visible. Measured across 926 session
