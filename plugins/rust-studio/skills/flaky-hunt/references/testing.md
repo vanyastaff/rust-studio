@@ -35,6 +35,21 @@ Applies to integration tests, test modules, and benches.
   on shared ports/files — use ephemeral resources.
 - A flaky test is a failing test. Quarantine with an issue link, don't `#[ignore]` silently.
 
+## Test the program that ships
+- Debug and release are **different programs**. `debug_assert!` is compiled out, integer
+  overflow wraps instead of panicking, `cfg(debug_assertions)` branches flip, and the optimizer
+  starts relying on the aliasing and validity rules that make latent UB observable. A suite that
+  only ever ran in debug proves nothing about the binary you deploy.
+- Keep the debug run as the fast default — it is the only one where `debug_assert!` and overflow
+  panics fire at all — and add `cargo test --release` / `cargo nextest run --release` **in
+  addition**, not instead.
+- Release-mode runs earn their wall-clock on arithmetic-heavy code, `unsafe`/FFI, and anything
+  whose behavior depends on optimization or a debug-only branch. Scope the release job to those
+  crates rather than the whole workspace if the full run is too slow to keep.
+- A failure that appears only in release is a real bug, not a flake: the debug run was hiding
+  it. Never "fix" it by keeping the suite debug-only — that is gate-disabling (`core.md`
+  §Integrity & discipline).
+
 ## Integrity — a test must be able to fail
 - A test that **cannot fail is not a test**. Assert the **value/effect**, not mere existence
   (`is_ok()` with no value check); never a tautology (`assert_eq!(x, x)`) or an assertion-free

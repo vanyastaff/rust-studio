@@ -29,6 +29,10 @@ Applies to every `.rs` file.
 - Integer overflow is **defined**, not UB: debug panics, release wraps (two's complement).
   On untrusted numbers reach for `checked_`/`saturating_`/`wrapping_`/`overflowing_`
   (or `Wrapping<T>`/`Saturating<T>`) to state the intended semantics explicitly.
+  Naming the intent at the call site is the fix; `overflow-checks = true` in the release
+  profile (`cargo-manifest.md`) is the net under the arithmetic nobody annotated, turning a
+  silent wrap into a panic. It is a backstop, not a substitute — an attacker-controlled length
+  that wraps past a bounds check is a bug whether or not the wrap is caught.
 
 ## Idiom
 - Iterators over manual index loops; `?`-friendly combinators over nested matches.
@@ -146,5 +150,9 @@ See `references/integrity-and-evidence.md`.
 A change that adds/modifies a state, error variant, hot path, or cross-crate call ships its
 observability now, not as a follow-up: a typed error variant (`#[source]` chains, not `String`),
 a `#[tracing::instrument]`/span with meaningful fields, and any prose invariant turned into a
-`debug_assert!` or type-level guarantee. Green tests are not "done"; finishing the cross-crate
-ripple is. See `references/working-preferences.md`.
+type-level guarantee or an assertion. Choose the assertion by who can break the invariant:
+`debug_assert!` is **compiled out in release**, so it guards only what construction already
+guarantees — a regression tripwire for the next author. An invariant that untrusted input, a
+caller, or arithmetic can actually violate at runtime needs `assert!` or a returned `Result`,
+or it does not exist in the binary that ships. Green tests are not "done"; finishing the
+cross-crate ripple is. See `references/working-preferences.md`.

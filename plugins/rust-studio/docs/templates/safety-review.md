@@ -48,7 +48,7 @@ src/collections/raw_buf.rs:87   — ptr::copy_nonoverlapping in grow()
 - `RawBuf` fields (`ptr`, `cap`, `len`) are private; only methods in this module can mutate them.
 - `RawBuf::new()` is the sole constructor; it zeroes `len` and checks the allocator result.
 - `grow()` is `pub(crate)` — external callers cannot trigger the `copy_nonoverlapping` path with an invalid state.
-- Precondition `len <= cap` is asserted (`debug_assert!`) at the top of every mutating method.
+- Precondition `len <= cap` is checked with `assert!` at the top of every mutating method — not `debug_assert!`, which is compiled out in release and would leave `copy_nonoverlapping` running on an unchecked precondition in the shipped binary. A soundness precondition holds in every profile or it does not hold.
 
 ---
 
