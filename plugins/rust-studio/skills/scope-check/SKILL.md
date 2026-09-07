@@ -74,6 +74,12 @@ ref is also needed, batch both into a single user prompt before proceeding.
 
 ## Phase 5 — Verdict
 
+**Any lens verdict you relay is quoted, not paraphrased.** A spawned lens is worth its
+cost only because the judgement is not yours; its verdict token appears verbatim and
+attributed next to your own, and a difference between the two is stated with its reason
+rather than merged away (`references/verdicts.md`).
+
+
 9. After all decisions are captured, emit the final scope verdict:
 
 ```

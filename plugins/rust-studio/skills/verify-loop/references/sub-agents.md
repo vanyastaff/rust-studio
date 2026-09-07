@@ -13,6 +13,14 @@ Plan before you write. Read the finished diff back as an adversarial reviewer, h
 what you would reject in someone else's work, before you call it done. The tiers, the quality
 gates and the verdicts are unchanged — only the number of processes is.
 
+**Where the agent does exist, what it returns is a verdict, not raw material.** The reason a
+gate lens runs in its own process is that the session which read the code cannot also be the
+one that judges it — so relaying its finding as part of your own merged summary gives back
+exactly the independence the spawn was paid for. Its verdict token appears verbatim in the
+message the user reads, attributed to the lens it came from, next to your own; if yours
+differs, say so and say why, rather than quietly merging a blocking verdict into a passing
+one. The full contract, including what each token means, is in `references/verdicts.md`.
+
 Where a skill says the orchestrator must never write and must delegate to `rust-builder`, and
 no `rust-builder` exists: **you write** — but only after running the scout and plan phases you
 would otherwise have handed off. The protocol exists to keep those phases from collapsing into

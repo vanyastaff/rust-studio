@@ -52,6 +52,12 @@ Use `/doc-review` for specs, plans, ADRs, RFCs, and design docs.
    disagreements between lenses explicitly — don't average them.
 
 ## Output
+
+**Any lens verdict you relay is quoted, not paraphrased.** A spawned lens is worth its
+cost only because the judgement is not yours; its verdict token appears verbatim and
+attributed next to your own, and a difference between the two is stated with its reason
+rather than merged away (`references/verdicts.md`).
+
 Ordered by severity, one line each, grouped by dimension:
 
 ```

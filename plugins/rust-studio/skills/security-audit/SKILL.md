@@ -123,6 +123,12 @@ If any CRITICAL or HIGH findings remain unresolved, the RELEASE-GATE is **BLOCKE
 this explicitly. `release-lead` must acknowledge before shipping.
 
 ## Verdict
+
+**Any lens verdict you relay is quoted, not paraphrased.** A spawned lens is worth its
+cost only because the judgement is not yours; its verdict token appears verbatim and
+attributed next to your own, and a difference between the two is stated with its reason
+rather than merged away (`references/verdicts.md`).
+
 **Persist the audit's memory first.** `security-auditor` surfaces durable triage
 (RUSTSEC waivers + justification, accepted advisory exceptions, confirmed false
 positives) on `MEMORY:` lines in its verdicts — it is read-only and cannot write the

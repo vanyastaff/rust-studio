@@ -31,13 +31,13 @@ _json_escape() { # minimal JSON string escaping for the fields below
 # Code registry. Numbers are never reused: a code that appears in an old issue must keep
 # meaning what it meant. Take the next free number in the area you are adding to.
 #
-#   RS-DIST-0xx      required files, and this script itself    next: 003
+#   RS-DIST-0xx      required files, and this script itself    next: 004
 #   RS-CODEX-0xx     Codex hooks and manifest wiring           next: 017
 #   RS-HOOK-0xx      hook config shared across hosts           next: 022
 #   RS-SCRIPT-0xx    shipped scripts and their contracts       next: 037
 #   RS-MEM-0xx       memory-store contract                     next: 041
 #   RS-MANIFEST-0xx  plugin manifests and version agreement    next: 058
-#   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 077
+#   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 078
 #   RS-DATA-0xx      rules/*.json data files                   next: 076
 #   RS-AGENT-0xx     agent briefs and their generation         next: 083
 #   RS-DOC-0xx       docs and README staying true to the tree  next: 094
@@ -66,6 +66,14 @@ fail() {
   fi
   exit 1
 }
+
+# --json promises ONE parseable object on stdout. A diagnostic block that prints its
+# offenders to stdout breaks that promise silently — the caller gets a JSON parse error
+# instead of the finding, which is worse than the finding.
+stdout_blocks=$(grep -cE "^python3 - <<'" scripts/validate-distribution.sh || true)
+(( stdout_blocks == 0 )) || fail RS-DIST-003 "scripts/validate-distribution.sh" \
+  "$stdout_blocks diagnostic block(s) write to stdout, which corrupts --json output" \
+  "invoke them as \`python3 - >&2 <<'TAG'\` so offender lines go to stderr"
 
 # This script's own promise first: a finding code is a stable identifier, so two checks
 # must never share one. A copy-pasted code is the easy way to break that silently.
@@ -371,7 +379,7 @@ unknown_keys=$(awk '
 # Extracted 2026-09-04 from Claude Code 2.1.260 (binary at
 # ~/.local/share/claude/versions/2.1.260): 20 keys, matched below. `agents/openai.yaml` is
 # Codex metadata, not an agent brief, and is skipped by the `*.md` glob below.
-python3 - <<'AGENTFRONTMATTER' || fail RS-AGENT-080 "agents/*.md frontmatter" "an agent brief violates the frontmatter gate — the failing class is printed above" "fix the brief named above; the gate detail is in the python block in this script"
+python3 - >&2 <<'AGENTFRONTMATTER' || fail RS-AGENT-080 "agents/*.md frontmatter" "an agent brief violates the frontmatter gate — the failing class is printed above" "fix the brief named above; the gate detail is in the python block in this script"
 import re, pathlib, sys
 
 # Every key Claude Code 2.1.260's own agent-frontmatter schema recognizes (see the extraction
@@ -556,7 +564,7 @@ jq -e '.experimental.evals == "./evals"' .claude-plugin/plugin.json >/dev/null |
 # A `references/x.md` §"Heading" pointer that names no heading sends the agent to look for a
 # section that isn't there. /review carried one for as long as the citation existed: it pointed
 # at "don't over-report", which is a bullet inside "Adversarial review, not echo chamber".
-python3 - <<'ANCHORS' || fail RS-SKILL-074 "skills/*/SKILL.md reference anchors" "a skill cites a section heading that does not exist in its bundled reference — the offender is printed above" "fix the citation, or add the section; a dangling anchor sends the agent looking for text that is not there"
+python3 - >&2 <<'ANCHORS' || fail RS-SKILL-074 "skills/*/SKILL.md reference anchors" "a skill cites a section heading that does not exist in its bundled reference — the offender is printed above" "fix the citation, or add the section; a dangling anchor sends the agent looking for text that is not there"
 import re, pathlib, sys
 bad = 0
 for sk in sorted(pathlib.Path("skills").iterdir()):
@@ -614,7 +622,7 @@ ANCHORS
 # exception stops covering the pair and this gate goes back to requiring a boundary
 # section, exactly as if the exception did not exist. The defect this gate catches is a
 # confusable pair with nowhere to resolve the confusion.
-python3 - <<'BOUNDARIES' || fail RS-SKILL-075 "skills/*/SKILL.md#description" "two descriptions are confusable with no boundary stated between them — the pair is printed above" "state the boundary in one of the two descriptions; the router picks by description alone"
+python3 - >&2 <<'BOUNDARIES' || fail RS-SKILL-075 "skills/*/SKILL.md#description" "two descriptions are confusable with no boundary stated between them — the pair is printed above" "state the boundary in one of the two descriptions; the router picks by description alone"
 import re, pathlib, sys
 from itertools import combinations
 from collections import Counter
@@ -716,7 +724,7 @@ BOUNDARIES
 #   4. process spawning outside hooks/scripts/_lib.ts's timeout-guarded run() helper
 # It checks exactly these four literal patterns and nothing else — see README.md's "Script
 # safety gate" section for what that does and does not prove.
-python3 - <<'SCRIPTSAFETY' || fail RS-SCRIPT-033 "shipped scripts" "a script violates the script-safety gate — the failing class is printed above" "fix the script named above; the gate detail is in the python block in this script"
+python3 - >&2 <<'SCRIPTSAFETY' || fail RS-SCRIPT-033 "shipped scripts" "a script violates the script-safety gate — the failing class is printed above" "fix the script named above; the gate detail is in the python block in this script"
 import re, sys
 from pathlib import Path
 
@@ -814,6 +822,28 @@ for f in hook_files:
 
 sys.exit(1 if bad else 0)
 SCRIPTSAFETY
+
+# --- relayed-verdict contract ------------------------------------------------------
+# A skill that names a studio agent will receive a verdict from it, and the one edit that
+# turns a gate result into an opinion is folding that verdict into the orchestrator's own
+# summary. The rule lives in docs/verdicts.md; this check is that the rule is REACHABLE from
+# every skill it binds — a skill installed on its own carries only its own references/.
+python3 - >&2 <<'VERDICTREACH' || fail RS-SKILL-077 "skills/*/references/verdicts.md" \
+  "a skill names a studio agent but cannot reach the relayed-verdict contract — the offender is printed above" \
+  "cite references/verdicts.md from the skill, or from a doc it already bundles (docs/sub-agents.md reaches 54 of them), then run ./scripts/sync-references.sh"
+import pathlib, sys
+agents = {p.stem for p in pathlib.Path("agents").glob("*.md")}
+bad = []
+for sk in sorted(pathlib.Path("skills").glob("*/SKILL.md")):
+    text = sk.read_text()
+    if not any(f"`{a}`" in text for a in agents):
+        continue
+    if not (sk.parent / "references" / "verdicts.md").exists():
+        bad.append(sk.parent.name)
+for b in bad:
+    print(f"  {b}: names a studio agent, no references/verdicts.md in its bundle", file=sys.stderr)
+sys.exit(1 if bad else 0)
+VERDICTREACH
 
 # Both sub-checks report on stdout. Capture it so --json keeps stdout to one object, and
 # so a failure arrives as a finding with the drift folded in rather than as loose text.
