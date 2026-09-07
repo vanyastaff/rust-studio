@@ -5,6 +5,57 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.52.2] - 2026-09-07
+
+`/review` called its step-4 fan-out "read-only lenses". Of the thirteen agents it named, two
+were. The rest shipped with `Edit`/`Write`, and one of them used them: briefed to review a diff
+and report findings, it applied its own findings to the working tree instead — ~38 files over
+~57 minutes, plus an unrelated rewrite, on uncommitted work with no recovery point. A
+whole-workspace `nextest` run was in flight while the tree changed underneath it and reported
+7211/7211 green. A review that can edit the artifact it audits does not have a weaker verdict;
+it has no verdict, because the thing it measured no longer exists.
+
+The brief said "reads and runs checks; does not fix" for `rust-reviewer` alone. Nothing checked
+that the other twelve agreed, and instruction text was never going to be the guarantee — that is
+what the tool declaration is for.
+
+### Fixed
+
+- **Directors and leads are read-only** (9 briefs: `chief-architect`, `product-steward`,
+  `api-design-lead`, `async-systems-lead`, `cli-ux-lead`, `systems-perf-lead`, `qa-lead`,
+  `release-lead`, `tooling-lead`). They decide, hold a gate, and delegate — none of their briefs
+  ever instructed an edit, so this closes a gap between what they were told to do and what they
+  could do. Read-only agents go from 5 of 33 to **14 of 33**; `docs/agent-roster.md` gains a
+  *Who can write* section stating the split as a roster invariant rather than a per-brief detail.
+- **`/review` step 4 spawns read-only lenses only.** Gate lenses are now the auditors plus the
+  leads that own the gate. The domain checklist that a write-capable specialist used to carry is
+  carried by `rules/<domain>.md`, read by the lens that owns the gate — the mechanism the skill
+  already prescribed one bullet later for pasted code. An implementer (`rust-builder`,
+  `perf-engineer`, `observability-engineer`, `rust-build-resolver`) is never a lens; findings go
+  in the report, and fixes happen after the verdict, on the user's decision.
+
+### Added
+
+- **`RS-AGENT-083`** — the build fails if `skills/review/SKILL.md` names an agent that ships with
+  `Edit`/`Write`, so the "read-only lenses" claim cannot go stale again. Blocks are judged whole
+  rather than per line, because prose wraps and a per-line test splits a sentence from the word
+  that exempts it. Verified red→green: re-adding `database-specialist` as a lens fails the gate.
+
+### Notes
+
+- `perf-engineer` and `observability-engineer` keep write access on purpose — their briefs say
+  *"Implement the change via Write/Edit"* and *"Implement: add `#[instrument(...)]`"*. They are
+  implementers that `/review` should never have been spawning. `ffi-specialist` and
+  `database-specialist` already delegated implementation to `rust-builder`; they lost nothing but
+  a role they should not have held.
+- Frontmatter and hook payload fields were checked against Claude Code 2.1.263's own bundle, not
+  only the docs: `agent_id`/`agent_type` do reach `PreToolUse` in subagent context. A hook keyed
+  on `agent_type` was rejected anyway — it cannot tell a review lens from the same agent
+  implementing under `/dev-task`, and subagent-level `hooks` and `permissionMode` are ignored for
+  plugin subagents. Agent identity is the only stateless discriminator, so the fix lives there.
+- `/resolve-pr` and the `team-*` skills were checked for the same false claim and do not make it:
+  they spawn these agents as implementers, which is their role.
+
 ## [0.52.1] - 2026-09-07
 
 The studio told agents to encode invariants as `debug_assert!` — in `rules/core.md`'s Definition

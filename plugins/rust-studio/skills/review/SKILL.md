@@ -195,20 +195,33 @@ surviving assertions actually check.
 4. **Full review** (`--full`, or for breaking / public-API / large diffs): fan out the
    remaining relevant lenses **in parallel** (one task per lens, or background subagents — see
    Orchestration), then merge and de-duplicate findings. This is the multi-lens pass:
+   **A lens is spawned read-only. No exceptions** — every agent named below declares
+   `disallowedTools: Write, Edit, NotebookEdit`, and `RS-AGENT-083` fails the build if one of
+   them ever stops. A review that edits the tree it is reviewing destroys the artifact under
+   audit: it races the verification run (a whole-workspace `nextest` reporting green against a
+   tree changing beneath it), and on uncommitted work there is no recovery point. An
+   implementer agent — `rust-builder`, `perf-engineer`, `observability-engineer`,
+   `rust-build-resolver` — is **never** a lens. Findings go in the report; fixes happen after
+   the verdict, on a decision that is the user's.
    - `unsafe-auditor` if the diff touches `unsafe` (SAFETY-GATE).
    - `security-auditor` if it touches input parsing, auth, deserialization, or FFI.
-   - `perf-engineer` if it touches hot paths or benches (PERF-GATE).
-   - `api-design-lead` if it changes the public surface (API-GATE / semver).
-   - `async-systems-lead` if it touches async/handlers (ASYNC-GATE).
-   - the domain specialist whose rule file the diff lands in, when one exists —
-     `ffi-specialist` (`extern "C"`, `repr(C)`, a `-sys` crate), `database-specialist` (SQL,
-     sqlx/diesel, migrations), `macro-specialist` (`macro_rules!`, proc-macros),
-     `cli-ux-lead` (`main.rs`, clap, exit codes), `embedded-specialist` (`no_std`, ISRs, MMIO),
-     `wasm-specialist` (`wasm-bindgen`, a `cdylib` for wasm32), `error-architect` (error types
-     on a library surface), `observability-engineer` (workers, jobs, services),
-     `dependency-manager` (`Cargo.toml`), `qa-lead` (a diff that is mostly tests). The measured
-     miss behind this list: an FFI diff reviewed through the unsafe lens alone found the UB but
-     not the ownership contract — the specialist's checklist is what carries the domain.
+   - `systems-perf-lead` if it touches hot paths, benches, `no_std`, `wasm32`, or FFI
+     (PERF-GATE / SAFETY-GATE). It holds the budget; `perf-engineer` measures and edits, so it
+     reviews nothing.
+   - `api-design-lead` if it changes the public surface, or an error type on a library
+     surface (API-GATE / semver).
+   - `async-systems-lead` if it touches async/handlers, workers, jobs, or service
+     instrumentation (ASYNC-GATE).
+   - `cli-ux-lead` (`main.rs`, clap, exit codes), `qa-lead` (a diff that is mostly tests),
+     `tooling-lead` (`build.rs`, CI, the feature matrix), `release-lead` (`Cargo.toml`
+     versions, semver impact, MSRV).
+   - **The domain checklist is carried by the rule file, not by an implementer.** Where the
+     diff lands in a domain whose specialist writes code — `ffi.md`, `database.md`, `macros.md`,
+     `embedded.md`, `wasm.md`, `observability.md`, `perf.md` — the lens that owns that gate
+     reads `references/<domain>.md` and walks the list itself. The measured miss behind this:
+     an FFI diff reviewed through the unsafe lens alone found the UB but not the ownership
+     contract — it is the *checklist* that carries the domain, and the checklist is the rule
+     file. Spawning the implementer to get it is what put writes in a review pass.
    - **Pasted code has no path**, so the hooks injected no rule for it. Before ruling on a
      domain you did not spawn a specialist for, read the studio's `rules/<domain>.md` for it
      (`cli.md`, `ffi.md`, `database.md`, `macros.md`, …) and walk the list — one review in
