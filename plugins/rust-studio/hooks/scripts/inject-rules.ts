@@ -24,8 +24,7 @@
 
 import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
-import { tmpdir } from "node:os";
-import { readInput, emit, done, watchdog, pluginRoot, option } from "./_lib.ts";
+import { readInput, emit, done, watchdog, pluginRoot, option, pluginData } from "./_lib.ts";
 import { crateFloor } from "./cargo-manifest.ts";
 import { loadTimeline, resolveFloor, renderTimeline } from "./stdlib-timeline.ts";
 
@@ -341,7 +340,7 @@ if (import.meta.main) {
   let showTimeline = norms.some((n) => n.endsWith(".rs")) && untrusted === null;
   try {
     if (!data.session_id) throw new Error("no session key");
-    const dir = join(tmpdir(), "rust-studio-rules");
+    const dir = join(pluginData(), "rules");
     const marker = (name: string) => join(dir, markerName(String(data.session_id), data.agent_id, name));
     mkdirSync(dir, { recursive: true });
     fresh = matched.filter((r) => !existsSync(marker(r.name)));

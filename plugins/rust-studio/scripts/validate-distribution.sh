@@ -130,7 +130,12 @@ done < <(jq -r '.hooks | keys[]' hooks/codex-hooks.json)
 # not because nobody revisited it. Keep the two files' script sets diffable.
 claude_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/claude-hooks.json | sort -u)
 codex_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/codex-hooks.json | sort -u)
-expected_claude_only=$'/auto-capture.ts\n/model-switch.ts\n/statusline-install.ts\n/subagent-start.ts\n/subagent-stop.ts'
+# subagent-stop stays Claude-only on purpose. Codex fires the SubagentStop event, but the
+# hook needs the sub-agent's FINAL MESSAGE, which it gets from Claude-specific payload
+# fields or by resolving `<session_dir>/subagents/<agent-id>.jsonl`. Codex stores
+# transcripts as sessions/YYYY/MM/DD/rollout-*.jsonl with no subagents/ directory, so the
+# hook would run, find nothing, and enforce nothing — coverage that looks real and is not.
+expected_claude_only=$'/auto-capture.ts\n/model-switch.ts\n/statusline-install.ts\n/subagent-stop.ts'
 actual_claude_only=$(comm -23 <(echo "$claude_scripts") <(echo "$codex_scripts"))
 [[ $actual_claude_only == "$expected_claude_only" ]] ||
   fail RS-HOOK-020 "hooks/claude-hooks.json vs hooks/codex-hooks.json" "the Claude-only hook set is now: $(echo "$actual_claude_only" | tr '\n' ' ')" "port the new hook to Codex, or add it to expected_claude_only in this script once that is a deliberate gap"

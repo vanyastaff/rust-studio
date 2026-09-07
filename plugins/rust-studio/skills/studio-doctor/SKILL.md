@@ -120,3 +120,13 @@ a toolchain component, adding a binary, or writing to the host's settings change
 machine, so each is presented and approved, never applied on the way past
 (`references/collaboration.md`). Where the fix is outside your reach — a host-level trust
 approval, a plugin re-enable — say exactly what the user has to do and stop there.
+
+**When the host does not deliver hooks at all, the repair is a different channel, not a
+retry.** Codex CLI 0.153 enumerates a plugin's hooks, reports them completed, and executes only
+the user's own `~/.codex/hooks.json`; neither trusting them, nor the documented
+`hooks/hooks.json` discovery path, nor `--dangerously-bypass-hook-trust` changes it. Skills
+still load there, so the session looks healthy while the briefing and the standards never
+arrive — the reason this row is worth probing rather than assuming. Where that is the case, say
+so plainly, and offer `references/templates/agents-md.md`: the static half of the briefing, in
+the one file that host does read. Writing into the user's repository is an outward step —
+show the diff and get approval, never paste it on the way past.

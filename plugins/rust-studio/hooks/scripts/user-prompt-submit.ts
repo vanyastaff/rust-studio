@@ -23,10 +23,9 @@
 // Never blocks (no decision:block) and never fails the session. Codex delivers the
 // same event; if its payload carries no `prompt`, only the nudge runs.
 
-import { readInput, watchdog, optionBool, pluginRoot } from "./_lib.ts";
+import { readInput, watchdog, optionBool, pluginRoot, pluginData } from "./_lib.ts";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
 import {
   labelFor,
   rankEntries,
@@ -196,7 +195,7 @@ export function renderRoute(r: { skill?: string; agent?: string; why: string }):
 }
 
 function markerDir(name: string): string {
-  return join(tmpdir(), name);
+  return join(pluginData(), name);
 }
 
 /** A per-session set persisted as a JSON array in `<tmpdir>/<name>/<sid>`; unreadable or

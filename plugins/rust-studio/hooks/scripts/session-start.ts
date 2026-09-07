@@ -13,7 +13,7 @@
 
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { readInput, emit, watchdog, option, optionBool, pluginRoot } from "./_lib.ts";
+import { readInput, emit, watchdog, option, optionBool, pluginRoot, pluginData, pruneState } from "./_lib.ts";
 import { summarizeManifest } from "./cargo-manifest.ts";
 import {
   INDEX_FILE,
@@ -248,6 +248,16 @@ if (!manifestExists) {
   }
 
   briefing = lines.join("\n");
+}
+
+// Session-keyed state lives in the host's plugin data dir, which — unlike tmpdir — is not
+// cleared at boot. A marker keyed by a finished session suppresses nothing, so what would
+// accumulate is dead weight, invisible until a temp directory fills. One sweep per session
+// start is the cheapest place to pay for it, and it fails open.
+try {
+  pruneState(pluginData());
+} catch {
+  /* never let housekeeping cost a briefing */
 }
 
 const recall = optionBool("memory_recall", true) ? buildRecall(cwd) : "";
