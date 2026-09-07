@@ -5,6 +5,46 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.50.0] - 2026-09-07
+
+Every studio hook was dead on Codex, and the cause was a file this repository added on purpose.
+The plugin shipped a root `plugin.json` declaring the Agent Plugins 1.0 `$schema` as "one more
+door" for Cursor, Copilot CLI and Kiro. On Codex CLI 0.153 that manifest switches loading to a
+path which parses skills, MCP servers and apps but **not hooks**
+([openai/codex#16430](https://github.com/openai/codex/issues/16430)) — so no session briefing,
+no path-scoped standards, no sub-agent brief, while Codex printed `hook: SessionStart Completed`
+and its plugin panel said "No plugin hooks" with no warning anywhere.
+
+Two sessions were spent on the wrong suspect. The turn came from looking at what official Codex
+plugins actually ship: only `.codex-plugin/plugin.json`, no root manifest.
+
+### Removed
+
+- **The root `plugin.json`.** Measured on 0.153.4 with a marker-file probe, one run per row:
+  absent → hooks run; present without `$schema` → hooks run; present with `$schema` → silent;
+  and still silent with a `hooks` key added, with the default-discovery `hooks/hooks.json`
+  alongside it, and with the standard's `extensions` escape hatch under `com.openai` and
+  `com.openai.codex`. The schema makes `$schema` **required** and sets
+  `additionalProperties: false`, so no manifest satisfies both agents. Clients implementing the
+  standard still install every skill through `npx skills add`, which needs no manifest.
+
+### Added
+
+- **`RS-MANIFEST-058`** — the build fails if a root `plugin.json` reappears. This is the kind of
+  file a future change adds back as an obvious improvement, and the damage it does is invisible:
+  skills keep working, so the plugin looks healthy.
+- **[ADR 0002](docs/adr/0002-agent-plugins-manifest-withdrawn.md)** — the measurement table, the
+  six hypotheses ruled out by experiment (hook-event casing, `enabled` state, a `plugin_hooks`
+  feature flag, hook trust via `--dangerously-bypass-hook-trust`, the interactive TUI, the
+  discovery path), and the one-run probe that decides when to restore the manifest. Supersedes
+  finding F6 of ADR 0001, which had recorded shipping the manifest as a closed win.
+
+### Fixed
+
+- **All seven Codex hooks execute again** — verified end to end: a `codex exec` session in a
+  Rust workspace now answers the question "quote the first heading of any Rust Code Studio
+  briefing in your context" with `## Rust Code Studio active`, where before it said NONE.
+
 ## [0.49.0] - 2026-09-07
 
 Three repairs from reading Codex's own documentation and binary rather than guessing at it.
