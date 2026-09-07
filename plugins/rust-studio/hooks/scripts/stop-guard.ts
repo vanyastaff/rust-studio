@@ -16,10 +16,9 @@
 // behind a timeout and a watchdog force-exits 0 (ALLOW) if anything stalls — failing
 // OPEN, because trapping the user in a hung turn is worse than a missed block.
 
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
-import { readInput, watchdog, option, optionBool } from "./_lib.ts";
+import { readInput, watchdog, option, optionBool, pluginData } from "./_lib.ts";
 
 type Severity = "hard" | "soft";
 
@@ -550,7 +549,7 @@ export function evaluate(text: string, cfg: GuardConfig): Decision {
 const MAX_BLOCKS = 4;
 
 function blockCounterFile(sessionId: string): string {
-  return join(tmpdir(), `rust-studio-stopguard-${sessionId.replace(/[^A-Za-z0-9]/g, "_")}.json`);
+  return join(pluginData(), `stopguard-${sessionId.replace(/[^A-Za-z0-9]/g, "_")}.json`);
 }
 function bumpBlocks(sessionId: string): number {
   const f = blockCounterFile(sessionId);

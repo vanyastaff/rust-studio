@@ -235,8 +235,21 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
 
 Hooks are TypeScript, run via [`bun`](https://bun.sh). If `bun` isn't on PATH they no-op — the
 studio still works, you just lose auto-injection and recall. Each hook reads stdin behind a
-hard timeout with a watchdog, so it can never freeze the session (even mid-subagent). See
-[`../../INSTALL.md`](../../INSTALL.md).
+hard timeout with a watchdog, so it can never freeze the session (even mid-subagent). Session
+state goes to the per-plugin directory the host provides (`CLAUDE_PLUGIN_DATA`, `PLUGIN_DATA`
+on Codex), swept of entries older than a week at each session start; where neither is set it
+falls back to the temp directory. See [`../../INSTALL.md`](../../INSTALL.md).
+
+**On Codex** the studio ships the same hooks minus two: `PostModelSwitch` has no equivalent
+event, and `SubagentStop` needs the sub-agent's final message, which it reads from
+Claude-specific payload fields or from `<session>/subagents/<id>.jsonl` — a layout Codex does
+not use, so the hook would run, find nothing, and enforce nothing. A gap stated is worth more
+than coverage that looks real. Note also that **Codex CLI 0.153 does not execute plugin hooks
+at all** — it enumerates them, reports them completed, and runs only the user's own
+`~/.codex/hooks.json`. Skills still load, so the session looks healthy while the briefing and
+the standards never arrive. `/studio-doctor` detects it and offers
+[`docs/templates/agents-md.md`](docs/templates/agents-md.md), which carries the static half of
+the briefing through the one file that host does read.
 
 ## Configuration
 

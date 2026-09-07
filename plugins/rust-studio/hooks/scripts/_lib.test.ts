@@ -1,4 +1,7 @@
 // Regression tests for the shared helpers + cross-script contracts fixed in the
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { existsSync, mkdtempSync, writeFileSync, utimesSync } from "node:fs";
 // hooks audit. Each test pins a bug that shipped:
 //   1. run() mapped a timeout-killed child to exitCode 1 ("check failed") instead
 //      of null ("couldn't check") — fmt-check then nagged on every slow workspace.
@@ -7,8 +10,8 @@
 //   3. The SubagentStop VERDICT regex rejected harsh-critic's prescribed verdict
 //      vocabulary, so the hook nagged that agent on every run.
 
-import { describe, expect, test } from "bun:test";
-import { run, option, optionBool } from "./_lib.ts";
+import { afterEach, describe, expect, test } from "bun:test";
+import { run, option, optionBool, pluginData, pruneState } from "./_lib.ts";
 import { pathMatches } from "./inject-rules.ts";
 import { hasVerdict } from "./subagent-stop.ts";
 
@@ -105,5 +108,65 @@ describe("option() precedence across hosts", () => {
     process.env[ALT] = "   ";
     expect(option("git_guard")).toBeNull();
     restore();
+  });
+});
+
+describe("pluginData", () => {
+  // Both hosts hand a plugin its own state dir; the names differ and Claude wins where both
+  // are set, mirroring pluginRoot(). Verified against the shipped binaries, not the docs.
+  const saved = { c: process.env.CLAUDE_PLUGIN_DATA, p: process.env.PLUGIN_DATA };
+  afterEach(() => {
+    if (saved.c === undefined) delete process.env.CLAUDE_PLUGIN_DATA;
+    else process.env.CLAUDE_PLUGIN_DATA = saved.c;
+    if (saved.p === undefined) delete process.env.PLUGIN_DATA;
+    else process.env.PLUGIN_DATA = saved.p;
+  });
+
+  test("prefers Claude's var, then Codex's", () => {
+    const a = join(tmpdir(), `pd-a-${Math.random().toString(36).slice(2)}`);
+    const b = join(tmpdir(), `pd-b-${Math.random().toString(36).slice(2)}`);
+    delete process.env.CLAUDE_PLUGIN_DATA;
+    process.env.PLUGIN_DATA = b;
+    expect(pluginData()).toBe(b);
+    process.env.CLAUDE_PLUGIN_DATA = a;
+    expect(pluginData()).toBe(a);
+  });
+
+  test("creates the directory, and falls back when it cannot", () => {
+    const d = join(tmpdir(), `pd-new-${Math.random().toString(36).slice(2)}`, "nested");
+    process.env.CLAUDE_PLUGIN_DATA = d;
+    delete process.env.PLUGIN_DATA;
+    expect(pluginData()).toBe(d);
+    expect(existsSync(d)).toBe(true);
+    // An unwritable path must not wedge a hook — state is worth less than the session.
+    process.env.CLAUDE_PLUGIN_DATA = "/proc/self/cannot/create/this";
+    expect(pluginData()).toBe(join(tmpdir(), "rust-studio-state"));
+  });
+
+  test("no host var at all still yields a usable directory", () => {
+    delete process.env.CLAUDE_PLUGIN_DATA;
+    delete process.env.PLUGIN_DATA;
+    const d = pluginData();
+    expect(existsSync(d)).toBe(true);
+  });
+});
+
+describe("pruneState", () => {
+  // The plugin data dir is NOT cleared at boot the way tmpdir is, so session-keyed markers
+  // would accumulate forever. They suppress nothing once their session ends — they are dead
+  // weight, which is the kind of leak that stays invisible until a disk fills.
+  test("removes what is older than the cutoff and keeps the rest", () => {
+    const dir = mkdtempSync(join(tmpdir(), "prune-"));
+    const old = join(dir, "stale"); const fresh = join(dir, "current");
+    writeFileSync(old, "1"); writeFileSync(fresh, "1");
+    const past = new Date(Date.now() - 30 * 24 * 3600_000);
+    utimesSync(old, past, past);
+    expect(pruneState(dir, 7 * 24 * 3600_000)).toBe(1);
+    expect(existsSync(old)).toBe(false);
+    expect(existsSync(fresh)).toBe(true);
+  });
+
+  test("an unreadable directory is left alone, not thrown over", () => {
+    expect(pruneState("/definitely/not/a/directory")).toBe(0);
   });
 });

@@ -28,9 +28,8 @@
 // agent to act on the nudge), not merely append context it can ignore.
 
 import { join } from "node:path";
-import { tmpdir } from "node:os";
 import { readFileSync, writeFileSync } from "node:fs";
-import { readInput, watchdog, optionBool, run, which, pluginRoot } from "./_lib.ts";
+import { readInput, watchdog, optionBool, run, which, pluginRoot, pluginData } from "./_lib.ts";
 import { getEvidenceGroups, lastAssistantFromTranscript } from "./stop-guard.ts";
 import { budgetLine, indexHealth, resolveStore, type StoreInfo } from "./memory-store.ts";
 
@@ -45,7 +44,7 @@ const TAIL_BYTES = 200_000;
 export const MAX_NUDGES = 2;
 
 function nudgeCountFile(sessionId: string): string {
-  return join(tmpdir(), `rust-studio-autocapture-${sessionId.replace(/[^A-Za-z0-9]/g, "_")}.json`);
+  return join(pluginData(), `autocapture-${sessionId.replace(/[^A-Za-z0-9]/g, "_")}.json`);
 }
 export function peekNudges(sessionId: string): number {
   try {

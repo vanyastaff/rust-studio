@@ -5,6 +5,47 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.49.0] - 2026-09-07
+
+Three repairs from reading Codex's own documentation and binary rather than guessing at it.
+Session state moves to the directory each host hands the plugin; `SubagentStart` reaches Codex,
+which supports the event and never got it; and where a host does not run plugin hooks at all,
+the studio now has a second channel instead of a shrug.
+
+### Added
+
+- **`pluginData()` and `pruneState()`** (`hooks/scripts/_lib.ts`). Both hosts give a plugin its
+  own state directory — `CLAUDE_PLUGIN_DATA`, `PLUGIN_DATA` on Codex, both verified in the
+  shipped binaries — and hook state now goes there instead of unconditionally to `tmpdir()`.
+  That directory is **not** cleared at boot the way a temp directory is, so session-keyed
+  markers would accumulate forever; `pruneState` sweeps entries older than a week at each
+  session start. Trading one host's temp directory for an unbounded one would not have been a
+  fix. Falls back to `tmpdir()` where neither variable is set, and where the given path cannot
+  be created.
+- **`SubagentStart` on Codex.** Codex fires the event and its payload carries `agent_id` and
+  `agent_type` — the exact fields the handler reads — so a sub-agent there now starts with the
+  project, gate and verdict facts instead of an empty window. Verified by running the handler
+  against a Codex-shaped payload with `PLUGIN_ROOT` set.
+- **`docs/templates/agents-md.md`** — the static half of the session briefing as an `AGENTS.md`
+  fragment: protocol, the standards being files rather than memory, the MSRV gate, the evidence
+  bar, the oracle rule, third-party text, and the verdict vocabulary. `/studio-doctor` offers it
+  when it finds that hooks do not reach the model, and shows the diff for approval first —
+  writing into a repository is an outward step.
+
+### Changed
+
+- **`/studio-doctor` names the un-retryable case.** Codex CLI 0.153 enumerates a plugin's
+  hooks, reports them completed, and executes only the user's own `~/.codex/hooks.json`.
+  Neither trusting them, nor the documented `hooks/hooks.json` discovery path, nor
+  `--dangerously-bypass-hook-trust` changes it — each ruled out by experiment. Skills still
+  load, so the session looks healthy while nothing is delivered, which is why the probe exists
+  rather than an assumption. The repair is a different channel, not another retry.
+- **`SubagentStop` stays Claude-only, with the reason recorded in the validator.** Codex fires
+  the event, but the handler needs the sub-agent's final message and resolves it through a
+  transcript layout Codex does not use (`sessions/YYYY/MM/DD/rollout-*.jsonl`, no `subagents/`
+  directory). Shipping it would have produced a hook that runs, finds nothing, and enforces
+  nothing.
+
 ## [0.48.1] - 2026-09-07
 
 Path-scoped standards were silent on an entire host's read path. Verified against Codex

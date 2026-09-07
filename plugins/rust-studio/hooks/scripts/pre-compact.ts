@@ -13,10 +13,9 @@
 //
 // Non-blocking and cheap. Never fails the session.
 
-import { readInput, emit, watchdog, optionBool } from "./_lib.ts";
+import { readInput, emit, watchdog, optionBool, pluginData } from "./_lib.ts";
 import { existsSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
 
 const disarm = watchdog(6_000);
 
@@ -27,7 +26,7 @@ disarm();
 // not the studio's standards. Fail-open — a tmp error just leaves rules quiet.
 if (data.session_id) {
   try {
-    const dir = join(tmpdir(), "rust-studio-rules");
+    const dir = join(pluginData(), "rules");
     // Both shapes: `<sid>__rule__<name>` (main thread) and `<sid>__agent__<id>__rule__<name>`
     // (a sub-agent's window). The session prefix covers both.
     const prefix = `${String(data.session_id).replace(/[^A-Za-z0-9]/g, "_")}__`;
