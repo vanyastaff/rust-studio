@@ -33,3 +33,7 @@ before pushing and before creating the PR** (`references/collaboration.md`).
 ## Output
 The PR URL (or, without `gh`, the ready-to-run commands + the description). Verdict
 **COMPLETE / NEEDS WORK / BLOCKED**. Suggest `/review` or `/dev-task` for the reviewer pass.
+
+A PR with automated reviewers on it is not finished when it opens — it is finished when they
+are satisfied. Offer **`/resolve-pr --loop`** to drive that: triage each round of bot findings,
+fix, reply, push, re-trigger the bots, and stop at merge-ready.

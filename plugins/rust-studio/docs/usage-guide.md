@@ -227,7 +227,9 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 - **`/commit`** — Conventional Commit for the current changes (fmt/clippy first; no hook bypass).
 - **`/pr`** — open a PR with a value-first description via `gh`.
 - **`/resolve-pr`** — work through review threads and CI failures, or watch a PR until it is
-  merge-ready.
+  merge-ready. `--loop` closes the cycle against review bots (Copilot, Codex, CodeRabbit): fix,
+  reply, push, re-trigger, repeat to a round cap, then stop at merge-ready without merging.
+  Findings too big for the PR become issues you approve at exit.
 - **`/merge-conflicts`** — resolve a stopped merge or rebase hunk by hunk, then prove the tree
   still builds.
 - **`/worktree-sweep`** — inspect and prune leftover git worktrees (agent-isolation leftovers

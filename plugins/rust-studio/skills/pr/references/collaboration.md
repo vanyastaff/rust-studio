@@ -112,6 +112,37 @@ plan/scope already agreed. Note that an `AskUserQuestion` answer does **not** by
 authorize a later *destructive/irreversible* step — those still need a direct point-of-action
 confirmation and must not be bypassed with bash/filesystem tools (`delegation.md` §6).
 
+### Standing mandate (a bounded loop, authorized once)
+
+Some work is a **loop against a system that answers back** — a PR that review bots re-review
+after every push. Asking per push turns one authorization into a dozen identical ones, and the
+owner ends up re-explaining the same procedure every round. For that shape only, the owner may
+grant a **standing mandate**: outward actions pre-authorized for a bounded run.
+
+A mandate is valid only if all five hold. Anything missing makes it an ordinary escalation.
+
+1. **Granted at entry, explicitly.** The owner starts the loop and the loop states, before its
+   first outward action, exactly which actions it will take unattended. Silence is not a grant,
+   and a mandate is never inferred from an earlier answer about something else.
+2. **Enumerated, not general.** It names the actions (commit, push, post a reply, request a
+   re-review) — never "act autonomously".
+3. **Bound to one target.** One PR, one head branch. The mandate dies the moment the target
+   changes: a new base, a closed or converted PR, a force-push by someone else.
+4. **Bounded in rounds.** A round count fixed at entry, so the loop terminates without the owner
+   having to interrupt it.
+5. **Excludes every irreversible step.** Merge, force-push, `cargo publish`, branch or repo
+   deletion, dismissing someone's review, and creating issues stay on the point-of-action
+   confirmation above — a mandate can never reach them. This is not an exception to the previous
+   paragraph; it is that paragraph's scope, made explicit.
+
+The loop **reports what it did under the mandate** in its exit summary — every commit, push,
+reply, and re-review request, so an unattended run is auditable after the fact rather than
+merely permitted before it. A mandate expires at the round cap, at target change, or on
+interrupt, whichever comes first; re-entering the loop needs a fresh grant.
+
+Where the loop *would* have taken an excluded action, it collects the intent and presents it at
+exit as a batch to approve — not as a mid-loop interruption, and not as something it did anyway.
+
 **No sub-agents in this host?** A skill that tells you to delegate a phase to a named agent
 (`rust-scout`, `rust-builder`, …) is describing a phase, not a process. Run it yourself,
 in order, under that agent's brief. A missing sub-agent is never a blocker and never a
