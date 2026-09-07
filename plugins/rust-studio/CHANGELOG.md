@@ -5,6 +5,62 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.52.0] - 2026-09-07
+
+`/resolve-pr` could read a review bot and fix what it found. It could not finish the job. Posting
+the reply, committing, pushing, and asking the bot to look again were left to the user to
+re-request every round — so the studio's answer to "the bots are reviewing my PR" was a procedure
+someone had to narrate from scratch each time.
+
+The reason it was left undone is real, and it is a policy, not an oversight: `collaboration.md`
+classes push and every outward action as an escalation, and states that answering one question
+does not authorize a later irreversible step. A loop that pushes once per round cannot live under
+that rule. So the rule got the missing case rather than an exception.
+
+### Added
+
+- **Standing mandate** (`docs/collaboration.md`). Outward actions can now be authorized *once*
+  for a bounded loop, valid only when all five hold: granted explicitly at entry, enumerating the
+  specific actions, bound to one target, capped in rounds, and **excluding every irreversible
+  step** — merge, force-push, `cargo publish`, deletions, and issue creation stay on
+  point-of-action confirmation and no mandate can reach them. The loop reports every action it
+  took under the mandate at exit, so an unattended run is auditable after the fact rather than
+  merely permitted before it.
+- **`docs/pr-bots.md`** — a standard for PR review bots. The roster is read off the PR
+  (`.user.type == "Bot"`), never from a hardcoded list, because the set changes without notice.
+  Per-bot re-trigger commands (CodeRabbit `@coderabbitai review` / `full review`; Copilot
+  `gh pr edit N --add-reviewer @copilot`, which is a reviewer re-request and **not** a comment,
+  and which does not re-review on push by default; Codex `@codex review`), each dated, since
+  vendor surfaces drift. What "satisfied" means is defined per bot against the **head SHA it last
+  reviewed** — a bot that was never re-triggered is not a satisfied bot, and reporting it as one
+  is the failure the section exists to prevent.
+- **`/resolve-pr --loop` (Mode C)** — the closed cycle: collect, triage, fix, verify, reply and
+  resolve, commit, push, re-trigger, re-assess. Round cap defaults to 3.
+- **DEFER**, a fifth triage class. A finding that needs its own design or reaches outside the
+  PR's blast radius becomes a drafted issue, presented as one batch to approve at exit — not a
+  silent drop, and not a TODO.
+
+### Changed
+
+- `/resolve-pr` gained the bot roster read in Mode A and the thread mechanics it never spelled
+  out: the reply endpoint, the `resolveReviewThread` mutation, and `viewerCanReply` /
+  `viewerCanResolve` checks so a permissions gap surfaces as a reported thread instead of a
+  failed command mid-loop. Both were verified against the live GitHub schema and REST reference,
+  not written from memory.
+- `/pr` now hands off to `/resolve-pr --loop`: a PR with automated reviewers on it is not
+  finished when it opens, it is finished when they are satisfied.
+
+### Notes
+
+- **`@codex fix it` is deliberately out of scope.** It pushes its own commits to the head branch,
+  making a second writer on a branch the loop is mid-round on — the next push races it, and
+  neither agent's verification covers the other's commit.
+- A bot that re-raises a finding already rejected on technical merit **stops the loop and
+  escalates**, rather than conceding to repetition.
+- Skill description budget is at 6472 of 6500 characters (`RS-SKILL-070`). The first draft of this
+  release's description reached 6498; the ceiling is close enough that new descriptions now need
+  the total checked, not just the sentence.
+
 ## [0.51.0] - 2026-09-07
 
 The studio's authoring rules were written against Claude Fable 5 and a Codex whose hooks did not
