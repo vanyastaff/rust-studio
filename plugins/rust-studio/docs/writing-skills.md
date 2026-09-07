@@ -127,6 +127,7 @@ Then hunt the four ways a skill rots:
 | **Re-announcement** | The same pointer injected turn after turn. The studio shipped this: rule injection keyed its dedupe by file, so `core.md` was announced once per file touched — 70% of all rule-pointer tokens in a 12-file session (`bun tools/context-cost.ts`). | Say it once per context, and re-arm only when the context that held it is actually gone (PreCompact), not on a fixed schedule. |
 | **Sediment** | Stale layers nobody removed, because adding feels safe. | Check each line still bears on what the skill does. |
 | **No-op** | A line the model already obeys by default. Test: does it change behaviour versus no instruction? | Delete it, or replace a weak word with one strong enough to beat the default. |
+| **Weaker-model guardrail** | A correction for a failure mode the current model doesn't have, that now overcorrects: "double-check your work" on a model that self-verifies, "never use bullets" on one that already under-formats, "flag only the important findings" on one whose marginal findings are real. Worse than a no-op — it moves behaviour the wrong way. | Delete it. The current list is `claude-5-compat.md` §"Instructions to keep out of agents and skills"; re-run that audit on every model release. |
 | **Sprawl** | Simply too long, even when every line is live and unique. | Disclose reference to `references/`, split by branch. |
 
 Run the no-op test sentence by sentence, and delete whole sentences rather than trimming
@@ -141,4 +142,6 @@ words out of them.
 - Anything cited as `references/<name>.md` exists in `docs/` or `rules/`; you edited the
   source there, never the bundled copy.
 - No meaning stated twice; no line that changes nothing.
+- No instruction from `claude-5-compat.md`'s delete list, and no demand for a specific effort
+  level or thinking phrase — effort is the user's dial.
 - `./scripts/validate-distribution.sh` and `bun test` pass.

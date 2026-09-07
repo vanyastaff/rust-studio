@@ -12,7 +12,7 @@ files with content, because nothing would keep them in sync.
 ## The bar: does this line survive?
 
 This file is loaded every time an agent touches this crate, on top of the root file and the
-studio's path-scoped rules. A line earns its place only by passing **all four**:
+studio's path-scoped rules. A line stays only if it passes **all four**:
 
 1. **Not in `Cargo.toml`.** Dependencies, features, edition, MSRV, targets, crate type — the
    agent reads the manifest.

@@ -3,17 +3,29 @@
 Paste this into the repository's `AGENTS.md` when the studio's hooks do not reach the model.
 
 **When you need it.** The studio normally delivers its briefing and its path-scoped standards
-through hooks. Some hosts do not execute a plugin's hooks — Codex CLI 0.153 enumerates them,
-reports them completed, and runs only the user's own `~/.codex/hooks.json` — and the failure is
-silent: skills still load, so the session looks healthy while the standards never arrive. Run
-`/studio-doctor` to find out which case you are in. Where hooks do deliver, this file is
-redundant; do not add it.
+through hooks, and they run on both Claude Code and Codex. Some hosts still do not execute a
+plugin's hooks, and the failure is silent: skills keep loading, so the session looks healthy
+while the standards never arrive. Run `/studio-doctor` — it probes rather than assumes — to
+find out which case you are in. Where hooks do deliver, this file is redundant; do not add it.
+
+*(Codex ran the studio's hooks dark for two releases. The cause was this plugin's own root
+`plugin.json`, now withdrawn — ADR 0002. If you are reading an older copy of this fragment that
+says Codex never runs plugin hooks, it is stale.)*
 
 **What it does and does not replace.** This carries the half of the briefing that is the same
 in every session: the protocol, the evidence bar, and where the standards live. It cannot
 carry the half that is computed per project — the crate, edition, MSRV floor, detected domains,
 the discovered project gate. Run `/detect-stack` once and paste its findings into the project
 section below, or accept that those stay unknown to the agent.
+
+**Where it goes.** Codex walks up from the working directory to the project root and merges
+what it finds, most specific winning: `~/.codex/AGENTS.md` for your personal defaults, the
+repository's `AGENTS.md` or `.codex/AGENTS.md` for the project, and per-directory files deeper
+in the tree. This fragment belongs at the **repository** level. In a workspace whose crates
+have genuinely different rules — a `no_std` firmware crate beside an async service — put the
+difference in an `AGENTS.md` beside that crate rather than growing this one; that is the
+closest thing Codex has to the path-scoped standards the hooks inject. Keep every one of them
+short, and add a rule only after you have watched an agent get it wrong twice.
 
 ---
 

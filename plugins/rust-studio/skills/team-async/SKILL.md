@@ -12,6 +12,8 @@ not permission loops — see `references/collaboration.md` §1 and
 
 ## Orchestration & progress
 Execute the phases through the host capabilities described in **`references/delegation.md` §8**.
+Every spawn carries a complete brief — goal, paths, constraints, prior decisions, acceptance,
+write zone, required verdict (`references/delegation.md` §"The brief").
 Use workers and a native task surface when available; otherwise run each named role inline and
 keep a concise checklist. Surface every phase result in one line before advancing.
 

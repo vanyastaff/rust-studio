@@ -74,6 +74,13 @@ without hedging — and audit every progress claim against a tool result from th
 make it. Extends *progress logs are fact-only, past-tense* and the agent-template's *verdict
 supplements the deliverable*.
 
+**Files you write to disk get the same treatment, and they need it more.** Specs, ADRs, review
+notes, research digests, and session recaps run long by default on current models — the padding
+arrives as filler sections, a summary that restates the section above it, a "Considerations"
+heading with nothing under it that the analysis didn't already say. Match the length to the
+substance: keep a section only if it carries something the reader cannot get from another one.
+A short document that decides the question beats a long one that surveys it.
+
 ### Active-development mode: never minimize scope
 Most work here is active development of a solo-owned workspace, not a frozen prod release. That
 changes what "done" means:
@@ -174,10 +181,17 @@ debt that only surfaces in prod (the "70% problem" / happy-path bias).
 - For breaking / public-API / kernel-level PRs, dispatch **multiple review lenses in parallel**
   (architecture, migration-risk, API/semver) — they routinely catch correctness bugs that
   clippy/tests/CI miss. (See `/review`.)
-- **But don't over-report.** A reviewer/critic asked to find gaps will find some even when the
-  work is sound. Flag only what affects **correctness, security, or the stated requirements**;
-  treat style and "could be more abstract" as optional. Chasing every finding produces the
-  unnecessary abstractions and defensive bloat the studio explicitly rejects (no future-proofing).
+- **Report everything; filter at the verdict.** A lens told to "flag only what matters" reports
+  less — current models follow that instruction literally, and their marginal findings are
+  mostly real, not noise (`claude-5-compat.md` §"Instructions to keep out of agents and
+  skills"). So the reviewer reports what it actually found, severity-tagged, and the **verdict**
+  decides what blocks: correctness, soundness, security, and the stated requirements gate the
+  merge; style, idiom, and "could be more abstract" ride along as optional and never gate.
+  Two stages, not one cautious pass — a finding suppressed at the lens is gone, while a finding
+  ranked out at the verdict is still on the record for the author to take or leave.
+- **Filtering is not a licence to demand more code.** Acting on every optional finding is how a
+  review produces the unnecessary abstractions and defensive bloat the studio rejects (no
+  future-proofing). The optional tier exists so the author can decline it in one line.
 
 ### Boundaries & ADRs
 - **Boundary erosion**: before adding a helper/const/type, ask "which crate owns this concept?"
