@@ -5,6 +5,47 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.0] - 2026-09-07
+
+The release that made the maintainer's verdict visible. Measured across 926 session
+transcripts, `rust-reviewer` is spawned 74 times in 11 sessions — nearly twice `harsh-critic`
+and 4.6x `api-design-lead`, the two lenses a user actually notices. It runs; its verdict
+disappears. `/review` merges every lens into one report signed by the orchestrator, so the
+finding that was worth a separate process — the judgement of someone who had not been reading
+the code — comes back as the session's own summary. The rule against exactly this was already
+written in `docs/verdicts.md`; it simply could not be reached, because 53 of 62 skills did not
+carry that document in their bundle.
+
+### Added
+
+- **`RS-SKILL-077`** — a skill that names a studio agent must be able to reach the
+  relayed-verdict contract. A skill installed on its own carries only its own `references/`,
+  so a rule it cannot open does not bind it.
+- **`RS-DIST-003`** — a diagnostic block that writes to stdout fails the build, because it
+  corrupts `--json` (see Fixed).
+
+### Changed
+
+- **The relayed-verdict contract now reaches every skill it binds.** Rather than templating a
+  line into 30 files, `docs/sub-agents.md` — already bundled by 54 skills, and already the
+  document about phases named for an agent — now states what an agent returns when it does
+  exist, and cites `references/verdicts.md`. `sync-references.sh` resolves citations
+  transitively, so one line carried the contract from **9 bundles to 54**, covering all 51
+  skills that name a studio agent.
+- **Six gate-bearing skills restate the rule where the decision is written** — `/review`,
+  `/api-review`, `/audit-unsafe`, `/security-audit`, `/scope-check`, `/doc-review`. A verdict
+  token is relayed verbatim and attributed next to the orchestrator's own, and a difference
+  between the two is stated with its reason instead of merged away. In `/review`: a lens whose
+  verdict you cannot quote did not run.
+
+### Fixed
+
+- **`--json` was not one parseable object.** Four diagnostic blocks in
+  `validate-distribution.sh` printed their offenders to stdout, so on failure the caller got a
+  JSON parse error instead of the finding — worse than the finding. The contract was claimed in
+  0.47.0 and was never true on the failing path, which is the only path that matters. All five
+  blocks now write to stderr, and `RS-DIST-003` fails the build if one is added back.
+
 ## [0.47.0] - 2026-09-06
 
 The release that measured the router against its own roster and found it routing on names.

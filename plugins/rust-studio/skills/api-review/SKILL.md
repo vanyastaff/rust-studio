@@ -154,6 +154,12 @@ Show the draft to the user before any file changes are made.
 
 ## Phase 7 — Gates and verdict
 
+**Any lens verdict you relay is quoted, not paraphrased.** A spawned lens is worth its
+cost only because the judgement is not yours; its verdict token appears verbatim and
+attributed next to your own, and a difference between the two is stated with its reason
+rather than merged away (`references/verdicts.md`).
+
+
 10. This skill feeds two gates that must be signed off before release:
     - `API-GATE` (owner: `api-design-lead`) — public items documented; semver
       impact understood; `#[non_exhaustive]`/sealed where needed; no accidental pub.

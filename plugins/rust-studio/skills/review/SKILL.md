@@ -242,6 +242,15 @@ NEEDS WORK (numbered blockers) / REDO-TO-BAR / BLOCKED**, plus the clippy/test s
   WORK/BLOCKED as normal) and the `🚩 INTEGRITY` finding rides along as a non-blocking
   escalation — see "Accretion check" above for who it goes to.
 
+**The reviewer's verdict is quoted, not absorbed.** Step 2 spawns `rust-reviewer` for one
+reason — the verdict cannot come from whoever has been reading the code — and merging its
+findings into a single report signed by you hands that reason back. So its verdict token
+appears **verbatim and attributed** (`rust-reviewer: NEEDS WORK`) next to your own, and the
+same holds for every lens that returned one. If your verdict differs from the reviewer's, say
+which one you are overriding and why, in the message the user reads; silently merging a
+blocking verdict into a passing one is the single edit that turns a gate into an opinion
+(`references/verdicts.md`). A lens whose verdict you cannot quote did not run.
+
 **Repeat findings get promoted, not restated.** Before you close, check each finding against
 what this project has already been told — the recalled notes, the repo's rules, prior review
 threads. A finding appearing for the second time has outgrown per-change correction: name the

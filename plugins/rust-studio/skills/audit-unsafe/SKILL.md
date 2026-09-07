@@ -88,6 +88,12 @@ path does not exist, ask the user to clarify before proceeding.
 
 ## Phase 6 — Verdict
 
+**Any lens verdict you relay is quoted, not paraphrased.** A spawned lens is worth its
+cost only because the judgement is not yours; its verdict token appears verbatim and
+attributed next to your own, and a difference between the two is stated with its reason
+rather than merged away (`references/verdicts.md`).
+
+
 11. **Persist the audit's memory.** `unsafe-auditor` surfaces durable items (accepted
     invariants, settled soundness arguments, known false positives) on `MEMORY:` lines in
     its verdicts — it is read-only and cannot write the vault. Sweep every verdict for
