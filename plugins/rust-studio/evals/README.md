@@ -1,6 +1,6 @@
 # Rust Code Studio — `claude plugin eval` suite
 
-Thirty-one cases that ask the studio to do its core job — reject code a strict maintainer would
+Thirty-seven cases that ask the studio to do its core job — reject code a strict maintainer would
 reject — scored against a **no-plugin baseline** so the headline number is the delta the plugin
 adds, not an absolute. Each case is a `prompt.md` (the fixture source inlined, so the sandbox
 needs no files) plus `graders/`: an `llm` rubric derived from the fixture's ground truth, a
@@ -37,6 +37,12 @@ indicator (`arm: with-only`) that shows whether the plugin's own path fired.
 | `wasm-browser-target` | `…/wasm/thread-and-time` | `std::thread`, `Instant::now()`, `std::fs`, and a secret handed to JS are caught on a crate whose native tests pass |
 | `critic-rate-limiter-plan` | — | a plan with a global mutex on the hot path, no eviction, a wall clock, and a vacuous test plan does not survive the adversarial critique |
 | `scope-check-creep` | — | a `--json` story's diff is split: the flag ships; the `--yaml` rider, the module rename of untouched code, and a beta major dependency bump do not |
+| `spec-blind-acceptance` | — | green spec criteria do not erase a retained user requirement; a spec-aware checker cannot claim blind acceptance, and later user removals are respected |
+| `eval-improvement-holdout` | — | training gains do not excuse a holdout regression, missing/null results, changed prompts, weakened oracles or an unsupported spending guarantee |
+| `repair-loop-closeout` | — | advisory findings do not restart repairs; exhausted repair history survives and affected acceptance is rechecked |
+| `task-resume-evidence` | — | worker completion cannot unblock a consumer before destination integration and contract reconciliation |
+| `session-retro-evidence` | — | observed friction leads to small verifiable environment improvements without weaker checks or invented speedups |
+| `review-guard-preservation` | — | a guard simplification requires boundary and producer-contract evidence; missing local standards remain unverified |
 | `routing-flaky-tests`, `routing-binary-size`, `routing-public-api-design` | — | three natural requests reach the studio skill that owns them (`/flaky-hunt`, `/bloat`, `/design-api`) instead of generic advice |
 
 ## Run
@@ -73,6 +79,12 @@ bun tools/eval-runner.ts --fixture scout/trait-map --fixture release/workspace-p
   to a temp dir, committed as a baseline, the target skill or agent runs on it, and
   `check.sh` — the crate's own gate plus a golden harness or probe — decides pass / fail. The
   runner never reads the agent's prose to score a live task.
+
+`/eval-agents improve <skill-or-agent-path>` uses this runner for a bounded comparison of
+one instruction change, with repeated training cases and an independently held control set.
+See `docs/eval-improvement.md` for frozen decision rules, isolation and budget-accounting
+limits. The workflow cases adjudicate supplied records; they do not by themselves
+prove host-level worker isolation or the safety of applying a real candidate patch.
 
 ## Editing
 

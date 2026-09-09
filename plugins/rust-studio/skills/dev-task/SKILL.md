@@ -180,9 +180,11 @@ written) passes — not merely when the unit tests do.
 11. The builder reports a diff summary + command output. Show it to the user.
 
 ## Phase 5 — Review (gate; blocked by build)
-Two stages — **spec compliance first, then code quality** (the superpowers subagent-driven-dev
-pattern); a finding in EITHER stage loops back to `rust-builder` and re-runs that stage before
-advancing.
+Two stages — **spec compliance first, then code quality**. Apply
+`references/review-repair.md`: normalize blocking/advisory findings, keep one durable count
+of at most three repair dispatches across both stages, and re-review the repair rather than
+restarting an unrelated broad audit. Verification after the third repair is allowed; a fourth
+repair is not automatic. Recheck any earlier acceptance/gate affected by a later fix.
 12. **Stage 5a — spec compliance.** First, the **outer acceptance test passes** (the executable
     anchor from Phase 1, where one exists) — a green acceptance test is the objective proof the spec
     is met, not a re-reading of prose. Then check the diff against the Phase-1 acceptance criteria
@@ -193,8 +195,11 @@ advancing.
     soundness, standards, and tests. For **full** mode, also run the owning lead's gate checklist as
     sibling tasks (and `unsafe-auditor` if `unsafe` was touched, `security-auditor` for
     input/auth/deserialization) — these read-only lenses run concurrently as teammates.
-14. If either stage returns NEEDS WORK, hand findings back to `rust-builder` (loop Phase 4) and
-    re-run the failing stage until clean or the user decides to stop.
+14. If either stage returns NEEDS WORK, send blocking findings to `rust-builder` within the
+    shared repair budget. Resume the same implementer for the same task when usable; retain
+    independent review. Recheck the repaired findings, new repair regressions and affected
+    earlier gates. At exhaustion or repeated non-progress, preserve evidence and report
+    unresolved work; never reset the count by changing worker or phase.
 
 ## Phase 6 — Verdict
 15. Summarize: what changed, evidence (tests/clippy output), gates passed, and anything

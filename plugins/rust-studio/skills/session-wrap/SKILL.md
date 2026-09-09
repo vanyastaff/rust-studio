@@ -24,9 +24,24 @@ or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`, `
    (a lint or CI check if it can be decided mechanically, a repo rule if it binds everyone, a
    `convention` note otherwise) and propose the exact line
    (`references/memory-protocol.md` §"Flagged twice is a rule, not a note").
+   **Review observed friction, when there was any.** Use the current session's concrete
+   searches, commands, corrections and available redacted logs; inspect another session only
+   within the requested scope. Propose **zero to three** environment improvements, each as
+   observed event → cause or labelled hypothesis → smallest change → how to validate it.
+   Check navigation, repeated/oversized tool output, missing diagnostic information, and
+   mistakes a deterministic check or scoped standard could catch. Reuse an existing index
+   or rule owner before adding another instruction file; a pointer can replace repeated
+   searching without copying the entire document into global context.
+   Missing dev logs may justify local stderr capture, not production privileges or secrets.
+   Proposals do not grant access or change global settings. Do not remove an effective
+   safety/acceptance check for speed, infer a no-op from one unused step, or claim savings
+   without before/after evidence. Separate these proposed improvements from work already
+   done; no observed friction means no manufactured retrospective checklist.
 3. **State of play** — list done / in-progress / blocked with the next action for each open
    item. If a spec is active (`.rust-studio/specs/`), update its task
-   statuses.
+   statuses and execution entries, preserving destination-tree evidence, repair counts and
+   facts that dependent tasks need (`references/task-continuity.md`). Do not turn stale
+   worker evidence into a done row or conflate local completion with remote merge.
 4. **Suggest the next step** and offer to run it:
    - Uncommitted work that's coherent → `/commit` (then `/pr`).
    - A spec's tasks all done → `/spec-verify`.

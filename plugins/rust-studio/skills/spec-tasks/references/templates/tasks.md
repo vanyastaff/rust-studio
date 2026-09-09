@@ -27,3 +27,30 @@ Status: ☐ todo (pending) · ◐ in-progress · ☑ done (completed) · ⊘ blo
 
 ## Notes
 *Blocked-task reasons and their unblock step (e.g. "needs ADR — run `/adr`").*
+
+## Shared contracts
+*Only actual shared files/interfaces. Compare producer, consumer and tests before dispatch;
+name the semantics, source and any unresolved conflict. Distinguish planned from implemented.*
+
+| Producer task | Consumer task | Contract + source | Compatible / conflict |
+|---------------|---------------|-------------------|-----------------------|
+| *…* | *…* | *absence/error meanings, units, ownership, ordering where relevant* | *…* |
+
+## Execution entries
+*One entry per task, linked to its status row above (do not duplicate the status database).
+The coordinator updates this before repairs and whenever downstream-relevant facts change.*
+
+### Task <id>
+- **Source:** worker / worktree / branch / commit + relevant dirty-diff identity.
+- **Destination:** agreed worktree / branch / integrated revision + dirty-diff identity.
+- **Acceptance evidence:** criteria → exact commands/results/artifact pointers and tested tree;
+  missing checks stay unverified. Worker evidence is not destination evidence.
+- **Review/repair:** original review and finding IDs; dispatch count (maximum three shared
+  across review stages); open/blocking/advisory/resolved findings and latest repair evidence.
+- **Discoveries for dependants:** fact / source pointer / affected task IDs; resolved contract
+  changes and consequences for their briefs. No secrets or pasted log dumps.
+- **Integration / next action:** what landed, what needs reconciliation or refreshed evidence.
+- **External state:** observed tracker/PR status; synchronization or merge pending separately.
+
+*On resume reconcile entries with actual trees; preserve user work and counts. Missing history
+is unknown, never zero. Only integrated work with current required evidence unblocks dependants.*

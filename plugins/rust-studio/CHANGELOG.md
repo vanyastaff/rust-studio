@@ -5,6 +5,44 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.53.0] - 2026-09-09
+
+Independent acceptance now checks the original request, instruction improvements have a
+controlled eval workflow, and task execution keeps review and integration evidence across
+interruptions. Existing skills carry these workflows; no new agents or runtime dependencies
+are required.
+
+### Added
+
+- `/spec-verify` independently checks the original user request for multi-task, cross-crate
+  and observable behavior changes (`--blind` also enables it for a small change). A fresh
+  read-only checker derives scenarios before inspecting implementation, excludes design
+  artifacts and reports missing requirements or unverifiable independence. Green spec tests
+  cannot override those findings. Intent now preserves exact redacted user amendments.
+- `/eval-agents improve <skill-or-agent-path>` tests a bounded instruction change using the
+  existing runner: frozen baseline/oracles/decision rule, repeated training cases, private
+  holdout, false-positive checks and isolated patches. Missing evidence, regression or
+  holdout contamination prevents adoption. The documented launch budget is not presented
+  as a hard total-cost cap; unmetered grader costs remain explicit.
+- Six behavioral eval cases cover independent acceptance, instruction-improvement evidence,
+  bounded review repairs, task resumption, session retrospectives and guard preservation.
+  The suite now contains 37 cases.
+
+### Changed
+
+- `/dev-task` and `/spec-tasks` share a persisted limit of three review-repair dispatches
+  per task, focused re-review and explicit blocking/advisory findings. Repairs recheck
+  affected earlier gates; changing workers or resuming cannot reset the counter.
+- Task records retain source and destination identity, acceptance evidence, discoveries
+  and integration state. Producer/consumer contracts are reconciled before dependent work
+  starts; worker completion is distinct from local integration and remote PR merge.
+- `/session-wrap` proposes up to three evidence-based environment improvements. `/review`
+  discovers applicable local standards and requires boundary/contract evidence for branch
+  or guard simplifications.
+- Upstream commit and issue analysis is recorded in `docs/upstream-workflows-2026-09.md`.
+
 ## [0.52.2] - 2026-09-07
 
 `/review` called its step-4 fan-out "read-only lenses". Of the thirteen agents it named, two

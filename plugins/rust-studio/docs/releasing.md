@@ -14,8 +14,8 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
   bumping it does nothing for installed users — Claude Code sees the same version and keeps the
   cached copy. Bump on every user-facing change.
 - Follow [semver](https://semver.org): **MAJOR** for removed/renamed skills, agents, or gates that
-  break existing workflows; **MINOR** for new skills/agents/rules/components; **PATCH** for fixes
-  to existing behavior.
+  break existing workflows; **MINOR** for new skills/agents/rules/components or additive
+  workflow modes; **PATCH** for fixes to existing behavior.
 
 ## Release steps
 
@@ -24,7 +24,9 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
    withdrawn in 0.50.0 because its `$schema` silences every Codex hook
    (`adr/0002-agent-plugins-manifest-withdrawn.md`), and `RS-MANIFEST-058` fails the build if it
    comes back.
-2. **Update the changelog / README** if component counts or behavior changed.
+2. **Update the changelog / README and usage guide.** Move the pending entry under the new
+   version and release date, retaining an empty `Unreleased` heading. Include changed behavior
+   and component/eval counts; preserve historical entries and measured results.
 3. **Regenerate and validate** from the plugin root:
    ```sh
    cd plugins/rust-studio
@@ -33,6 +35,8 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
    ./scripts/validate-distribution.sh
    bun test
    claude plugin validate . --strict
+   claude plugin validate ../.. --strict
+   agnix --strict .
    ```
 4. **Smoke-test both distribution paths** from the marketplace root:
    ```sh
@@ -46,7 +50,12 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
    Confirm the standalone skill contains its script, the Codex plugin exposes all skills without
    auto-discovering `hooks/hooks.json`, and Claude still provides the SessionStart briefing,
    rule injection, and LSP diagnostics (needs `rust-analyzer` on PATH).
-5. **Tag and push** from inside the plugin directory:
+5. **Commit and push `main`.** Inspect the staged file list, including newly added reference
+   copies and eval cases; exclude local logs, credentials and generated eval results. Commit
+   the release and push `main` without force. Wait for the required plugin-quality jobs on
+   that exact commit; an earlier green run does not cover the release. The relative-path
+   marketplace source resolves `main`, so it must contain the new version.
+6. **Tag and push** from inside the plugin directory after CI passes:
    ```sh
    cd plugins/rust-studio
    claude plugin tag --dry-run   # preview: rust-studio--v<version>
@@ -55,7 +64,11 @@ How to cut a release of **this plugin** (distinct from the crate-release checkli
    `claude plugin tag` derives `rust-studio--v<version>` from the manifest, validates the plugin,
    and requires a clean working tree under the plugin directory. This tag convention is what lets
    downstream plugins resolve a `{ "name": "rust-studio", "version": "~0.5" }` dependency.
-6. **Push `main`** so the relative-path marketplace source resolves the new commit.
+7. **Verify publication.** Confirm the remote branch and dereferenced tag point to the
+   tested release commit, and that both manifests at that tag have the intended version.
+   A GitHub Release can attach the same changelog entry to the existing tag; create it with
+   `--verify-tag` so a typo cannot tag an unrelated revision. A pushed tag and marketplace
+   update are the plugin distribution mechanism; no npm or crates.io publish is needed.
 
 ## How users receive it
 

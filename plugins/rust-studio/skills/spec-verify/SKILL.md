@@ -28,7 +28,16 @@ on. Keep blocking steps in the foreground so the user sees intermediate evidence
 final dump.
 
 ## Steps
-1. Read the spec's **acceptance criteria** (`input` = slug or path). Then read
+1. Resolve the spec (`input` = slug or path; optional `--blind` requires independent
+   acceptance even for a small change). Determine whether the independent pass is required
+   under `references/blind-acceptance.md`: multiple tasks, cross-crate changes, or changed
+   externally observable behavior. Before sharing any design context, prepare the original
+   request and user amendments and dispatch a **fresh read-only `qa-lead`** using that
+   document's input boundary and assignment. Do not reuse a spec-aware QA worker. If the
+   host cannot isolate the context or the original request is missing, continue the ordinary
+   checks but record required blind acceptance as **unverified**, never passed.
+   A small-change skip needs its applicability reason in the report.
+2. Read the spec's **acceptance criteria**. Then read
    `intent.md` beside it, if the spec was written through `/spec` Phase 0, and check the
    trace the spec claims: **every criterion must answer to something in intent's "What
    'fixed' looks like".** Phase 4 asserts that trace when it drafts the spec; nothing
@@ -39,7 +48,7 @@ final dump.
    with **no** criterion pointing at it is the more dangerous of the two, because
    everything present passes and the missing thing is what the user actually asked for.
    No `intent.md` means skip this step, not fail it.
-2. **First, run the spec-level outer acceptance test** — a green outer test is the primary
+3. **First among ordinary checks, run the spec-level outer acceptance test** — a green outer test is the primary
    executable proof the feature is met (`references/testing-model.md`). Then, for
    each remaining criterion, find and run the evidence:
    - Use serena MCP (`find_symbol`) and the harness Grep (ripgrep) to locate test functions
@@ -49,13 +58,21 @@ final dump.
    - `cargo clippy --all-targets --all-features -- -D warnings` and `cargo fmt --check`.
    - `cargo +nightly miri test` if `unsafe` was involved; criterion benches if perf was
      a criterion.
-3. Spawn the relevant **gate owners** in parallel (QA-GATE always; add API/ASYNC/PERF/
+4. Spawn the relevant **gate owners** in parallel (QA-GATE always; add API/ASYNC/PERF/
    SAFETY/RELEASE as the spec touched them). Spawn `rust-reviewer` for a final diff
    audit. Gate owners report pass/fail — don't ask the user about tactical gate details.
-4. Delegate to `rust-builder`: write `.rust-studio/specs/<slug>/verify-report.md` from
+5. Reconcile the independent result with the spec only after that worker returns. Apply
+   `references/blind-acceptance.md`'s combined-verdict rules: a retained user requirement
+   missing from the spec still blocks Done; an explicitly withdrawn requirement does not.
+   Quote the worker's verdict verbatim, record context exposure and distinguish actual runs
+   from supplied logs/static inspection. Required unverified acceptance blocks COMPLETE.
+6. Delegate to `rust-builder`: write `.rust-studio/specs/<slug>/verify-report.md` from
    `references/templates/verify-report.md` — each criterion → pass/fail
-   + evidence, commands run, gates cleared, follow-ups.
-5. **On pass**: mark the spec `Status: Done` (delegate write). For each durable learning the
+   + evidence, independent requirement results and input provenance, commands run, gates
+   cleared, disagreements and follow-ups. Only reporting and successful archival bookkeeping
+   (status and durable memory) may write; do not repair sources
+   or rewrite intent/spec criteria to make verification pass.
+7. **On pass**: mark the spec `Status: Done` (delegate write). For each durable learning the
    work produced (a decision + rationale, a gotcha, a convention discovered), run `/remember`
    to persist it; suggest `/changelog` if user-facing; suggest `/commit` + `/pr`
    to ship — these are outward/irreversible, so confirm before running them.

@@ -7,7 +7,7 @@
 
 ## Asked for
 
-> *The user's own words, quoted verbatim — not paraphrased into project vocabulary, not
+> *The user's own words, quoted verbatim after redacting secret values — not paraphrased into project vocabulary, not
 > tidied up, not translated into type names. This block is the anchor: it is the one part of
 > the record no later pass may rewrite. When the spec drifts, this is what it drifted from.*
 
@@ -44,9 +44,21 @@ Scope arguments are cheapest here, before an approach exists to defend.*
 
 ---
 
+## User amendments
+
+*Append later user scope corrections, additions and removals in order, including messages
+received during implementation. Quote each message after redacting secret values; retain
+its date/order and source (message identifier when available). Do not rewrite Asked for.
+Later user instructions supersede earlier ones. Assistant decisions and summaries are not
+user quotations; if an older original message cannot be recovered, record that gap.*
+
+- **Date/order + source:** *…*
+  > *Exact redacted user message.*
+
 ## Corrections
 
-*Changes to any field above made after `spec.md` was first written — one line each, dated.
+*Changes to derived fields above made after `spec.md` was first written — one line each, dated.
+Link the original user amendment where applicable; this summary does not replace its quote.
 This log is a tripwire, not bookkeeping. One correction is ordinary. A second or third means
 the problem was never understood, and the honest response is to reopen the spec rather than
 patch it.*

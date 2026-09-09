@@ -1,6 +1,6 @@
 ---
 name: eval-agents
-description: "Use when running Claude Code benchmarks for the studio's Rust reviewer and auditors against planted defects."
+description: "Use when benchmarking studio reviewers in Claude Code or improving instructions with a controlled training/holdout experiment."
 disable-model-invocation: true
 ---
 
@@ -14,6 +14,22 @@ Run the studio's review agents against the planted-defect fixtures in
 `<plugin-root>/benchmarks/` and score recall against ground truth. This tests the
 *studio itself* — quality assurance for the plugin, not the user's code.
 Protocol: `references/delegation.md` §8 (team execution).
+
+## Input and improvement mode
+
+- Default: `/eval-agents [folder|fixture]` measures existing instructions and proposes fixes;
+  it does not edit them.
+- Explicit `/eval-agents improve <skill-or-agent-path>` runs the controlled experiment in
+  `references/eval-improvement.md`. Read it before selecting cases or editing. This mode
+  requires a plugin source checkout and the existing runner; resolve the target there,
+  never modify the installed cache. It can evaluate skill cases and live tasks as well as
+  agent fixtures. Freeze baseline, decision rule, repetitions and limits; keep the holdout
+  hidden from the tuning worker; select at most two training candidates and evaluate only
+  one on holdout. A holdout regression rejects the change, not the oracle.
+
+Improvement mode follows that document instead of the measurement-only steps below. On
+hosts without the required evaluator/runner, prepare the experiment and report BLOCKED;
+never substitute a dry-run or an in-context self-review for measured improvement.
 
 ## Orchestration
 Spawn each fixture's mapped agent as its own sub-agent. The fixtures are independent and

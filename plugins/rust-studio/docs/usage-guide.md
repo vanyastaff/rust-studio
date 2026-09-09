@@ -149,6 +149,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 
 ### Build
 - **`/dev-task`** — implement one unit end-to-end: scout → plan → approve → build → review.
+  Review repairs share a persisted three-dispatch limit; focused verification includes
+  affected earlier acceptance checks, and advisory findings alone do not restart repairs.
 - **`/new-crate`** — scaffold a crate/workspace member with studio conventions.
 - **`/add-dep`** — vet a crate (RUSTSEC, license, MSRV, features) before adding it.
 - **`/refactor`** — behaviour-preserving cleanup driven by clippy + standards.
@@ -162,13 +164,24 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 - **`/spec`** — intent (the problem in your words, frozen) → explore → weigh approaches →
   an approved spec doc.
 - **`/spec-tasks`** — break a spec into ordered tasks, drive each via `/dev-task`.
-- **`/spec-verify`** — prove the implementation meets the spec's acceptance criteria; archive.
+  On resume, reconcile destination state and evidence before unblocking dependencies.
+  Task records carry producer/consumer contracts, discoveries and repair history; local
+  integration and external PR merge are separate states.
+- **`/spec-verify`** — prove the implementation meets the spec's acceptance criteria. For
+  multi-task, cross-crate or observable behavior changes, a fresh read-only checker also
+  verifies the original user request without the spec/tasks/history; `--blind` requests
+  that pass on a smaller change. Missing requirements or required unverified checks block
+  archiving. User amendments remain part of acceptance.
 
 ### TDD & verification
 - **`/tdd`** — build a behaviour test-first: RED → GREEN → REFACTOR.
 - **`/verify-loop`** — run fmt/clippy/nextest and auto-fix in a bounded loop (≤3) until green.
 
 ### Quality & review
+
+Review reads applicable root and scoped standards from the actual tree. Suggested guard
+or branch simplifications require boundary-state and producer-contract evidence; one
+happy-path test does not establish preserved behavior.
 - **`/review`** — audit a diff for correctness/scope/tests (`--full` = parallel multi-lens).
 - **`/lint`** — rustfmt + clippy zero-warning gate (`--fix` applies).
 - **`/audit-unsafe`** — review all `unsafe` (invariants, miri).
@@ -207,6 +220,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
   stale or resolved notes, secrets, conventions to promote into `CLAUDE.md`/rules, and a
   one-time import of a legacy Obsidian vault.
 - **`/session-wrap`** — recap the session, capture learnings, suggest the next step.
+  Preserve task execution evidence for resume; propose at most three small environment
+  improvements tied to observed friction and a concrete validation.
 - Capture is also **automatic**: the work skills (`/dev-task`, `/debug`, `/verify-loop`,
   `/refactor`, `/spec-verify`) run `/remember` for durable learnings, and the `auto_capture`
   Stop hook nudges you once after a completed unit if nothing was saved. Recall is automatic:
@@ -256,11 +271,15 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
   install (hooks, agents, LSP, memory, tooling) versus what silently degraded.
 - **`/eval-agents`** — run the review agents against planted-defect fixtures and score recall
   (quality-assures the plugin itself). The same fixtures ship as a `claude plugin eval` suite
-  (`evals/`) with a no-plugin baseline arm for out-of-session scoring, and CI runs that suite
-  whenever the studio's own configuration changes (`skills/`, `agents/`, `rules/`, `hooks/`,
-  `docs/`) — those files are the studio's source code, and a prompt edit regresses recall the
+  (`evals/`) with a no-plugin baseline arm for out-of-session scoring. Paid eval CI is manual;
+  run relevant cases when the studio's configuration changes — a prompt edit regresses recall the
   way a code edit regresses a test. A defect that escapes the studio becomes a permanent
   fixture before the fix is called done.
+- **`/eval-agents improve <skill-or-agent-path>`** — explicitly test one instruction change
+  against a frozen baseline, repeated training runs and a separately held control set.
+  Regression, incomplete evidence or exposed holdout rejects adoption; the report preserves
+  the before/after results and measured cost. Uses the existing Claude Code runner and
+  source checkout; normal `/eval-agents` remains measurement-only.
 
 ---
 
