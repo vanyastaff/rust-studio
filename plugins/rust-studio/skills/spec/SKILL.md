@@ -23,7 +23,8 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
 
 ## Phase 0 — Intent (before any technical framing)
 1. **Capture the problem in the user's words, while you still have no solution to defend.**
-   Quote what they asked verbatim — don't translate it into project vocabulary yet. Then ask
+   Quote what they asked verbatim after redacting secret values — don't translate it into
+   project vocabulary yet. Preserve variable names, never secret values. Then ask
    the analyst questions (scope, who feels it, constraints they own, what "fixed" looks like)
    with `/grill-me` discipline: one focused question at a time, each with a recommended
    default, and **only for what genuinely lives in the user**. Anything the repo answers —
@@ -43,6 +44,14 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
    not rewrite it. If drafting the spec makes you want to change the intent, stop and change
    it explicitly, logging it under `## Corrections` — that edit is the finding. A spec that
    quietly grows to match its own solution reports nothing.
+
+   **Keep later user messages too.** Append every user scope correction, addition or removal
+   to intent's **User amendments**, in order, quoting the redacted message and its provenance.
+   Never replace the original **Asked for** block or turn an assistant design choice into a
+   user amendment. Keep this record current through implementation; later user instructions
+   supersede earlier ones. **Corrections** remains the explanation of changed derived fields.
+   `/spec-verify` uses the original quotations for independent acceptance, so an older summary
+   must not be relabelled as a verbatim message or reconstructed from the finished spec.
 
 ## Phase 1 — Explore
 3. Restate the goal in one line **from `intent.md`**, not from your reading of the code.

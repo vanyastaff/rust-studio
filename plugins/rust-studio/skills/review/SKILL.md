@@ -178,11 +178,28 @@ right thing — a test can keep every assertion, add none, and still test the wr
 Running this checklist clean is a precondition for review, not a substitute for reading what the
 surviving assertions actually check.
 
+## Suggested branch and guard changes
+
+Before recommending a branch/guard replacement as equivalent, name the boundary input or
+state the original handles. Trace the producer/caller contract and show preservation through
+an invariant, characterization test or trace; a happy-path green does not prove equivalence.
+If the distinguishing input is invalid under a proven invariant, explain that proof; do not
+demand a counterexample to equivalent code. If validity or required behavior is unknown, label
+the simplification a hypothesis and name the missing evidence. A reviewer suggestion is not
+an instruction to silently change behavior; the implementer must verify it before applying.
+
 ## How to run
 1. Get the diff. Determine scope from context; proceed without asking unless the
    change's goal is truly opaque.
+   Discover and read applicable project standards from the actual tree: root
+   `CODING_STANDARDS.md` and `CONTRIBUTING.md` when present, plus scoped instructions and
+   standards for the affected crates/directories. Do not rely on memory or only links in
+   `AGENTS.md` to decide which files exist. Give lenses the applicable paths and constraints;
+   the standard itself must be read, not merely listed. Unavailable required standards are
+   an unverified lens, not a claimed standards pass; pasted code cannot prove unseen rules.
 2. Spawn **`rust-reviewer`** for the core correctness/scope/test audit, applying the
-   Shape audit, the Accretion check, and the Oracle-weakening checklist above. This step is
+   Shape audit, the Accretion check, the Oracle-weakening checklist, applicable local standards
+   and the branch/guard preservation check above. This step is
    not optional where the Agent tool exists: the reviewer's value is that it is not the
    session that has been reading the code, so "I can review this inline faster" forfeits the
    independence the verdict rests on. Inline is for hosts with no sub-agents — and there, say

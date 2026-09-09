@@ -11,6 +11,12 @@ A Rust engineering studio for coding agents: 62 skills that carry the standards 
 maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
+**New in 0.53.0:** independent acceptance from the original request, controlled instruction
+experiments with `/eval-agents improve`, and task records that retain repair history and
+integration evidence across interruptions. Review repairs have a shared three-attempt limit.
+See the [changelog](plugins/rust-studio/CHANGELOG.md#0530---2026-09-09) and
+[usage guide](plugins/rust-studio/docs/usage-guide.md).
+
 **What changes when you install it.** Your agent stops writing plausible Rust and starts writing
 Rust that a maintainer would merge: it locates before it edits, plans before it builds, asks you
 to approve the plan, runs `clippy` and the tests as evidence instead of asserting success (plus
@@ -225,7 +231,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 | Irreversible-action guard | no | yes | yes |
 | Stop-guard, auto-capture, sub-agent verdict check | no | no — these read the Claude transcript | yes |
 | LSP, status line, background monitors | no | no | yes |
-| Eval suite — 31 `claude plugin eval` cases + 45 agent fixtures + 3 live tasks on real crates (`tools/eval-runner.ts` runs them without early access, `--runs N` for repeatability) | no | no | yes |
+| Eval suite — 37 `claude plugin eval` cases + 45 agent fixtures + 3 live tasks on real crates (`tools/eval-runner.ts` runs them without early access, `--runs N` for repeatability) | no | no | yes |
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities, and explicit-invocation-only
@@ -275,7 +281,8 @@ not enabled.
 
 ### Releasing
 
-Keep the version in both plugin manifests identical, then tag and push:
+Keep the version in both plugin manifests identical, update the changelog, validate and commit
+the release. Push `main` and check its CI before publishing the version tag:
 
 ```bash
 cd plugins/rust-studio

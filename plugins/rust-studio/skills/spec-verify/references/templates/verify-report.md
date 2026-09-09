@@ -4,6 +4,23 @@
 
 - **Spec:** [`spec.md`](spec.md)   ·   **Date:** `YYYY-MM-DD`   ·   **Verdict:** `COMPLETE / NEEDS WORK / BLOCKED`
 
+## Independent acceptance → original request
+
+- **Applicability:** required (multiple tasks / cross-crate / changed observable behavior /
+  explicit `--blind`) | skipped (small-change reason).
+- **Original input:** Asked for + ordered user amendments, with message provenance; name any
+  unrecoverable quotation. Do not substitute spec criteria or summaries.
+- **Independence:** fresh worker and permitted inputs; consulted artifacts and any exposure
+  to spec/tasks/reports/history. An inline or contaminated pass is unverified, not blind.
+- **Worker verdict:** quote verbatim; keep the combined verdict separate.
+
+| User requirement / amendment | Result | Evidence and provenance |
+|-----------------------------|--------|-------------------------|
+| *…* | implemented / partial / missing / unverified / withdrawn by user | *actual command + result; distinguish supplied logs or static inspection* |
+
+*Disagreements with the spec and ordinary gates remain findings. Missing retained requirements
+or required unverified acceptance prevent COMPLETE/Done; a user-withdrawn requirement does not.*
+
 ## Acceptance criteria → result
 | # | Criterion | Result | Evidence |
 |---|-----------|--------|----------|
