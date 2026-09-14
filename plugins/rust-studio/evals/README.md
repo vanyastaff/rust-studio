@@ -1,6 +1,6 @@
 # Rust Code Studio — `claude plugin eval` suite
 
-Thirty-seven cases that ask the studio to do its core job — reject code a strict maintainer would
+Thirty-eight cases that ask the studio to do its core job — reject code a strict maintainer would
 reject — scored against a **no-plugin baseline** so the headline number is the delta the plugin
 adds, not an absolute. Each case is a `prompt.md` (the fixture source inlined, so the sandbox
 needs no files) plus `graders/`: an `llm` rubric derived from the fixture's ground truth, a
@@ -43,6 +43,7 @@ indicator (`arm: with-only`) that shows whether the plugin's own path fired.
 | `task-resume-evidence` | — | worker completion cannot unblock a consumer before destination integration and contract reconciliation |
 | `session-retro-evidence` | — | observed friction leads to small verifiable environment improvements without weaker checks or invented speedups |
 | `review-guard-preservation` | — | a guard simplification requires boundary and producer-contract evidence; missing local standards remain unverified |
+| `acceptance-ledger-honest-report` | — | a ledger with a stale gate, an abandonment and an unpinned cargo filter is not COMPLETE: the checker's counts are the denominator, hand-written evidence on a runnable gate is not met, and loosening `EXPECT:` is weakening the oracle |
 | `routing-flaky-tests`, `routing-binary-size`, `routing-public-api-design` | — | three natural requests reach the studio skill that owns them (`/flaky-hunt`, `/bloat`, `/design-api`) instead of generic advice |
 
 ## Run

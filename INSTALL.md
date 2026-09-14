@@ -17,7 +17,7 @@ path. Safe to re-run; `--dry-run` prints the commands without running them.
 
 ## Just the skills, on any agent
 
-The 62 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
+The 63 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
 Codex, Cursor, OpenCode, Zed and ~70 other hosts — no npm publish, no clone:
 
 ```text
@@ -25,7 +25,7 @@ npx skills add .                                      # from a local clone
 npx skills add <owner>/rust-studio --skill dev-task --agent codex
 ```
 
-The 60 host-neutral workflows bundle the standards and deterministic helpers they need. What you
+The 61 host-neutral workflows bundle the standards and deterministic helpers they need. What you
 *don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
 stop-guard), the status line, and working versions of the two clearly labeled Claude-only
 utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
@@ -45,7 +45,7 @@ silent — no session briefing, no path-scoped standards — and Codex's plugin 
 beside it.
 
 Clients that implement Agent Plugins install through `npx skills add` (below) instead, and a
-client that does gets the 62 skills all the same — that path reads the flat `skills/` directory
+client that does gets the 63 skills all the same — that path reads the flat `skills/` directory
 and needs no manifest at all.
 
 ## Codex plugin
@@ -203,7 +203,10 @@ On enable, Claude Code prompts for the studio's options: behavioral defaults (pr
 runner, gate intensity, house MSRV fallback) and toggles for ambient behaviors (`memory_recall`,
 `routing_nudge`, `fmt_nudge` — all on by default — plus a `memory_dir` override for the project memory store). There's also an
 opt-in **`stop_guard`** (+ `stop_guard_strict`) that mechanically blocks an undisciplined turn
-ending (ownership-dodging, test avoidance, "done" without evidence) — off by default. Change them
+ending (ownership-dodging, test avoidance, "done" without evidence) — off by default — and an
+on-by-default **`acceptance_guard`** that blocks a turn reporting COMPLETE while a spec's
+acceptance ledger this session named still has unmet gates (questions and honest NEEDS WORK /
+BLOCKED pass). Change them
 later via `/plugin` → **Rust Code Studio** → configure. The plugin also ships an opt-in
 `Rust review (terse)` output style — select it under `/config` → Output style. Full table:
 [`plugins/rust-studio/README.md`](plugins/rust-studio/README.md#configuration).

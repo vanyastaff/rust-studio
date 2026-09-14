@@ -92,6 +92,11 @@ check in `skills/review/SKILL.md` does.
   observes — `Drop` order, closure capture, temporary scope — where a suite can be large, green,
   and blind to exactly the thing being changed. Skipping the calibration is allowed; reporting
   the pass rate as if you had not skipped it is not. Name the blind spot instead.
+- **Where a ledger exists, its checker's state is the criterion's result.** `acceptance.md` beside
+  the spec turns "criterion 3 passes" into a state the checker computed — exit 0 and the marker,
+  bound to the definition it proved — and its summary line is the evidence a report pastes. A
+  criterion with no gate is a criterion nothing will prove; an unmet, stale, or abandoned gate is
+  the denominator, whatever the prose says (`acceptance-ledger.md`).
 - **"Unverified" / "couldn't run X" is a valid and required state.** Substituting *probably* /
   *should pass* for *checked* is itself a gaming move.
 - **Cite what you read, at the range you read it.** A claim about code carries `path:line`, the
@@ -150,6 +155,12 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
 - **the `stop-guard` hook (opt-in)** — the mechanical teeth: when `stop_guard` is enabled it blocks
   a turn from ending (exit 2 → feedback to the model) when the final message dodges ownership, seeks
   permission, avoids tests, leaves stubs, or claims done without evidence. Off by default; fails open.
+- **the acceptance ledger + `acceptance-guard` hook** — `acceptance-ledger.md`: a spec's criteria
+  as gates a checker decides (exit 0 **and** the success marker), with evidence bound to the exact
+  `CHECK:`/`EXPECT:` it proved, so an edited oracle or a hand-ticked box reads as stale, never met.
+  The guard blocks a turn that reports COMPLETE while a ledger this session named has unmet
+  gates — a question or an honest NEEDS WORK / BLOCKED passes — and releases after four such stops
+  without progress. On by default; fails open.
 
 ## Kept Honest By Eval Fixtures
 

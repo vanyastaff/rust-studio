@@ -1,0 +1,4 @@
+interface:
+  display_name: "Acceptance"
+  short_description: "Acceptance criteria need a checker-decided pass: write, lint"
+  default_prompt: "Use $acceptance when acceptance criteria need a checker-decided pass: write, lint, run, or re-verify an acceptance ledger."

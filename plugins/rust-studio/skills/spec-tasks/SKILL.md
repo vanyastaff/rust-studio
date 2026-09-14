@@ -52,6 +52,10 @@ Each dependent brief includes the relevant discoveries recorded by completed tas
    `references/templates/tasks.md` (delegate the write). The template's
    columns (`#`, owner lead, "Blocked by", status) mirror the shared task-list shape, so the
    rows map cleanly to host-native task items.
+   Beside it, write `.rust-studio/specs/<slug>/acceptance.md` through `/acceptance` — one
+   gate per acceptance criterion, runnable wherever a command can decide the outcome, linted
+   before dispatch (`references/acceptance-ledger.md`). Each task's "Acceptance slice" names
+   the gate ids it drives toward, so a criterion no task covers is visible here, not at verify.
    **Gate (phase boundary):** present the task list and get approval before executing any
    task. If the user wants changes, loop back to step 2.
 
@@ -95,8 +99,10 @@ Each dependent brief includes the relevant discoveries recorded by completed tas
 6. Summarize local integration, current evidence/gates, unresolved findings and the critical
    path; state external synchronization or merge pending separately. Update durable task
    entries before the final report, including discoveries needed to resume.
-7. When all local tasks are done, run `/spec-verify <slug>` before the feature-level
-   **COMPLETE / NEEDS WORK / BLOCKED** verdict. Local task completion alone does not prove
+7. When all local tasks are done, re-verify the ledger (`/acceptance` `--reverify`; paste its
+   summary line) and run `/spec-verify <slug>` before the feature-level
+   **COMPLETE / NEEDS WORK / BLOCKED** verdict. An unmet, stale, or abandoned gate is that
+   verdict's list, whatever the task table says. Local task completion alone does not prove
    final spec/user acceptance. Every closing report ends with one of these verdicts,
    including a partial run; completed workers cannot make an unfinished plan COMPLETE.
 

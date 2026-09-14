@@ -100,6 +100,9 @@ that **governs merging** where the project owns a gate (`project-gate.md`):
 - "no UB" → `cargo +nightly miri test` output (where feasible).
 
 Name the command behind each claim. If something was skipped, say so. Never substitute
-"probably" for checking.
+"probably" for checking. Where the spec has an acceptance ledger, the checker's summary line
+(`ACCEPTANCE … N met, M unmet, S stale, A abandoned` + `ALL MET` / `NOT MET` / `HANDOFF
+REQUIRED`) is the criteria evidence, and it maps onto the verdicts directly: `NOT MET` is NEEDS
+WORK, `HANDOFF REQUIRED` is BLOCKED (`acceptance-ledger.md`).
 
 ---

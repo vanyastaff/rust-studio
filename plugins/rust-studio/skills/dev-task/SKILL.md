@@ -187,7 +187,10 @@ restarting an unrelated broad audit. Verification after the third repair is allo
 repair is not automatic. Recheck any earlier acceptance/gate affected by a later fix.
 12. **Stage 5a — spec compliance.** First, the **outer acceptance test passes** (the executable
     anchor from Phase 1, where one exists) — a green acceptance test is the objective proof the spec
-    is met, not a re-reading of prose. Then check the diff against the Phase-1 acceptance criteria
+    is met, not a re-reading of prose. When the task belongs to a spec with an acceptance ledger
+    (`.rust-studio/specs/<slug>/acceptance.md`), re-verify the gates in this task's acceptance
+    slice through `/acceptance` and paste the summary line — a gate the checker reports unmet or
+    stale is a 5a gap, whatever the diff looks like. Then check the diff against the Phase-1 acceptance criteria
     and the approved plan: exactly what was specified — nothing missing, nothing extra (scope
     creep)? Use `rust-reviewer` with a spec-compliance lens (or `product-steward` for scope). On a
     gap, hand back to `rust-builder` and re-run 5a. **Do not start 5b until 5a is ✅.**

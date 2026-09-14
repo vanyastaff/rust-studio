@@ -14,7 +14,7 @@ Status: ☐ todo (pending) · ◐ in-progress · ☑ done (completed) · ⊘ blo
 
 | # | Task (outcome) | Acceptance slice | Owner lead | Blocked by | Status |
 |---|----------------|------------------|------------|------------|--------|
-| 1 | *…* | *which spec criteria this satisfies* | `<lead>` | — | ☐ |
+| 1 | *…* | *which spec criteria this satisfies — the gate ids in `acceptance.md` (G1, G3)* | `<lead>` | — | ☐ |
 | 2 | *…* | *…* | `<lead>` | 1 | ☐ |
 | 3 | *…* | *…* | `<lead>` | 1 | ☐ |
 

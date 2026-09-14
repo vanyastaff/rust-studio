@@ -34,7 +34,7 @@ _json_escape() { # minimal JSON string escaping for the fields below
 #   RS-DIST-0xx      required files, and this script itself    next: 004
 #   RS-CODEX-0xx     Codex hooks and manifest wiring           next: 017
 #   RS-HOOK-0xx      hook config shared across hosts           next: 022
-#   RS-SCRIPT-0xx    shipped scripts and their contracts       next: 037
+#   RS-SCRIPT-0xx    shipped scripts and their contracts       next: 040
 #   RS-MEM-0xx       memory-store contract                     next: 041
 #   RS-MANIFEST-0xx  plugin manifests and version agreement    next: 059
 #   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 078
@@ -146,6 +146,21 @@ for f in memory-doctor.ts memory-store.ts _lib.ts; do
 done
 grep -q 'bun "scripts/memory-doctor.ts"' skills/memory-doctor/SKILL.md ||
   fail RS-SCRIPT-032 "skills/memory-doctor/SKILL.md" "does not invoke bun \"scripts/memory-doctor.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
+# The acceptance checker is the one shipped script that executes commands by design (the
+# CHECK: lines of a ledger). It reaches a user machine only through the skill bundle, so the
+# bundle must be whole and the skill must call it by its bundled path; the Stop guard shares
+# the parser from hooks/scripts/ and never executes.
+for f in acceptance-check.ts acceptance-ledger.ts; do
+  [[ -f skills/acceptance/scripts/$f ]] || fail RS-SCRIPT-037 "skills/acceptance/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so it breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
+done
+grep -q 'bun "scripts/acceptance-check.ts"' skills/acceptance/SKILL.md ||
+  fail RS-SCRIPT-038 "skills/acceptance/SKILL.md" "does not invoke bun \"scripts/acceptance-check.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
+# The template is the first ledger every user sees; it must parse under the strict parser and
+# pass its own lint, or the first thing /spec-tasks writes is a ledger the checker refuses.
+if command -v bun >/dev/null 2>&1; then
+  lint_out=$(bun hooks/scripts/acceptance-check.ts --lint --strict docs/templates/acceptance.md 2>&1) || lint_rc=$?
+  [[ ${lint_rc:-0} -eq 0 ]] || fail RS-SCRIPT-039 "docs/templates/acceptance.md" "the shipped ledger template fails its own strict lint: $(echo "$lint_out" | grep -E 'ERROR|warning|PARSE' | head -3 | tr '\n' ' ')" "fix the template so acceptance-check.ts --lint --strict passes on it"
+fi
 ! grep -rqE 'OBSIDIAN_VAULT_PATH|vault_path|note_create|search_semantic|obsidian MCP|`obsidian`' \
     skills/*/SKILL.md docs/*.md README.md $(ls hooks/scripts/*.ts | grep -v '\.test\.ts$') ||
   fail RS-MEM-040 "skills/*/SKILL.md, docs/*.md, README.md, hooks/scripts/*.ts" "Obsidian-era memory contract remnants (vault path / MCP note tools) survive" "memory has been the host auto-memory store since 0.36.0 — remove the reference or rewrite it against docs/memory-protocol.md"

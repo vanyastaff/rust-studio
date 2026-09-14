@@ -1,6 +1,6 @@
 ---
 name: worktree-sweep
-description: "Use when inspecting or pruning leftover git worktrees: dirty/merge status per worktree, removal on approval."
+description: "Use when inspecting or pruning leftover git worktrees: dirty/merge status, removal on approval."
 disable-model-invocation: true
 allowed-tools: "Bash(git worktree*) Bash(git -C*) Bash(git status*) Bash(git branch*) Bash(git log*) Bash(git rev-list*) Bash(du *)"
 ---

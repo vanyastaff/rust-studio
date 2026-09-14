@@ -1,6 +1,6 @@
 interface:
   display_name: "Eval Agents"
-  short_description: "Benchmarking studio reviewers in Claude Code or improving"
-  default_prompt: "Use $eval-agents when benchmarking studio reviewers in Claude Code or improving instructions with a controlled training/holdout experiment."
+  short_description: "Benchmarking studio reviewers in Claude Code or testing"
+  default_prompt: "Use $eval-agents when benchmarking studio reviewers in Claude Code or testing an instruction change by holdout."
 policy:
   allow_implicit_invocation: false

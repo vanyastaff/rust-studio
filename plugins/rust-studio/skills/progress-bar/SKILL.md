@@ -1,6 +1,6 @@
 ---
 name: progress-bar
-description: "Use when running Claude Code and configuring, refreshing, or removing the Rust Code Studio status line."
+description: "Use when running Claude Code and configuring, refreshing, or removing the status line."
 disable-model-invocation: true
 argument-hint: "[off | nerd | emoji | symbols | text | ascii]"
 ---

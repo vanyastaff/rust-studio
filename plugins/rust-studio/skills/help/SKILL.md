@@ -29,7 +29,7 @@ list of every installed skill is generated below it.
 **Find out:** `/research` (settle a question against crate source and docs.rs, cited) · `/recall` (what the studio already learned)
 **Build:** `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/migrate` (edition or major-dependency upgrade) · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 **Spec-driven:** `/spec` · `/spec-tasks` · `/spec-verify`
-**TDD & verify:** `/tdd` · `/verify-loop`
+**TDD & verify:** `/tdd` · `/verify-loop` · `/acceptance` (criteria as checker-decided gates)
 **Debug:** `/debug` (root-cause runtime bugs) · `/fix-build` (compile errors) · `/flaky-hunt` (flaky tests)
 **Quality & review:** `/review` (`--full` = parallel multi-lens) · `/doc-review` (specs/plans/ADRs) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
 **Studio self-check:** `/eval-agents` (run the review agents against planted-bug fixtures) · `/studio-doctor` (hooks, runtime, agents, LSP, memory, cargo tooling)

@@ -52,6 +52,11 @@
             "type": "command",
             "command": "bun \"${PLUGIN_ROOT}/hooks/scripts/stop-guard.ts\"",
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "bun \"${PLUGIN_ROOT}/hooks/scripts/acceptance-guard.ts\"",
+            "timeout": 15
           }
         ]
       }

@@ -22,9 +22,14 @@
 or required unverified acceptance prevent COMPLETE/Done; a user-withdrawn requirement does not.*
 
 ## Acceptance criteria → result
+*Where `acceptance.md` exists beside the spec, paste the checker's summary line here
+(`ACCEPTANCE … N met, M unmet, S stale, A abandoned (of T)` + `ALL MET` / `NOT MET` / `HANDOFF
+REQUIRED`) from a `--reverify` run, and cite the gate id in each row's Evidence — the checker's
+state is the result, not a `✅` typed here.*
+
 | # | Criterion | Result | Evidence |
 |---|-----------|--------|----------|
-| 1 | *…* | ✅ pass / ❌ fail | *test name / bench / command* |
+| 1 | *…* | ✅ pass / ❌ fail | *gate id (`<slug>:G1`) / test name / bench / command* |
 | 2 | *…* | ✅ / ❌ | *…* |
 
 ## Commands run (evidence)

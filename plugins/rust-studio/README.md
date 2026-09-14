@@ -10,14 +10,15 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 
 ## In the box
 
-- **62 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping,
+- **63 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping,
   build-fixing, edition & major-dependency migration, CI gates, cross-session memory.
 - **33 agents** — 2 directors → 7 leads → 20 specialists (including an adversarial
   `harsh-critic`) + a scout / builder / resolver / reviewer execution group.
 - **20 path-scoped rule sets** — the right Rust standard surfaces the moment you open a matching
   file; the agent reads the full rule on demand, so the window stays lean.
-- **13 Claude hook handlers across 9 events** — stack detection and memory recall, rule pointers, a
-  sub-agent brief, lint and lifecycle nudges, verdict checks, and an opt-in stop-guard.
+- **14 Claude hook handlers across 9 events** — stack detection and memory recall, rule pointers, a
+  sub-agent brief, lint and lifecycle nudges, verdict checks, an acceptance-ledger guard, and an
+  opt-in stop-guard.
 - **Bundled rust-analyzer LSP** — diagnostics and go-to-definition as you edit, so `rust-scout`
   resolves symbols instead of scanning files. Just put `rust-analyzer` on PATH.
 - **An integrity layer that rejects a gamed green** — see
@@ -59,7 +60,7 @@ is in [`../../INSTALL.md`](../../INSTALL.md).
 - **Design** — `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
 - **Build** — `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/migrate` (edition / major-dependency upgrade, with the semantic review `cargo fix` can't do) · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
 - **Spec-driven** — `/spec` · `/spec-tasks` · `/spec-verify` (persisted in `.rust-studio/specs/`)
-- **TDD & verify** — `/tdd` · `/verify-loop`
+- **TDD & verify** — `/tdd` · `/verify-loop` · `/acceptance` (criteria as checker-decided gates)
 - **Quality** — `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
 - **Testing** — `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
 - **Memory** — `/remember` · `/recall` · `/memory-doctor` · `/session-wrap` (cross-session, in the host's auto-memory store — no MCP, no vault)
@@ -227,6 +228,19 @@ injected automatically; the agent reads the full rule on demand ([`rules/`](rule
   return; inside a sub-agent it asks for the model to be named next to the verdict's evidence.
 - **PreCompact / SessionEnd** — remind you to persist an in-flight plan to a durable file and to
   run `/session-wrap` so learnings are captured to memory.
+- **Acceptance guard (Stop)** — a turn that **reports completion** (its last verdict is COMPLETE,
+  or it is a completion summary with no verdict) while a spec's acceptance ledger
+  (`.rust-studio/specs/<slug>/acceptance.md`, written by `/spec-tasks` or `/acceptance`) that
+  **this session named** has gates that are unmet, stale (their `CHECK:`/`EXPECT:` changed since
+  the evidence), or does not parse, is blocked (exit 2) with the qualified ids and the exact
+  `--reverify` command. A question to the user, the `/spec-tasks` approval checkpoint, and an
+  honest NEEDS WORK / BLOCKED pass — the message is read only to tell a done-claim from a
+  handoff; what it enforces is ledger *state*, and it never executes a `CHECK:`. The loop guard
+  is keyed to resolved gate state — turning a gate green
+  rearms it, rewording a title does not — and releases after four stops without progress. A
+  ledger another session left half-done never blocks this one; with no transcript to bind
+  against it stays silent. On by default (`acceptance_guard`); fails open. Format and checker:
+  [`docs/acceptance-ledger.md`](docs/acceptance-ledger.md).
 - **Stop-guard (opt-in)** — the mechanical teeth for the integrity doctrine: when `stop_guard` is
   on, it **blocks** the turn from ending (exit 2 → feedback to the model) if the final message
   dodges ownership, seeks permission, stops early, avoids tests, leaves stubs, hands the work back
@@ -280,6 +294,7 @@ verdict check) is always on, and the whole plugin disables with
 | **Project memory directory** (`memory_dir`) | — | Moves the studio's memory off the host's auto-memory directory (Claude Code then no longer loads that index itself; the session-start hook carries it). Leave empty to share the host's store. |
 | **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
 | **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
+| **Acceptance guard** (`acceptance_guard`) | on | The acceptance ledger becomes advisory: a turn may report COMPLETE with gates unmet, stale, or unparsed. The checker, `/spec-verify` and `/dev-task` still refuse to call an unmet ledger COMPLETE. |
 | **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit — capture stays manual (`/remember`, `/session-wrap`) and in-skill. |
 | **Irreversible-action guard** (`git_guard`) | on | The agent may again run commands nothing can undo — `git reset --hard`, `clean -f`, `checkout .`, `branch -D`, `stash drop`, plain force-push, `reflog expire`, and a real `cargo publish`/`yank`. Plain `git push`, `--force-with-lease`, and `publish --dry-run` are never blocked either way. |
 | **Progress visibility** (`progress_tracking`) | on | Orchestrating skills (`/dev-task`, `team-*`, `/refactor`, `/spec-verify`) stop keeping a live task list + per-phase result lines — phases run without the checklist narration. |
@@ -378,6 +393,13 @@ that last risk is what the untrusted-context doctrine
 ([`docs/untrusted-context.md`](docs/untrusted-context.md)) and `security-auditor` cover, not
 this gate. For the product-wide security posture and how to report a vulnerability, see
 [`../../SECURITY.md`](../../SECURITY.md).
+
+One shipped script runs commands **by design**: `skills/acceptance/scripts/acceptance-check.ts`
+executes the `CHECK:` lines of an acceptance ledger (`docs/acceptance-ledger.md`). It is a CLI,
+never a hook — the Stop guard only parses — so a command runs because an agent or a person invoked
+it under the host's permission mode; its default mode (`--status`) executes nothing, and a ledger
+that arrived from outside the project is inspected as untrusted text before `--run`. Approval is the
+host's Bash permission, not a sandbox.
 
 Alongside it, a **shipped-script contract**: a skill that ships `scripts/` ships a CLI, and it
 has two callers — the agent following `SKILL.md`, and the person deciding whether to let the

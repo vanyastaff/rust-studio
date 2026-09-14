@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.0] - 2026-09-14
+
+A spec's acceptance criteria were a checklist the model ticked. `/spec-verify` ran the tests,
+read the prose, and typed `✅` into a table — the same hand that built the change certified it,
+and nothing bound the certificate to the command it claimed. This release gives the criteria a
+form a checker decides, adapted from [Leonxlnx/unlazy](https://github.com/Leonxlnx/unlazy)'s
+gate ledger (MIT): the format, the exit-0-plus-`EXPECT:` rule, definition-bound evidence, and
+abandonment as a visible handoff. The Depth Tree, the lease/scope/wave machinery and the Windows
+process-identity hardening were deliberately not carried over.
+
+### Added
+
+- **`/acceptance`** and `.rust-studio/specs/<slug>/acceptance.md` — one gate per acceptance
+  criterion. A runnable gate (`CHECK:` + `EXPECT:`) is met only when the command exits 0 **and**
+  the success marker matches stdout+stderr; the checker writes evidence carrying a digest of the
+  exact `CHECK`/`EXPECT`/`CWD` it proved, so an edited oracle or a hand-ticked box reads as
+  *stale*, never met. `ABANDON: <id> <reason>` keeps the gate and ends the run `HANDOFF REQUIRED`
+  (exit 1) — BLOCKED, never COMPLETE. The bundled checker (`scripts/acceptance-check.ts`, bun,
+  zero dependencies) defaults to `--status`, which executes nothing; `--run`, `--reverify`
+  (met gates re-executed, failures demoted) and `--lint` are explicit. Checks run sequentially
+  under a per-check timeout that kills the process group, so a hung `cargo` does not outlive
+  the checker. Doctrine: `docs/acceptance-ledger.md`; template: `docs/templates/acceptance.md`.
+- **Oracle lint** (`--lint`, `--strict`): a fixed-output `CHECK:`, an `EXPECT:` the command
+  itself prints or that matches empty output, an activity title, a manual gate carrying a
+  number nothing measures, a mostly-manual ledger — and the Rust trap: `cargo test` /
+  `cargo nextest run` with a filter that matches no test exits 0 with `running 0 tests`, so a
+  cargo test gate without a pinned nonzero count is flagged.
+- **Acceptance guard** (Stop hook, `acceptance_guard`, default on): a turn that **reports
+  completion** — its last verdict is COMPLETE, or it is a completion summary with no verdict —
+  while a ledger **this session named** has unmet or stale gates, or does not parse, is blocked
+  with the qualified ids and the exact `--reverify` command. A question to the user, the
+  `/spec-tasks` approval checkpoint, and an honest NEEDS WORK / BLOCKED report pass: the guard
+  reads the final message only to tell a done-claim from a handoff; the state it enforces is
+  the ledger's, and it never executes a `CHECK:`. The loop guard is keyed to a hash of resolved gate states —
+  turning a gate green rearms it, rewording a title does not — and releases after four stops
+  without progress. Bound by the spec directory appearing in the session transcript, so a
+  ledger another session left half-done never blocks this one; with no transcript it stays
+  silent. Ported to Codex too. 75 new tests cover parser, states, evidence binding, lint, the
+  CLI end to end (`--status` never executes, a definition edited mid-run is not credited,
+  output past the cap is cut and labelled overflow, a descendant holding the pipes is reaped)
+  and the guard's bind / claim / block / release behavior.
+- Validator: `RS-SCRIPT-037` (the skill bundle is whole), `RS-SCRIPT-038` (the skill invokes
+  the checker by its bundled path) and `RS-SCRIPT-039` (the shipped template passes its own
+  strict lint).
+- Eval case `acceptance-ledger-honest-report`: a record-only ledger with a stale gate, an
+  abandonment and a zero-tests trap must not be reported COMPLETE, and the fix must not be
+  an edit to `EXPECT:`. The suite now contains 38 cases.
+
+### Changed
+
+- `/spec-tasks` writes the ledger beside `tasks.md` before the first task runs and names gate
+  ids in each task's acceptance slice; it re-verifies the ledger before the feature verdict.
+  `/dev-task` Stage 5a re-verifies the task's slice when a ledger exists. `/spec-verify`
+  re-verifies the ledger (`--reverify`, never `--status`) and carries its summary line into
+  the report: `NOT MET` is NEEDS WORK, `HANDOFF REQUIRED` is BLOCKED.
+- `docs/integrity-and-evidence.md` and `docs/verdicts.md` §7 name the ledger as the
+  criteria's evidence and denominator; the verify-report template cites gate ids per row.
+
 ## [0.53.0] - 2026-09-09
 
 Independent acceptance now checks the original request, instruction improvements have a

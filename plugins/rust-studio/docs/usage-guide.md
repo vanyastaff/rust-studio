@@ -14,7 +14,7 @@ Five moving parts:
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (62) — slash commands. They are *workflows*: a skill orchestrates the right agents
+- **Skills** (63) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
 - **Rules** (20) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
@@ -117,7 +117,7 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 
 ---
 
-## The skills (62)
+## The skills (63)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
@@ -176,6 +176,13 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 ### TDD & verification
 - **`/tdd`** — build a behaviour test-first: RED → GREEN → REFACTOR.
 - **`/verify-loop`** — run fmt/clippy/nextest and auto-fix in a bounded loop (≤3) until green.
+- **`/acceptance`** — the spec's criteria as gates a checker decides: write or lint
+  `.rust-studio/specs/<slug>/acceptance.md` (`CHECK:` + `EXPECT:`, met only on exit 0 **and**
+  the marker), `--run` / `--reverify` it, and report the measured met / unmet / abandoned counts.
+  Evidence is bound to the exact oracle it proved, so an edited `CHECK:` goes stale on its own;
+  `ABANDON:` is a visible handoff (BLOCKED), never a pass. `/spec-tasks` writes it, `/dev-task`
+  and `/spec-verify` re-verify it; the `acceptance_guard` Stop hook blocks a turn that reports
+  COMPLETE while a ledger this session named has unmet gates.
 
 ### Quality & review
 

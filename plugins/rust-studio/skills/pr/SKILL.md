@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Use when pushing committed Rust work and opening a pull request with a value-first description via gh."
+description: "Use when pushing committed Rust work and opening a pull request with a value-first description."
 allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*)"
 disable-model-invocation: true
 ---

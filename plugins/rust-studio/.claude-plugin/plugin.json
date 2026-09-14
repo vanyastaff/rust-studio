@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Turn a single Claude Code session into a full Rust engineering studio. Tiered agent team (architect -> leads -> specialists), path-scoped Rust standards, quality gates, and cargo-aware hooks across libraries, async/web services, CLIs, and systems/embedded code.",
-  "version": "0.53.0",
+  "version": "0.54.0",
   "author": {
     "name": "Rust Studio contributors"
   },
@@ -60,6 +60,12 @@
       "type": "boolean",
       "title": "Auto-capture learnings",
       "description": "When a turn finishes a real unit of work (a completion summary + uncommitted changes) but nothing was saved to memory, block the stop ONCE and nudge the agent to /remember any non-obvious, durable learning. The agent does the judging and writing (a hook cannot judge what was learned). Nudges at most once per turn and never re-blocks (stop_hook_active breaks the loop), so it is far gentler than stop_guard. Turn off to keep memory capture purely manual.",
+      "default": true
+    },
+    "acceptance_guard": {
+      "type": "boolean",
+      "title": "Acceptance guard (block ending with unmet ledger gates)",
+      "description": "When a spec has an acceptance ledger (.rust-studio/specs/<slug>/acceptance.md) that THIS session named, block a turn that reports completion (a COMPLETE verdict, or a completion summary with no verdict) while the ledger has gates that are unmet, stale (their CHECK/EXPECT changed since the evidence), or does not parse. A question to you, an approval checkpoint, or an honest NEEDS WORK / BLOCKED passes. Enforces ledger state, never executes a CHECK line — the feedback carries the exact --reverify command. Keyed to resolved gate state: turning a gate green rearms it, rewording a title does not; releases after four stops without progress. Fails open. Turn off to keep the ledger advisory.",
       "default": true
     },
     "statusline": {

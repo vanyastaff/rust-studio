@@ -49,8 +49,13 @@ final dump.
    everything present passes and the missing thing is what the user actually asked for.
    No `intent.md` means skip this step, not fail it.
 3. **First among ordinary checks, run the spec-level outer acceptance test** — a green outer test is the primary
-   executable proof the feature is met (`references/testing-model.md`). Then, for
-   each remaining criterion, find and run the evidence:
+   executable proof the feature is met (`references/testing-model.md`). Where the spec has an
+   acceptance ledger (`.rust-studio/specs/<slug>/acceptance.md`), re-verify it next through
+   `/acceptance` (`--reverify`, never `--status` — old evidence is not re-execution) and carry its
+   summary line into the report: each gate id is a criterion's evidence, `NOT MET` is NEEDS WORK
+   with the unmet and stale ids as the list, `HANDOFF REQUIRED` is BLOCKED with the abandonment
+   named (`references/acceptance-ledger.md`). The checker rewrites evidence lines itself; that
+   is not a source write. Then, for each remaining criterion, find and run the evidence:
    - Use serena MCP (`find_symbol`) and the harness Grep (ripgrep) to locate test functions
      and impl sites relevant to each criterion — never Bash `grep` for symbols.
    - `cargo nextest run` (fall back to `cargo test`), including `--doc` for doc-tests —
