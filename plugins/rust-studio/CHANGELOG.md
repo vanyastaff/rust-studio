@@ -2551,8 +2551,9 @@ recurring defect class encoded as a standing rule:
 - **Dangling protocol pointer in `/recall`** (cited `coordination-protocol.md`, which had
   no memory section) now points at `memory-protocol.md`.
 - **Personal project names removed from the plugin — fully universal.** Benchmark
-  fixtures used `acme-*` crate names and `directory-conventions.md` named
-  three private projects; fixtures now use `acme-*` and docs use neutral wording.
+  fixtures used crate names from the author's private projects and
+  `directory-conventions.md` named three of them; fixtures now use `acme-*` and docs use
+  neutral wording.
   Stale counts corrected (54 skills, 20 rules).
 
 ## [0.24.0] - 2026-07-01
