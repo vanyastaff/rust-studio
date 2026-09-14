@@ -19,6 +19,8 @@ fuzz/corpus/
 
 # Host-local settings: machine-specific paths, permissions, claudeMdExcludes.
 **/.claude/settings.local.json
+# Codex's project-local config (MCP server URLs, model prefs) — same drawer, same rule.
+.codex/
 
 # Skill output written into the working project (`/research`, `/spec`, `/tech-debt`,
 # progress logs). Scratch by design: anything durable gets promoted into docs/adr/,
