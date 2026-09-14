@@ -23,18 +23,12 @@ fuzz/corpus/
 .codex/
 
 # Skill output written into the working project (`/research`, `/spec`, `/tech-debt`,
-# progress logs). Scratch by design: anything durable gets promoted into docs/adr/,
-# which is how the 2026-09 research survived its own autopilot run (ADR 0001).
+# progress logs). Scratch by design: anything durable gets promoted into docs/adr/
+# (ADR 0001 is the 2026-09 research that survived that way).
 .rust-studio/
 
 # `claude plugin eval` scores — regenerated per run, and model-dependent.
 plugins/rust-studio/evals/results/
-
-# Autopilot working directory: one build run's brief, manifest, spec, tickets, live
-# dashboard and resume state. Local by design — it dies with the run that produced it,
-# and anything durable is promoted into docs/adr/ instead (ADR 0001). Untracked in
-# 0.51.0; the files stay on disk, so "продолжи автопилот" still resumes.
-.autopilot/
 
 # ── Local caches and one-off backups ──────────────────────────────────────────
 .build/
