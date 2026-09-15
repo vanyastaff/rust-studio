@@ -9,7 +9,7 @@ studio.
 `install.sh` detects the agent CLIs on your machine and runs each host's native install:
 the full studio on Claude Code, the native plugin on Codex, and the portable skills via the
 skills registry when neither CLI is found. From a clone it installs offline from the local
-path. Safe to re-run; `--dry-run` prints the commands without running them.
+path. It is safe to re-run, and `--dry-run` prints the commands without running them.
 
 ```bash
 ./install.sh
@@ -18,7 +18,7 @@ path. Safe to re-run; `--dry-run` prints the commands without running them.
 ## Just the skills, on any agent
 
 The 64 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
-Codex, Cursor, OpenCode, Zed and ~70 other hosts — no npm publish, no clone:
+Codex, Cursor, OpenCode, Zed and ~70 other hosts, with no npm publish and no clone:
 
 ```text
 npx skills add .                                      # from a local clone
@@ -29,8 +29,8 @@ The 62 host-neutral workflows bundle the standards and deterministic helpers the
 *don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
 stop-guard), the status line, and working versions of the two clearly labeled Claude-only
 utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
-that phase inline — see
-[`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md).
+that phase inline (see
+[`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md)).
 
 ## Agent Plugins (Cursor, GitHub Copilot CLI, Kiro)
 
@@ -39,9 +39,9 @@ that phase inline — see
 Codex: with that manifest present, Codex CLI 0.153 loads the plugin through its Agent Plugins
 path, which reads skills, MCP servers and apps but **not hooks**
 ([openai/codex#16430](https://github.com/openai/codex/issues/16430)). Every studio hook went
-silent — no session briefing, no path-scoped standards — and Codex's plugin panel reported
+silent (no session briefing, no path-scoped standards) and Codex's plugin panel reported
 "No plugin hooks" without a warning. The standard makes `$schema` required and forbids a
-`hooks` key, so no manifest satisfies both; the file is withdrawn until Codex runs plugin hooks
+`hooks` key, so no manifest satisfies both. The file is withdrawn until Codex runs plugin hooks
 beside it.
 
 Clients that implement Agent Plugins install through `npx skills add` (below) instead, and a
@@ -52,11 +52,11 @@ and needs no manifest at all.
 
 The Codex plugin installs the portable Rust workflows with native install-surface metadata,
 plus the host-neutral lifecycle hooks (session stack briefing, routing nudge, rustfmt nudge,
-pre-compaction warning — they need [Bun](#hooks-need-bun) on PATH). It does not run the
+pre-compaction warning), which need [Bun](#hooks-need-bun) on PATH. It does not run the
 Claude-specific pieces: status line, LSP, or transcript-reading hooks.
 
-Hooks are trust-gated: Codex does not run a plugin's hooks until you approve them once —
-accept the trust prompt in your first interactive session and the session briefing appears
+Hooks are trust-gated: Codex does not run a plugin's hooks until you approve them once.
+Accept the trust prompt in your first interactive session and the session briefing appears
 from then on (trust is persisted per hook in `~/.codex/config.toml`).
 
 Codex plugins cannot bundle agent definitions, so `./install.sh` (from a clone, with node)
@@ -75,8 +75,8 @@ codex plugin list
 ```
 
 For a local clone, replace the GitHub shorthand in the first command with the absolute repository
-path. Restart the ChatGPT desktop app after adding the marketplace; start a new Codex task after
-installing so the complete skill catalog is loaded.
+path. Restart the ChatGPT desktop app after adding the marketplace, and start a new Codex task
+after installing so the complete skill catalog is loaded.
 
 ## Full Claude Code studio
 
@@ -179,11 +179,11 @@ If a machine lacks `bun` on PATH:
   detection + memory recall, and the fmt nudge.
 
 Each hook reads stdin behind a hard timeout and arms a watchdog that force-exits if anything
-stalls, so a hook can never freeze the session — even mid-subagent.
+stalls, so a hook can never freeze the session, even mid-subagent.
 
 ## Code intelligence needs rust-analyzer
 
-The plugin bundles a rust-analyzer LSP (`plugins/rust-studio/.lsp.json`) — diagnostics (via
+The plugin bundles a rust-analyzer LSP (`plugins/rust-studio/.lsp.json`) for diagnostics (via
 `cargo clippy`) and go-to-definition after each edit. It activates automatically **only if the
 `rust-analyzer` binary is on PATH**:
 
@@ -201,9 +201,9 @@ for other platforms.
 
 On enable, Claude Code prompts for the studio's options: behavioral defaults (preferred test
 runner, gate intensity, house MSRV fallback) and toggles for ambient behaviors (`memory_recall`,
-`routing_nudge`, `fmt_nudge` — all on by default — plus a `memory_dir` override for the project memory store). There's also an
-opt-in **`stop_guard`** (+ `stop_guard_strict`) that mechanically blocks an undisciplined turn
-ending (ownership-dodging, test avoidance, "done" without evidence) — off by default — and an
+`routing_nudge`, `fmt_nudge`, all on by default, plus a `memory_dir` override for the project memory store). There's also an
+opt-in **`stop_guard`** (+ `stop_guard_strict`), off by default, that mechanically blocks an
+undisciplined turn ending (ownership-dodging, test avoidance, "done" without evidence), and an
 on-by-default **`acceptance_guard`** that blocks a turn reporting COMPLETE while a spec's
 acceptance ledger this session named still has unmet gates (questions and honest NEEDS WORK /
 BLOCKED pass). Change them

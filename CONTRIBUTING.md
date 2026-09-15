@@ -2,19 +2,19 @@
 
 ## Layout
 
-- `plugins/rust-studio/` — the plugin: `skills/`, `agents/`, `docs/`, `rules/`, `hooks/`.
+- `plugins/rust-studio/` is the plugin: `skills/`, `agents/`, `docs/`, `rules/`, `hooks/`.
 - `plugins/rust-studio/docs/` and `rules/` are the **single source of truth** for standards.
 - `plugins/rust-studio/skills/*/references/` is **generated** — never edit it by hand.
-- `.claude-plugin/` + `.agents/plugins/marketplace.json` — Claude and Codex marketplaces;
-  `plugins/rust-studio/.codex-plugin/plugin.json` — the Codex manifest. Both carry the same
+- `.claude-plugin/` + `.agents/plugins/marketplace.json` are the Claude and Codex marketplaces,
+  and `plugins/rust-studio/.codex-plugin/plugin.json` is the Codex manifest. Both carry the same
   `version`. There is deliberately **no** root `plugin.json`: the Agent Plugins 1.0 manifest
   silently disables every plugin hook on Codex, and `RS-MANIFEST-058` fails the build if one
   reappears — see `docs/adr/0002-agent-plugins-manifest-withdrawn.md`.
-- `plugins/rust-studio/evals/` — the `claude plugin eval` suite (one `prompt.md` + `graders/`
+- `plugins/rust-studio/evals/` is the `claude plugin eval` suite (one `prompt.md` + `graders/`
   per case, derived from `benchmarks/fixtures/`). Keep prompts free of absolute paths.
   `plugins/rust-studio/tools/eval-runner.ts` runs the suite (`--fixtures` for the benchmarks, `--live` for the
   writing agents on real crates, `--runs 3` to see variance)
-  over `claude -p --plugin-dir` for accounts without early access — a prompt edit to an agent,
+  over `claude -p --plugin-dir` for accounts without early access. A prompt edit to an agent,
   skill, or rule is not done until its fixtures still score.
 
 ## The one invariant
@@ -28,16 +28,16 @@ everything that skill cites. So:
 
 ## Skill conventions
 
-`plugins/rust-studio/docs/writing-skills.md` is the editorial standard — invocation,
+`plugins/rust-studio/docs/writing-skills.md` is the editorial standard: invocation,
 descriptions, information hierarchy, completion criteria, and the pruning failure modes.
 Read it before adding or reshaping a skill. The mechanics below are what CI enforces.
 
 - Frontmatter keys: only `name`, `description`, `license`, `compatibility`, `metadata`,
   `allowed-tools`, `disable-model-invocation`. `name` must match the directory.
 - No host-specific APIs in portable skills (`CLAUDE_PLUGIN_ROOT`, `$ARGUMENTS`, task/team
-  tool names, …) — describe capabilities instead; `validate-distribution.sh` enforces the
+  tool names, …). Describe capabilities instead. `validate-distribution.sh` enforces the
   exact list. `eval-agents` and `progress-bar` are the labeled Claude-only exceptions.
-- `SKILL.md` under 500 lines; all skill descriptions share a 6,500-character budget (Codex
+- `SKILL.md` under 500 lines, and all skill descriptions share a 6,500-character budget (Codex
   bounds the initial skill catalog).
 - A side-effecting skill (publishes, commits, scaffolds, rewrites machine config) is
   user-invoked in **both** harnesses: `disable-model-invocation: true` in the frontmatter
@@ -58,12 +58,12 @@ claude plugin validate --strict .    # the host's own validator (also run in CI)
 agnix .                              # cross-host agent-config linter (cargo binstall agnix-cli)
 ```
 
-`validate-distribution.sh` reports a failure as a structured finding — a stable
-`RS-<AREA>-<NNN>` code, the exact subject, what was measured, and the repair — so it can be
+`validate-distribution.sh` reports a failure as a structured finding (a stable
+`RS-<AREA>-<NNN>` code, the exact subject, what was measured, and the repair) so it can be
 acted on without a second round trip. `--json` emits that as one object for CI and for
-agents. Codes are never reused; the registry at the top of the script says which number is
+agents. Codes are never reused: the registry at the top of the script says which number is
 next in each area, and the script fails itself if two checks ever share one.
 
-Both run in CI (`.github/workflows/sync-references.yml`); a PR that fails either does not
+Both run in CI (`.github/workflows/sync-references.yml`), and a PR that fails either does not
 merge. Bump the version in **both** manifests and add a `CHANGELOG.md` entry when behavior
 changes.
