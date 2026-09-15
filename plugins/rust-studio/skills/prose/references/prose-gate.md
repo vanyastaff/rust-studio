@@ -6,7 +6,7 @@ The accent a language model leaves in technical prose, checked deterministically
 ## Why
 
 On 2026-09-14 the plugin's 157k words of prose carried one em-dash every 57 words (all
-separators, one per 34), the plugin README 3.62 per 100 prose words. A reader who has
+separators, one per 34), the plugin README 3.65 per 100 prose words. A reader who has
 seen a thousand Claude paragraphs this month recognises the accent before the content, and the
 model that wrote it cannot hear it, so a linter runs first and the author rewrites.
 

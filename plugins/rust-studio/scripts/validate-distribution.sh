@@ -536,7 +536,7 @@ EOF
 
 # --- prose gate -------------------------------------------------------------------
 # Nothing here measured prose until this gate, and the prose the plugin ships had drifted to
-# one separator (em-dash, spaced en-dash, semicolon) per 57 words: an accent a reader who
+# one em-dash per 57 words, one separator (em-dash, spaced en-dash, semicolon) per 34: an accent a reader who
 # has seen a thousand model paragraphs recognises before the content. hooks/scripts/
 # prose-gate.ts is the checker and docs/prose-gate.md the standard. The landing files, the
 # first thing a visitor reads, are scanned whole under the density ceiling. Every other

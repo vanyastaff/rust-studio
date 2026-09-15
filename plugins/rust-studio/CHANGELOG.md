@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.55.0] - 2026-09-14
 
 Measured on 2026-09-14, the plugin's prose carried one em-dash every 57 words, the plugin
-README 3.62 separators per 100 prose words and the root README 2.42. A reader who has seen a
+README 3.65 separators per 100 prose words and the root README 2.43. A reader who has seen a
 thousand model-written paragraphs this month recognises the accent before the content, and
 the model that wrote it cannot hear it, so this release puts a linter in front of the author.
 The linter-first loop, the 220-character window, the two vocabulary lists and "empty input
@@ -62,7 +62,7 @@ cannot hear its own accent, so the hits are shown and the rewrite stays with the
   draft is not changed.
 - `stripQuoted` in `hooks/scripts/_lib.ts`: a line-preserving strip of fenced code (CommonMark
   fences, container prefixes allowed), inline code, blockquotes and quoted spans, shared by
-  `prose-gate.ts` and `stop-guard.ts` (its `toProse` delegates; its tests are unchanged). A
+  `prose-gate.ts` and `stop-guard.ts` (its `toProse` delegates; its tests gain three pins). A
   straight double-quoted span may cross soft line breaks within a paragraph, never a blank
   line, and a backticked URL keeps its closing backtick: two stripper defects the SlopMonster
   cross-check surfaced, pinned by four tests that were red before their fix.
@@ -73,8 +73,8 @@ cannot hear its own accent, so the hits are shown and the rewrite stays with the
   own sentence or goes in parentheses, a list lead-in takes a colon, a semicolon splice becomes
   two sentences. No em-dash was swapped for a semicolon or an en-dash, since the gate counts
   all three. Measured by `prose-gate.ts --full --density 100`, in separators per 100 prose
-  words: root `README.md` 2.42 → 0.53 (36 → 8 separators), `INSTALL.md` 2.32 → 0.58
-  (20 → 5), `CONTRIBUTING.md` 4.15 → 0.51 (16 → 2), plugin `README.md` 3.62 → 0.50
+  words: root `README.md` 2.43 → 0.54 (36 → 8 separators), `INSTALL.md` 2.32 → 0.58
+  (20 → 5), `CONTRIBUTING.md` 4.15 → 0.47 (16 → 2), plugin `README.md` 3.65 → 0.51
   (149 → 21); 23 → 0 errors across the four. Every number, command, link, table, badge and
   code block is unchanged, and the counts `RS-DOC-090` and `RS-DOC-093` pin are
   byte-identical.

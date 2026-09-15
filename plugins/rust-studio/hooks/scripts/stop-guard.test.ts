@@ -152,6 +152,22 @@ describe("prose stripping prevents meta-discussion false positives", () => {
     expect(toProse('say "placeholder" here').includes("placeholder")).toBe(false);
     expect(toProse("x\n```\ncode\n```\ny").split("\n").length).toBe(5); // line-preserving
   });
+
+  test("toProse: an unclosed top-level fence blanks to the end of the message (pinned trade)", () => {
+    // CommonMark reads an unclosed fence as code to EOF; the old regex hid text after an
+    // inline marker instead. The phrase scan sees nothing here; evidence detection runs on
+    // the raw text (`getEvidenceGroups`), so a truncated message is still caught there.
+    const msg = "Done with the change.\n```\nThe failing test is pre-existing, please verify on your side.";
+    expect(scan(toProse(msg), buildRules(), 8)).toEqual([]);
+    expect(scan("The failing test is pre-existing, please verify on your side.", buildRules(), 8).length).toBeGreaterThan(0);
+  });
+
+  test("toProse: an unpaired straight quote pairs with the next quote in its paragraph, not past a blank line (pinned trade)", () => {
+    const sameParagraph = 'I set the 5" column width.\nThe suite should pass, "done".';
+    expect(scan(toProse(sameParagraph), buildRules(), 8)).toEqual([]);
+    const acrossBlank = 'I set the 5" column width.\n\nThe suite should pass, "done".';
+    expect(scan(toProse(acrossBlank), buildRules(), 8).map((h) => h.phrase)).toContain("should pass");
+  });
 });
 
 describe("evidence detection", () => {

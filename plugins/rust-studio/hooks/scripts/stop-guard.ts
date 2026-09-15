@@ -524,7 +524,12 @@ async function getLastAssistantText(input: any): Promise<string> {
  *  *discussing* a flagged phrase — in `code`, a "quote", a > blockquote, or
  *  meta-commentary about this guard's own category list — is not mistaken for
  *  committing it. One implementation, shared with the prose gate through _lib.ts, so the
- *  two cannot drift; the shared form also keeps line breaks, which this guard ignores. */
+ *  two cannot drift; the shared form also keeps line breaks, which this guard ignores.
+ *  Two shapes trade against the old per-message regexes and are pinned in the tests: an
+ *  unclosed top-level fence blanks to the end of the message (CommonMark; the old form
+ *  instead hid everything after an inline fence marker), and an unpaired straight quote
+ *  pairs with the next quote in its paragraph, never past a blank line. The evidence
+ *  groups still run over the raw text, so a truncated message is caught there. */
 export function toProse(text: string): string {
   return stripQuoted(String(text ?? ""));
 }
