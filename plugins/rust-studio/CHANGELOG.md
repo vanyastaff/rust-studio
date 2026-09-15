@@ -7,6 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.0] - 2026-09-14
+
+Measured on 2026-09-14, the plugin's prose carried one em-dash every 57 words, the plugin
+README 3.62 separators per 100 prose words and the root README 2.42. A reader who has seen a
+thousand model-written paragraphs this month recognises the accent before the content, and
+the model that wrote it cannot hear it, so this release puts a linter in front of the author.
+The linter-first loop, the 220-character window, the two vocabulary lists and "empty input
+fails" come from [SlopMonster](https://github.com/ItsssssJack/SlopMonster) (MIT). Its
+marketing catalogue and its model "cleanse" pass were deliberately not taken: semicolons and
+three-item lists are false positives in technical prose, and the model is the thing that
+cannot hear its own accent, so the hits are shown and the rewrite stays with the author.
+
+### Added
+
+- **`/prose`** and `hooks/scripts/prose-gate.ts`: a deterministic checker for the tells a
+  model leaves in technical prose. Blocking rules, where one hit sets the exit code:
+  `dash-pair` (two em-dashes in one sentence or 220-character window), `not-just`,
+  `throat-clearing`, `hedge-stack`, `process-bleed`, and `density` under `--full --density N`.
+  Advisory rules: `vocab-root`, `vocab-word` and `proof`. Vocabulary is advisory because a
+  root-matched list measured 0 true positives and at least 6 false ones on this corpus, and in
+  Rust prose `unlock` is a mutex, `elevated` a privilege level, `realm` Basic auth and `robust`
+  a crate name. Scopes: `--full` scans every sentence; `--since <rev>` keeps only the sentences
+  that intersect a line added since `<rev>` (`git diff -U0`, an untracked file is all added
+  lines); `--stdin [--lang md|rustdoc]` reads a draft; a `.rs` file is read in rustdoc mode
+  (`///` and `//!` bodies only). Exit 0 clean, 1 on an error-class hit, 2 when the gate could
+  not evaluate (usage, an unreadable file, no git or an unresolvable rev, zero prose words under
+  `--full` or `--stdin`), so a run that reads nothing never passes. Every hit prints its fix.
+  The text stays as its author left it, and a rewrite happens only on request. Standard:
+  `docs/prose-gate.md` (the measured accent, the rule table as the code implements it, the
+  ceiling and where the gate runs).
+- **`rules/prose.md`**: the five-line register (one em-dash per paragraph at most, an aside in
+  commas or parentheses, the claim first, a number cites its measurement, stop at the last real
+  point), injected as a pointer on `README.md`, `CHANGELOG.md`, `docs/**` and `.rust-studio/**`
+  edits on both hosts. It names no tell: a ban list in context makes the words more available.
+- Validator: `RS-DOC-094` (an error-class hit: up to five `file:line rule` entries, the total,
+  the base and the first hit's fix) and `RS-DOC-095` (the gate was not evaluated: bun absent,
+  the checker exiting 2, unparseable JSON, or a non-empty prose diff that scanned zero
+  sentences). The landing files (the plugin `README.md`, plus the root `README.md`,
+  `INSTALL.md` and `CONTRIBUTING.md` when the plugin sits in its repo checkout) run whole at
+  one separator per 100 prose words; `CHANGELOG.md`, `docs/`, `rules/`, `skills/*/SKILL.md`
+  and `agents/` run on the sentences touched since `PROSE_GATE_BASE`, else the upstream
+  branch, else `HEAD`. Unlike the other bun-dependent checks this one does not skip without
+  bun: a gate that passes because it read nothing is worse than no gate. A clean run costs
+  0.7 s more.
+- CI (`sync-references.yml`) checks out with `fetch-depth: 0`, resolves `PROSE_GATE_BASE` to
+  the merge base of the PR base or the pushed-from commit (`HEAD~1` when that is empty,
+  all-zero or unreachable), and runs on changes to the root `README.md`, `INSTALL.md` and
+  `CONTRIBUTING.md`. `CONTRIBUTING.md` documents `PROSE_GATE_BASE=main` for a long branch.
+- `/pr`, `/changelog` and `/adr` run `/prose` over their draft (`--stdin`) before the user
+  sees it and print the hits under it; `docs-engineer` gains step 9, the bundled linter in
+  rustdoc mode over the `.rs` files it touched, hits carried as advisory `PROSE` lines. In a
+  user's project the gate is advisory: the next step proceeds with the hits in view and the
+  draft is not changed.
+- `stripQuoted` in `hooks/scripts/_lib.ts`: a line-preserving strip of fenced code (CommonMark
+  fences, container prefixes allowed), inline code, blockquotes and quoted spans, shared by
+  `prose-gate.ts` and `stop-guard.ts` (its `toProse` delegates; its tests are unchanged). A
+  straight double-quoted span may cross soft line breaks within a paragraph, never a blank
+  line, and a backticked URL keeps its closing backtick: two stripper defects the SlopMonster
+  cross-check surfaced, pinned by four tests that were red before their fix.
+
+### Changed
+
+- The four landing files were rewritten under the gate: an aside between em-dashes becomes its
+  own sentence or goes in parentheses, a list lead-in takes a colon, a semicolon splice becomes
+  two sentences. No em-dash was swapped for a semicolon or an en-dash, since the gate counts
+  all three. Measured by `prose-gate.ts --full --density 100`, in separators per 100 prose
+  words: root `README.md` 2.42 → 0.53 (36 → 8 separators), `INSTALL.md` 2.32 → 0.58
+  (20 → 5), `CONTRIBUTING.md` 4.15 → 0.51 (16 → 2), plugin `README.md` 3.62 → 0.50
+  (149 → 21); 23 → 0 errors across the four. Every number, command, link, table, badge and
+  code block is unchanged, and the counts `RS-DOC-090` and `RS-DOC-093` pin are
+  byte-identical.
+- Seven user-invoked descriptions trimmed to 77 to 82 characters to pay for the new skill:
+  `new-crate`, `commit`, `eval-agents`, `migrate`, `publish`, `worktree-sweep` and
+  `progress-bar`. The router never sees a user-invoked description. `RS-SKILL-070` budget:
+  6467 of 6500. The catalog is 64 skills and 21 rules; `docs/usage-guide.md`, `/help`, both
+  READMEs, `INSTALL.md`, `install.sh` and the Codex manifest carry the count, and the root
+  README's directory tree, which still said 63, now agrees.
+
+### Measured
+
+`bun test`: 704 pass, 0 fail across 23 files (632 across 22 before this release), of which
+`prose-gate.test.ts` holds 71, each red before its fix. The acceptance ledger
+(`.rust-studio/specs/prose-gate/acceptance.md`): 13 of 13 gates met by
+`acceptance-check.ts --reverify` (11 runnable, 2 manual). The `dash-pair` rule was
+cross-checked against SlopMonster's rule 3 over 153 files: 213 of its windows against 255 of
+our hits, 142 files agree, 11 disagree with a reason recorded per case in
+`.rust-studio/specs/prose-gate/g9-crosscheck.md` (38 of the 42 extra hits are one file,
+where SlopMonster's fence regex paired an inline fence marker in `CHANGELOG.md` with a real
+fence and blanked 2,300 lines). This entry passes `prose-gate.ts --since main CHANGELOG.md`
+with 0 errors, the validator's own check on the sentences a change touches.
+
 ## [0.54.0] - 2026-09-14
 
 A spec's acceptance criteria were a checklist the model ticked. `/spec-verify` ran the tests,

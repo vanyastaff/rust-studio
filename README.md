@@ -310,7 +310,7 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .lsp.json                # bundled rust-analyzer LSP
 │       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
-│       ├── skills/                  # 63 skills + references + OpenAI metadata
+│       ├── skills/                  # 64 skills + references + OpenAI metadata
 │       ├── evals/                   # claude plugin eval suite (plugin only)
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 21 path-scoped Rust standards
