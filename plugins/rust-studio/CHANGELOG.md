@@ -47,6 +47,30 @@ changes, so the week measures one variable: the model's own routing from descrip
   notification, which stays a prompt). In the audit, 1,096 of the 1,996 main-session prompts
   began with the first tag alone.
 
+- **The instruction layer, audited against Claude Opus 5 and Fable 5.1** (`/claude-api
+  prompt-audit` over agents, skills, rules, and the hook text; 64 files). Three review lenses
+  still told the model to "flag only correctness, security, and requirement gaps", the
+  weaker-model guardrail 0.51.0 removed from `rust-reviewer` but not from `harsh-critic`,
+  `api-design-lead`, or `qa-lead`; current models follow it literally and report less, so all
+  three now report everything and let the verdict filter, and `qa-lead` no longer exempts
+  naming. Nineteen skills and agents named `cargo clippy --all-targets --all-features` as the
+  verification step with no project-gate reference, `team-release`'s RELEASE-GATE table among
+  them, which is the off-gate green `project-gate.md` documents; each now runs the project's
+  gate first and falls back to the studio defaults only where there is none. Incident
+  narratives written into behavioral text ("both runs of the accretion fixture missed",
+  "the item this lens skips most", "eight denials in one session") are gone and the rules
+  they carried stay. Twenty-three agents and four skills named serena alone for navigation
+  while `tooling.md` ranks the built-in `LSP` tool first; agents now name the session's
+  language-server layer, skills stop restating the scout's own protocol, and `tooling-lead` no
+  longer claims symbol queries inside TOML. Hardcoded `mcp__exa__` prefixes are bare tool
+  names again, `/dev-task` drops its copy of `rust-builder`'s whole-file-rewrite rule, and
+  `/new-crate`'s MSRV example matches its edition-2024 default.
+- **`inject-rules.ts` matched directory globs on segment suffixes.** `**/` compiled to a bare
+  `.*`, so `**/api/**` reached `claude-api/` and `openapi/`, `**/auth/**` reached `oauth/`, and
+  `**/server/**` reached `fileserver/`; a Markdown file under an unrelated `claude-api/`
+  directory received the async and security standards with a REQUIRED marker. `**/` is now a
+  segment boundary (`(?:.*/)?`), pinned by four regression rows.
+
 ### Added
 
 - **Usage telemetry.** `hooks/scripts/usage-log.ts` on `PostToolUse` (matcher `Skill|Agent`)
