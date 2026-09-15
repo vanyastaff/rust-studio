@@ -26,6 +26,9 @@ before pushing and before creating the PR** (`references/collaboration.md`).
    - **Testing/evidence** (the `cargo nextest run` / `cargo clippy` summary; bench numbers if perf-relevant).
    - **Semver / changelog** note if the public API changed (`cargo semver-checks`; link `/api-review`, `/changelog`).
    - Link the spec (`.rust-studio/specs/<slug>/`) or issues it closes.
+
+   Then run `/prose` on the body as a `--stdin` draft and print its hits under the draft.
+   Advisory: step 4 proceeds with the hits in view.
 4. Prompt the user (outward action): show the draft title + body; get approval, then:
    `git push -u origin HEAD` and `gh pr create --base <base> --title … --body …`.
    Never force-push and never `--no-verify`.

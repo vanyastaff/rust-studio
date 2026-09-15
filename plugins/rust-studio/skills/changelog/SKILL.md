@@ -46,7 +46,8 @@ for?" If no tags exist, default to `0.1.0`.
 ## Phase 3 — Draft (gate)
 7. Show the user the categorized draft entry — plain prose, user-facing language, **not** a
    commit dump. Each bullet should say what changed and why it matters to users, not how it was
-   implemented.
+   implemented. Before showing it, run `/prose` on the entry as a `--stdin` draft and print its
+   hits under the draft. Advisory: step 8 proceeds with the hits in view.
 8. Prompt the user: present the draft and the recommended semver bump. Ask:
    - Are any entries missing, mislabeled, or too implementation-focused?
    - Is the version bump correct?

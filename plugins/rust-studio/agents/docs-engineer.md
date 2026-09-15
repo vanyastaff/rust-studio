@@ -58,6 +58,10 @@ consumer reads before they write their first `use` statement.
 8. Apply tactical fixes directly (doc text, missing sections, broken links). For
    structural changes (new book chapters, scope cuts), present the plan and confirm
    before writing.
+9. Run the bundled linter in rustdoc mode over the `.rs` files you touched:
+   `bun "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/prose-gate.ts" --rustdoc <files>`. Carry each
+   hit into the findings list as an advisory `PROSE` line below the API-GATE items, with the
+   fix text the linter printed.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/rules/api.md` — documentation requirements that accompany
@@ -66,6 +70,8 @@ consumer reads before they write their first `use` statement.
   example code is held to the same bar as source.
 - `${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` — the owner's voice and
   communication bar for every piece of prose the user reads.
+- `${CLAUDE_PLUGIN_ROOT}/docs/prose-gate.md` — the rule table behind step 9's `PROSE`
+  lines, with the fix for each and the shown-not-fixed rule.
 
 ## Gate sign-off checklist
 Your contributions to gates owned by others:

@@ -91,6 +91,9 @@ nothing surfaces, proceed (`references/memory-protocol.md`).
      introduced. Be direct about downsides; do not spin.
    - **Alternatives** — rejected options and the reason each was ruled out.
 
+   Then run `/prose` on it as a `--stdin` draft and print its hits under the draft.
+   Advisory: the step 9 gate proceeds with the hits in view.
+
 ## Phase 5 — Approve and write
 
 9. Terminal "here's the plan — file it?" gate: present the complete ADR draft for the
