@@ -172,3 +172,63 @@ export function optionBool(key: string, dflt: boolean): boolean {
   if (raw == null) return dflt;
   return !/^(false|0|no|off)$/i.test(raw);
 }
+
+/** Every non-newline run in `m` becomes one space, so a blanked span keeps its line breaks. */
+function blankKeepingLines(m: string): string {
+  return m.replace(/[^\n]+/g, " ");
+}
+
+/** Optional indentation, then any run of list markers or blockquote markers: a fence may
+ *  open on `- ```bash` or `> ```` and close on the same kind of line. */
+const CONTAINER_PREFIX = String.raw`^[ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+|>[ \t]*)*`;
+/** A backtick fence's info string cannot contain a backtick (CommonMark), so a line that
+ *  starts with an inline span like ```` ```x``` is a span ```` is not an opener. */
+const FENCE_OPEN = new RegExp(`${CONTAINER_PREFIX}(?:(\`{3,})(?!.*\`)|(~{3,}))`);
+const FENCE_CLOSE = new RegExp(`${CONTAINER_PREFIX}(\`+|~+)[ \\t\\r]*$`);
+
+/** Blank fenced code blocks line by line, the way CommonMark reads them: a fence opens on a
+ *  line whose content (after indentation and any list or blockquote markers) starts with
+ *  three or more backticks or tildes, and closes only on a line that is a run of the same
+ *  character at least as long as the opener and nothing else. So a ```` fence around a ```
+ *  block keeps the inner block inside, a `~~~` fence counts, a fence inside a list item or a
+ *  blockquote does not invert the parity of every fence after it, and an unclosed fence runs
+ *  to the end of input rather than leaking its code into the prose. Every line inside
+ *  becomes empty; the line count is unchanged. */
+function blankFences(text: string): string {
+  const lines = text.split("\n");
+  let open: string | null = null;
+  for (let i = 0; i < lines.length; i++) {
+    if (open == null) {
+      const m = FENCE_OPEN.exec(lines[i]);
+      if (!m) continue;
+      open = m[1] ?? m[2];
+    } else {
+      const m = FENCE_CLOSE.exec(lines[i]);
+      if (m && m[1][0] === open[0] && m[1].length >= open.length) open = null;
+    }
+    lines[i] = "";
+  }
+  return lines.join("\n");
+}
+
+/** Blank the parts of a markdown text that are not the writer's own prose: fenced code,
+ *  inline code spans, blockquote lines, and double-quoted spans of every glyph family
+ *  (straight, curly, guillemet, low). A quoted specimen is discussion, not a commitment,
+ *  so neither the stop-guard's phrase scan nor the prose gate's rules should see it.
+ *
+ *  Line-preserving: the output has exactly as many newlines as the input, so a caller can
+ *  name the source line of anything it finds. An inline code span may cross at most one
+ *  soft line break (a hard-wrapped `cargo test\n<filter>` is one span) and never a blank
+ *  line, so a stray backtick can swallow at most the rest of its line and the next one.
+ *  Quoted spans stay within one line, as the old stop-guard `toProse` had it. Markdown
+ *  structure that only the prose gate cares about (frontmatter, HTML comments, images) is
+ *  layered on top in prose-gate.ts, because the stop-guard must keep scanning that text. */
+export function stripQuoted(text: string): string {
+  return blankFences(text)
+    .replace(/(`+)[^`\n]*(?:\n(?![ \t\r]*\n)[^`\n]*)?\1(?!`)/g, blankKeepingLines) // inline code spans
+    .replace(/^[ \t]*>.*$/gm, " ") // markdown blockquotes
+    .replace(/"[^"\n]*"/g, " ") // straight double-quoted spans
+    .replace(/[“”][^“”\n]*[“”]/g, " ") // curly double quotes
+    .replace(/«[^»\n]*»/g, " ") // guillemets
+    .replace(/„[^“”\n]*[“”]/g, " "); // low „ … “/” quotes
+}

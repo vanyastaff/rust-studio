@@ -150,6 +150,7 @@ describe("prose stripping prevents meta-discussion false positives", () => {
     expect(toProse("a `b` c").trim()).toBe("a   c".trim());
     expect(toProse("> quoted\nplain").includes("quoted")).toBe(false);
     expect(toProse('say "placeholder" here').includes("placeholder")).toBe(false);
+    expect(toProse("x\n```\ncode\n```\ny").split("\n").length).toBe(5); // line-preserving
   });
 });
 

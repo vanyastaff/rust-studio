@@ -18,7 +18,7 @@
 
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
-import { readInput, watchdog, option, optionBool, pluginData } from "./_lib.ts";
+import { readInput, watchdog, option, optionBool, pluginData, stripQuoted } from "./_lib.ts";
 
 type Severity = "hard" | "soft";
 
@@ -523,16 +523,10 @@ async function getLastAssistantText(input: any): Promise<string> {
 /** Remove fenced code, inline code, markdown blockquotes, and quoted spans so that
  *  *discussing* a flagged phrase — in `code`, a "quote", a > blockquote, or
  *  meta-commentary about this guard's own category list — is not mistaken for
- *  committing it. Mirrors the session-level stop-phrase guard's prose preprocessing. */
+ *  committing it. One implementation, shared with the prose gate through _lib.ts, so the
+ *  two cannot drift; the shared form also keeps line breaks, which this guard ignores. */
 export function toProse(text: string): string {
-  return String(text ?? "")
-    .replace(/```[\s\S]*?```/g, " ") // fenced code blocks
-    .replace(/`[^`]*`/g, " ") // inline code spans
-    .replace(/^\s*>.*$/gm, " ") // markdown blockquotes
-    .replace(/"[^"\n]*"/g, " ") // straight double-quoted spans
-    .replace(/[“”][^“”\n]*[“”]/g, " ") // curly double quotes
-    .replace(/«[^»\n]*»/g, " ") // guillemets
-    .replace(/„[^“”\n]*[“”]/g, " "); // low „ … “/” quotes
+  return stripQuoted(String(text ?? ""));
 }
 
 /** Pure decision over a final message — the unit tests' entry point. */
