@@ -86,7 +86,8 @@ done
 # source so existing plugin automation and release paths remain stable.
 # <src>:<dest> pairs. memory-doctor's CLI imports memory-store.ts and _lib.ts relatively, so
 # all three travel together and the skill stays self-contained; acceptance-check.ts imports
-# acceptance-ledger.ts the same way (the Stop guard shares that parser from hooks/scripts/).
+# acceptance-ledger.ts the same way (the Stop guard shares that parser from hooks/scripts/);
+# prose-gate.ts imports stripQuoted from _lib.ts, so /prose carries its own copy of that too.
 assets=(
   scripts/env-setup.sh:skills/env-setup/scripts/env-setup.sh
   hooks/scripts/memory-doctor.ts:skills/memory-doctor/scripts/memory-doctor.ts
@@ -94,6 +95,8 @@ assets=(
   hooks/scripts/_lib.ts:skills/memory-doctor/scripts/_lib.ts
   hooks/scripts/acceptance-check.ts:skills/acceptance/scripts/acceptance-check.ts
   hooks/scripts/acceptance-ledger.ts:skills/acceptance/scripts/acceptance-ledger.ts
+  hooks/scripts/prose-gate.ts:skills/prose/scripts/prose-gate.ts
+  hooks/scripts/_lib.ts:skills/prose/scripts/_lib.ts
 )
 for pair in "${assets[@]}"; do
   asset_src=${pair%%:*}

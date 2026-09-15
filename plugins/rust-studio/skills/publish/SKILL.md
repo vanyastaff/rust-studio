@@ -1,6 +1,6 @@
 ---
 name: publish
-description: "Use when preparing a crate for crates.io: release gates and a publish dry-run, never publishing."
+description: "Use when preparing a crate for crates.io: gates, a dry-run, never publishing."
 disable-model-invocation: true
 ---
 

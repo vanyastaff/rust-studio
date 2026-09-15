@@ -1,6 +1,6 @@
 interface:
   display_name: "Migrate"
-  short_description: "Migrating a Rust edition or a major dependency version"
-  default_prompt: "Use $migrate when migrating a Rust edition or a major dependency version, reviewing what cargo fix cannot."
+  short_description: "Migrating a Rust edition or a major dependency version beyond"
+  default_prompt: "Use $migrate when migrating a Rust edition or a major dependency version beyond cargo fix."
 policy:
   allow_implicit_invocation: false

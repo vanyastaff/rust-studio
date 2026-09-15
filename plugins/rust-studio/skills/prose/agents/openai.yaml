@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prose"
+  short_description: "Checking prose for AI tells: README, changelog, PR body, ADR"
+  default_prompt: "Use $prose when checking prose for AI tells: README, changelog, PR body, ADR, or rustdoc."

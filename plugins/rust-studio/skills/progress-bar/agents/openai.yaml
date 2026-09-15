@@ -1,6 +1,6 @@
 interface:
   display_name: "Progress Bar"
-  short_description: "Running Claude Code and configuring, refreshing"
-  default_prompt: "Use $progress-bar when running Claude Code and configuring, refreshing, or removing the status line."
+  short_description: "Running Claude Code and adding, refreshing"
+  default_prompt: "Use $progress-bar when running Claude Code and adding, refreshing, or removing the status line."
 policy:
   allow_implicit_invocation: false

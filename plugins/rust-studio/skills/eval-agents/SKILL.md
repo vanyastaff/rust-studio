@@ -1,6 +1,6 @@
 ---
 name: eval-agents
-description: "Use when benchmarking studio reviewers in Claude Code or testing an instruction change by holdout."
+description: "Use when benchmarking studio reviewers in Claude Code or holdout-testing a prompt."
 disable-model-invocation: true
 ---
 

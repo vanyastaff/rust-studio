@@ -8,7 +8,7 @@
 // rather than quietly disarming the injector.
 
 import { test, expect, describe } from "bun:test";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { applyPatchTargets, markerName, pathMatches, shellTargets, untrustedSource } from "./inject-rules.ts";
@@ -75,6 +75,24 @@ describe("extracted paths reach the right standards", () => {
       expect(pathMatches(globs, path)).toBe(want);
     });
   }
+
+  // rules/prose.md is the one standard keyed to the files the studio WRITES rather than
+  // to Rust source, so its glob is read from the shipped file: a missing file or a glob
+  // that no longer reaches README.md fails here, not silently in a user session.
+  test("prose rule pointer on README.md", () => {
+    const rule = readFileSync(new URL("../../rules/prose.md", import.meta.url), "utf8");
+    const globs = /^paths:\s*"?([^"\n]+)"?\s*$/m.exec(rule)?.[1] ?? "";
+    expect(globs).not.toBe("");
+    for (const hit of [
+      "/repo/README.md",
+      "/repo/docs/guide.md",
+      "/repo/CHANGELOG.md",
+      "/repo/.rust-studio/specs/x/spec.md",
+    ]) {
+      expect(pathMatches(globs, hit)).toBe(true);
+    }
+    expect(pathMatches(globs, "/repo/src/lib.rs")).toBe(false);
+  });
 });
 
 describe("announces each standard once per session, re-arming on compaction", () => {

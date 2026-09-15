@@ -1,6 +1,6 @@
 ---
 name: commit
-description: "Use when committing one logical Rust change: run fmt and clippy, then create a Conventional Commit."
+description: "Use when committing one logical Rust change as a Conventional Commit, gates first."
 allowed-tools: "Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git log*) Bash(just *) Bash(make *) Bash(bash scripts/check-*)"
 disable-model-invocation: true
 ---

@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: "Use when migrating a Rust edition or a major dependency version, reviewing what cargo fix cannot."
+description: "Use when migrating a Rust edition or a major dependency version beyond cargo fix."
 disable-model-invocation: true
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "rust-studio",
   "version": "0.54.0",
-  "description": "A maintainer-grade Rust engineering studio with 63 focused skills for architecture, implementation, review, testing, performance, security, and release work.",
+  "description": "A maintainer-grade Rust engineering studio with 64 focused skills for architecture, implementation, review, testing, performance, security, and release work.",
   "author": {
     "name": "Rust Studio contributors",
     "url": "https://github.com/vanyastaff/rust-studio"

@@ -10,11 +10,11 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 
 ## In the box
 
-- **63 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping,
+- **64 skills** — design, spec-driven build, TDD, review, test, release, git/PR shipping,
   build-fixing, edition & major-dependency migration, CI gates, cross-session memory.
 - **33 agents** — 2 directors → 7 leads → 20 specialists (including an adversarial
   `harsh-critic`) + a scout / builder / resolver / reviewer execution group.
-- **20 path-scoped rule sets** — the right Rust standard surfaces the moment you open a matching
+- **21 path-scoped rule sets** — the right Rust standard surfaces the moment you open a matching
   file; the agent reads the full rule on demand, so the window stays lean.
 - **14 Claude hook handlers across 9 events** — stack detection and memory recall, rule pointers, a
   sub-agent brief, lint and lifecycle nudges, verdict checks, an acceptance-ledger guard, and an

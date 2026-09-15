@@ -14,10 +14,10 @@ Five moving parts:
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (63) — slash commands. They are *workflows*: a skill orchestrates the right agents
+- **Skills** (64) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
-- **Rules** (20) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
+- **Rules** (21) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
   relevant standard is auto-injected (a hook does this) and the agent reads the full rule on
   demand, so it has the right bar in front of it without bloating the window (`core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `ffi.md` on C-ABI boundaries,
@@ -117,7 +117,7 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially 
 
 ---
 
-## The skills (63)
+## The skills (64)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
@@ -201,6 +201,8 @@ happy-path test does not establish preserved behavior.
 - **`/scope-check`** — compare a diff/plan against acceptance criteria; flag creep.
 - **`/doc-review`** — review a requirements, spec, plan, ADR, or design document for coherence,
   feasibility, scope, and security.
+- **`/prose`** — lint a README, changelog, PR body, ADR, rustdoc, or a draft on stdin for AI
+  tells: every hit prints with its fix and a metric line. Standard: [`docs/prose-gate.md`](prose-gate.md).
 - Two standards bind every review lens. [`docs/integrity-and-evidence.md`](integrity-and-evidence.md)
   governs the honesty of what the studio *emits* (`🚩 INTEGRITY`);
   [`docs/untrusted-context.md`](untrusted-context.md) governs the trust level of what it

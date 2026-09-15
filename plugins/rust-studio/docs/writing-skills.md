@@ -144,4 +144,6 @@ words out of them.
 - No meaning stated twice; no line that changes nothing.
 - No instruction from `claude-5-compat.md`'s delete list, and no demand for a specific effort
   level or thinking phrase — effort is the user's dial.
+- The prose gate is clean on the sentences you touched:
+  `bun hooks/scripts/prose-gate.ts --since main skills/<name>/SKILL.md`.
 - `./scripts/validate-distribution.sh` and `bun test` pass.

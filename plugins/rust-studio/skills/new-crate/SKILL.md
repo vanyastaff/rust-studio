@@ -1,6 +1,6 @@
 ---
 name: new-crate
-description: "Use when scaffolding a Rust crate or workspace member with studio metadata, lints, toolchain, and CI."
+description: "Use when scaffolding a Rust crate or workspace member with studio conventions."
 disable-model-invocation: true
 ---
 
