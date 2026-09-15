@@ -1,12 +1,19 @@
-// Tests for the prose gate's linter core. Behavior-asserting and able to fail
-// (docs/integrity-and-evidence.md): each test pins rule ids, lines, counts, or the exact
-// stripped text, never merely "it ran". The three names the acceptance ledger filters on
-// ("dash-pair fires across a hard wrap", "honest-use fixture yields no errors",
-// "rustdoc mode scans doc comments only") are verbatim from specs/prose-gate/tasks.md.
+// Tests for the prose gate: the linter core and the CLI around it. Behavior-asserting and
+// able to fail (docs/integrity-and-evidence.md): each test pins rule ids, lines, counts, exit
+// codes, or the exact output, never merely "it ran". The names the acceptance ledger filters
+// on ("dash-pair fires across a hard wrap", "honest-use fixture yields no errors",
+// "rustdoc mode scans doc comments only", "since scans only touched sentences",
+// "zero prose exits 2", "stdin draft reports not-just and stays unchanged") are verbatim
+// from specs/prose-gate/tasks.md.
 import { test, expect, describe } from "bun:test";
+import { appendFileSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { stripQuoted } from "./_lib.ts";
-import { RULES, audit, rustdocProse, sentences, stripProse } from "./prose-gate.ts";
-import type { Hit } from "./prose-gate.ts";
+import {
+  RULES, USAGE, addedRanges, audit, gitDiffArgs, main, parseArgs, rustdocProse, sentences, stripProse,
+} from "./prose-gate.ts";
+import type { Hit, Io } from "./prose-gate.ts";
 
 const lineCount = (s: string) => s.split("\n").length;
 const errors = (hits: Hit[]) => hits.filter((h) => h.severity === "error");
@@ -313,6 +320,19 @@ describe("sentences", () => {
     expect(audit(balanced).hits).toEqual([]);
   });
 
+  test("etc.) before a lowercase word continues the sentence, so a pair across it is seen", () => {
+    const text = "(fmt, clippy, etc.) and then — a — b.\n";
+    expect(sentences(text).map((s) => s.text)).toEqual(["(fmt, clippy, etc.) and then — a — b."]);
+    expect(audit(text).hits.map((h) => [h.rule, h.line])).toEqual([["dash-pair", 1]]);
+    // The closing bracket is part of the terminator, so a capital after it still splits.
+    expect(sentences("(fmt, clippy, etc.) Then — a — b.\n").map((s) => s.text)).toEqual([
+      "(fmt, clippy, etc.)",
+      "Then — a — b.",
+    ]);
+    // The corpus lines the advisory recorded: a bracketed list, then the sentence goes on.
+    expect(sentences("Implement the marker traits (`Send`, `Sync`,\netc.) explicitly when you need them.\n")).toHaveLength(1);
+  });
+
   test("a blank-line-free 12,000-line paragraph splits in linear time", () => {
     const text = Array.from({ length: 12000 }, (_, i) => `Sentence number ${i} ends here.`).join("\n") + "\n";
     const t0 = performance.now();
@@ -540,5 +560,524 @@ describe("audit", () => {
     expect(r.metric).toMatchObject({ words: 4, emDashes: 2 });
     expect(r.sentences).toBe(1);
     expect(r.hits.map((h) => [h.rule, h.line])).toEqual([["dash-pair", 1]]);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// CLI (task 2). `main` takes an `io` so no test spawns a process for stdin or output; the one
+// shell test at the end covers the shipped-script contract (`--help` exits 0 from bun).
+// ---------------------------------------------------------------------------------------------
+
+function fakeIo(stdin = "") {
+  const out: string[] = [];
+  const err: string[] = [];
+  const io: Io = {
+    stdin: async () => stdin,
+    stdout: (s) => { out.push(s); },
+    stderr: (s) => { err.push(s); },
+  };
+  return { io, stdout: () => out.join(""), stderr: () => err.join("") };
+}
+
+const lastLine = (s: string) => s.trimEnd().split("\n").at(-1);
+
+const GIT_ENV = {
+  ...process.env,
+  GIT_AUTHOR_NAME: "prose-gate test", GIT_AUTHOR_EMAIL: "prose-gate@example.invalid",
+  GIT_COMMITTER_NAME: "prose-gate test", GIT_COMMITTER_EMAIL: "prose-gate@example.invalid",
+  GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_SYSTEM: "/dev/null",
+};
+
+function git(cwd: string, ...args: string[]): string {
+  const r = Bun.spawnSync(["git", "-c", "commit.gpgsign=false", "-c", "init.defaultBranch=main", ...args], {
+    cwd, env: GIT_ENV, stdout: "pipe", stderr: "pipe", stdin: "ignore",
+  });
+  if (r.exitCode !== 0) throw new Error(`git ${args.join(" ")}: ${new TextDecoder().decode(r.stderr)}`);
+  return new TextDecoder().decode(r.stdout);
+}
+
+const tempDir = (prefix = "rs-prose-") => mkdtempSync(join(tmpdir(), prefix));
+
+interface Repo {
+  dir: string;
+  /** Committed, then one line added inside its second two-dash sentence. */
+  a: string;
+  /** Untracked, two pairs. */
+  b: string;
+  /** Committed, untouched, carries a pair. */
+  c: string;
+  /** Committed with a code fence only; untouched. */
+  fence: string;
+  /** Committed; a two-dash sentence appended after the commit. */
+  real: string;
+  /** Committed symlink to `real`. */
+  link: string;
+}
+
+/** Populate `dir` (the caller made it and removes it, so a failing init cannot leak it). */
+function makeRepo(dir: string): Repo {
+  const a = join(dir, "a.md");
+  const b = join(dir, "b.md");
+  const c = join(dir, "c.md");
+  const fence = join(dir, "fence.md");
+  const real = join(dir, "real.md");
+  const link = join(dir, "link.md");
+  git(dir, "init", "-q");
+  writeFileSync(a, "The gate — honest,\ncheap — fails the build.\n\nThe second — also\nwrapped — sentence here.\n");
+  writeFileSync(c, "Committed — and — untouched.\n");
+  writeFileSync(fence, "```rust\nlet x = 1; // a — b — c\n```\n");
+  writeFileSync(real, "Real file, plain.\n");
+  symlinkSync("real.md", link);
+  git(dir, "add", "a.md", "c.md", "fence.md", "real.md", "link.md");
+  git(dir, "commit", "-q", "-m", "base");
+  writeFileSync(a, "The gate — honest,\ncheap — fails the build.\n\nThe second — also\nand now longer,\nwrapped — sentence here.\n");
+  writeFileSync(b, "Untracked — one — pair.\n\nAnd — another — pair.\n");
+  appendFileSync(real, "\nAdded — through — the target.\n");
+  return { dir, a, b, c, fence, real, link };
+}
+
+describe("cli: parseArgs", () => {
+  test("--full with --density and --since with a rev parse into the Scope union", () => {
+    expect(parseArgs(["--full", "--density", "100", "a.md"])).toEqual({
+      scope: { kind: "full", density: 100 }, files: ["a.md"], stdin: false, lang: "md", rustdoc: false, json: false, help: false,
+    });
+    expect(parseArgs(["--since", "main", "--json", "a.md", "b.rs"])).toMatchObject({
+      scope: { kind: "since", base: "main" }, files: ["a.md", "b.rs"], json: true,
+    });
+    expect(parseArgs(["a.md"])).toMatchObject({ scope: { kind: "full" } });
+    expect(parseArgs(["--stdin", "--lang", "rustdoc"])).toMatchObject({ stdin: true, lang: "rustdoc", files: [] });
+    expect(parseArgs(["--rustdoc", "--", "-weird.md"])).toMatchObject({ rustdoc: true, files: ["-weird.md"] });
+  });
+
+  test("--since with --density is a usage error", () => {
+    const r = parseArgs(["--since", "HEAD", "--density", "100", "a.md"]);
+    expect(r).toBeInstanceOf(Error);
+    expect((r as Error).message).toContain("--density");
+    // Order does not matter: density is refused by the scope, not by argument position.
+    expect(parseArgs(["--density", "100", "--since", "HEAD", "a.md"])).toBeInstanceOf(Error);
+  });
+
+  test("meaningless combinations are usage errors", () => {
+    for (const argv of [
+      [],
+      ["--stdin", "a.md"],
+      ["--lang", "rustdoc", "a.md"],
+      ["--stdin", "--rustdoc"],
+      ["--stdin", "--lang", "yaml"],
+      ["--since"],
+      ["--since", "--json", "a.md"],
+      ["--since", "HEAD", "--full", "a.md"],
+      ["--since", "HEAD", "--stdin"],
+      ["--density", "0", "a.md"],
+      ["--density", "1.5", "a.md"],
+      ["--density", "1e2", "a.md"],
+      ["--density", "0x10", "a.md"],
+      ["--density", " 100", "a.md"],
+      ["--density", "+100", "a.md"],
+      ["--density"],
+      ["--bogus", "a.md"],
+    ]) {
+      expect(parseArgs(argv)).toBeInstanceOf(Error);
+    }
+  });
+});
+
+describe("cli: addedRanges", () => {
+  test("hunk headers with +c, +c,d and +c,0 become added-line ranges", () => {
+    const diff = [
+      "diff --git a/a.md b/a.md",
+      "index 1111111..2222222 100644",
+      "--- a/a.md",
+      "+++ b/a.md",
+      "@@ -4,0 +5 @@ The second",
+      "+and now longer,",
+      "@@ -10,2 +12,3 @@",
+      "-old",
+      "-old",
+      "+new",
+      "+new",
+      "+@@ -1 +1 @@ a content line that looks like a header",
+      "@@ -20,4 +25,0 @@",
+      "-gone",
+      "-gone",
+      "-gone",
+      "-gone",
+      "",
+    ].join("\n");
+    expect(addedRanges(diff)).toEqual([[5, 5], [12, 14]]);
+    expect(addedRanges("")).toEqual([]);
+  });
+
+  test("the diff argv pins zero context and zero inter-hunk context, no external diff, no color", () => {
+    expect(gitDiffArgs("HEAD~1", "docs/a.md")).toEqual([
+      "diff", "--no-ext-diff", "--no-color", "--inter-hunk-context=0", "-U0", "HEAD~1", "--", "docs/a.md",
+    ]);
+  });
+});
+
+describe("cli: main", () => {
+  test("--help returns 0 and prints usage", async () => {
+    const f = fakeIo();
+    expect(await main(["--help"], f.io)).toBe(0);
+    expect(f.stdout()).toContain("usage: prose-gate.ts");
+    expect(f.stdout()).toContain("--since <rev>");
+    expect(f.stdout()).toBe(`${USAGE}\n`);
+    expect(f.stderr()).toBe("");
+    const g = fakeIo();
+    expect(await main(["-h"], g.io)).toBe(0);
+    expect(g.stdout()).toBe(`${USAGE}\n`);
+  });
+
+  test("a usage error returns 2 and explains on stderr", async () => {
+    const f = fakeIo();
+    expect(await main(["--since", "HEAD", "--density", "100", "a.md"], f.io)).toBe(2);
+    expect(f.stdout()).toBe("");
+    expect(f.stderr()).toContain("prose-gate: --density");
+  });
+
+  test("a missing file returns 2 with the path in the message", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rs-prose-"));
+    try {
+      const missing = join(dir, "nope.md");
+      const f = fakeIo();
+      expect(await main(["--full", missing], f.io)).toBe(2);
+      expect(f.stderr()).toContain(`prose-gate: cannot read ${missing}`);
+      expect(f.stdout()).toBe("");
+      // A directory is not a file either.
+      const g = fakeIo();
+      expect(await main([dir], g.io)).toBe(2);
+      expect(g.stderr()).toContain(`prose-gate: cannot read ${dir}`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("zero prose exits 2", async () => {
+    const f = fakeIo("---\nname: empty\n---\n\n```rust\nlet x = 1; // a — b — c\n```\n");
+    expect(await main(["--stdin", "--lang", "md"], f.io)).toBe(2);
+    expect(f.stderr()).toContain("prose-gate: no prose to score: stdin");
+    // The report still prints (words 0, no hits), so the caller sees what was read.
+    expect(lastLine(f.stdout())).toBe("prose-gate: 1 files · 0 sentences · 0 errors · 0 warnings · scope=full");
+    // The same through --json: the object still prints, the exit code is still 2.
+    const g = fakeIo("<!-- only a comment -->\n");
+    expect(await main(["--stdin", "--json"], g.io)).toBe(2);
+    expect(JSON.parse(g.stdout())).toMatchObject({ files: [{ path: "stdin", words: 0, sentences: 0, hits: [] }] });
+    expect(g.stderr()).toContain("no prose to score: stdin");
+  });
+
+  test("stdin draft reports not-just and stays unchanged", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rs-prose-"));
+    const cwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const before = readdirSync(dir);
+      const f = fakeIo("This change is not just faster, but safer.\n");
+      expect(await main(["--stdin", "--lang", "md"], f.io)).toBe(1);
+      const lines = f.stdout().trimEnd().split("\n");
+      expect(lines).toEqual([
+        "stdin  8 words · 0 em · 0 en · 0 ; · 0/100 · 1 sentences",
+        "stdin:1 not-just [error]: This change is not just faster, but safer.",
+        "  fix: cut the first clause, keep the claim",
+        "prose-gate: 1 files · 1 sentences · 1 errors · 0 warnings · scope=full",
+      ]);
+      expect(f.stderr()).toBe("");
+      expect(readdirSync(dir)).toEqual(before);
+      expect(before).toEqual([]);
+    } finally {
+      process.chdir(cwd);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("--json output parses and matches the shape", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rs-prose-"));
+    try {
+      const file = join(dir, "doc.md");
+      writeFileSync(file, "# Title\n\nThe gate — honest,\ncheap — fails; a robust one.\n");
+      const f = fakeIo();
+      expect(await main(["--json", "--full", file], f.io)).toBe(1);
+      const obj = JSON.parse(f.stdout());
+      expect(Object.keys(obj).sort()).toEqual(["base", "errors", "files", "scope", "warnings"]);
+      expect(obj).toMatchObject({ base: null, scope: "full", errors: 1, warnings: 1 });
+      expect(obj.files).toHaveLength(1);
+      expect(Object.keys(obj.files[0]).sort()).toEqual(["hits", "path", "per100", "sentences", "separators", "words"]);
+      expect(obj.files[0]).toMatchObject({ path: file, words: 9, separators: 3, per100: 33.33, sentences: 2 });
+      expect(obj.files[0].hits.map((h: Hit) => Object.keys(h).sort())).toEqual([
+        ["excerpt", "fix", "line", "rule", "severity"],
+        ["excerpt", "fix", "line", "rule", "severity"],
+      ]);
+      expect(obj.files[0].hits[0]).toMatchObject({ rule: "dash-pair", severity: "error", line: 3 });
+      expect(obj.files[0].hits[1]).toMatchObject({ rule: "vocab-word", severity: "warn", line: 3 });
+      expect(f.stderr()).toBe("");
+      // Density rides in through the full scope only.
+      const g = fakeIo();
+      expect(await main(["--json", "--full", "--density", "20", file], g.io)).toBe(1);
+      const dense = JSON.parse(g.stdout());
+      expect(dense.errors).toBe(2);
+      expect(dense.files[0].hits.map((h: Hit) => h.rule)).toEqual(["dash-pair", "density", "vocab-word"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("the human report prints the metric line, hits with fixes, errors first, and the summary last", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rs-prose-"));
+    try {
+      const file = join(dir, "doc.md");
+      writeFileSync(file, "A seamless start.\n\nThe gate — honest,\ncheap — fails the build.\n\nSecond — also\nwrapped — here.\n");
+      const f = fakeIo();
+      expect(await main([file], f.io)).toBe(1);
+      expect(f.stdout().trimEnd().split("\n")).toEqual([
+        `${file}  14 words · 4 em · 0 en · 0 ; · 28.57/100 · 3 sentences`,
+        `${file}:3 dash-pair [error]: The gate — honest, cheap — fails the build.`,
+        "  fix: make the aside its own sentence or put it in parentheses; not a semicolon",
+        `${file}:6 dash-pair [error]: Second — also wrapped — here.`,
+        "  fix: make the aside its own sentence or put it in parentheses; not a semicolon",
+        `${file}:1 vocab-root [warn]: A seamless start.`,
+        "  fix: a plainer word, not a synonym",
+        "prose-gate: 1 files · 3 sentences · 2 errors · 1 warnings · scope=full",
+      ]);
+      // A clean file exits 0 and still prints its metric and the summary.
+      const clean = join(dir, "clean.md");
+      writeFileSync(clean, "Plain words only.\n");
+      const g = fakeIo();
+      expect(await main([clean], g.io)).toBe(0);
+      expect(g.stdout().trimEnd().split("\n")).toEqual([
+        `${clean}  3 words · 0 em · 0 en · 0 ; · 0/100 · 1 sentences`,
+        "prose-gate: 1 files · 1 sentences · 0 errors · 0 warnings · scope=full",
+      ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("a .rs file takes rustdoc mode by extension; --rustdoc forces it on any file", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "rs-prose-"));
+    try {
+      const src = [
+        "/// This robust, seamless API — fast — and safe.",
+        "pub fn x() {",
+        '    let s = "delve — into — it"; // not just a, but b',
+        "}",
+        "",
+      ].join("\n");
+      const rs = join(dir, "lib.rs");
+      writeFileSync(rs, src);
+      const f = fakeIo();
+      expect(await main(["--json", rs], f.io)).toBe(1);
+      const obj = JSON.parse(f.stdout());
+      expect(obj.files[0].hits.map((h: Hit) => [h.rule, h.line])).toEqual([
+        ["dash-pair", 1],
+        ["vocab-root", 1],
+        ["vocab-word", 1],
+      ]);
+      expect(obj.files[0].words).toBe(7);
+      // The same bytes under a non-.rs name are markdown: the code is prose and not-just fires.
+      const txt = join(dir, "lib.txt");
+      writeFileSync(txt, src);
+      const g = fakeIo();
+      expect(await main(["--json", txt], g.io)).toBe(1);
+      expect(JSON.parse(g.stdout()).files[0].hits.map((h: Hit) => h.rule)).toContain("not-just");
+      // --rustdoc forces the doc-comment reading on that file.
+      const h = fakeIo();
+      expect(await main(["--json", "--rustdoc", txt], h.io)).toBe(1);
+      expect(JSON.parse(h.stdout()).files[0].hits.map((x: Hit) => x.rule)).toEqual(["dash-pair", "vocab-root", "vocab-word"]);
+      // --stdin --lang rustdoc reads a draft the same way.
+      const i = fakeIo(src);
+      expect(await main(["--json", "--stdin", "--lang", "rustdoc"], i.io)).toBe(1);
+      expect(JSON.parse(i.stdout()).files[0]).toMatchObject({ path: "stdin", words: 7 });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("since scans only touched sentences", async () => {
+    const dir = tempDir();
+    try {
+      const { a, b, c } = makeRepo(dir);
+      const f = fakeIo();
+      expect(await main(["--json", "--since", "HEAD", a, c, b], f.io)).toBe(1);
+      const obj = JSON.parse(f.stdout());
+      expect(obj).toMatchObject({ base: "HEAD", scope: "since", errors: 3, warnings: 0 });
+      expect(obj.files.map((x: { path: string }) => x.path)).toEqual([a, c, b]);
+      // a.md: the touched sentence spans lines 4-6 and is reported at its first line; the
+      // untouched first sentence (lines 1-2) carries a pair too and is not reported.
+      expect(obj.files[0].sentences).toBe(1);
+      expect(obj.files[0].hits).toHaveLength(1);
+      expect(obj.files[0].hits[0]).toMatchObject({ rule: "dash-pair", line: 4 });
+      expect(obj.files[0].words).toBe(16);
+      // c.md: committed and untouched, so nothing is scanned, but it is listed.
+      expect(obj.files[1]).toMatchObject({ words: 3, sentences: 0, hits: [] });
+      // b.md: untracked, so every line is added and both pairs are hits.
+      expect(obj.files[2].sentences).toBe(2);
+      expect(obj.files[2].hits.map((h: Hit) => [h.rule, h.line])).toEqual([["dash-pair", 1], ["dash-pair", 3]]);
+      expect(f.stderr()).toBe("");
+      // The human summary names the base.
+      const g = fakeIo();
+      expect(await main(["--since", "HEAD", a, c], g.io)).toBe(1);
+      expect(lastLine(g.stdout())).toBe("prose-gate: 2 files · 1 sentences · 1 errors · 0 warnings · scope=since HEAD");
+      // With the edit committed, HEAD has no added lines: nothing scanned, exit 0.
+      git(dir, "add", "a.md");
+      git(dir, "commit", "-q", "-m", "edit");
+      const h = fakeIo();
+      expect(await main(["--json", "--since", "HEAD", a], h.io)).toBe(0);
+      expect(JSON.parse(h.stdout()).files[0]).toMatchObject({ sentences: 0, hits: [] });
+      // Against the first commit the same line is added again.
+      const i = fakeIo();
+      expect(await main(["--json", "--since", "HEAD~1", a], i.io)).toBe(1);
+      expect(JSON.parse(i.stdout()).files[0].hits.map((x: Hit) => x.line)).toEqual([4]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("--since with an unresolvable rev or outside a repository returns 2", async () => {
+    const dir = tempDir();
+    const outside = tempDir("rs-prose-norepo-");
+    const ceiling = process.env.GIT_CEILING_DIRECTORIES;
+    try {
+      const { a, c } = makeRepo(dir);
+      const f = fakeIo();
+      expect(await main(["--since", "no-such-rev", a, c], f.io)).toBe(2);
+      expect(f.stderr()).toContain("prose-gate: --since no-such-rev: cannot resolve a commit in ");
+      // Two files, one repository: the base is verified once and the message printed once.
+      expect(f.stderr().split("cannot resolve a commit").length - 1).toBe(1);
+      expect(f.stdout()).toBe("");
+      // The temp parent is a ceiling, so git cannot find a repository above the loose file
+      // whatever the machine's /tmp happens to be inside of.
+      const loose = join(outside, "loose.md");
+      writeFileSync(loose, "Words here.\n");
+      process.env.GIT_CEILING_DIRECTORIES = tmpdir();
+      const g = fakeIo();
+      expect(await main(["--since", "HEAD", loose], g.io)).toBe(2);
+      expect(g.stderr()).toContain(`prose-gate: ${loose}: not inside a git repository`);
+      expect(g.stdout()).toBe("");
+    } finally {
+      if (ceiling === undefined) delete process.env.GIT_CEILING_DIRECTORIES;
+      else process.env.GIT_CEILING_DIRECTORIES = ceiling;
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  test("since follows a symlinked input to its target", async () => {
+    const dir = tempDir();
+    try {
+      const { link, real } = makeRepo(dir);
+      const f = fakeIo();
+      expect(await main(["--json", "--since", "HEAD", link], f.io)).toBe(1);
+      const obj = JSON.parse(f.stdout());
+      // Reported under the path given; diffed as the target, whose added line carries the pair.
+      expect(obj.files[0]).toMatchObject({ path: link, sentences: 1 });
+      expect(obj.files[0].hits.map((h: Hit) => [h.rule, h.line])).toEqual([["dash-pair", 3]]);
+      const g = fakeIo();
+      expect(await main(["--json", "--since", "HEAD", real], g.io)).toBe(1);
+      expect(JSON.parse(g.stdout()).files[0].hits).toEqual(obj.files[0].hits);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("zero prose under since is listed and does not change the exit code; under full it is 2", async () => {
+    const dir = tempDir();
+    try {
+      const { fence, c } = makeRepo(dir);
+      // Tracked, untouched, fence only: nothing to scan, nothing wrong.
+      const f = fakeIo();
+      expect(await main(["--json", "--since", "HEAD", fence, c], f.io)).toBe(0);
+      const obj = JSON.parse(f.stdout());
+      expect(obj.files[0]).toMatchObject({ path: fence, words: 0, sentences: 0, hits: [] });
+      expect(obj.files[1]).toMatchObject({ path: c, words: 3, sentences: 0, hits: [] });
+      expect(f.stderr()).toBe("");
+      // Untracked and fence only: every line is added, still no prose, still not an error.
+      const loose = join(dir, "loose-fence.md");
+      writeFileSync(loose, "<!-- nothing -->\n\n```\ncode\n```\n");
+      const g = fakeIo();
+      expect(await main(["--since", "HEAD", loose], g.io)).toBe(0);
+      expect(lastLine(g.stdout())).toBe("prose-gate: 1 files · 0 sentences · 0 errors · 0 warnings · scope=since HEAD");
+      expect(g.stderr()).toBe("");
+      // The same file under full scope is a gate that read nothing: 2.
+      const h = fakeIo();
+      expect(await main(["--full", fence], h.io)).toBe(2);
+      expect(h.stderr()).toBe(`prose-gate: no prose to score: ${fence}\n`);
+      expect(lastLine(h.stdout())).toBe("prose-gate: 1 files · 0 sentences · 0 errors · 0 warnings · scope=full");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("the script runs from the shell: --help exits 0 and prints usage", () => {
+    const r = Bun.spawnSync(["bun", join(import.meta.dir, "prose-gate.ts"), "--help"], { stdout: "pipe", stderr: "pipe", stdin: "ignore" });
+    expect(r.exitCode).toBe(0);
+    expect(new TextDecoder().decode(r.stdout)).toContain("usage: prose-gate.ts");
+    const draft = Bun.spawnSync(["bun", join(import.meta.dir, "prose-gate.ts"), "--stdin"], {
+      stdout: "pipe", stderr: "pipe", stdin: new TextEncoder().encode("It's worth noting that this — a — b.\n"),
+    });
+    expect(draft.exitCode).toBe(1);
+    const out = new TextDecoder().decode(draft.stdout);
+    expect(out).toContain("stdin:1 dash-pair [error]");
+    expect(out).toContain("stdin:1 throat-clearing [error]");
+    expect(lastLine(out)).toBe("prose-gate: 1 files · 1 sentences · 2 errors · 0 warnings · scope=full");
+  });
+
+  test("a large --json report survives a slow pipe reader intact", () => {
+    // process.exit right after process.stdout.write drops everything past the pipe buffer
+    // (65,536 bytes through `| (sleep 1; cat)` in bun 1.3.14). The in-process io seam and a
+    // Bun.spawnSync reader cannot see that; only a real pipe with a slow reader can.
+    const dir = tempDir();
+    try {
+      const big = join(dir, "big.md");
+      const n = 5000;
+      writeFileSync(
+        big,
+        Array.from({ length: n }, (_, i) => `Sentence ${i} has — one aside — and a second clause that pads it out.\n`).join("\n"),
+      );
+      const script = join(import.meta.dir, "prose-gate.ts");
+      const r = Bun.spawnSync(["sh", "-c", `"${process.execPath}" "${script}" --json "${big}" | (sleep 1; cat)`], {
+        stdout: "pipe", stderr: "pipe", stdin: "ignore",
+      });
+      const out = new TextDecoder().decode(r.stdout);
+      expect(out.length).toBeGreaterThan(1_000_000);
+      const obj = JSON.parse(out);
+      expect(obj.files[0].sentences).toBe(n);
+      expect(obj.files[0].hits).toHaveLength(n);
+      expect(obj.errors).toBe(n);
+      expect(new TextDecoder().decode(r.stderr)).toBe("");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("--since without git on PATH exits 2 and says so", () => {
+    const dir = tempDir();
+    try {
+      const file = join(dir, "x.md");
+      writeFileSync(file, "Words.\n");
+      const r = Bun.spawnSync([process.execPath, join(import.meta.dir, "prose-gate.ts"), "--since", "HEAD", file], {
+        stdout: "pipe", stderr: "pipe", stdin: "ignore", env: { ...process.env, PATH: "/nonexistent" },
+      });
+      expect(r.exitCode).toBe(2);
+      expect(new TextDecoder().decode(r.stderr)).toBe("prose-gate: --since needs git on PATH\n");
+      expect(new TextDecoder().decode(r.stdout)).toBe("");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+
+describe("cli: stdin read errors", () => {
+  test("a stdin that cannot be read exits 2 with a message, not a stack trace", async () => {
+    const err: string[] = [];
+    const out: string[] = [];
+    const io = {
+      stdin: async () => { throw Object.assign(new Error("EISDIR: illegal operation on a directory"), { code: "EISDIR" }); },
+      stdout: (s: string) => { out.push(s); },
+      stderr: (s: string) => { err.push(s); },
+    };
+    const code = await main(["--stdin"], io);
+    expect(code).toBe(2);
+    expect(out).toEqual([]);
+    expect(err.join("")).toBe("prose-gate: cannot read stdin: EISDIR: illegal operation on a directory\n");
   });
 });
