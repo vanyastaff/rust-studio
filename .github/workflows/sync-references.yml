@@ -8,6 +8,11 @@ on:
       - '.agents/**'
       - '.github/workflows/sync-references.yml'
       - 'plugins/rust-studio/**'
+      # The root landing pages are under the prose gate (RS-DOC-094), so a PR that touches
+      # only them still has to run the validator.
+      - 'README.md'
+      - 'INSTALL.md'
+      - 'CONTRIBUTING.md'
   push:
     branches: [main]
 
@@ -16,7 +21,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The prose gate diffs touched sentences against the PR base; the default depth
+          # of 1 has no base to diff against, so the checker exits 2 and RS-DOC-095 fires.
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
+      - name: Resolve the base the prose gate diffs against
+        # A pull request diffs against its base branch, a push against the commit before
+        # it, in both cases from the merge base so a base branch that moved on does not
+        # count its own commits as this change. A branch creation reports the all-zero sha
+        # as "before", and a force-push leaves one nothing fetched can reach; the parent of
+        # the pushed commit stands in for both. Read through env, not interpolated.
+        env:
+          EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base=HEAD~1
+          if [ -n "$EVENT_BASE" ] && [ "$EVENT_BASE" != 0000000000000000000000000000000000000000 ] \
+             && git cat-file -e "$EVENT_BASE^{commit}" 2>/dev/null; then
+            base=$(git merge-base "$EVENT_BASE" HEAD) || base=HEAD~1
+          fi
+          echo "PROSE_GATE_BASE=$base" >> "$GITHUB_ENV"
+          echo "prose gate base: $base"
       - name: Validate manifests, skills, metadata, and references
         run: ./scripts/validate-distribution.sh
         working-directory: plugins/rust-studio

@@ -40,7 +40,7 @@ _json_escape() { # minimal JSON string escaping for the fields below
 #   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 078
 #   RS-DATA-0xx      rules/*.json data files                   next: 076
 #   RS-AGENT-0xx     agent briefs and their generation         next: 084
-#   RS-DOC-0xx       docs and README staying true to the tree  next: 094
+#   RS-DOC-0xx       docs and README staying true to the tree  next: 096
 #   RS-EVAL-0xx      eval cases                                next: 106
 #   RS-REF-1xx       bundled skill references                  next: 111
 #
@@ -533,6 +533,125 @@ $portable	../../install.sh	(N portable skills
 $skill_count	docs/usage-guide.md	**Skills** (N)
 $skill_count	docs/usage-guide.md	## The skills (N)
 EOF
+
+# --- prose gate -------------------------------------------------------------------
+# Nothing here measured prose until this gate, and the prose the plugin ships had drifted to
+# one separator (em-dash, spaced en-dash, semicolon) per 57 words: an accent a reader who
+# has seen a thousand model paragraphs recognises before the content. hooks/scripts/
+# prose-gate.ts is the checker and docs/prose-gate.md the standard. The landing files, the
+# first thing a visitor reads, are scanned whole under the density ceiling. Every other
+# prose file is scanned only on the sentences touched since the base, so no untouched
+# sentence is forced to change. skills/*/references/ are bundled copies of docs/ and
+# rules/, already scanned at the source. A warning is advisory; only an `error` hit fails.
+#
+# This block does not use the bun-absent skip the script contracts above use. A gate that
+# passes because its checker never ran is worse than no gate (docs/integrity-and-evidence.md),
+# so no bun, a checker that could not evaluate, a report that does not parse, and a prose
+# diff that scanned no sentence are all RS-DOC-095, never a pass. One helper carries that
+# code so the duplicate-code check above keeps meaning what it means.
+prose_unevaluated() { fail RS-DOC-095 "$@"; }
+
+prose_landing=(README.md)
+# The root README, INSTALL and CONTRIBUTING exist only in the repository checkout; a
+# standalone install of this directory has no landing pages above it.
+if [[ $(cd ../.. && pwd)/plugins/rust-studio == "$PWD" ]]; then
+  prose_landing+=(../../README.md ../../INSTALL.md ../../CONTRIBUTING.md)
+fi
+prose_rest=(CHANGELOG.md)
+while IFS= read -r f; do prose_rest+=("$f"); done < <(find docs -name '*.md' | sort)
+prose_rest+=(rules/*.md skills/*/SKILL.md agents/*.md)
+
+# The base the touched-sentence run diffs against. CI sets PROSE_GATE_BASE to the PR base;
+# locally the upstream branch stands in, and a branch with no upstream falls back to HEAD,
+# which lints uncommitted changes only (CONTRIBUTING.md says how to pin main).
+if [[ -n ${PROSE_GATE_BASE:-} ]]; then
+  prose_base=$PROSE_GATE_BASE prose_base_from='from PROSE_GATE_BASE'
+elif git rev-parse --verify --quiet '@{upstream}' >/dev/null 2>&1; then
+  prose_base='@{upstream}' prose_base_from='the upstream branch'
+else
+  prose_base=HEAD prose_base_from='no upstream, so uncommitted changes only'
+fi
+say "prose gate: base $prose_base ($prose_base_from)"
+
+command -v bun >/dev/null 2>&1 || prose_unevaluated "hooks/scripts/prose-gate.ts" \
+  "bun is not on PATH, so the prose gate was not evaluated: neither the ${#prose_landing[@]} landing file(s) nor the sentences touched since $prose_base ($prose_base_from) were read" \
+  "install bun; the prose gate cannot run without it"
+
+# stdout and stderr are kept apart: stdout is the --json report, stderr is what the checker
+# said when it could not evaluate, and neither may leak onto this script's stdout. stderr is
+# kept to its first three distinct lines: outside a git checkout it repeats one line per
+# file, 11 KB of the same complaint, and a finding is read, not grepped.
+prose_run() { # prose_run <args…>  →  prose_out, prose_err, prose_rc
+  local err_file lines; err_file=$(mktemp)
+  prose_rc=0
+  prose_out=$(bun hooks/scripts/prose-gate.ts --json "$@" 2>"$err_file") || prose_rc=$?
+  lines=$(grep -c . "$err_file" || true)
+  prose_err=$(awk 'NF && !seen[$0]++' "$err_file" | head -3 | tr '\n' ';' | sed 's/;$//; s/;/; /g')
+  (( lines <= 3 )) || prose_err+=" (+$(( lines - 3 )) more lines)"
+  rm -f "$err_file"
+}
+# prose_eval <what>: a run that could not evaluate is a finding here; otherwise its error
+# hits join prose_hits as `path:line<TAB>rule<TAB>fix`, its sentence count lands in
+# prose_run_sentences, and its counts join the totals.
+prose_hits=(); prose_sentences=0; prose_errors=0; prose_warnings=0; prose_run_sentences=0
+prose_eval() {
+  local what=$1 parsed header
+  if (( prose_rc != 0 && prose_rc != 1 )); then
+    prose_unevaluated "hooks/scripts/prose-gate.ts" \
+      "exited $prose_rc over $what (base $prose_base, $prose_base_from), so the prose gate was not evaluated: ${prose_err:-no diagnostic on stderr}" \
+      "pin the base with PROSE_GATE_BASE=<rev> or run from a git checkout, and fix any file the checker could not read"
+  fi
+  if ! parsed=$(jq -r '
+      "\([.files[].sentences] | add // 0)\t\(.errors)\t\(.warnings)",
+      (.files[] | .path as $p | .hits[] | select(.severity == "error") | "\($p):\(.line)\t\(.rule)\t\(.fix)")
+    ' <<<"$prose_out" 2>/dev/null); then
+    prose_unevaluated "hooks/scripts/prose-gate.ts --json" \
+      "exited $prose_rc over $what (base $prose_base, $prose_base_from) but printed no parseable --json object: ${prose_out:0:200}${prose_err:+ / stderr: $prose_err}" \
+      "run bun hooks/scripts/prose-gate.ts --json on those files; the report must be one object"
+  fi
+  header=${parsed%%$'\n'*}
+  prose_run_sentences=${header%%$'\t'*}
+  prose_sentences=$(( prose_sentences + prose_run_sentences ))
+  header=${header#*$'\t'}
+  prose_errors=$(( prose_errors + ${header%%$'\t'*} ))
+  prose_warnings=$(( prose_warnings + ${header#*$'\t'} ))
+  [[ $parsed == *$'\n'* ]] && while IFS= read -r line; do prose_hits+=("$line"); done <<<"${parsed#*$'\n'}"
+  return 0
+}
+
+prose_run --full --density 100 "${prose_landing[@]}"
+prose_eval "the ${#prose_landing[@]} landing file(s)"
+prose_run --since "$prose_base" "${prose_rest[@]}"
+prose_eval "${#prose_rest[@]} prose files since $prose_base"
+
+# The read-nothing case: git adds non-blank lines to the prose files since the base, yet
+# the checker scanned no sentence. A base the checker resolved differently from this
+# script, or a broken touched-line filter, would otherwise pass as "nothing to judge". A
+# diff whose added lines all sit in fences, comments or frontmatter trips this too; the
+# CHANGELOG line such an edit carries is the sentence that satisfies it. A git failure here
+# must arrive as a finding or a pass, never as pipefail aborting the script mid-run.
+prose_added=$(git diff --relative -U0 --ignore-blank-lines "$prose_base" -- "${prose_rest[@]}" 2>/dev/null | awk '/^\+/ && !/^\+\+\+ / && !/^\+[ \t]*$/ { n++ } END { print n + 0 }' || true)
+if (( prose_added > 0 && prose_run_sentences == 0 )); then
+  prose_unevaluated "hooks/scripts/prose-gate.ts --since $prose_base" \
+    "git adds $prose_added non-blank line(s) to the prose files since $prose_base ($prose_base_from) and the checker scanned 0 sentences, so the gate read nothing: $(git diff --relative --ignore-blank-lines --name-only "$prose_base" -- "${prose_rest[@]}" 2>/dev/null | head -5 | tr '\n' ' ' || true)" \
+    "confirm the base is the one the diff should use (PROSE_GATE_BASE=<rev> overrides it); a prose change carries at least one sentence the gate can read, and an edit that adds only markup or frontmatter is satisfied by the CHANGELOG line it should carry"
+fi
+
+if (( ${#prose_hits[@]} )); then
+  IFS=$'\t' read -r prose_first_loc prose_first_rule prose_first_fix <<<"${prose_hits[0]}"
+  prose_packed=""
+  for hit in "${prose_hits[@]:0:5}"; do
+    IFS=$'\t' read -r loc rule _ <<<"$hit"
+    prose_packed+="${prose_packed:+; }$loc $rule"
+  done
+  prose_more=""
+  if (( prose_errors > 5 )); then prose_more="; and $(( prose_errors - 5 )) more"; fi
+  fail RS-DOC-094 "${prose_first_loc%%:*}" \
+    "$prose_errors error hit(s) in the prose (landing files whole, the rest since $prose_base, $prose_base_from): $prose_packed$prose_more" \
+    "$prose_first_loc $prose_first_rule: $prose_first_fix"
+fi
+say "prose gate: ${#prose_landing[@]} landing file(s) whole, ${#prose_rest[@]} files since $prose_base: $prose_sentences sentences, 0 errors, $prose_warnings warnings"
+(( JSON || prose_warnings == 0 )) || echo "prose gate: $prose_warnings advisory warning(s); bun hooks/scripts/prose-gate.ts --full <file> lists them" >&2
 
 # Codex agents install OUTSIDE the plugin (~/.codex/agents/), so the ${CLAUDE_PLUGIN_ROOT}
 # form Claude Code expands has nothing to resolve against there. Generate into a
