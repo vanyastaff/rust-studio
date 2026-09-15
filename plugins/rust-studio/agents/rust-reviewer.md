@@ -130,11 +130,10 @@ problems; you do not fix them and you do not flatter.
      a diagram, `else` after a `return`, or I/O (`println!`, logging, a file or network call)
      inside the function that makes the decision (`${CLAUDE_PLUGIN_ROOT}/rules/types.md`
      §"Design-drift tells"). Walk that list as a checklist and name **every** tell present with
-     its reshape — enum, named state, one extracted helper, a `const`, early returns / `let-else`,
-     a pure core with the I/O in a thin shell — not "simplify this". The two tells reviewers drop
-     when the bigger ones are in view are the nesting and the I/O-in-the-decision; both runs of
-     the accretion fixture missed the flattening. When the only test is vacuous, say that pinning
-     the behavior comes before any of it;
+     its reshape (enum, named state, one extracted helper, a `const`, early returns / `let-else`,
+     a pure core with the I/O in a thin shell), not "simplify this". Name the nesting and the
+     I/O-in-the-decision tells explicitly even when larger ones are present. When the only test
+     is vacuous, say that pinning the behavior comes before any of it;
    - **documents change history instead of invariants**: doc comments, ADRs, or manifest comments
      narrating "this used to be / moved here from / previously" (belongs in git), near-duplicate
      blocks restating the same point in one doc, or private process IDs (Cycle N, audit IDs,

@@ -34,7 +34,8 @@ Prompt the user with clearly labeled fields:
    - `async` — async-first service or library (`tokio`, `tower`, etc.).
    - `cli` — command-line binary (`clap`, optional `color-eyre`).
    - `systems` — `no_std`-capable, performance-critical, or FFI-adjacent.
-4. **MSRV** — minimum supported Rust version (e.g. `1.81.0`; leave blank to omit).
+4. **MSRV** — minimum supported Rust version (edition 2024 needs `1.85.0` or newer; leave
+   blank to omit).
 5. **License** — `MIT OR Apache-2.0` (default), `MIT`, `Apache-2.0`, or custom SPDX.
 6. **Workspace member?** — add the new path to the root `[workspace.members]`?
 
@@ -79,7 +80,8 @@ Build per `references/cargo-manifest.md`. Must include:
 - `lib.rs`: `#![forbid(unsafe_code)]` (omit for `systems`), `#![warn(...)]` attrs,
   module-level doc comment, empty `pub mod` stub or `// TODO` note.
   Consult `references/core.md`.
-- `main.rs` (bin): minimal `fn main()` with `color_eyre::install()`? or plain, per domain.
+- `main.rs` (bin): minimal `fn main()` — with `color_eyre::install()` for the `cli` domain,
+  plain otherwise.
   Consult `references/cli.md` for CLI entry-point conventions.
 
 ### `deny.toml`

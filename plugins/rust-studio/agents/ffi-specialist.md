@@ -60,9 +60,9 @@ language boundary.
 
 ## How you work
 
-1. Map the upstream C header (or shared library interface) with `rg` and serena
-   (`get_symbols_overview`); trace every type, function, and
-   ownership rule before touching any Rust code.
+1. Map the upstream C header (or shared library interface) with `rg` and
+   the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`); trace every
+   type, function, and ownership rule before touching any Rust code.
 2. Choose the binding approach — handwritten `extern "C"` blocks, `bindgen`-generated
    bindings, or a hybrid — and present the trade-offs.
 3. Audit every `#[repr(C)]` struct and union: field types, padding, alignment, field
@@ -104,7 +104,8 @@ language boundary.
    for `frame->width`. Make the fields private or say it where the header is generated.
 9. Run `cargo build` (with cross-compilation targets if relevant),
    `cargo nextest run` (including `bindgen` layout tests), and
-   `cargo clippy --all-targets --all-features -- -D warnings` — cite the output.
+   `cargo clippy --all-targets --all-features -- -D warnings`, through the project's gate
+   where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`). Cite the output.
 10. For `cbindgen`: verify the generated header compiles as C and as C++; commit it
    alongside the Rust source.
 

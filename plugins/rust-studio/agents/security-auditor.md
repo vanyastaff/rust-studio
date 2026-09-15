@@ -63,7 +63,7 @@ Never substitute "probably safe" for checking.
 
 1. Run `cargo audit` (or `cargo audit --json`); triage every RUSTSEC ID — is it
    reachable in this binary? Is a patched version available? Is a `cargo deny`
-   exception already recorded? Cross-check advisories via `mcp__exa__web_search_exa`
+   exception already recorded? Cross-check advisories via exa (`web_search_exa`)
    for upstream issue status and fixed-version availability.
 2. Search source, tests, and fixtures for hardcoded secrets using `rg` (the Grep tool):
    patterns `password`, `secret`, `api_key`, `token`, `-----BEGIN`, suspiciously long
@@ -73,13 +73,15 @@ Never substitute "probably safe" for checking.
    `serde`, `bincode`, `rmp_serde`, `postcard`, custom `Read` impls. Verify
    `#[serde(deny_unknown_fields)]` on user-facing structs; check for unbounded `Vec`
    allocation or recursive enum depth.
-4. Audit auth/authz paths via serena (`find_referencing_symbols` on auth/capability
-   types): where are capabilities checked? Look for missing checks on state transitions,
+4. Audit auth/authz paths through the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   (references of the auth/capability types): where are capabilities checked? Look for
+   missing checks on state transitions,
    TOCTOU, and privilege escalation. Verify constant-time comparison on all secret/token
    equality checks.
 5. Scan untrusted-input paths with `rg` for integer overflow (`as` casts without bounds
    checks), panic-as-DoS (`unwrap`/`expect`/`index`), and `unsafe` blocks reachable
-   via attacker-controlled data. Use serena `find_implementations` to trace call paths.
+   via attacker-controlled data. Trace call paths through the language-server layer
+   (implementations and callers).
 6. Check supply-chain surface: `cargo tree` for transitive deps touching sensitive paths;
    use `rg` to find any `build.rs` that shells out (`Command`, `reqwest`, `ureq`,
    network fetch patterns) — flag as MEDIUM if found.

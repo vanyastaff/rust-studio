@@ -68,6 +68,11 @@ describe("extracted paths reach the right standards", () => {
     ["**/src/parser*.rs,**/src/parser/**/*.rs", "/repo/src/parser/lexer.rs", true],
     ["**/Cargo.toml", "/repo/Cargo.toml", true],
     ["**/src/domain/**/*.rs", "/repo/src/parser/lexer.rs", false],
+    // `**/` is a segment boundary, not a bare prefix: `claude-api/` and `openapi/` are not `api/`.
+    ["**/api/**", "/repo/src/api/handlers.rs", true],
+    ["**/api/**", "/tmp/skills/claude-api/shared/prompt-audit.md", false],
+    ["**/api/**", "/repo/src/openapi/gen.rs", false],
+    ["**/auth/**", "/repo/src/oauth/token.rs", false],
   ];
 
   for (const [globs, path, want] of cases) {

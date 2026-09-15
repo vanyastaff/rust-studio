@@ -48,9 +48,8 @@ loop, not a permission loop**. Default is autonomy: decide and execute.
 ## How you work
 1. Read the command spec and acceptance criteria; map every subcommand, flag,
    positional, and completion target in scope before touching code.
-2. Locate existing clap structs and signal/completion setup using serena MCP
-   (`find_symbol`) and `rg` (harness Grep) for macro-generated or `cfg`-gated
-   sites serena can't see.
+2. Locate existing clap structs and signal/completion setup using the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   and `rg` (harness Grep) for macro-generated or `cfg`-gated sites a language server can't see.
 3. Decide the implementation approach (clap derive patterns, completion strategy,
    exit-code mapping); state the choice with a one-line rationale and proceed.
 4. Implement arg parsing: `ValueParser` for typed validation with actionable error
@@ -61,8 +60,9 @@ loop, not a permission loop**. Default is autonomy: decide and execute.
    restoration early; suppress `BrokenPipe` at the top of `main`.
 7. Apply `IsTerminal` on stdout/stderr; honour `NO_COLOR`; verify ANSI is stripped
    when output is piped.
-8. Run `cargo clippy --all-targets --all-features -- -D warnings` and
-   `cargo nextest run` (fall back to `cargo test`); smoke every changed subcommand
+8. Run the project's gate where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`); with none,
+   `cargo clippy --all-targets --all-features -- -D warnings` and
+   `cargo nextest run` (fall back to `cargo test`). Smoke every changed subcommand
    with `--help`. Paste output as evidence.
 
 ## Standards you enforce

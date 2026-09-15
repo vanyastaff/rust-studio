@@ -26,9 +26,7 @@ when a recalled note changes the approach. If nothing surfaces, proceed
 (`references/memory-protocol.md`).
 
 1. Spawn **`rust-scout`** to locate the test(s) and any setup/teardown fixtures that
-   might be implicated. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`)
-   for symbol-level navigation and `rg` (harness Grep) for macro-generated or
-   `cfg`-gated sites. Record `file:line` for each candidate.
+   might be implicated. Record `file:line` for each candidate.
 2. Run the suite in stress mode — no retries, randomized order — to surface failures:
    ```
    cargo nextest run --retries 0 --test-threads 8 [filter]
@@ -88,8 +86,8 @@ when a recalled note changes the approach. If nothing surfaces, proceed
      clock value, assert sorted output),
    - run `cargo nextest run --retries 0 [filter]` for **10 passes** and paste the summary
      as evidence,
-   - run `cargo clippy --all-targets --all-features -- -D warnings` and `cargo fmt`, fix
-     any new warnings,
+   - run the project's lint gate (`references/project-gate.md`; `cargo clippy --all-targets
+     --all-features -- -D warnings` where it has none) and `cargo fmt`, fix any new warnings,
    - stay strictly in scope — no opportunistic cleanups.
 10. Show the diff summary and command output to the user.
 

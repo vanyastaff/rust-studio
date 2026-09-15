@@ -70,8 +70,9 @@ concurrent workers when supported, otherwise sequentially. The lead synthesizes 
   teammates don't inherit it). Instruct it to:
   - Work in the smallest reviewable increments — one logical change at a time.
   - Stay strictly in scope; no opportunistic refactors.
-  - Run `cargo check`, `cargo clippy --all-targets --all-features -- -D warnings`, and
-    `cargo fmt` after each increment; fix all warnings before moving on.
+  - Run the project's gate (`references/project-gate.md`; `cargo check`, `cargo clippy
+    --all-targets --all-features -- -D warnings` where it has none) and `cargo fmt` after
+    each increment; fix all warnings before moving on.
   - Add `// SAFETY:` comments to every `unsafe` block (new or pre-existing and
     comment-free). Flag any new `unsafe` explicitly in the diff summary.
 - For **every new or modified `unsafe` block**, pause and hand a task to `unsafe-auditor` to

@@ -33,7 +33,7 @@ Follow `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1: **decide and e
   (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
-1. Map the command surface: use serena (`find_symbol`, `get_symbols_overview`) to enumerate clap structs, subcommands, flags, and args; `rg` to catch macro-generated or `cfg`-gated sites.
+1. Map the command surface: use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`) to enumerate clap structs, subcommands, flags, and args; `rg` to catch macro-generated or `cfg`-gated sites.
 2. Check config precedence (flags override env override file) and validate that args are caught at parse time, not mid-execution.
 3. Audit output streams: confirm stdout carries only data, stderr carries diagnostics; check that `--quiet` / `--verbose` gates are wired correctly.
 4. Review error messages for actionability: every error names what failed, why, and what the user can do next.

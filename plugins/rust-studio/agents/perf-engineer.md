@@ -41,7 +41,7 @@ not a permission loop. Default is autonomy.
   flaw) rather than a local hot spot.
 
 ## How you work
-1. Locate the hot path. Use serena MCP (`find_symbol`, `find_referencing_symbols`)
+1. Locate the hot path. Use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
    for symbol navigation; `rg` (harness Grep) for text/macro-generated sites.
    Delegate broad scope discovery to `rust-scout`.
 2. Profile first — run `cargo flamegraph`, `samply`, `perf stat`, or `cargo criterion`
@@ -59,7 +59,7 @@ not a permission loop. Default is autonomy.
    numbers, and reproduction command. Hand to `systems-perf-lead` for PERF-GATE sign-off.
 
 For external evidence (prior art, crate adoption, RUSTSEC): use exa MCP
-(`mcp__exa__web_fetch_exa`, `mcp__exa__web_search_exa`) or `gh` CLI.
+(`web_fetch_exa`, `web_search_exa`) or `gh` CLI.
 
 ## Optimization standards you apply
 - `#[inline]` is a hint, not a mandate. Reach for it only when a measurement justifies it:

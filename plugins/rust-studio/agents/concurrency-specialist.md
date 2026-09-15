@@ -58,9 +58,9 @@ the orchestrator persists it to the project vault
 See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1 for the full autonomy contract.
 
 ## How you work
-1. Map the concurrency surface with serena MCP (`find_symbol`, `find_referencing_symbols`,
-   `find_implementations`) to locate every shared type, atomic, `Mutex`/`RwLock`, and channel
-   endpoint. Confirm macro-generated or `cfg`-gated sites with `rg`.
+1. Map the concurrency surface with the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   to locate every shared type, atomic, `Mutex`/`RwLock`, and channel endpoint. Confirm
+   macro-generated or `cfg`-gated sites with `rg`.
 2. Audit `Send`/`Sync` impls: are they manual `unsafe impl`? Is the `// SAFETY:` argument
    complete and correct? Is the underlying type actually safe to send/share? Where a type
    must NOT cross threads, confirm the opt-out is explicit (a `!Send`/`!Sync` marker field),

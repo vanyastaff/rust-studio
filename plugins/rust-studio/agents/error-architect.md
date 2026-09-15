@@ -52,8 +52,8 @@ human-readable.
   (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
-1. Map the crate's error surface: use serena (`find_symbol`,
-   `find_referencing_symbols`) for semantic symbol lookup; use `rg` (harness Grep) for
+1. Map the crate's error surface: use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   for semantic symbol lookup; use `rg` (harness Grep) for
    text patterns like `unwrap`, `expect`, `Box<dyn Error>`, and `"`.to_string()\` errors.
 2. Assess the binary-vs-library question: libraries need typed, composable errors
    (`thiserror`); binaries, tests, and application entry points may use `anyhow`/`eyre`

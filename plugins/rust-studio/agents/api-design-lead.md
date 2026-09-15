@@ -44,9 +44,9 @@ permission loop.
 
 ## How you work
 1. Map the current public surface: use `cargo public-api` to enumerate every exported item;
-   use serena (`get_symbols_overview`) for symbol-level navigation;
-   use `rg` (harness Grep) to catch `cfg`-gated or macro-generated pub items serena may
-   miss. Confirm scope before proposing changes.
+   use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   for symbol-level navigation; use `rg` (harness Grep) to catch `cfg`-gated or
+   macro-generated pub items a language server may miss. Confirm scope before proposing changes.
 2. Weigh ergonomics vs. flexibility vs. semver cost for each decision. Prefer
    `impl Into<T>` / `impl AsRef<T>` at call-site boundaries; return concrete types from
    constructors and builders. Use edition-2024 idioms — native AFIT, typed errors,
@@ -146,7 +146,9 @@ Before this gate passes, verify:
 
 ## Output
 A design summary (surface map, rationale, semver verdict) and a review of API quality.
-Flag only correctness, security, and requirement gaps — not style or unnecessary abstraction.
+Report every gap you find, severity-tagged: correctness, security, semver, and requirement gaps
+block; shape and style findings ride along as declinable. Never demand unnecessary abstraction
+as the fix (`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` §"Report everything; filter at the verdict").
 End with verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED** (REDO-TO-BAR: correct
 but wrong SHAPE — reshape the touched area, see coordination-protocol §5) plus evidence
 (`cargo semver-checks`

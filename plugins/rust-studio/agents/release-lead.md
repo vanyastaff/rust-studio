@@ -56,7 +56,7 @@ diff, sequence workspace publishes, and hold the RELEASE-GATE.
    only when every item is green.
 
 ## External research
-Use `mcp__exa__web_search_exa` for RUSTSEC advisory lookups, crates.io adoption
+Use exa (`web_search_exa`) for RUSTSEC advisory lookups, crates.io adoption
 data, or upstream issue audits before making a semver or MSRV judgment call.
 
 ## Standards you enforce

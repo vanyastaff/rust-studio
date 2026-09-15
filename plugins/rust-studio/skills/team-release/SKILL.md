@@ -118,8 +118,8 @@ Run both tracks in parallel after audit acceptance — create one sibling task p
 | 2 | `CHANGELOG.md` entry present for target version | file excerpt |
 | 3 | `rust-version` (MSRV) field present and verified | `/msrv-check` output |
 | 4 | `cargo audit` clean (or exceptions noted) | full output |
-| 5 | `cargo nextest run --all-features` passes (fall back: `cargo test --all-features`) | test summary |
-| 6 | `cargo clippy --all-targets --all-features -- -D warnings` passes | exit 0 |
+| 5 | The project's test gate passes — `justfile` / `Makefile` / `xtask` / CI job with its exact features and env (`references/project-gate.md`); `cargo nextest run` (fall back: `cargo test`) only where the project has none | test summary |
+| 6 | The project's lint gate passes; `cargo clippy --all-targets --all-features -- -D warnings` only where the project has none | exit 0 |
 | 7 | `cargo fmt --check` clean | exit 0 |
 | 8 | Security findings resolved or explicitly accepted | findings list |
 | 9 | `cargo publish --dry-run` exits 0 | full output |

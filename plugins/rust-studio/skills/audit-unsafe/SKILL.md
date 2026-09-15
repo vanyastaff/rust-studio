@@ -41,7 +41,8 @@ path does not exist, ask the user to clarify before proceeding.
    merge findings from different invariant boundaries.
 
 5. Run evidence commands and cite their output:
-   - `cargo clippy --all-targets --all-features -- -D warnings` (must be clean).
+   - the project's lint gate (`references/project-gate.md`; `cargo clippy --all-targets
+     --all-features -- -D warnings` where it has none) — must be clean.
    - `cargo +nightly miri test` for each crate that contains `unsafe` (if the nightly
      toolchain is available; note if skipped and why).
 

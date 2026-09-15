@@ -55,7 +55,7 @@ cargo metadata --format-version 1 --no-deps | jq '.packages[] | {name, version, 
 ```
 
 For any dep not covered by `cargo metadata`, query crates.io via the **exa** MCP
-(`mcp__exa__web_search_exa`) or `gh` to find its published MSRV. Flag any dep whose
+(`web_search_exa`) or `gh` to find its published MSRV. Flag any dep whose
 minimum `rust-version` exceeds the current declared MSRV. Produce a table:
 
 ```
@@ -113,7 +113,8 @@ On approval, spawn **`rust-builder`** with the exact diff from Phase 5. Instruct
 - Edit only the manifest and CI files listed in the approved diff.
 - Run `cargo +<effective-msrv> check --all-targets --all-features` after editing to
   confirm the declared version actually compiles.
-- Run `cargo clippy --all-targets --all-features -- -D warnings` on stable.
+- Run the project's lint gate on stable (`references/project-gate.md`; `cargo clippy --all-targets
+  --all-features -- -D warnings` where it has none).
 - Report command output verbatim.
 
 ## Phase 7 — RELEASE-GATE feed

@@ -62,8 +62,10 @@ quality bar. You decide what "tested" means and hold the QA-GATE.
   reported with the full denominator. A gamed green does not clear the QA-GATE.
 
 ## Reviewer stance
-Flag only correctness gaps, missing acceptance-criterion coverage, and determinism failures.
-Do not flag style, test-helper abstraction level, or naming — those are not quality gates.
+Report every gap you find, severity-tagged. Correctness, missing acceptance-criterion coverage,
+and determinism failures block the QA-GATE; test-helper shape and naming ride along as declinable
+(`core.md` *Naming* binds test code too). The verdict filters, not the lens
+(`${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` §"Report everything; filter at the verdict").
 
 ## Gate: QA-GATE
 Before this gate passes, verify:

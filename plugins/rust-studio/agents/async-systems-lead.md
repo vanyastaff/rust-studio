@@ -50,7 +50,7 @@ Never write the vault yourself.
 2. Choose the runtime topology: single-threaded vs. multi-threaded, dedicated thread pools
    for blocking work, `spawn_blocking` policy.
 3. Propose the web stack and tower middleware chain; ground the recommendation in ecosystem
-   adoption data (`mcp__exa__web_search_exa`, `mcp__exa__web_fetch_exa`) — evidence
+   adoption data (exa: `web_search_exa`, `web_fetch_exa`) — evidence
    over opinion.
 4. Define the concurrency model: channel types, bounded capacities, backpressure strategy,
    timeout budget per I/O operation. Default: typed errors, no `Arc<Mutex<_>>` across `.await`
@@ -61,8 +61,8 @@ Never write the vault yourself.
 6. Specify the plan; delegate writing to `rust-builder` via `async-runtime-specialist` or
    `web-framework-specialist`. Observability (tracing spans, metrics) is a DoD requirement —
    specify it in the plan, not as a follow-up.
-7. Review the diff for ASYNC-GATE compliance. Navigate code with serena MCP
-   (`find_symbol`, `find_referencing_symbols`) and `rg`/`cargo clippy` — not Bash grep.
+7. Review the diff for ASYNC-GATE compliance. Navigate code with the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   and `rg`/`cargo clippy` — not Bash grep.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source

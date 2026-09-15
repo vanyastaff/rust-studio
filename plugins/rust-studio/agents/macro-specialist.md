@@ -58,10 +58,9 @@ the vault yourself.
    already does.
 3. Audit call-site ergonomics first: what does the user write, what error should
    they see when they get it wrong?
-4. Navigate with purpose-built tools: use serena MCP (`find_symbol`,
-   `find_referencing_symbols`, `get_symbols_overview`) to locate existing macro
-   infrastructure; use `rg` (harness Grep) or `ast-grep` for structural searches
-   across generated or `cfg`-gated sites serena can't see.
+4. Navigate with purpose-built tools: use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   to locate existing macro infrastructure; use `rg` (harness Grep) or `ast-grep` for
+   structural searches across generated or `cfg`-gated sites a language server can't see.
 5. Implement the `syn` parse tree, keeping span information attached to every
    user-facing token so errors point at the right place.
 6. Generate via `quote!`; enforce hygiene. `macro_rules!` hygiene is
@@ -84,8 +83,9 @@ the vault yourself.
    A `macro_rules!` interpreter is fine only for a tiny embedded DSL.
 9. Verify the expansion with `cargo expand` before trusting it — hygiene bugs,
    double-evaluation, and missing parentheses are invisible in source and obvious in
-   the expansion. The generated code must compile cleanly under
-   `cargo clippy --all-targets --all-features -- -D warnings`.
+   the expansion. The generated code must compile cleanly under the project's lint gate
+   (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`; `cargo clippy --all-targets --all-features -- -D warnings`
+   where the project has none).
 10. Write `trybuild` tests for every intentional compile error: good message,
     correct span, stable wording. A macro's diagnostics are part of its contract —
     pin them, and cover hygiene (callers with shadowing locals), double-evaluation,

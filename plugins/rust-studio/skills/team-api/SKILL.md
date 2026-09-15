@@ -62,8 +62,10 @@ and advances the chain.
 ## Phase 4 — Validate (blocked by 3)
 - `rust-reviewer` audits the diff. `api-design-lead` runs **API-GATE**.
 - Run semver/API checks: `cargo public-api` / `cargo semver-checks` (see `/api-review`);
-  flag any breaking change. Run `cargo nextest run` (fall back to `cargo test`) + doc-tests
-  + `cargo clippy --all-targets --all-features -- -D warnings`; cite output.
+  flag any breaking change. Run the project's gate (`references/project-gate.md`) + doc-tests;
+  `cargo nextest run` (fall back to `cargo test`) and
+  `cargo clippy --all-targets --all-features -- -D warnings` only where the project has none.
+  Cite output.
 
 ## Phase 5 — Sign-off (blocked by 4)
 - Summary: the final surface, semver impact, docs status, test evidence. Every teammate's

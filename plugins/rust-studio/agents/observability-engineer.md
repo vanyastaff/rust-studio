@@ -54,9 +54,10 @@ signal without leaking secrets or exploding cardinality.
    strategy that changes data retention, a new OTel backend not already in use).
 5. Implement: add `#[instrument(skip(...), fields(...))]` with meaningful fields;
    emit `tracing::error!` on failure paths; wire metrics with bounded labels.
-6. Verify: run `cargo nextest run` (fall back to `cargo test`) and confirm no new clippy
-   warnings (`cargo clippy --all-targets --all-features -- -D warnings`); if OTel is
-   configured, confirm the exporter initialises cleanly in the test harness.
+6. Verify with the project's gate where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`); with
+   none, `cargo nextest run` (fall back to `cargo test`) and
+   `cargo clippy --all-targets --all-features -- -D warnings`. If OTel is configured, confirm
+   the exporter initialises cleanly in the test harness.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/rules/observability.md` — your canonical standard: span design,

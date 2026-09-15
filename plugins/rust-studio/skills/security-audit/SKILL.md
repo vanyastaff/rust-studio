@@ -22,8 +22,6 @@ crate/area?" then proceed.
 1. Restate the audit scope in 1–2 bullets.
 2. Spawn **`rust-scout`** to map relevant files: input boundaries, deserialization sites,
    auth paths, FFI, and any existing `// SAFETY:` annotations.
-   Scout uses serena MCP for symbol/reference navigation and `rg` for macro-generated or
-   `cfg`-gated sites serena can't see — never Bash `grep`/`find`.
 
 ## Phase 2 — Automated scans (parallel, read-only — no approval needed)
 Spawn **`security-auditor`** to run all of the following and collect raw output:
@@ -100,8 +98,9 @@ For each finding approved for fixing:
 1. Spawn **`rust-builder`** with a precise fix plan (file, line, what to change, why).
    Instruct it to:
    - stay strictly in scope — no opportunistic refactors,
-   - run `cargo nextest run` (fall back to `cargo test`), `cargo audit`, and
-     `cargo clippy --all-targets --all-features -- -D warnings` after each fix,
+   - run the project's gate (`references/project-gate.md`) and `cargo audit` after each fix —
+     `cargo nextest run` (fall back to `cargo test`) and
+     `cargo clippy --all-targets --all-features -- -D warnings` only where the project has none,
    - add or update `// SAFETY:` notes on any `unsafe` it touches,
    - for dependency upgrades: update `Cargo.toml`, run `cargo update`, then
      `cargo deny check`.

@@ -46,9 +46,9 @@ or OS underneath it.
    version, linker script, feature flags (`alloc` allowed? which `critical-section` impl?).
    Decide these tactically from `Cargo.toml` and `.cargo/config.toml`; ask only if genuinely
    ambiguous and load-bearing.
-2. Navigate existing code with **serena** MCP (`find_symbol`, `find_implementations`,
-   `get_symbols_overview`) for trait impls and type definitions; use `rg` (harness Grep)
-   to confirm `cfg`-gated and macro-generated sites serena can't see. Scan `Cargo.toml`
+2. Navigate existing code with the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   for trait impls and type definitions; use `rg` (harness Grep) to confirm `cfg`-gated and
+   macro-generated sites a language server can't see. Scan `Cargo.toml`
    `[profile]` / `panic` settings and existing HAL usage patterns this way.
 3. Audit `unsafe` blocks touching registers or DMA: verify `// SAFETY:` comments,
    aliasing rules, and `Send`/`Sync` on interrupt-shared state.

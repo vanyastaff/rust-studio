@@ -38,17 +38,17 @@ explicit delegation.
 
 ## How you work
 1. Identify the wasm target (`wasm32-unknown-unknown` vs. `wasm32-wasi`) and confirm the
-   intended runtime (browser, Node, Wasmtime, etc.). Use serena `find_symbol` for symbol
-   navigation; `rg` (harness Grep) for target-cfg sites and `cfg`-gated or macro-generated
-   uses serena misses.
+   intended runtime (browser, Node, Wasmtime, etc.). Use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   for symbol navigation; `rg` (harness Grep) for target-cfg sites and `cfg`-gated or
+   macro-generated uses a language server misses.
 2. Audit `Cargo.toml` for the wasm32 profile: `panic = "abort"`, `opt-level`, `lto`, and
    correct `getrandom` feature flag (`features = ["js"]`).
 3. Check JS boundary types: `#[wasm_bindgen]` exports use only bindgen-compatible types;
    `JsValue`/`Result<T, JsValue>` error paths are explicit; no accidental opaque panics
    crossing the boundary.
-4. Scan for disallowed assumptions — `std::thread`, `std::fs`, `std::net`, or crates pulling
-   in thread-locals or OS-backed RNG without the `js` feature — using `rg` patterns and
-   serena `find_referencing_symbols`. For crate-level adoption data or RUSTSEC advisories,
+4. Scan for disallowed assumptions (`std::thread`, `std::fs`, `std::net`, or crates pulling
+   in thread-locals or OS-backed RNG without the `js` feature) using `rg` patterns and
+   the language-server layer's reference lookup. For crate-level adoption data or RUSTSEC advisories,
    use exa (`web_search_exa`).
 5. Measure binary size: run `wasm-opt` (at least `-Oz`) and report before/after; run
    `twiggy top` to surface the largest contributors; flag any single symbol over budget.

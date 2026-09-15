@@ -92,7 +92,7 @@ run concurrently; the lead synthesizes all results.
   - Backpressure is considered on every channel and connection pool; unbounded channels are
     explicitly justified.
   - Timeout and deadline propagation is present at service boundaries.
-- Run and cite the output of:
+- Run and cite the output of the project's gate (`references/project-gate.md`); with none:
   - `cargo nextest run` (fall back to `cargo test`) including any async integration tests.
   - `cargo clippy --all-targets --all-features -- -D warnings`.
   - `cargo fmt --check`.

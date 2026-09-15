@@ -38,8 +38,14 @@ export function globToRegex(pattern: string): RegExp {
     if (c === "*") {
       if (i + 1 < n && pattern[i + 1] === "*") {
         i += 2;
-        if (i < n && pattern[i] === "/") i += 1;
-        out.push(".*");
+        if (i < n && pattern[i] === "/") {
+          // `**/` spans zero or more whole segments: `**/api/**` must reach `src/api/x.rs`
+          // and stay off `claude-api/` or `openapi/` — a bare `.*` matched any suffix.
+          i += 1;
+          out.push("(?:.*/)?");
+        } else {
+          out.push(".*");
+        }
       } else {
         out.push("[^/]*");
         i += 1;

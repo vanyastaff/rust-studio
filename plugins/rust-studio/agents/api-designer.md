@@ -41,7 +41,7 @@ rejected — surface it on a `MEMORY:` line in your verdict; the orchestrator pe
 project vault (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the vault yourself.
 
 ## How you work
-1. **Understand the landscape.** Use serena (`find_symbol`, `find_implementations`, `get_symbols_overview`) to map existing types, traits, and impls before proposing anything. Use `rg` to catch macro-generated or `cfg`-gated sites serena can't see.
+1. **Understand the landscape.** Use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`) to map existing types, traits, and impls before proposing anything. Use `rg` to catch macro-generated or `cfg`-gated sites a language server can't see.
 2. **Identify the invariant.** What must be unrepresentable? What must be infallible vs. fallible? Derive the abstraction from the constraint, not the other way round.
 3. **Evaluate object-safety.** If callers need `dyn Trait`, design for it: no generic method params on dispatchable methods, no associated consts, `Self` only in receiver position, no `async fn`/`-> impl Trait` methods. If a method genuinely needs generics, mark it `where Self: Sized` so it stays out of the vtable but the trait remains dyn-compatible — or factor the dyn-safe core into a supertrait and keep the generic conveniences on a `Sized`-bound extension trait. If callers don't need `dyn`, prefer generics for zero-cost.
 4. **Present the design shape with trade-offs** — e.g. typestate builder vs. validated constructor vs. `Default`+setters — covering ergonomics, compile-time guarantees, binary size, downstream flexibility. State your recommendation and rationale; proceed unless a genuine fork requires input.

@@ -29,8 +29,8 @@ problem does this crate solve?" Then proceed.
 ## Phase 2 — Vet (spawn dependency-manager)
 
 Spawn **`dependency-manager`** to run the full vetting checklist. Use the **exa** MCP
-(`mcp__exa__web_search_exa`, `mcp__exa__web_fetch_exa`) for external evidence —
-crates.io trajectory, RUSTSEC advisories, peer-project adoption — rather than guessing.
+(`web_search_exa`, `web_fetch_exa`) for external evidence rather than guessing: crates.io
+trajectory, RUSTSEC advisories, peer-project adoption.
 Every item below must be reported; "unknown" is valid, silence is not.
 
 ### Security — advisories

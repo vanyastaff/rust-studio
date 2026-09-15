@@ -45,7 +45,8 @@ test; say when a recalled note changes the approach. If nothing surfaces, procee
 
 ### 🔧 REFACTOR — clean with tests green
 6. With the bar green, improve names/structure/duplication (`rust-builder`); re-run after each
-   step so it stays green. `cargo clippy --all-targets --all-features -- -D warnings` and `cargo fmt`.
+   step so it stays green — the project's gate (`references/project-gate.md`; `cargo clippy
+   --all-targets --all-features -- -D warnings` where it has none) and `cargo fmt`.
 7. `rust-reviewer` audits the diff.
 
 Repeat for the next behavior. Use `/verify-loop` to drive the run→fix→re-run cycle.

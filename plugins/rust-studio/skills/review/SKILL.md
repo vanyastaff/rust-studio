@@ -122,7 +122,7 @@ needs a human eye on the surrounding hunk before you call it a finding.
   git diff -- '*.rs' | grep -n '^+.*#\[ignore'
   ```
   Any newly `+`-added `#[ignore]`/`#[ignore = "..."]`. A "flaky, skip for now" comment on a
-  test that is actually failing is GT-5 in `benchmarks/fixtures/integrity/gamed-green`.
+  test that is actually failing is a gamed green, not a quarantine.
 
 - **A test function or test file deleted**
   ```
@@ -233,16 +233,16 @@ an instruction to silently change behavior; the implementer must verify it befor
      `tooling-lead` (`build.rs`, CI, the feature matrix), `release-lead` (`Cargo.toml`
      versions, semver impact, MSRV).
    - **The domain checklist is carried by the rule file, not by an implementer.** Where the
-     diff lands in a domain whose specialist writes code — `ffi.md`, `database.md`, `macros.md`,
-     `embedded.md`, `wasm.md`, `observability.md`, `perf.md` — the lens that owns that gate
-     reads `references/<domain>.md` and walks the list itself. The measured miss behind this:
-     an FFI diff reviewed through the unsafe lens alone found the UB but not the ownership
-     contract — it is the *checklist* that carries the domain, and the checklist is the rule
-     file. Spawning the implementer to get it is what put writes in a review pass.
+     diff lands in a domain whose specialist writes code (`ffi.md`, `database.md`, `macros.md`,
+     `embedded.md`, `wasm.md`, `observability.md`, `perf.md`), the lens that owns that gate
+     reads `references/<domain>.md` and walks the list itself. The unsafe lens alone finds the
+     UB in an FFI diff but not the ownership contract: the *checklist* carries the domain, and
+     the checklist is the rule file. Spawning the implementer to get it puts writes in a review
+     pass.
    - **Pasted code has no path**, so the hooks injected no rule for it. Before ruling on a
      domain you did not spawn a specialist for, read the studio's `rules/<domain>.md` for it
-     (`cli.md`, `ffi.md`, `database.md`, `macros.md`, …) and walk the list — one review in
-     three of a CLI `main.rs` missed the stdout/stderr split until the rule was in front of it.
+     (`cli.md`, `ffi.md`, `database.md`, `macros.md`, …) and walk the list — a CLI `main.rs`
+     review without `cli.md` in front of it misses the stdout/stderr split.
 5. Run evidence commands and cite output. **Where the repo owns a gate** — `justfile`,
    `Makefile`, `xtask`, cargo-make, lefthook, or the CI lint/test job — run *that*, with its
    feature sets and env, and check the author's evidence against it: a green from a command the

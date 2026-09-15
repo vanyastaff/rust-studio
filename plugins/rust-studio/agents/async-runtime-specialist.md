@@ -44,9 +44,9 @@ tokio correctness, cancellation safety, and structured concurrency.
   and confirmed state is consistent if the future is dropped at each point.
 
 ## How you work
-1. Locate all async entry points and spawn sites: use serena
-   (`find_symbol`, `find_referencing_symbols`) for semantic lookup; use `rg` (harness Grep)
-   to catch macro-generated or `cfg`-gated sites serena can't see. Target `tokio::spawn`,
+1. Locate all async entry points and spawn sites: use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   for semantic lookup; use `rg` (harness Grep) to catch macro-generated or `cfg`-gated
+   sites a language server can't see. Target `tokio::spawn`,
    `spawn_blocking`, `select!`, `JoinSet`, `timeout`, `CancellationToken`.
 2. Audit each spawn site: is the future `Send + 'static`? Is the `JoinHandle` stored,
    awaited, or intentionally detached? Detached tasks must be justified.
@@ -62,11 +62,10 @@ tokio correctness, cancellation safety, and structured concurrency.
    lock under contention used directly in an async context.
 7. Flag every `Instant::now()` / `SystemTime::now()` read inside library logic (not at the
    edge) as its own finding — `rules/async.md` "Inject the clock": it makes the timing logic
-   untestable under `start_paused` and is the item this lens skips most when the bigger
-   cancellation defects are in view. Same for a `sleep` future recreated every loop
-   iteration inside `select!` (the deadline never fires): name the mechanism, not only the
-   symptom.
-7. Review stream consumers for bounded concurrency (`buffer_unordered` with an explicit
+   untestable under `start_paused`, and it is a finding in its own right beside any
+   cancellation defect. Same for a `sleep` future recreated every loop iteration inside
+   `select!` (the deadline never fires): name the mechanism, not only the symptom.
+8. Review stream consumers for bounded concurrency (`buffer_unordered` with an explicit
    limit) and correct termination when the stream ends.
 8. Confirm graceful shutdown: a `CancellationToken` (or equivalent) is propagated,
    spawned tasks are joined or aborted with a deadline, and in-flight work is drained

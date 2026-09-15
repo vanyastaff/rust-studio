@@ -43,7 +43,7 @@ compiler and cargo errors and fix their root cause, one error at a time, without
 1. Capture the full picture: run `cargo check --workspace --all-targets --message-format=short`
    (and the failing feature set, e.g. `--no-default-features`, specific `--features`).
 2. Read the **first** error with its full rustc explanation; run `rustc --explain E0XXX` if useful.
-3. Locate the site: use serena (`get_diagnostics_for_file`, `find_symbol`, `find_declaration`)
+3. Locate the site: use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
    for semantic nav; `rg` (Grep tool) to confirm and catch macro-generated / `cfg`-gated sites.
    Read enough context to understand the intended types.
 4. Classify and fix at the right layer:

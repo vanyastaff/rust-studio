@@ -28,9 +28,7 @@ re-modelling, not greenfield: skip to **Re-modelling mode** below before Phase 1
 1. Restate the concept in one sentence. If genuinely ambiguous (multiple plausible
    interpretations), confirm with the user; otherwise proceed.
 2. Spawn **`rust-scout`** to locate any existing types, traits, or modules related to
-   this concept. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`,
-   `get_symbols_overview`) for semantic navigation; fall back to `rg` for
-   macro-generated or `cfg`-gated sites serena can't see. Never Bash `grep`/`find`.
+   this concept.
 3. Prompt the user (genuine fork — only the user knows the domain): present what
    scout found and ask the user to enumerate:
    - **States** — what distinct situations can the concept be in?
@@ -103,8 +101,9 @@ re-modelling, not greenfield: skip to **Re-modelling mode** below before Phase 1
    - Implement the types, constructors, and trait impls from the sketch.
    - Write tests asserting compile-time guarantees (`compile_fail` doc-tests or
      trybuild where a state transition must be rejected) and runtime behaviour.
-   - Run `cargo nextest run` (fall back to `cargo test`), `cargo clippy --all-targets
-     --all-features -- -D warnings`, and `cargo fmt`; fix all issues.
+   - Run the project's gate (`references/project-gate.md`) and `cargo fmt`; `cargo nextest run`
+     (fall back to `cargo test`) and `cargo clippy --all-targets --all-features -- -D warnings`
+     only where the project has none. Fix all issues.
    - Add `// SAFETY:` comments to any `unsafe`; flag it in the build report.
    - Stay strictly in scope — no opportunistic refactors.
 9. Builder reports a diff summary and command output. Show it to the user.

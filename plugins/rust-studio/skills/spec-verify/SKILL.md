@@ -58,9 +58,10 @@ final dump.
    is not a source write. Then, for each remaining criterion, find and run the evidence:
    - Use serena MCP (`find_symbol`) and the harness Grep (ripgrep) to locate test functions
      and impl sites relevant to each criterion — never Bash `grep` for symbols.
-   - `cargo nextest run` (fall back to `cargo test`), including `--doc` for doc-tests —
-     map test names to criteria in the report.
-   - `cargo clippy --all-targets --all-features -- -D warnings` and `cargo fmt --check`.
+   - the project's gate (`references/project-gate.md`), including `--doc` for doc-tests — map
+     test names to criteria in the report. Only where the project has none: `cargo nextest run`
+     (fall back to `cargo test`) and `cargo clippy --all-targets --all-features -- -D warnings`.
+   - `cargo fmt --check`.
    - `cargo +nightly miri test` if `unsafe` was involved; criterion benches if perf was
      a criterion.
 4. Spawn the relevant **gate owners** in parallel (QA-GATE always; add API/ASYNC/PERF/

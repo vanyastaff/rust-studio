@@ -103,9 +103,7 @@ changes the approach. If nothing surfaces, proceed
    Phase 4's unit-level TDD drives inward to make it pass. Pure internal refactors with no external
    behavior change skip the acceptance test — their existing unit tests are the anchor.
 2. Task owned by **`rust-scout`** to map the edit sites and existing tests. Don't guess the
-   layout. Scout uses serena MCP for symbol/reference navigation and `rg` for macro-generated
-   or `cfg`-gated sites serena can't see — never Bash `grep`/`find`. (As a teammate, scout
-   relies on the user's ambient serena — it is not bundled into the spawn.)
+   layout.
 3. Identify the owning lead from the domain (see `references/agent-roster.md`).
 
 ## Phase 2 — Plan (blocked by scout)
@@ -174,8 +172,6 @@ written) passes — not merely when the unit tests do.
      (`references/project-gate.md`); `cargo test`/`nextest`, `cargo clippy --all-targets
      --all-features -- -D warnings` and `cargo fmt` are the fallback for a project with none,
      and fix issues,
-   - apply the change as targeted `Edit`s, not a whole-file rewrite — re-emitting a file of a few
-     hundred lines and up exhausts the response budget and loses the task with nothing written,
    - add `// SAFETY:` notes to any `unsafe` and flag it.
 11. The builder reports a diff summary + command output. Show it to the user.
 

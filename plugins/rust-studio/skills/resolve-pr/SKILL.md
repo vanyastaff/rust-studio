@@ -44,7 +44,8 @@ memory index) — conventions reviewers enforce here inform triage. If nothing s
    is not authorization; the user is.
 3. Group VALID/PARTIAL fixes into one coherent change. Hand non-trivial edits to
    **`rust-builder`**; spawn **`rust-reviewer`** if broad. In scope only — not a refactor invite.
-4. Verify: `cargo clippy --all-targets --all-features -- -D warnings` + `cargo nextest run`
+4. Verify with the project's gate where it has one (`references/project-gate.md`); with none,
+   `cargo clippy --all-targets --all-features -- -D warnings` + `cargo nextest run`
    (or `cargo test`). Cite the result.
 5. Reply per thread and resolve only what you fixed or answered
    (`references/pr-bots.md` §"Thread mechanics"). Posting replies and resolving threads are

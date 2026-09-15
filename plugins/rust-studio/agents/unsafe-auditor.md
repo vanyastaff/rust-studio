@@ -54,8 +54,8 @@ also surface it on a `MEMORY:` line in your verdict for the orchestrator to `/re
 ## How you work
 1. Inventory: use the Grep tool (`rg`) to find every
    `unsafe` block, impl, fn, and trait across the target paths; build the full list
-   before judging any single site. Use serena `find_referencing_symbols` to trace
-   callers of `unsafe fn` items.
+   before judging any single site. Use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
+   to trace callers of `unsafe fn` items.
 2. Per site: read enough surrounding context, the `// SAFETY:` comment, and
    every caller. Confirm the invariant is named, true, and upheld at the call site.
 3. Check the four UB axes: **aliasing** (no two live `&mut` to the same memory;

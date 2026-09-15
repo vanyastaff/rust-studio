@@ -44,8 +44,9 @@ Follow the **Question → Options → Decision → Draft → Approval** quality 
 
 ## How you work
 1. **Map the workspace** — read `Cargo.toml` members, feature flags, and existing CI config.
-   Use `rg` (the harness **Grep** tool) for text and pattern searches; serena's
-   `get_symbols_overview` for symbol-level queries inside manifest files.
+   Use `rg` (the harness **Grep** tool) for text and pattern searches in manifests and CI
+   config; the session's language-server layer (harness `LSP` tool or serena —
+   `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`) only for the Rust symbols they gate.
 2. Identify the feature-combination matrix and target triples that must be covered.
 3. Review any `build.rs` for determinism, offline viability, and correct `rerun-if-*` declarations.
 4. Decide CI cache strategy and matrix structure; state the choice + rationale, then proceed.

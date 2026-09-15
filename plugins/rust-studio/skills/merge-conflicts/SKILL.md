@@ -22,9 +22,10 @@ is the user's call, never the default.
 3. **Resolve each hunk** by the rules below. Where both intents are genuinely incompatible,
    keep the one matching the merge's stated goal and state the trade-off in the summary.
    Introducing behavior neither side wrote is out of scope — that is a follow-up change.
-4. **Prove the tree.** `cargo check --all-targets`, then
+4. **Prove the tree.** `cargo check --all-targets`, then the project's gate
+   (`references/project-gate.md`), then `cargo fmt`. Where the project has no gate:
    `cargo clippy --all-targets --all-features -- -D warnings`, then `cargo nextest run`
-   (fall back to `cargo test`), then `cargo fmt`. A merge that compiles is not a merge that
+   (fall back to `cargo test`). A merge that compiles is not a merge that
    works — the tests are the evidence.
 5. **Stage the resolution and stop.** Leave the commit to the human: `/commit` for a merge,
    `git rebase --continue` for a rebase, once they have read the summary. Then repeat from

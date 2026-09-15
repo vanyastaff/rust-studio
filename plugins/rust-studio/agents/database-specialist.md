@@ -63,8 +63,8 @@ orchestrator persists it to the project vault
 7. Specify row-to-type mapping: derive `FromRow`, newtype wrappers for domain IDs and
    money types, nullability (database nullable → `Option<T>`).
 
-Use **serena** (`find_symbol`, `find_referencing_symbols`) to locate existing query sites
-and pool initialization before proposing changes. Use **exa** (`web_search_exa`) for
+Use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`) to locate existing
+query sites and pool initialization before proposing changes. Use **exa** (`web_search_exa`) for
 RUSTSEC advisories, crate adoption data, or upstream sqlx/diesel issue audits.
 
 ## Standards you enforce

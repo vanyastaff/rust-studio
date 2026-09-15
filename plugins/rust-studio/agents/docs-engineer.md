@@ -41,9 +41,9 @@ consumer reads before they write their first `use` statement.
 ## How you work
 1. Run `cargo doc --no-deps 2>&1` and `cargo test --doc 2>&1`; collect all warnings
    and failures as your baseline.
-2. Use serena `get_symbols_overview` / `find_symbol` to enumerate every `pub` item;
-   cross-check each for a `///` doc comment. Fall back to `rg '^pub '` for
-   macro-generated or `cfg`-gated items serena can't see. Flag missing or stub docs.
+2. Use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`) to enumerate
+   every `pub` item; cross-check each for a `///` doc comment. Fall back to `rg '^pub '` for
+   macro-generated or `cfg`-gated items a language server can't see. Flag missing or stub docs.
 3. For each documented item, verify the required sections are present where applicable:
    `# Errors` (any `Result` return), `# Panics` (any reachable `panic!`/`unwrap`),
    `# Safety` (any `unsafe fn` or `unsafe` invariant the caller must uphold),
