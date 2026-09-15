@@ -106,6 +106,62 @@ describe("stripQuoted (_lib)", () => {
     expect(out).toContain("c");
   });
 
+  test("a double-quoted span wrapped across a soft line break is blanked and the pair after it is found", () => {
+    // docs/sub-agents.md:36 as it was: the wrapped span left both quotes unpaired, the next
+    // quote on line 2 paired with the wrong partner, and the real em-dash was blanked.
+    const input = [
+      'The refusal comes in several wordings — "requires approval", "permission …',
+      'denied", "blocked", a tool missing from the list — and some hosts append "you may attempt this',
+      'with other tools"; for a build that offer is empty.',
+      "",
+    ].join("\n");
+    const out = stripQuoted(input);
+    expect(lineCount(out)).toBe(lineCount(input));
+    for (const w of ["requires approval", "permission", "denied", "blocked", "you may attempt", "other tools"]) {
+      expect(out).not.toContain(w);
+    }
+    expect(out.split("\n")[1]).toContain("a tool missing from the list — and some hosts append");
+    expect(out.split("\n")[2]).toBe(" ; for a build that offer is empty.");
+    expect(audit(stripProse(input)).hits.map((h) => [h.rule, h.line])).toEqual([["dash-pair", 1]]);
+    // CRLF: the span still crosses one soft break.
+    expect(stripQuoted('a "b\r\nc" d')).toBe("a  \n  d");
+  });
+
+  test("a lone double quote does not eat the paragraph", () => {
+    // No partner on the next line: nothing is blanked and the pair after it is found.
+    const lone = 'A lone " quote here.\nNext — a — pair.\n';
+    expect(stripQuoted(lone)).toBe(lone);
+    expect(audit(stripQuoted(lone)).hits.map((h) => [h.rule, h.line])).toEqual([["dash-pair", 2]]);
+    // A partner past a blank line is not a partner: the paragraph break ends the search.
+    const far = 'He said "hello\n\nNext — a — pair, "quoted".\n';
+    const out = stripQuoted(far);
+    expect(lineCount(out)).toBe(4);
+    expect(out.split("\n")[0]).toBe('He said "hello');
+    expect(out.split("\n")[2]).toBe("Next — a — pair,  .");
+    expect(audit(out).hits.map((h) => [h.rule, h.line])).toEqual([["dash-pair", 3]]);
+  });
+
+  test("a double-quoted span may wrap across several lines of one paragraph", () => {
+    // docs/delegation.md:170-173 as it was: a three-line quote that a one-break rule leaves
+    // unpaired, whose orphan closer then pairs forward and blanks one dash of the real pair.
+    const input = [
+      'Codex carries "Do not spawn sub-agents unless the',
+      'user or applicable instructions explicitly ask for sub-agents, delegation, or',
+      'parallel agent work" (its proactive mode lifts that prior). So a skill must name the',
+      'spawn — "spawn `rust-reviewer`", "run these lenses in parallel" — because intent-only phrasing',
+      "does not clear the gate.",
+      "",
+    ].join("\n");
+    const out = stripQuoted(input);
+    expect(lineCount(out)).toBe(lineCount(input));
+    for (const w of ["Do not spawn", "explicitly ask", "parallel agent work", "rust-reviewer", "run these lenses"]) {
+      expect(out).not.toContain(w);
+    }
+    expect(out.split("\n")[2]).toBe("  (its proactive mode lifts that prior). So a skill must name the");
+    expect(out.split("\n")[3]).toBe("spawn —  ,   — because intent-only phrasing");
+    expect(audit(stripProse(input)).hits.map((h) => [h.rule, h.line])).toEqual([["dash-pair", 3]]);
+  });
+
   test("a fence opened on a list-marker line is a fence, and its closer does not invert parity", () => {
     const input = "- ```bash\n  cargo test; x; y\n  ```\n- next — a — b.\n\nProse — c — d.\n";
     const out = stripQuoted(input);
@@ -219,6 +275,36 @@ describe("stripProse", () => {
     expect(out).not.toContain("docs/a.b");
     expect(out).not.toContain("img.png");
     expect(audit(out).hits).toEqual([]);
+  });
+
+  test("a backticked URL keeps its closing backtick, so the next bullet's pair is seen", () => {
+    // The URL pass used to run before the code-span pass and take the closing backtick as
+    // the URL's last character; the orphan opener then paired into the next bullet.
+    const input = [
+      "- `https://example.com/x` → 200 (checked) — the real repo",
+      "- The second — honest — bullet, with `code` in it.",
+      "",
+    ].join("\n");
+    const out = stripProse(input);
+    expect(lineCount(out)).toBe(lineCount(input));
+    expect(out).not.toContain("example.com");
+    expect(out).not.toContain("code");
+    expect(out.split("\n")[0]).toBe("-   → 200 (checked) — the real repo");
+    expect(out.split("\n")[1]).toBe("- The second — honest — bullet, with   in it.");
+    expect(audit(out).hits.map((h) => [h.rule, h.line])).toEqual([["dash-pair", 2]]);
+    // docs/adr/0001…:216 as it was: three one-dash bullets fused into one two-dash sentence.
+    const corpus = [
+      "- Published 2026-08-06 — agent-plugins.org",
+      "- `https://github.com/x/y` → 200 (checked 2026-09-04) — the real repo",
+      "- `https://x.com/z/` → 200 (checked 2026-09-04) — first-party docs",
+      "",
+    ].join("\n");
+    expect(sentences(stripProse(corpus)).map((s) => s.line)).toEqual([1, 2, 3]);
+    expect(audit(stripProse(corpus)).hits).toEqual([]);
+    // A bare URL in prose is still blanked, and a closer or quote after it survives.
+    expect(stripProse("See (https://example.com/a) and then.\n").split("\n")[0]).toBe("See ( ) and then.");
+    expect(stripProse("At 'https://example.com/b' — a — b.\n").split("\n")[0]).toBe("At ' ' — a — b.");
+    expect(stripProse("Go to https://example.com/c.\n").split("\n")[0]).toBe("Go to  .");
   });
 });
 

@@ -126,11 +126,20 @@ function stripFrontmatter(lines: string[]): void {
   }
 }
 
+/** A bare URL in prose: a scheme, `://`, then anything up to whitespace or a closer. The
+ *  last character is never a closer, a quote, a backtick, or trailing punctuation, so a URL
+ *  in parentheses, in single quotes, or at the end of a sentence gives that closer back to
+ *  the prose. It runs after `stripQuoted`, so a URL inside a code span is already blank and
+ *  this pass can never take a span's closing backtick (which once left an orphan opener that
+ *  blanked the next bullet, docs/adr/0001:216). */
+const BARE_URL = /\b[a-z][a-z0-9+.-]*:\/\/[^\s)>\]`"'”’]*[^\s.,;:!?)\]>`"'”’]/gi;
+
 /** Markdown to prose, line-preserving: frontmatter (except the description and the `---`
  *  delimiters), HTML comments, images, link targets, reference-link definitions, autolinks
- *  and bare URLs, and `~~struck~~` text become blanks; link text stays; headings keep their
- *  text and their `#` marker, which `sentences` uses as a block boundary and drops from the
- *  sentence it emits. Then the shared `stripQuoted` layer blanks code and quoted specimens. */
+ *  and `~~struck~~` text become blanks; link text stays; headings keep their text and their
+ *  `#` marker, which `sentences` uses as a block boundary and drops from the sentence it
+ *  emits. Then the shared `stripQuoted` layer blanks code and quoted specimens, and last the
+ *  bare URLs that remain in prose. */
 export function stripProse(text: string): string {
   const lines = text.split("\n");
   stripFrontmatter(lines);
@@ -142,9 +151,8 @@ export function stripProse(text: string): string {
     .replace(/\[([^\]]*)\]\[[^\]\n]*\]/g, "$1") // reference-style links
     .replace(/^[ \t]*\[[^\]\n]+\]:[ \t]+\S.*$/gm, " ") // reference-link definitions
     .replace(/<[a-z][a-z0-9+.-]*:[^>\s]*>/gi, " ") // autolinks
-    .replace(/\b[a-z][a-z0-9+.-]*:\/\/[^\s)>\]]*[^\s.,;:!?)\]>]/gi, " ") // bare URLs
     .replace(/~~[^~\n]+~~/g, " "); // struck text
-  return stripQuoted(md);
+  return stripQuoted(md).replace(BARE_URL, " ");
 }
 
 /** A `.rs` file as prose: each `///` or `//!` line yields its comment text (one leading space

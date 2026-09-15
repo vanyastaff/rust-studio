@@ -219,15 +219,20 @@ function blankFences(text: string): string {
  *  Line-preserving: the output has exactly as many newlines as the input, so a caller can
  *  name the source line of anything it finds. An inline code span may cross at most one
  *  soft line break (a hard-wrapped `cargo test\n<filter>` is one span) and never a blank
- *  line, so a stray backtick can swallow at most the rest of its line and the next one.
- *  Quoted spans stay within one line, as the old stop-guard `toProse` had it. Markdown
+ *  line, so a stray backtick can swallow at most the rest of its line and the next one. A
+ *  straight double-quoted span may cross any number of soft line breaks but never a blank
+ *  line: hard-wrapped prose splits a quote across two lines 68 times and across three lines
+ *  3 times in the plugin's docs, a span left unpaired makes the next quote on the line pair
+ *  with the wrong partner and blank a real em-dash, and no paragraph in that corpus carries
+ *  a lone quote, so the paragraph is the bound a stray quote could reach. The curly,
+ *  guillemet and low forms stay within one line (no wrapped case in the corpus). Markdown
  *  structure that only the prose gate cares about (frontmatter, HTML comments, images) is
  *  layered on top in prose-gate.ts, because the stop-guard must keep scanning that text. */
 export function stripQuoted(text: string): string {
   return blankFences(text)
     .replace(/(`+)[^`\n]*(?:\n(?![ \t\r]*\n)[^`\n]*)?\1(?!`)/g, blankKeepingLines) // inline code spans
     .replace(/^[ \t]*>.*$/gm, " ") // markdown blockquotes
-    .replace(/"[^"\n]*"/g, " ") // straight double-quoted spans
+    .replace(/"[^"\n]*(?:\n(?![ \t\r]*\n)[^"\n]*)*"/g, blankKeepingLines) // straight double-quoted spans
     .replace(/[“”][^“”\n]*[“”]/g, " ") // curly double quotes
     .replace(/«[^»\n]*»/g, " ") // guillemets
     .replace(/„[^“”\n]*[“”]/g, " "); // low „ … “/” quotes
