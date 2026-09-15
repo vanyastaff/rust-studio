@@ -115,11 +115,12 @@ prompts produced one nudge (the session's first), 59 memory pointers and no rout
 routing evals (`routing-start`, `routing-binary-size`, `routing-flaky-tests`,
 `routing-public-api-design`, three runs each, `tools/eval-runner.ts` on a snapshot of the
 tree before and after): before, the intended skill fired in 12 of 12 runs with the regex hint
-in context; after, in every run finished at the time of writing (9 of 9 on the first three
-cases, the fourth in flight), with the hint gone. `bun test`: 633 pass, 0 fail across 25
-files (704 across 23 before; the 127 corpus and route tests left with the router, 56 arrived
-with the guard, the log and the report). `validate-distribution.sh`: ok at 64 skills, 6467 of
-6500 description characters.
+in context; after, 12 of 12 with the hint gone (`routing-public-api-design` hit the case's
+600 s timeout in 2 runs before and 3 after, with `/design-api` and its agents already fired;
+that is the case's budget, not its routing). `bun test`: 636 pass, 0 fail across 25 files
+(704 across 23 before; the 127 corpus and route tests left with the router, 59 arrived with
+the guard, the log and the report). `validate-distribution.sh`: ok at 64 skills, 6467 of 6500
+description characters.
 
 ## [0.55.0] - 2026-09-14
 
