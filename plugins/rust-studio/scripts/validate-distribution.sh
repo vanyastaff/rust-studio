@@ -34,7 +34,7 @@ _json_escape() { # minimal JSON string escaping for the fields below
 #   RS-DIST-0xx      required files, and this script itself    next: 004
 #   RS-CODEX-0xx     Codex hooks and manifest wiring           next: 017
 #   RS-HOOK-0xx      hook config shared across hosts           next: 022
-#   RS-SCRIPT-0xx    shipped scripts and their contracts       next: 040
+#   RS-SCRIPT-0xx    shipped scripts and their contracts       next: 042
 #   RS-MEM-0xx       memory-store contract                     next: 041
 #   RS-MANIFEST-0xx  plugin manifests and version agreement    next: 059
 #   RS-SKILL-0xx     skill structure, frontmatter, metadata    next: 078
@@ -155,6 +155,14 @@ for f in acceptance-check.ts acceptance-ledger.ts; do
 done
 grep -q 'bun "scripts/acceptance-check.ts"' skills/acceptance/SKILL.md ||
   fail RS-SCRIPT-038 "skills/acceptance/SKILL.md" "does not invoke bun \"scripts/acceptance-check.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
+# The usage report reads the log the hooks write and the catalog on disk; /studio-doctor runs
+# it under --usage, so the bundle must be whole (the report imports the row parser and the
+# plugin-root helper relatively) and the skill must call it by its bundled path.
+for f in usage-report.ts usage-log.ts _lib.ts; do
+  [[ -f skills/studio-doctor/scripts/$f ]] || fail RS-SCRIPT-040 "skills/studio-doctor/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so --usage breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
+done
+grep -q 'bun "scripts/usage-report.ts"' skills/studio-doctor/SKILL.md ||
+  fail RS-SCRIPT-041 "skills/studio-doctor/SKILL.md" "does not invoke bun \"scripts/usage-report.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
 # The template is the first ledger every user sees; it must parse under the strict parser and
 # pass its own lint, or the first thing /spec-tasks writes is a ledger the checker refuses.
 if command -v bun >/dev/null 2>&1; then

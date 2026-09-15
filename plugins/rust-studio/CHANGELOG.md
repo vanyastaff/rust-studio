@@ -7,6 +7,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.0] - 2026-09-15
+
+The question "which of the 64 skills does anyone use?" led somewhere else first. An audit of
+1,187 sessions (72 main-session transcripts, 2026-08-12 to 09-14, four Rust projects and the
+plugin's own development) found 22 skills ever invoked and 42 never, and then found that the
+counter could not be trusted: the per-prompt regex that named a skill for a prompt's shape had
+fired 123 times, 114 of them on `<task-notification>` text no human typed, and the model had
+obeyed 6. The counts measured a hint the model had learned to ignore, not a need. So this
+release changes the routing first and adds the instrument, and the pruning waits a week for
+numbers taken with the noise removed. Nothing is deleted here, and no skill description
+changes, so the week measures one variable: the model's own routing from descriptions.
+
+### Removed
+
+- **The regex route hint** in `hooks/scripts/user-prompt-submit.ts` (0.44 to 0.55): the
+  `ROUTES` table, its vetoes, the per-skill session marker and the 111-prompt
+  `routing-corpus.json`. Retired on measurement, not taste. On the real traffic 93% of its
+  firings were on sub-agent completions passing through `UserPromptSubmit`; the model followed
+  6 of 123, and 0 of the 17 that named `/review`. The table could not have been repaired: 488
+  of the 545 human prompts were Russian against an English-only table and corpus, 73% were
+  under 120 characters, and none carried an `error[E…]`, a panic, a diff, clippy output or a
+  `-->` location. A prompt like "мержи 259 когда пройдёт" has no shape a regex can read; the
+  model can. The hint was added in 0.44.0 from an eval-runner measurement on English
+  synthetic prompts and had never been checked against a transcript. Routing now lives in the
+  skill descriptions and the routing evals, and the usage log below measures whether that is
+  enough. The once-per-session nudge and the `routing_nudge` switch stay.
+
+### Fixed
+
+- **The prompt hook ignores text no human typed.** `<task-notification>`, `<teammate-message`,
+  `<agent-message`, the echo of a slash command (`<command-name>`, `<command-message>`), bash
+  mode (`<bash-input>`, `<bash-stdout>`, `<bash-stderr>`), `<local-command`,
+  `<system-reminder>`, `Stop hook feedback:`, `Goal check-in:`, the expanded body of a skill
+  (`Base directory for this skill:`) and `[Request interrupted` return before anything runs:
+  no memory pointer, no nudge, no usage row. The nudge is no longer spent on a notification,
+  so the first real prompt of a session carries it. Every prefix is pinned by a sample from
+  the transcripts (`isMachinePrompt`, 15 machine samples, 9 human ones including a pasted
+  notification, which stays a prompt). In the audit, 1,096 of the 1,996 main-session prompts
+  began with the first tag alone.
+
+### Added
+
+- **Usage telemetry.** `hooks/scripts/usage-log.ts` on `PostToolUse` (matcher `Skill|Agent`)
+  appends one JSON line per skill invocation and sub-agent spawn to `usage.jsonl` in the
+  plugin's data directory: timestamp, session, working directory, kind, name, and whose hand.
+  The Skill tool's `tool_input.skill` and the Agent tool's `tool_input.subagent_type` were read
+  from the installed Claude Code bundle (2.1.272), not the docs. A typed `/name` never passes
+  through the Skill tool, so the prompt hook appends the same row with `invoker: "user"`,
+  verified by feeding a live session `/rust-studio:help` and reading what the hook received.
+  Only a leading `/name` counts as the user's hand: in the transcripts 55 of 61 prompts that
+  named a skill named it mid-sentence ("вместо полного /dev-task"), and when the model acts on
+  such a mention the Skill tool logs that call as its own.
+  No prompt text is recorded; the file never leaves the machine; the session-start sweep of
+  week-old markers leaves it alone (`pruneState` gains a keep-set). Ported to Codex on
+  `spawn_agent` with `tool_input.agent_type`, schema read from the Codex 0.154 binary; a Codex
+  skill is a file the model reads rather than a tool it calls, so a Codex week reports agents
+  and typed invocations only, and `docs/usage-telemetry.md` says so.
+- **`usage-report.ts`**, bundled with `/studio-doctor` and run by `/studio-doctor --usage`: per
+  skill and per agent, invocations split by model and user, distinct sessions, projects (the
+  working directory's basename, `rust-studio` flagged as plugin-dev), over the last 7 days by
+  default (`--days N`, `0` for the whole log, `--json` for a script), and the two lists the
+  pruning decision needs: every skill and agent on disk the window never saw, plus the names
+  the model reached for that are not the studio's (a bare `Explore` where `rust-scout` exists
+  is a routing fact too). One command replaces mining 1.7 GB of transcripts. The doctor's
+  probe list gains a usage-log row.
+- **`docs/usage-telemetry.md`**: the record, the privacy line, the per-host coverage, what the
+  regex router taught, and the decision rule fixed before the week begins: a genuine
+  invocation outside plugin-dev keeps a skill; no invocation and no demand deletes it; no
+  invocation with demand is a description to sharpen and a Russian routing eval to add, then
+  a second measurement.
+- Tests: `usage-log.test.ts` (Skill, Agent, `Task`, `spawn_agent` and a forked spawn, every
+  malformed shape writing nothing and exiting 0, the keep-set) and `usage-report.test.ts`
+  (window, hands, projects, never-lists, outside names, rendering, the CLI with `--help`,
+  `--json`, a missing log and a copied one). `user-prompt-submit.test.ts` drops the corpus and
+  pins the guard and the user-invocation path end to end.
+
+### Measured
+
+The hook replayed over the audit's traffic (`bun user-prompt-submit.ts` with each text as the
+`prompt`): 2,361 machine-generated texts produced no output and no usage row; 660 human
+prompts produced one nudge (the session's first), 59 memory pointers and no route hint. The
+routing evals (`routing-start`, `routing-binary-size`, `routing-flaky-tests`,
+`routing-public-api-design`, three runs each, `tools/eval-runner.ts` on a snapshot of the
+tree before and after): before, the intended skill fired in 12 of 12 runs with the regex hint
+in context; after, in every run finished at the time of writing (9 of 9 on the first three
+cases, the fourth in flight), with the hint gone. `bun test`: 633 pass, 0 fail across 25
+files (704 across 23 before; the 127 corpus and route tests left with the router, 56 arrived
+with the guard, the log and the report). `validate-distribution.sh`: ok at 64 skills, 6467 of
+6500 description characters.
+
 ## [0.55.0] - 2026-09-14
 
 Measured on 2026-09-14, the plugin's prose carried one em-dash every 57 words, the plugin

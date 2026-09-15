@@ -87,7 +87,9 @@ done
 # <src>:<dest> pairs. memory-doctor's CLI imports memory-store.ts and _lib.ts relatively, so
 # all three travel together and the skill stays self-contained; acceptance-check.ts imports
 # acceptance-ledger.ts the same way (the Stop guard shares that parser from hooks/scripts/);
-# prose-gate.ts imports stripQuoted from _lib.ts, so /prose carries its own copy of that too.
+# prose-gate.ts imports stripQuoted from _lib.ts, so /prose carries its own copy of that too;
+# usage-report.ts imports the row parser from usage-log.ts and pluginRoot from _lib.ts, so
+# /studio-doctor carries all three.
 assets=(
   scripts/env-setup.sh:skills/env-setup/scripts/env-setup.sh
   hooks/scripts/memory-doctor.ts:skills/memory-doctor/scripts/memory-doctor.ts
@@ -97,6 +99,9 @@ assets=(
   hooks/scripts/acceptance-ledger.ts:skills/acceptance/scripts/acceptance-ledger.ts
   hooks/scripts/prose-gate.ts:skills/prose/scripts/prose-gate.ts
   hooks/scripts/_lib.ts:skills/prose/scripts/_lib.ts
+  hooks/scripts/usage-report.ts:skills/studio-doctor/scripts/usage-report.ts
+  hooks/scripts/usage-log.ts:skills/studio-doctor/scripts/usage-log.ts
+  hooks/scripts/_lib.ts:skills/studio-doctor/scripts/_lib.ts
 )
 for pair in "${assets[@]}"; do
   asset_src=${pair%%:*}

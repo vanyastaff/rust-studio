@@ -16,9 +16,9 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
   `harsh-critic`) + a scout / builder / resolver / reviewer execution group.
 - **21 path-scoped rule sets**: the right Rust standard surfaces the moment you open a matching
   file. The agent reads the full rule on demand, so the window stays lean.
-- **14 Claude hook handlers across 9 events**: stack detection and memory recall, rule pointers, a
-  sub-agent brief, lint and lifecycle nudges, verdict checks, an acceptance-ledger guard, and an
-  opt-in stop-guard.
+- **15 Claude hook handlers across 10 events**: stack detection and memory recall, rule pointers, a
+  sub-agent brief, lint and lifecycle nudges, verdict checks, an acceptance-ledger guard, a usage
+  log, and an opt-in stop-guard.
 - **Bundled rust-analyzer LSP**: diagnostics and go-to-definition as you edit, so `rust-scout`
   resolves symbols instead of scanning files. Just put `rust-analyzer` on PATH.
 - **An integrity layer that rejects a gamed green**: see
@@ -196,18 +196,20 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
 - **UserPromptSubmit**: prompt-scoped recall. The prompt is matched against the memory index
   and a note that scores a strong hit is surfaced once per session (title, kind/age, path),
   plus a once-per-session nudge to `/recall` before working in a known area and to prefer a
-  studio skill when one fits. It also **routes by prompt shape**: Rust code pasted with "review
-  it", "is this in scope", "the binary is 48 MB", "attack this design" each get a one-line pointer
-  to the skill that owns that work (`/review`, `/scope-check`, `/bloat`, `/brainstorm`, …), once
-  per skill per session. Measured with the eval runner: without it, six of the first seven
-  review-shaped prompts were answered inline in one turn, with no skill, no agent and no verdict.
-  The table covers **work** shapes as well as review lenses: "add a retry layer", "it panics on
-  empty input", "test-first", "plan how cancellation propagates" reach `/dev-task`, `/debug`,
-  `/tdd` and `/spec`. The general shapes sort last, so every lens claims a prompt first. A
-  studio identifier in the prompt is stripped before the table: `ffi-specialist` contains "ffi"
-  and `chief-architect` contains "architect", and naming an agent is not a request to be routed
-  to one. All 20 routes are pinned by a 111-prompt corpus in `bun test`, 38 of them prompts that
-  must route nowhere.
+  studio skill when one fits. Text no human typed (a sub-agent's `<task-notification>`, a
+  teammate message, the echo of a slash command or of bash mode) is ignored whole, so neither
+  fires on it and the nudge waits for the first real prompt. A typed `/name` is also written to
+  the usage log (below), since a user's invocation never passes through the Skill tool. The
+  per-prompt regex that used to name a skill for a prompt's shape was retired in 0.56.0 on an
+  audit of real sessions: 93% of its firings were on those machine-generated prompts, and the
+  model obeyed 5% of them. Routing lives in the skill descriptions and the routing evals;
+  [`docs/usage-telemetry.md`](docs/usage-telemetry.md) has the numbers.
+- **PostToolUse (Skill/Agent)**: the usage log. One JSON line per skill invocation and
+  sub-agent spawn (name, session, working directory, timestamp, whose hand), appended to
+  `usage.jsonl` in the plugin's data directory and read by `/studio-doctor --usage`, which
+  reports per-skill and per-agent counts by project and session and lists every skill and
+  agent on disk that a week never touched. No prompt text is recorded and the file never
+  leaves the machine. [`docs/usage-telemetry.md`](docs/usage-telemetry.md).
 - **Stop**: nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
 - **Auto-capture (Stop)**: after a turn that finished a real unit of work (a completion summary +
   uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable
@@ -259,7 +261,9 @@ falls back to the temp directory. See [`../../INSTALL.md`](../../INSTALL.md).
 event, and `SubagentStop` needs the sub-agent's final message, which it reads from
 Claude-specific payload fields or from `<session>/subagents/<id>.jsonl`, a layout Codex does
 not use, so the hook would run, find nothing, and enforce nothing. A gap stated is worth more
-than coverage that looks real. Note also that **Codex CLI 0.153 does not execute plugin hooks
+than coverage that looks real. The usage log runs there too, on `spawn_agent`, but a Codex
+skill is a file the model reads rather than a tool it calls, so a Codex week reports agents
+and typed `/name` invocations only. Note also that **Codex CLI 0.153 does not execute plugin hooks
 at all**: it enumerates them, reports them completed, and runs only the user's own
 `~/.codex/hooks.json`. Skills still load, so the session looks healthy while the briefing and
 the standards never arrive. `/studio-doctor` detects it and offers

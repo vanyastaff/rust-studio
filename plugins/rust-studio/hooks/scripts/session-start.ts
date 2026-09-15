@@ -14,6 +14,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { readInput, emit, watchdog, option, optionBool, pluginRoot, pluginData, pruneState } from "./_lib.ts";
+import { USAGE_FILE } from "./usage-log.ts";
 import { summarizeManifest } from "./cargo-manifest.ts";
 import {
   INDEX_FILE,
@@ -255,7 +256,7 @@ if (!manifestExists) {
 // accumulate is dead weight, invisible until a temp directory fills. One sweep per session
 // start is the cheapest place to pay for it, and it fails open.
 try {
-  pruneState(pluginData());
+  pruneState(pluginData(), undefined, new Set([USAGE_FILE]));
 } catch {
   /* never let housekeeping cost a briefing */
 }

@@ -1,9 +1,25 @@
-// Tests for prompt-scoped recall (UserPromptSubmit): each pins which notes a prompt
-// surfaces and that a surfaced note is not repeated.
+// Tests for the UserPromptSubmit hook: prompt-scoped recall (which notes a prompt surfaces,
+// and that a surfaced note is not repeated), the machine-prompt guard, and the user-typed
+// skill detection that feeds the usage log.
 import { test, expect, describe } from "bun:test";
-import { readFileSync } from "node:fs";
-import { pickPromptPointers, renderPointers, MIN_PROMPT_SCORE, readSurfaced, writeSurfaced, routeFor, renderRoute, routeKey, readRouted, writeRouted, namesStudioSkill } from "./user-prompt-submit.ts";
+import { mkdtempSync, readFileSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  pickPromptPointers,
+  renderPointers,
+  MIN_PROMPT_SCORE,
+  readSurfaced,
+  writeSurfaced,
+  isMachinePrompt,
+  MACHINE_PROMPT_PREFIXES,
+  namesStudioSkill,
+  studioSkillsNamed,
+  userInvokedSkill,
+} from "./user-prompt-submit.ts";
 import { parseIndex } from "./memory-store.ts";
+
+const HOOK = new URL("./user-prompt-submit.ts", import.meta.url).pathname;
 
 const entries = parseIndex(
   [
@@ -47,49 +63,61 @@ describe("surfaced marker", () => {
   });
 });
 
-describe("routeFor — prompt shape → the skill that owns it", () => {
-  // Each prompt is (a paraphrase of) an eval case that answered inline with no skill fired.
-  const cases: [string, string | null][] = [
-    ["This is `src/service/fanout.rs`. Clippy is clean. Review it for async correctness before it lands; end with a verdict.\n\n```rust\nfn x() {}\n```", "review"],
-    ["We are about to publish 1.0 of `acme-store`. Review the error handling as the crate's public contract.", "api-review"],
-    ["Can we tag and publish 1.3.0? cargo semver-checks complained but CI is green.", "api-review"],
-    ["This is the lowest layer of our workspace. We are about to add a `refund` flow. Is the crate in shape to extend?", "architecture"],
-    ["Our Rust test suite fails about one run in five on CI with no code changes. Where do I start?", "flaky-hunt"],
-    ["The release binary of our small Rust CLI is 48 MB. Why, and how do we shrink it?", "bloat"],
-    ["I'm starting a new crate that parses .env files and we intend to publish it. Help me design its public API.", "design-api"],
-    ["We are considering taking a new dependency, `fast-validate 0.3.1`. I have pulled its source. Vet the crate and tell me whether we should add it.", "@dependency-manager"],
-    ["The story: add a --json flag. Here is what the branch changed. Is this diff in scope? What ships, what gets split out?", "scope-check"],
-    ["Nobody can follow apply_discount any more. Make it readable for a human — behavior must stay identical.", "refactor"],
-    ["Review the exported C API in src/ffi.rs before the binding teams build on it.", "audit-unsafe"],
-    ["cargo build fails with error[E0502] after my change, help", "fix-build"],
-    ["Audit the unsafe blocks in the ring buffer for soundness", "audit-unsafe"],
-    ["I want to start a new Rust project in this directory — a small CLI that deduplicates lines. How should we begin?", "start"],
-    ["continue", null],
-    ["what does the ? operator do in rust", null],
-  ];
-  for (const [prompt, want] of cases) {
-    test(`${want ?? "no route"}: ${prompt.slice(0, 50)}…`, () => {
-      const r = routeFor(prompt);
-      expect(r ? routeKey(r).replace(/^\//, "") : null).toBe(want);
+// Every sample below is the head of a real prompt from the 2026-08/09 transcripts. The
+// route hint this hook used to carry fired 114 of 123 times on the first shape alone.
+const MACHINE_SAMPLES: string[] = [
+  '<task-notification>\n<task-id>a0d5f4e3159d3d333</task-id>\n<tool-use-id>toolu_01DvjfUH5XktiJXepDNf4QSz</tool-use-id>\n<status>completed</status>\n<summary>Agent "Rust capability baseline" finished</summary>\n<note>A task-notification fires each time this agent stops</note>\n</task-notification>',
+  "<task-notification>\n<summary>Goal check-in: background work still running</summary>\n</task-notification>\n<system-reminder>\nGoal check-in: «возьми какой то новый issue в решение через /dev-task» is still active",
+  '<teammate-message teammate_id="team-lead">\nRepo: /home/vanyastaff/orca/workspaces/flui/walleye (git worktree). Read-only — do not edit.\n\nAudit the **re-entrancy and interior-mutability** surface of `crates/flui-widgets/src/navigator/`',
+  '<agent-message agent_id="rust-reviewer-1">Semver review of the public surface finished — NEEDS WORK, 2 blockers.</agent-message>',
+  "<local-command-stdout>✔ Updated Rust Code Studio. Run /reload-plugins to apply.</local-command-stdout>",
+  "[Request interrupted by user]",
+  "<command-name>/clear</command-name>\n            <command-message>clear</command-message>\n            <command-args></command-args>",
+  "<command-message>rust-studio:resolve-pr</command-message>\n<command-name>/rust-studio:resolve-pr</command-name>",
+  "<bash-stdout></bash-stdout><bash-stderr>sudo: A terminal is required to authenticate\n</bash-stderr>",
+  "<bash-stderr>error: no such command: `nextest`\n</bash-stderr>",
+  "<bash-input> sudo mkdir -p -m 755 /etc/apt/keyrings && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg",
+  "Stop hook feedback:\n[bun \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/stop-guard.ts\"]: the final message claims done without evidence",
+  "Goal check-in: «мержи 259 когда пройдёт» is still active; the last turn ended without progress on it.",
+  "Base directory for this skill: /home/me/.claude/plugins/cache/vanya/rust-studio/0.52.2/skills/resolve-pr\n\n# /resolve-pr — work through PR feedback",
+  "  \n<task-notification>\n<task-id>b1</task-id>\n<status>completed</status>\n</task-notification>",
+  "<system-reminder>\nThe user opened the file /home/me/proj/src/lib.rs in the IDE.\n</system-reminder>",
+];
+
+const HUMAN_SAMPLES: string[] = [
+  "мержи 259 когда пройдёт",
+  "запусти агентов снова",
+  "проверь роутинг и ссылки и оркестр работу и harmess и тд",
+  "/review the diff before we merge it",
+  "The release binary of our small Rust CLI is 48 MB. Why, and how do we shrink it?",
+  "[Image #1] верны ли данные на скрине?",
+  "Here is what the notification said, is it right?\n\n<task-notification>\n<status>completed</status>\n</task-notification>",
+  "This session is being continued from a previous conversation that ran out of context.",
+  "continue",
+];
+
+describe("isMachinePrompt", () => {
+  for (const s of MACHINE_SAMPLES) {
+    test(`machine: ${JSON.stringify(s.trimStart().slice(0, 44))}…`, () => {
+      expect(isMachinePrompt(s)).toBe(true);
     });
   }
-
-  test("a prompt that already names a studio skill is left alone", () => {
-    expect(routeFor("/review the diff before we merge it")).toBeNull();
-    expect(routeFor("run /rust-studio:api-review against v1.2.0")).toBeNull();
+  for (const s of HUMAN_SAMPLES) {
+    test(`human: ${JSON.stringify(s.slice(0, 44))}…`, () => {
+      expect(isMachinePrompt(s)).toBe(false);
+    });
+  }
+  test("a non-string is not a machine prompt (nor a human one — the caller checks emptiness)", () => {
+    expect(isMachinePrompt(undefined)).toBe(false);
+    expect(isMachinePrompt(42)).toBe(false);
   });
-
-  // routing-corpus.json is the routing table's contract: realistic prompts with the route each
-  // must take, and prompts that must take none. Extend the corpus before extending ROUTES, and
-  // never make a regex match a corpus prompt it is not meant to catch.
-  const corpus: Array<{ prompt: string; route: string | null }> = JSON.parse(
-    readFileSync(new URL("./routing-corpus.json", import.meta.url), "utf8"),
-  );
-  test("the routing corpus has both directions and no duplicates", () => {
-    expect(corpus.filter((c) => c.route).length).toBeGreaterThanOrEqual(55);
-    expect(corpus.filter((c) => !c.route).length).toBeGreaterThanOrEqual(25);
-    expect(new Set(corpus.map((c) => c.prompt)).size).toBe(corpus.length);
+  test("every prefix the guard knows is exercised by a sample", () => {
+    const heads = MACHINE_SAMPLES.map((s) => s.trimStart());
+    for (const p of MACHINE_PROMPT_PREFIXES) expect(heads.some((h) => h.startsWith(p))).toBe(true);
   });
+});
+
+describe("studioSkillsNamed — a typed /skill is a user invocation", () => {
   test("a slash token is a skill invocation only when it names a shipped skill, not a path", () => {
     expect(namesStudioSkill("/review the last commit")).toBe(true);
     expect(namesStudioSkill("run /rust-studio:audit-unsafe on src/raw.rs")).toBe(true);
@@ -97,31 +125,64 @@ describe("routeFor — prompt shape → the skill that owns it", () => {
     expect(namesStudioSkill("logs at /tmp/ci.log, and the crate is under /workspace/crates/core")).toBe(false);
     expect(namesStudioSkill("what is in /etc here")).toBe(false);
   });
-  for (const c of corpus) {
-    test(`corpus: ${c.prompt.slice(0, 60).replace(/\n/g, " ")} → ${c.route ?? "(none)"}`, () => {
-      const r = routeFor(c.prompt);
-      expect(r ? routeKey(r).replace(/^\//, "") : null).toBe(c.route);
-    });
-  }
+  test("names are returned bare, in order, without the namespace or duplicates", () => {
+    expect(studioSkillsNamed("/rust-studio:dev-task https://github.com/x/y/issues/536")).toEqual(["dev-task"]);
+    expect(studioSkillsNamed("/spec then /spec-tasks, then /spec again")).toEqual(["spec", "spec-tasks"]);
+    expect(studioSkillsNamed("мержи 259 когда пройдёт")).toEqual([]);
+  });
+  test("an invocation is a leading /name — what the host expands as a command; a mention is not", () => {
+    expect(userInvokedSkill("/rust-studio:dev-task https://github.com/x/y/issues/536")).toBe("dev-task");
+    expect(userInvokedSkill("  /review src/lib.rs")).toBe("review");
+    expect(userInvokedSkill("/review")).toBe("review");
+    expect(userInvokedSkill("вместо полного /dev-task ты сделал коммит")).toBeNull();
+    expect(userInvokedSkill("/compact")).toBeNull();
+    expect(userInvokedSkill("/run/media/me/STORAGE/memory тут еще есть")).toBeNull();
+    expect(userInvokedSkill("/code-review high pr 1020")).toBeNull();
+  });
+});
 
-  test("an adversarial-critique prompt goes to the harsh-critic agent, not a facilitation skill", () => {
-    const r = routeFor("Before we build it, attack this design. Give me the strongest case against it.");
-    expect(r?.agent).toBe("harsh-critic");
-    expect(renderRoute(r!)).toContain("subagent_type `rust-studio:harsh-critic`");
-    expect(renderRoute(r!)).toContain("verdict line quoted verbatim");
+/** Run the hook end to end with its own data directory; returns stdout and the usage log. */
+function runHook(payload: unknown, dataDir: string): { out: string; usage: string; code: number | null } {
+  const r = Bun.spawnSync(["bun", HOOK], {
+    stdin: new TextEncoder().encode(JSON.stringify(payload)),
+    stdout: "pipe",
+    stderr: "pipe",
+    env: { ...process.env, CLAUDE_PLUGIN_DATA: dataDir, CLAUDE_PLUGIN_OPTION_MEMORY_RECALL: "off" },
+  });
+  const usagePath = join(dataDir, "usage.jsonl");
+  return { out: new TextDecoder().decode(r.stdout), usage: existsSync(usagePath) ? readFileSync(usagePath, "utf8") : "", code: r.exitCode };
+}
+
+describe("the hook end to end", () => {
+  test("a machine-generated prompt gets nothing, spends no nudge, logs nothing", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ups-"));
+    const sid = `s-${Date.now()}`;
+    const first = runHook({ session_id: sid, prompt: MACHINE_SAMPLES[0], cwd: dir }, dir);
+    expect(first.code).toBe(0);
+    expect(first.out).toBe("");
+    expect(first.usage).toBe("");
+    // the first HUMAN prompt of the session still carries the once-per-session nudge
+    const second = runHook({ session_id: sid, prompt: "мержи 259 когда пройдёт", cwd: dir }, dir);
+    expect(second.out).toContain("prefer a studio skill");
+    const third = runHook({ session_id: sid, prompt: "запусти агентов снова", cwd: dir }, dir);
+    expect(third.out).toBe("");
   });
 
-  test("the hint names the skill, the verdict vocabulary, and says to invoke it", () => {
-    const text = renderRoute(routeFor("review this code before we merge")!);
-    expect(text).toContain("`/review`");
-    expect(text).toContain("Skill tool");
-    expect(text).toContain("NEEDS WORK");
+  test("a typed /skill is logged as a user invocation; a mention mid-prompt is not", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ups-"));
+    const r = runHook({ session_id: "s-log", prompt: "/rust-studio:review the diff, then /spec if it grows; /home/me is a path", cwd: "/home/me/proj" }, dir);
+    expect(r.code).toBe(0);
+    const rows = r.usage.trim().split("\n").map((l) => JSON.parse(l));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ session_id: "s-log", cwd: "/home/me/proj", kind: "skill", name: "review", invoker: "user" });
+    expect(Number.isNaN(Date.parse(rows[0].ts))).toBe(false);
+    const mention = runHook({ session_id: "s-log", prompt: "почему вместо /dev-task ты сделал коммит?", cwd: "/home/me/proj" }, dir);
+    expect(mention.usage.trim().split("\n")).toHaveLength(1);
   });
 
-  test("routed markers round-trip per session", () => {
-    const sid = `r-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    expect(readRouted(sid).size).toBe(0);
-    writeRouted(sid, new Set(["review"]));
-    expect([...readRouted(sid)]).toEqual(["review"]);
+  test("a /skill inside a machine-generated prompt is not a user invocation", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ups-"));
+    const r = runHook({ session_id: "s-m", prompt: MACHINE_SAMPLES[1], cwd: dir }, dir);
+    expect(r.usage).toBe("");
   });
 });

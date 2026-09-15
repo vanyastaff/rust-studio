@@ -121,8 +121,11 @@ export function pluginData(): string {
  *  Session markers are keyed by session id, so a stale one suppresses nothing — it just sits
  *  there. On a durable directory that is a slow leak rather than a bug, and a slow leak in a
  *  temp directory is exactly the failure that is invisible until it is not. Fails open: a
- *  directory that cannot be read is left alone rather than wedging the hook that called it. */
-export function pruneState(dir: string, maxAgeMs = 7 * 24 * 60 * 60 * 1000): number {
+ *  directory that cannot be read is left alone rather than wedging the hook that called it.
+ *
+ *  `keep` names entries that are records, not markers — the usage log — and survive whatever
+ *  their age: a week away from the keyboard must not erase the month of data before it. */
+export function pruneState(dir: string, maxAgeMs = 7 * 24 * 60 * 60 * 1000, keep: ReadonlySet<string> = new Set()): number {
   const cutoff = Date.now() - maxAgeMs;
   let removed = 0;
   let entries: string[];
@@ -132,6 +135,7 @@ export function pruneState(dir: string, maxAgeMs = 7 * 24 * 60 * 60 * 1000): num
     return 0;
   }
   for (const name of entries) {
+    if (keep.has(name)) continue;
     const path = join(dir, name);
     try {
       if (statSync(path).mtimeMs >= cutoff) continue;

@@ -19,7 +19,7 @@ live docs.
 | Studio asset | Codex path | Notes |
 |---|---|---|
 | 62 skills | native, via `.codex-plugin/plugin.json` → `skills/` | Also installable standalone with `npx skills add` |
-| 8 hooks | `hooks/codex-hooks.json` | Working since v0.50.0 — see below |
+| 9 hooks | `hooks/codex-hooks.json` | Working since v0.50.0 — see below |
 | 33 agents | generated TOMLs in `~/.codex/agents/` | `scripts/generate-codex-agents.mjs`, run by `install.sh` |
 | `rules/` standards | delivered by the `inject-rules` hook | Falls back to the `AGENTS.md` fragment when hooks are off |
 | `LSP` tool | **absent** | serena MCP or `rg` — `tooling.md` |

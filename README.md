@@ -192,10 +192,11 @@ and what lies, with reproductions, is in
 - **Rules (21)** are path-scoped standards. Edit a matching file and a *pointer* to the relevant
   rule is injected automatically. The agent pulls the full text on demand. `core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `macros.md` inside macros.
-- **Hooks (9 events)** cover stack briefing and memory recall at session start, rule pointers after
+- **Hooks (10 events)** cover stack briefing and memory recall at session start, rule pointers after
   edits (per window, so a sub-agent gets them too), a fact brief for every studio sub-agent it
-  spawns, a lint nudge when you stop, a check that blocks a verdict-less finish, and a note when
-  the model switches so you know who is judging now.
+  spawns, a lint nudge when you stop, a check that blocks a verdict-less finish, a note when
+  the model switches so you know who is judging now, and a usage log of which skills and agents
+  a week actually reached for.
 - **Gates** are named checkpoints: `ARCH / API / ASYNC / CLI / PERF / SAFETY / QA / RELEASE /
   BUILD`, run at **lean** (one crate), **full** (public API, unsafe, releases), or **solo**
   (prototype) intensity.

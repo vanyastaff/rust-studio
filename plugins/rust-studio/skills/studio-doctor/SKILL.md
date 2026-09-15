@@ -21,6 +21,22 @@ evidence, and a row you could not check reports `?`, never ✓
 - Memory notes are stale or the index is over budget → `/memory-doctor`.
 - The status line is wrong specifically → `/progress-bar`.
 
+## `--usage` — which skills and agents are actually reached for
+With `--usage`, skip the probes and print the usage report instead; `--days N` widens the
+window (default 7, `0` for the whole log):
+
+```sh
+bun "scripts/usage-report.ts" --days 7
+```
+
+The report is per skill and per agent: invocations split by whose hand (the model through
+the Skill or Agent tool, the user through a typed `/name`), sessions, and projects, with the
+plugin's own checkout flagged as plugin-dev. Then the two lists the pruning decision needs
+(every skill and agent on disk the window never saw) and the names the model reached for
+that are not the studio's. Relay it whole; do not summarise the never-lists away. What is
+recorded, where it lives, the per-host coverage and the decision rule the numbers feed:
+`references/usage-telemetry.md`. Apply that rule; do not reinterpret the numbers to taste.
+
 ## Phase 1 — Probe (read-only, no approval needed)
 Run every check; report what each one actually returned.
 
@@ -94,6 +110,11 @@ degrades without it:
 
 Report a **fallback in use** as ⚠, not ✗ — the skill still runs, with weaker evidence, and the
 user should know which. Only a row with no fallback is ✗.
+
+**Usage log.** `usage.jsonl` in the plugin data directory (`references/usage-telemetry.md`):
+report whether it exists and the date of its last row. Absent on a fresh install is `·`, not
+✗ — it appears on the first skill invocation or agent spawn. Absent after a week of sessions
+means the `PostToolUse` hook is not reaching this host, and that is a ✗ row.
 
 **Configuration.** Report the studio options actually in effect and where each came from
 (host plugin settings, or a `RUST_STUDIO_*` environment variable) — gate intensity, test
