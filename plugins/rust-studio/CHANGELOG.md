@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-09-17
+
 The studio's anti-slop bar lived in one place: `rust-reviewer`'s shape audit, which reads a
 diff. A diff reader cannot see the tree the change sits in: the function a sibling crate
 already owns, the file no `mod` links, the `pub` nothing reaches, the two modules that `use`
