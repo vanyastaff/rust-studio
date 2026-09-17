@@ -1,5 +1,3 @@
 Approved. Proceed with the plan exactly as written; no changes.
 ---
-Approved, go ahead.
----
-Yes — continue and finish the workflow.
+Option 1: keep the approved plan, no scope extension. Continue.

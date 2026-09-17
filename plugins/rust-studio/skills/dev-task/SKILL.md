@@ -78,16 +78,13 @@ dependency (a typo/doc fix, a localized bug with a clear cause, a serena-drivabl
   *"Fast path: <change> — <why it qualifies>."*
 - Still **red→green for any behavior change**, still `clippy -D warnings` + `fmt` clean, still a
   quick `rust-reviewer` pass (Phase 5b) and a Phase 6 verdict. Quality is never on the chopping block.
-- If triage proves wrong — the "one-liner" reveals a design choice, a cross-crate ripple, or a
-  public-API/`unsafe` touch — **stop and enter the full loop.** Abandoning a fast path mid-task
-  is correct, not failure; it's the honest move the moment a condition above stops holding.
 
 **Full loop** — everything else (features, public-API / `unsafe` / cross-crate changes, anything
 with a real design decision) runs Phases 1–6 below under the chosen review mode. This is *not* a
 quick-win escape hatch: when in doubt, take the full loop.
 
 The double-loop, observable-criteria, and full **fast-path abort protocol** are defined once in
-`references/testing-model.md` — abort the fast path the moment a trivial condition
+`references/testing-model.md` — abort the fast path the moment any fast-path condition
 stops holding, re-enter the full loop, and reuse (don't discard) the work already done.
 
 ## Phase 1 — Scope & locate
@@ -107,9 +104,8 @@ changes the approach. If nothing surfaces, proceed
    with the user if fuzzy.
    Where the change has an **externally observable behavior**, write the **outer acceptance test**
    now (the highest-level test that asserts the feature from outside) and confirm it **fails** (red).
-   This is the outer loop of a double loop: the acceptance test pins "done from the outside", and
-   Phase 4's unit-level TDD drives inward to make it pass. Pure internal refactors with no external
-   behavior change skip the acceptance test — their existing unit tests are the anchor.
+   Pure internal refactors with no external behavior change skip the acceptance test — their
+   existing unit tests are the anchor.
 2. Task owned by **`rust-scout`** to map the edit sites and existing tests. Don't guess the
    layout.
 3. Identify the owning lead from the domain (see `references/agent-roster.md`).
