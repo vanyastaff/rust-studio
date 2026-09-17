@@ -87,3 +87,29 @@ The runner prints the snapshot it loaded as its first line; a run whose traces s
 
 `scripts/score-compare.sh --table .rust-studio/evolve/<slug>/scores/round-*.tsv` renders this
 block from the score files a run leaves behind.
+
+## Real sessions: the trajectory report
+
+A benchmark shows what a skill does in a sandbox; `bun tools/trajectory-report.ts --since <date>`
+shows what it did in the user's own sessions. It walks `~/.claude/projects/<project>/<session>.jsonl`
+and the `subagents/` transcripts beside each, skips the eval runner's own sandboxes, and
+reports per skill (fires, sessions, episodes ending with a verdict, interruptions, turns) and per
+agent (runs, background share, hand-back rate since the hand-back tool existed, runs that died
+in two turns, verdict distribution, read-only lenses that wrote, model errors, median turns and
+minutes), plus hook blocks, notice-only orchestrator turns and the recurring tool errors. It quotes
+no prompt text. Every number is a lead; the mechanism is read from the transcript behind it.
+
+The week to 2026-09-17, real work only (37 sessions, 492 sub-agent runs, 14 projects):
+
+| lead | number | what the transcripts say |
+|---|---:|---|
+| spawns in the background | 97–100% per agent | 406 completion notices against 283 hand-backs; 55 orchestrator turns only acknowledged a notice. The foreground rule landed in `/review` and `/dev-task` today; the installed 0.56.0 still backgrounds everything. |
+| `/dev-task` episodes ending with a verdict line | 11% of 18 | median 55 assistant turns before the next human prompt, mostly inside `/goal` loops that chain tasks; the benchmark shows a verdict in every isolated run. |
+| `/review` fired directly | 3 | `rust-reviewer` ran 95 times: reviews happen inside `/dev-task` and the goal loop, so the reviewer's own brief governs far more often than `/review`'s text. |
+| reviewer verdict vocabulary | PASS 17 / FAIL 5 of 68 | not the studio's tokens (COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED); 22 verdicts a downstream parser would miss. |
+| `general-purpose` as a worker | 39 runs | a writable, brief-less worker where a studio agent exists; 1 `chief-architect` run attempted a write. |
+| lenses that died in two turns | 0 | every one of the 67 early deaths in the wider corpus was an eval sandbox on the Ollama endpoint (pinned models 404 there): an instrument fact, fixed in the runner, not a production one. |
+| Edit misses (`String to replace not found`) | 103 | the largest tool-error class; the builder's median run is 217 turns. |
+| auto-mode classifier unavailable | 66 | the permission classifier's model timing out or rate-limited (deepseek-flash, sonnet) blocks Bash calls: an environment setting, not the plugin. |
+| irreversible-guard blocks (all time) | 70 | `branch -D` 30, `reset --hard` 18, `checkout .` 10, stash drop 6, publish 4, force-push 2 — the guard doing its job. |
+| Stop hooks | auto-capture 16, acceptance-guard 4, stop-guard 0 | the stop-guard never blocked a turn in a week. |

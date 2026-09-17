@@ -97,8 +97,11 @@ contract, rather than on every round.
 ## Round N — one change, three-part gate, one decision
 
 8. **Pick.** With `--target`, the pick comes from a study, not a scan: read the target's body
-   and every reference it cites, its cases' traces (where the run went wrong and what the
-   grader said), its rows in the usage log, and the rules that fire on the paths it touches;
+   and every reference it cites, its real trajectories first (`bun tools/trajectory-report.ts
+   --since <date>`: how often it fired in real sessions, whether its episodes ended with a
+   verdict, which agents it spawned and how they returned, which errors recurred; then the
+   transcripts behind the numbers), its cases' traces (where the run went wrong and what the
+   grader said), and the rules that fire on the paths it touches;
    then research (the host's own prompt and skills for the same job, another agent's version
    of the workflow, the model guidance in `references/claude-5-compat.md`) and write one
    hypothesis: an instruction the model misreads, a step the traces show it skipping, a
