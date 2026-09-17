@@ -24,6 +24,7 @@ const explicitOnlySkills = new Set([
   "add-dep",
   "commit",
   "eval-agents",
+  "evolve",
   "migrate",
   "new-crate",
   "pr",

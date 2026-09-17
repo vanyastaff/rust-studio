@@ -31,7 +31,7 @@ list of every installed skill is generated below it.
 **Spec-driven:** `/spec` · `/spec-tasks` · `/spec-verify`
 **TDD & verify:** `/tdd` · `/verify-loop` · `/acceptance` (criteria as checker-decided gates)
 **Debug:** `/debug` (root-cause runtime bugs) · `/fix-build` (compile errors) · `/flaky-hunt` (flaky tests)
-**Quality & review:** `/review` (`--full` = parallel multi-lens) · `/doc-review` (specs/plans/ADRs) · `/prose` (AI tells in a README, changelog, PR body, ADR or rustdoc) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
+**Quality & review:** `/review` (`--full` = parallel multi-lens) · `/doc-review` (specs/plans/ADRs) · `/prose` (AI tells in a README, changelog, PR body, ADR or rustdoc) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` (scan 6: `slop-auditor`'s tree-level ledger) · `/evolve` (rounds of one gated change: checkpoint or roll back) · `/scope-check`
 **Studio self-check:** `/eval-agents` (run the review agents against planted-bug fixtures) · `/studio-doctor` (hooks, runtime, agents, LSP, memory, cargo tooling)
 **Testing:** `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
 **Memory (cross-session):** `/remember` · `/recall` (verified) · `/memory-doctor` (audit, promote, import) · `/session-wrap`

@@ -361,7 +361,7 @@ for skill_dir in skills/*/; do
     codex_user_invoked=1
 
   case $skill in
-    add-dep|commit|eval-agents|migrate|new-crate|pr|progress-bar|publish|worktree-sweep) expected=1 ;;
+    add-dep|commit|eval-agents|evolve|migrate|new-crate|pr|progress-bar|publish|worktree-sweep) expected=1 ;;
     *) expected=0 ;;
   esac
 

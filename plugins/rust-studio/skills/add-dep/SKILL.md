@@ -1,6 +1,6 @@
 ---
 name: add-dep
-description: "Use when adding a Rust dependency: check RUSTSEC, license, MSRV, and features first."
+description: "Use when adding a Rust dependency: RUSTSEC, license, MSRV, features first."
 disable-model-invocation: true
 ---
 

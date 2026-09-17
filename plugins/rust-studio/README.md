@@ -10,7 +10,7 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 
 ## In the box
 
-- **64 skills**: design, spec-driven build, TDD, review, test, release, git/PR shipping,
+- **65 skills**: design, spec-driven build, TDD, review, test, release, git/PR shipping,
   build-fixing, edition & major-dependency migration, CI gates, cross-session memory.
 - **34 agents**: 2 directors → 7 leads → 21 specialists (including an adversarial
   `harsh-critic` and a read-only `slop-auditor`) + a scout / builder / resolver / reviewer execution group.

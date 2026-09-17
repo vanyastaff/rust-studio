@@ -1,6 +1,6 @@
 ---
 name: progress-bar
-description: "Use when running Claude Code and adding, refreshing, or removing the status line."
+description: "Use when adding, refreshing, or removing the Claude Code status line."
 disable-model-invocation: true
 argument-hint: "[off | nerd | emoji | symbols | text | ascii]"
 ---

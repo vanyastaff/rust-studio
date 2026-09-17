@@ -1,13 +1,13 @@
 # Rust Code Studio
 
 <p>
-  <img src="https://img.shields.io/badge/skills-64-111111?style=flat-square" alt="64 skills">
+  <img src="https://img.shields.io/badge/skills-65-111111?style=flat-square" alt="65 skills">
   <img src="https://img.shields.io/badge/agents-34-111111?style=flat-square" alt="34 agents">
   <img src="https://img.shields.io/badge/works%20with-70%2B%20hosts-111111?style=flat-square" alt="Works with 70+ hosts">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
-A Rust engineering studio for coding agents: 64 skills that carry the standards a strict crate
+A Rust engineering studio for coding agents: 65 skills that carry the standards a strict crate
 maintainer would apply, 34 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
@@ -188,7 +188,7 @@ and what lies, with reproductions, is in
 - **Agents (34)** are the workforce, in three tiers: directors decide, leads own a domain and its
   quality gate, specialists do the work. Each runs in its own context, so their reading never
   crowds your conversation.
-- **Skills (62)** are the workflows. A skill orchestrates the right agents through phases.
+- **Skills (63)** are the workflows. A skill orchestrates the right agents through phases.
 - **Rules (22)** are path-scoped standards. Edit a matching file and a *pointer* to the relevant
   rule is injected automatically. The agent pulls the full text on demand. `core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `macros.md` inside macros.
@@ -225,7 +225,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 
 | | skills via `npx` | Codex plugin | Claude Code plugin |
 |---|---|---|---|
-| 64 skills | yes | yes | yes |
+| 65 skills | yes | yes | yes |
 | Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
 | 34 named studio agents | no (phases run inline) | yes, after one generator step | yes, spawned per phase |
 | Session briefing + path-scoped rule injection | no | yes | yes |
@@ -237,7 +237,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 
 > [!NOTE]
 > `/progress-bar` and `/eval-agents` are Claude Code-only utilities, and explicit-invocation-only
-> in Codex. The other 62 skills, including `/env-setup` and `/help`, are standalone.
+> in Codex. The other 63 skills, including `/env-setup` and `/help`, are standalone.
 
 > [!TIP]
 > A skill that says "delegate the build to `rust-builder`" runs that phase itself on a host with
@@ -245,7 +245,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 > [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md); every skill that names an agent
 > ships a copy, and CI enforces it.
 
-The 62 host-neutral workflows bundle their standards and deterministic helpers, so they work
+The 63 host-neutral workflows bundle their standards and deterministic helpers, so they work
 installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
 
 The skills are [Agent Skills](https://agentskills.io) and run on any skill-capable host. Claude
@@ -311,7 +311,7 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .lsp.json                # bundled rust-analyzer LSP
 │       ├── agents/                  # 34 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
-│       ├── skills/                  # 64 skills + references + OpenAI metadata
+│       ├── skills/                  # 65 skills + references + OpenAI metadata
 │       ├── evals/                   # claude plugin eval suite (plugin only)
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 21 path-scoped Rust standards

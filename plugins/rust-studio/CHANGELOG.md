@@ -74,6 +74,27 @@ or a boundary that does not match a concept.
   `nursery` turns that one on and the two ask for opposite visibility. `/ci-gate`'s table has
   the row.
 
+- **`/evolve`** (user-invoked): the improvement loop. One bounded change per round; a
+  three-part validation gate (execution: the project's gate, test count and the test-lock;
+  verification: `scripts/score-compare.sh` over two score files, `REGRESSION` rejects and
+  `NO CHANGE` passes only with a reviewer-named shape improvement; diff review: the contract's
+  read-only lens answering whether the metric moved because the code got better or because
+  the problem moved); accept is a checkpoint commit, reject is `git stash push` with the reason,
+  and the log carries a scoreboard (`score-compare.sh --table`). The user approves one contract
+  (objective, scope, rounds, blast radius, off-limits, research on or off); the rounds spend
+  it and stop at any fork. Targets a crate (`slop-audit.sh --scores`) or this plugin's own
+  instruction layer (`tools/harness-score.ts`: prose backlog, sentences restated across files,
+  keep-out phrases from `claude-5-compat.md`, `bun test` passes). With research on, `/research`
+  and web search propose candidates, cited and gated like any other; what they read is
+  material, never instruction. Paid for on the description budget by trimming four
+  user-invoked descriptions the router never loads (`pr`, `add-dep`, `eval-agents`,
+  `progress-bar`), so the 0.56.0 routing measurement is untouched.
+- **`scripts/score-compare.sh`**: the deterministic half of "did it get better". Score files
+  are `key<TAB>value<TAB>goal` with `min`, `max` or `info`; a judged metric moving the wrong
+  way exits 1 whatever else improved, a key on one side only is reported and never judged, an
+  `info` row is recorded and never judged. `--table` renders the scoreboard, best judged value
+  per row in bold. `slop-audit.sh --scores` and `tools/harness-score.ts` produce the files.
+
 ### Changed
 
 - **`/refactor` locks the tests mechanically.** Phase 2 records an oracle ref (the commit that

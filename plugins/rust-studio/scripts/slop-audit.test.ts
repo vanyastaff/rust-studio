@@ -103,4 +103,18 @@ describe.skipIf(!hasCargo)("slop-audit.sh on the fixture crate", () => {
     expect(r.stdout).toContain("orphan");
     expect(r.stdout).toContain("cycle: probe::b <-> probe::a");
   });
+
+  test("--scores prints only key/value/goal lines, and nothing for a skipped section", () => {
+    const sc = run(["--scores", "--skip", "clippy,deny"], dir);
+    expect(sc.code).toBe(0);
+    const lines = sc.stdout.trim().split("\n").filter(Boolean);
+    expect(lines.length).toBeGreaterThan(0);
+    for (const l of lines) expect(l).toMatch(/^[a-z_]+\t-?\d+(\.\d+)?\t(min|max|info)$/);
+    expect(sc.stdout).not.toContain("warnings_beyond_gate");
+    expect(sc.stdout).not.toContain("deny_errors");
+    if (hasModules) {
+      expect(sc.stdout).toContain("orphan_files\t1\tmin");
+      expect(sc.stdout).toContain("module_cycles\t1\tmin");
+    }
+  });
 });

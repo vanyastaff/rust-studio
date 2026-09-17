@@ -14,7 +14,7 @@ Five moving parts:
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (64) — slash commands. They are *workflows*: a skill orchestrates the right agents
+- **Skills** (65) — slash commands. They are *workflows*: a skill orchestrates the right agents
   through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
 - **Rules** (21) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
@@ -120,7 +120,7 @@ model calls, naming/pattern/boundary tells; read-only).
 
 ---
 
-## The skills (64)
+## The skills (65)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
@@ -200,7 +200,13 @@ happy-path test does not establish preserved behavior.
 - **`/security-audit`** — CODE security: untrusted input, injection, secrets, auth + advisories.
 - **`/deps-check`** — DEPENDENCY hygiene: cargo-deny, versions, duplicates, features, MSRV.
 - **`/api-review`** — semver hazards + required version bump on a public-API change.
-- **`/tech-debt`** — scan + prioritize debt (TODO/FIXME, `#[allow]`, `unwrap` in libs, …).
+- **`/tech-debt`** — scan + prioritize debt (TODO/FIXME, `#[allow]`, `unwrap` in libs, …);
+  scan 6 spawns `slop-auditor` for the tree-level ledger (duplicates, orphans, cycles, dead
+  `pub`, untyped model calls). `scripts/slop-audit.sh -p <crate>` is the same layer as one report.
+- **`/evolve`** — user-invoked improvement loop: one bounded change per round, a three-part gate
+  (execution, `score-compare.sh` no-regression, an overfit-aware diff review), checkpoint commit
+  or `git stash push`, a scoreboard in the log. Targets a crate (`slop-audit.sh --scores`) or the
+  plugin's own instruction layer (`tools/harness-score.ts`); research on request, cited.
 - **`/scope-check`** — compare a diff/plan against acceptance criteria; flag creep.
 - **`/doc-review`** — review a requirements, spec, plan, ADR, or design document for coherence,
   feasibility, scope, and security.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Evolve"
+  short_description: "Improving code in rounds under a fixed contract: one change"
+  default_prompt: "Use $evolve when improving code in rounds under a fixed contract: one change, gate, checkpoint or roll back."
+policy:
+  allow_implicit_invocation: false

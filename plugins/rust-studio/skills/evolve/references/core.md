@@ -1,0 +1,185 @@
+---
+name: core
+paths: "**/*.rs"
+description: Core idiomatic Rust standards for every .rs file
+---
+
+# Core Rust Standards
+
+Applies to every `.rs` file.
+
+## Errors & panics
+- Libraries return `Result`; they do **not** `panic!`/`unwrap`/`expect` on
+  recoverable conditions. `unwrap`/`expect` are allowed only when a comment proves
+  the invariant, in tests, or in `main`/examples.
+- Prefer `?` over `match`-and-rewrap. Add context at boundaries (`.with_context(...)`
+  / a typed error variant), not at every call.
+- `expect("...")` messages state the invariant that must hold, not "should never happen".
+- No `unwrap()` on `Option`/`Result` in library code paths reachable by callers.
+
+## Ownership & types
+- Take the cheapest sufficient borrow: `&str` over `&String`, `&[T]` over `&Vec<T>`,
+  `impl AsRef<Path>` for path args. Return owned values; borrow in parameters.
+- Make illegal states unrepresentable: prefer enums/newtypes over bool flags and
+  stringly-typed data. Parse, don't validate.
+- Derive `Debug` on public types. Derive `Clone`/`Copy`/`PartialEq` only when the
+  semantics are right, not reflexively. Order derives common -> specific:
+  `#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]`.
+- Avoid `as` casts that can truncate; use `TryFrom`/`try_into` and handle the error.
+- Integer overflow is **defined**, not UB: debug panics, release wraps (two's complement).
+  On untrusted numbers reach for `checked_`/`saturating_`/`wrapping_`/`overflowing_`
+  (or `Wrapping<T>`/`Saturating<T>`) to state the intended semantics explicitly.
+  Naming the intent at the call site is the fix; `overflow-checks = true` in the release
+  profile (`cargo-manifest.md`) is the net under the arithmetic nobody annotated, turning a
+  silent wrap into a panic. It is a backstop, not a substitute — an attacker-controlled length
+  that wraps past a bounds check is a bug whether or not the wrap is caught.
+
+## Idiom
+- Iterators over manual index loops; `?`-friendly combinators over nested matches.
+- No needless `.clone()` to satisfy the borrow checker — restructure or borrow.
+- `#[must_use]` on builders, `Result`-like returns, and guard types — anywhere a silently
+  discarded value is a bug.
+- Modules small and cohesive; `pub(crate)` by default, `pub` only when intended.
+- Size budget: a file past ~1,500–2,000 lines is a smell — split it; a `#[cfg(test)]`
+  module that dominates its file belongs in `tests/` or a `#[path]`-split module; a
+  function past ~150 lines should decompose unless it is one indivisible decision table.
+- `mem::take`/`mem::replace` to move a value out behind `&mut` for enum-variant transitions;
+  prefer `Option::take()` over `mem::take(opt)`, and `mem::replace(field, placeholder)` when
+  the type is not `Default`.
+- Iterate an `Option` via `.iter()`/`.chain()`/`.extend()`/`filter_map` — never `for x in opt`
+  (use `if let Some(x) = opt` for the single value).
+- Cut nesting with `let-else` and let-chains. Prefer the `cfg_select!` macro over the
+  `cfg-if` crate for compile-time branching in new code.
+- `if let` guards in `match` arms do **not** count toward exhaustiveness — always pair a
+  guarded arm with a non-guarded or wildcard arm covering the same case.
+
+## Naming (code documents itself)
+- A name states **intent**: what the value *is* or *means*, not its type or how it was made.
+  `elapsed_ms`, `retry_budget`, `parsed_header` — not `x`, `tmp`, `val`, `data`, `res`, `ret`,
+  `obj`, `the_thing`, `data2`. A reader who sees only the name should know what it holds.
+- This is **not optional polish**: clippy is silent on weak-but-valid names, so naming is a
+  first-class correctness-of-communication concern, judged by the maintainer bar — not "while
+  I'm here" churn. Choosing a clear name for code you write or touch is *part of the task*, never
+  scope creep.
+- Functions/methods read as verb phrases (`resolve_path`, `try_connect`); types/structs/enums as
+  nouns (`ConnectionPool`, `RetryPolicy`); `bool` getters/fields ask a question
+  (`is_ready`, `has_capacity`, `should_retry`) — not `flag`, `status`, `check`.
+- Encode the **unit/domain** in the name when ambiguity costs: `timeout` → `timeout_secs`,
+  `size` → `size_bytes`, `id` → `user_id`. A newtype (`Secs(u64)`, `UserId`) is even better — see
+  *Make illegal states unrepresentable* above; the type carries what the name otherwise must.
+- No domain-obscuring abbreviations: spell out `manager`, `request`, `configuration`, `message`,
+  `index` — not `mgr`, `req`, `cfg`, `msg`, `idx`. Established idioms stay (`ctx`, `len`, `i`/`j`
+  for tight loop counters, `tx`/`rx` for channel ends, `db`, `id`).
+- One concept, one word, across the whole surface: don't mix `fetch`/`get`/`load`/`retrieve` or
+  `user`/`account`/`customer` for the same thing. Rename to converge, don't add a synonym.
+- A name that needs a comment to explain *what it is* is the wrong name — fix the name, drop the
+  comment. Reserve comments for *why*, not *what*.
+
+## Clarity is design, not size
+- What makes code hard to read is not its length, its function count, or a complexity score.
+  It is a name that hides intent, a pattern that is missing where the shape calls for one, and
+  a system design too weak to say where a concept lives. A 120-line function with one job and a
+  name that states it reads fine; a 15-line one whose body must be read to learn what it does is
+  the finding. Line counts and `cognitive_complexity` numbers say *where to look*; the finding
+  itself is named in terms of the name, the pattern, or the boundary.
+- A missing pattern is a reading tell: a state machine written as a cluster of `bool`s and
+  `Option`s; a strategy written as `match kind: &str`; a builder written as twelve setters that
+  never validate; a pipeline written as one function that parses, decides and performs I/O; a
+  domain type written as `HashMap<String, serde_json::Value>`. Name the pattern the shape is
+  reaching for (enum + `match`, typestate, a builder whose `build()` returns `Result`, a pure
+  core with an I/O shell, a struct) and cut to it. `types.md` §"Design-drift tells" holds the
+  full list.
+- Weak system design shows as boundaries that do not match concepts: a module that owns two
+  ideas, one idea spread over three modules, a `utils`/`helpers`/`common` module that grows by
+  accretion, sibling modules that `use` each other in both directions. The fix is a boundary,
+  not a smaller function (`architecture.md`).
+- Generated-code residue is the mechanical layer of the same problem, the tells of code produced
+  faster than it was designed: a comment that restates the line below it; a `// ... existing
+  code ...` or `// rest unchanged` marker committed; `todo!()`/`unimplemented!()` on a shipped
+  path; a one-line wrapper that adds a name and nothing else; a near-duplicate of a sibling
+  function or type (`similarity-rs` finds these); a file no `mod` links (`cargo modules
+  orphans`); `#[allow(dead_code)]` where the item should be deleted; a `#[derive]` list copied
+  onto every type regardless of use; "Note:"/"Important:" comment sediment; a `pub` nothing
+  outside the module reaches. Each one is deleted or reshaped, never annotated.
+
+## Drop & raw pointers
+- Variables drop in **reverse** declaration order within a scope; struct/tuple/variant fields
+  drop in **declaration** order; array/slice elements drop first-to-last. When a `Drop` impl or
+  an `Rc`/`Arc` cycle depends on teardown sequence, order the fields to match.
+- RAII guards: bind to `_g`/`_guard`, never bare `_` (bare `_` drops at statement end, not scope
+  end). Never wrap a guard in `Rc`/`Arc` — its lifetime would escape the scope it protects.
+- `Drop` is **best-effort, not guaranteed**: it is skipped on `mem::forget`, `Rc`/`Arc` reference
+  cycles, `process::exit`/`abort`, and the second of a double-panic. Do not rely on it for critical
+  finalization (WAL flush, releasing external locks) — provide an explicit `close()` and document
+  `Drop` as best-effort.
+- Take a raw pointer with `&raw const x` / `&raw mut x`, never `&x as *const _` (that forms a
+  reference first — UB on unaligned, uninitialized, or `#[repr(packed)]` places).
+
+## Hygiene
+- Zero `cargo clippy --all-targets --all-features -- -D warnings`.
+- `cargo fmt` clean. No commented-out code, no stray `dbg!`/`println!` debugging.
+- No `#[allow(...)]` without a one-line justification comment.
+- Two compiler diagnostics are security signals, not lint nits, and both surfaced from a real
+  review of a planted auth bypass:
+  - **`unused variable` on a predicate's or validator's own inputs.** A `fn is_authorized(token,
+    store)` whose `token` and `store` are unused is the compiler reporting that the check ignores
+    what it is supposed to check. Treat it as a suspected bypass and read the body before
+    silencing it.
+  - **`#[allow(unreachable_code)]` or `#[allow(dead_code)]` on a security or validation path.**
+    Presume it masks an early `return` that short-circuits the check. Remove the allow, read what
+    the warning was hiding, and only then decide.
+- `TODO`/`FIXME` include an owner or issue reference, else they are not allowed.
+- No plan/task IDs or phase markers (`TODO(A-5)`, "Phase B", "Cycle N", "PR #NNN review")
+  in committed code, manifests, or in-tree docs — write the invariant a future change
+  enforces, not the plan id that schedules it.
+
+## Modern idioms & recurring misses
+- Gate idioms on the toolchain **this crate supports**, not on habit. The version-keyed
+  set — which stabilizations the crate's `rust-version` allows, the older shape each one
+  displaces, and the clippy lint that mechanizes the swap — is computed from the crate's
+  MSRV and injected when you edit a Rust file. That injected set is authoritative over
+  anything you recall about release history. Reaching above the floor is a build break,
+  not a modernization; `clippy::incompatible_msrv` catches it, and a floor that is genuinely
+  too low is a `rust-version` decision (`/msrv-check`), never a silent bump.
+- Standing preferences that hold at any recent floor: native async-fn-in-trait / RPITIT
+  over `async-trait` (which still earns its place when the trait must be `dyn`-safe),
+  `OnceLock`/`LazyLock` over `lazy_static!`/`once_cell`, `let-else` over the ladder that
+  exists only to return. Don't default to `Arc<Mutex<_>>` / `Rc<RefCell<_>>`. Prefer making
+  the wrong path *syntactically absent* (visibility, scoped borrows, newtypes) over a
+  "remember to call me" helper.
+- `map.entry(k).or_default()` — one lookup, not `get(&k)` then `entry()` on miss (`clippy::map_entry`).
+- `expect`/`panic!`/`unreachable!` messages name the **broken invariant and how to avoid it**,
+  not the function name.
+- `Vec` has **no** small-buffer optimization — `push` heap-allocates; the struct field holds
+  only the `(ptr,len,cap)` header. Use `smallvec`/`arrayvec` when inline-size matters.
+- Complexity comments state **average AND worst case** (+ a bounding note when N is bounded).
+
+## Integrity & discipline (not optional)
+The goal is correct behavior, not a green checkmark. Make the code satisfy the test — **never**
+weaken, `#[ignore]`, delete, or rewrite a test (or its assertion) to go green; a genuinely wrong
+test is a behavior decision — surface it, don't flip it silently.
+- A **behavior** change rides on a test that **failed before the fix** (red→green). A test that
+  can't fail (asserts `is_ok()` not the value, a tautology, happy-path-only, no assertion) doesn't count.
+- A self-authored test proves *no regression*, not *correctness* — correctness is vs the acceptance
+  criteria / an oracle / a property law. Report pass-rate & coverage with the **full denominator**;
+  name what's skipped/ignored and why — never silently drop it from the count.
+- No stub / `todo!()` / canned-constant return / phase-marker where real behavior is required.
+- A non-trivial change earns a **pre-code shape verdict** and a **pre-merge review**; skipping the
+  disciplined path *to go faster* is the quick-win this studio rejects. Green is the floor.
+- `#[allow(...)]` needs a one-line justification; never re-open a workspace `forbid`/`deny` by
+  redefining a crate `[lints]` table (it **replaces**, not merges, the workspace table). Likewise
+  never weaken the gate config — editing `clippy.toml`/`nextest.toml`/CI/lefthook to drop a check or
+  raise a timeout so failing code passes is gate-disabling; fix the call site (`/ci-gate` installs a
+  self-protecting version).
+See `references/integrity-and-evidence.md`.
+
+## Definition of done (observability ships in the same pass)
+A change that adds/modifies a state, error variant, hot path, or cross-crate call ships its
+observability now, not as a follow-up: a typed error variant (`#[source]` chains, not `String`),
+a `#[tracing::instrument]`/span with meaningful fields, and any prose invariant turned into a
+type-level guarantee or an assertion. Choose the assertion by who can break the invariant:
+`debug_assert!` is **compiled out in release**, so it guards only what construction already
+guarantees — a regression tripwire for the next author. An invariant that untrusted input, a
+caller, or arithmetic can actually violate at runtime needs `assert!` or a returned `Result`,
+or it does not exist in the binary that ships. Green tests are not "done"; finishing the
+cross-crate ripple is. See `references/working-preferences.md`.
