@@ -329,8 +329,11 @@ durable `AGENTS.md` context across tasks instead of re-deriving scope per spawn 
 zone is that outcome-first brief applied to the one property that makes two spawns unsafe together.
 
 **Results and cleanup.** Collect results through the host's worker-result or messaging channel.
-Wait only on workers whose output blocks the next phase. **Relay a worker's verdict line
-verbatim.** The orchestrator's final message carries every gate lens's verdict token exactly as
+Wait only on workers whose output blocks the next phase, and a gate lens always does: spawn it
+in the foreground (`run_in_background: false` where the agent tool takes it), or block on its
+result before the verdict. Left in the background, its completion notice lands as a turn after
+the review is written, the reply to that notice becomes the final message, and a headless host
+delivers only the final message. **Relay a worker's verdict line verbatim.** The orchestrator's final message carries every gate lens's verdict token exactly as
 the lens wrote it (`NEEDS WORK`, `REDO-TO-BAR`, `DOESN'T SURVIVE`, `OVER SCOPE`) beside the
 orchestrator's own; a paraphrase ("the critic had concerns") is not a verdict, and a measured
 run lost three verdicts this way: the critique was complete and the token never reached the

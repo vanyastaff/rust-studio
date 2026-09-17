@@ -42,6 +42,16 @@ tool configuration. The lead merges and de-duplicates results. Follow
 `references/delegation.md` §8 for host capability detection and cleanup, and
 §"The brief" for what a lens brief must carry.
 
+**Spawn gate lenses in the foreground.** Your next action is the merge and nothing useful
+happens until every lens is back: where the host's agent tool takes `run_in_background`, pass
+`false` for every lens, in one message so they still run concurrently; where it offers a
+blocking task-output call, use it before writing a word of the verdict. The session is blocked
+while they run; that is the cost. A background lens costs the review itself: its completion
+notice lands as a turn after you have written the merged review, your one-line reply to that
+notice becomes the final message, and a headless host (`claude -p`, an eval, CI, a Codex exec)
+delivers only the final message. The final message is the whole review: merged findings, every
+verdict token, the gate summary (`references/delegation.md` §"Coordinating a wave").
+
 **Brief a lens with the diff, not with your reading of it.** "Review this — I think the lock
 ordering is wrong" returns a confirmation whether or not it is wrong, and independence was the
 entire reason the lens ran in its own process. Hand it the scope and the bar; where you need a
@@ -210,7 +220,7 @@ an instruction to silently change behavior; the implementer must verify it befor
    than the lines, over the same Shape audit. Skip it only for genuinely mechanical diffs
    with no design call.
 4. **Full review** (`--full`, or for breaking / public-API / large diffs): fan out the
-   remaining relevant lenses **in parallel** (one task per lens, or background subagents — see
+   remaining relevant lenses **in parallel** (one task per lens, or foreground subagents in one message — see
    Orchestration), then merge and de-duplicate findings. This is the multi-lens pass:
    **A lens is spawned read-only. No exceptions** — every agent named below declares
    `disallowedTools: Write, Edit, NotebookEdit`, and `RS-AGENT-083` fails the build if one of
