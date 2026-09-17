@@ -32,13 +32,13 @@ Three corollaries, each a hard rule:
 | **Stub / placeholder pass** | `todo!()`, `unimplemented!()`, a canned-constant `return true`/`Ok(())`, or a body deep enough to satisfy a *shallow* check but not the behavior (the "sha256 that only passes the metadata check" move). |
 | **Weaken the oracle** | Edited, deleted, `#[ignore]`-d, `SKIP`-ped, or commented-out a test or assertion to go green; relaxed `assert_eq!(x, expected)` to `assert!(x.is_ok())`; changed the *test* to match the code instead of the code to match the spec. |
 | **Vacuous test** | A "test" that cannot fail: asserts existence not value (`is_ok()` with no value check), a tautology (`assert_eq!(x, x)`), happy-path-only, or no assertion at all. It executes lines without proving behavior. |
-| **Uncalibrated oracle** | Offered a green suite as proof that behavior *survived* a change — a refactor, an edition or dependency migration, a rewrite — without ever establishing that the suite can go **red** for the class of breakage that change can cause. Green-before and green-after are then two readings of an instrument nobody calibrated, and a suite that would have stayed green either way measured nothing. Distinct from *Vacuous test* (one test that cannot fail, and you can see it in the source): here every test is real, and the gap is between what they observe and what this change moves. |
+| **Uncalibrated oracle** | Offered a green suite as proof that behavior *survived* a change (a refactor, an edition or dependency migration, a rewrite) without ever establishing that the suite can go **red** for the class of breakage that change can cause. Green-before and green-after are then two readings of an instrument nobody calibrated, and a suite that would have stayed green either way measured nothing. Distinct from *Vacuous test* (one test that cannot fail, and you can see it in the source): here every test is real, and the gap is between what they observe and what this change moves. |
 | **Self-authored as proof** | Presented a test you wrote to match your own code as the *correctness* proof. A self-written test is a **regression guard**; correctness is proven against the spec's acceptance criteria, an independent/upstream oracle, or a property law. |
 | **Denominator gaming** | Reported "N% pass" / "X% coverage" with skipped, ignored, timed-out, or out-of-scope cases silently removed from the denominator. |
 | **Off-gate green** | Reported a green from a command the project's merge gate does not run: `cargo clippy --all-features` where the gate lints default features, one clippy pass where the gate runs two over two feature sets, `cargo nextest run` without the env the gate supplies (`APP_HEADLESS=1`, `xvfb-run`). Distinct from *Gate disabling* (edits the gate): nothing was weakened — the check simply measured a configuration nobody merges, and it fails in both directions, hiding real lints and inventing failures that do not exist under the gate. `project-gate.md`. |
 | **Gate disabling** | `#[allow(...)]` with no one-line justification; a crate-level `[lints]` table that redefines a lint and thereby **replaces** (not merges) the inherited `[workspace.lints]` — silently re-opening a workspace `forbid`/`deny`; or editing the gate config itself (`clippy.toml`, `.config/nextest.toml`, CI, `lefthook.yml`) to drop a ban or raise a timeout so failing code passes — fixing the gate instead of the code. |
 | **Skipped discipline** | Wrote the implementation with no failing test first for a behavior change; shipped a non-trivial change with no pre-code shape verdict and no pre-merge review; claimed success without running the check. |
-| **Unread assertion** | Asserted a property of code from a *proxy* for reading it — a grep hit, a symbol name, a section heading, a search snippet, a file listing, a doc comment — rather than the body itself. The tell: asked "which lines did you read?", you cannot answer. Reading a file's headings and describing what it does is this move. |
+| **Unread assertion** | Asserted a property of code from a *proxy* for reading it (a grep hit, a symbol name, a section heading, a search snippet, a file listing, a doc comment) rather than the body itself. The tell: asked "which lines did you read?", you cannot answer. Reading a file's headings and describing what it does is this move. |
 | **Inference dressed as verification** | Reported a conclusion you *reasoned to* in the voice of one you *checked*. "It handles the empty case" because the function is called `handle_empty`; "the caller guards this" because it would be odd not to. The reasoning may even be right — presenting it as a finding is the defect. |
 | **Verified observation, invented mechanism** | Checked *that* something happens, then explained *why* from plausibility and reported both at the same confidence. Observed in a live eval: two reviewers each correctly found that `unused_assignments` does not fire on `delay *= 2`, and gave mutually exclusive reasons — one blamed the early `return` dominating the loop's back-edge, the other the overloaded `MulAssign` counting as a use. A three-line probe settles it (swap `Duration` for `u32`, same control flow, and the lint fires), so only the second is true. The observation was earned; the mechanism was not, and a wrong mechanism sends the next reader to fix the wrong thing. |
 | **Silent retraction** | Discovered that something asserted earlier was wrong and moved on without withdrawing it. The correction lives in your head; the record still carries the false claim, and whoever reads it inherits the error. |
@@ -74,8 +74,8 @@ check in `skills/review/SKILL.md` does.
 
 - **Show the command and its real output.** No "tests pass" without the `cargo nextest run`
   summary; no "X% coverage" without the `llvm-cov` line; no "clippy clean" without the run.
-- **Run the command that governs merging, and name it.** Where the project owns a gate — a
-  `justfile`, `Makefile`, `xtask`, cargo-make target, lefthook hook, or the CI lint/test job —
+- **Run the command that governs merging, and name it.** Where the project owns a gate (a
+  `justfile`, `Makefile`, `xtask`, cargo-make target, lefthook hook, or the CI lint/test job),
   that is the command; a hand-rolled `cargo` invocation is evidence about a hand-rolled
   configuration. Copy the gate's exact flags, env, and wrappers, and run every invocation it
   runs. `project-gate.md` has the discovery order and the fallback for a project with no gate.
@@ -89,21 +89,21 @@ check in `skills/review/SKILL.md` does.
   can cause: break the behavior on purpose in the working tree, confirm the suite catches it,
   revert. `/tdd`'s RED step is this move for one new test; `/mutants` is its systematic form for
   a module. It matters most in Rust for the classes neither the type system nor a green build
-  observes — `Drop` order, closure capture, temporary scope — where a suite can be large, green,
+  observes (`Drop` order, closure capture, temporary scope), where a suite can be large, green,
   and blind to exactly the thing being changed. Skipping the calibration is allowed; reporting
   the pass rate as if you had not skipped it is not. Name the blind spot instead.
 - **Where a ledger exists, its checker's state is the criterion's result.** `acceptance.md` beside
-  the spec turns "criterion 3 passes" into a state the checker computed — exit 0 and the marker,
-  bound to the definition it proved — and its summary line is the evidence a report pastes. A
+  the spec turns "criterion 3 passes" into a state the checker computed (exit 0 and the marker,
+  bound to the definition it proved), and its summary line is the evidence a report pastes. A
   criterion with no gate is a criterion nothing will prove; an unmet, stale, or abandoned gate is
   the denominator, whatever the prose says (`acceptance-ledger.md`).
 - **"Unverified" / "couldn't run X" is a valid and required state.** Substituting *probably* /
   *should pass* for *checked* is itself a gaming move.
 - **Cite what you read, at the range you read it.** A claim about code carries `path:line`, the
-  same as a finding. Where you sampled rather than read — a grep sweep, a symbol map, headings —
+  same as a finding. Where you sampled rather than read (a grep sweep, a symbol map, headings),
   say so and label the claim as a lead to confirm, not a conclusion.
 - **A mechanism needs its own evidence.** Checking *that* something happens does not license an
-  explanation of *why*. When the mechanism matters — it decides the fix — isolate it with a probe
+  explanation of *why*. When the mechanism matters (it decides the fix), isolate it with a probe
   that changes one variable, or say "observed; cause not established". A confident wrong mechanism
   is more expensive than an honest gap, because it aims the fix at the wrong thing.
 - **State the bound of what you looked at.** "I read the four call sites in `net/`, not the two
@@ -159,7 +159,7 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
   as gates a checker decides (exit 0 **and** the success marker), with evidence bound to the exact
   `CHECK:`/`EXPECT:` it proved, so an edited oracle or a hand-ticked box reads as stale, never met.
   The guard blocks a turn that reports COMPLETE while a ledger this session named has unmet
-  gates — a question or an honest NEEDS WORK / BLOCKED passes — and releases after four such stops
+  gates (a question or an honest NEEDS WORK / BLOCKED passes) and releases after four such stops
   without progress. On by default; fails open.
 
 ## Kept Honest By Eval Fixtures
