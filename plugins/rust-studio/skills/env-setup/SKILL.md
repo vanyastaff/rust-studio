@@ -10,8 +10,9 @@ description: "Use when provisioning a Rust machine: OS prerequisites, rustup, co
 
 Bring a machine from "has a shell" to "every studio skill's tool is on PATH": OS build
 prerequisites → rustup + latest stable → toolchain components → `cargo-binstall` →
-cargo tools as **prebuilt binaries** (compiling 20 tools from source takes an hour;
-binstall takes minutes). This skill touches the **system**, not the repo — no
+cargo tools as **prebuilt binaries**, never `cargo install` for what binstall can fetch:
+compiling 20 tools from source takes an hour, binstall takes minutes. `cargo install` is
+the fallback. This skill touches the **system**, not the repo — no
 `rust-builder`. The mechanical work lives in one idempotent script:
 
 If the host has no studio subagents, follow `references/sub-agents.md` and run each role inline.
@@ -21,7 +22,8 @@ If the host has no studio subagents, follow `references/sub-agents.md` and run e
 **The script is the single source of truth** for the tool tiers, package names per
 platform, and install commands — read it before explaining, don't restate lists from
 memory. It maps to the studio canon in `references/tooling.md` ("Cargo &
-Rust toolchain" table). It refuses to run as root; OS packages are its one `sudo` step.
+Rust toolchain" table). It refuses to run as root, and never `sudo cargo ...`: everything
+under `~/.cargo` is per-user, and OS packages are its one `sudo` step.
 
 ## Phase 1 — Detect (read-only, always)
 
@@ -29,9 +31,9 @@ Rust toolchain" table). It refuses to run as root; OS packages are its one `sudo
    rustup/rustc/binstall state, and an installed/missing table for all three tiers
    (core / deep-quality+perf / QoL). Mutates nothing.
 2. Flag a **distro-packaged Rust** if the report warns about it (`rustc` without rustup):
-   it lags stable. rustup puts `~/.cargo/bin` first on PATH, which normally shadows it —
-   prefer shadowing; recommend removing the distro package only if it still wins after
-   install (removal can cascade to dependents).
+   it lags stable. rustup puts `~/.cargo/bin` first on PATH, which normally shadows it, so
+   never remove the distro package pre-emptively: recommend that only if it still wins
+   after install (removal can cascade to dependents).
 3. Show the table. If `input` is `check` or empty, stop after offering: install
    `core`, `full`, or nothing.
 
@@ -73,10 +75,10 @@ suggest they run it via `! <command>` in the prompt, then re-run the script.
 
 **Follow-ups the script deliberately does not do** — handle them yourself:
 
-- **PATH (fresh rustup install only):** the installer edits shell rc files, so only the
-  *current* session is stale — tell the user the one line:
-  `. "$HOME/.cargo/env"` (sh/bash/zsh) or `source "$HOME/.cargo/env.fish"` (fish — the
-  file only exists when rustup's installer detected fish; older installs lack it).
+- **PATH (fresh rustup install only):** the installer edits shell rc files itself, so never
+  hand-edit them and only the *current* session is stale — tell the user the one line:
+  `. "$HOME/.cargo/env"` (sh/bash/zsh) or `source "$HOME/.cargo/env.fish"` (fish only; the
+  file exists when rustup's installer detected fish, and older installs lack it).
 - **Optional configs** (only if chosen in Phase 2; MERGE into an existing
   `~/.cargo/config.toml`, never clobber — read it first):
   - sccache: `[build] rustc-wrapper = "sccache"`.
@@ -119,13 +121,5 @@ to classify the codebase, `/ci-gate` to install the anti-hang gate (now that nex
 lefthook exist), `/test-setup` to wire the test toolchain into a project.
 
 ## Do not
-- Do not `cargo install` a tool that binstall can fetch — compiling the suite from source
-  is the failure mode this skill exists to avoid. `cargo install` is the *fallback*.
-- Do not run the rustup or binstall bootstrap scripts as root, and do not `sudo cargo ...`
-  — everything under `~/.cargo` is per-user.
-- Do not let a distro-packaged Rust shadow rustup's — `~/.cargo/bin` must win on PATH;
-  remove the distro package only if PATH precedence doesn't already settle it.
-- Do not edit shell rc files by hand — rustup's installer already handles them; only tell
-  the user the one `source` line the current session needs.
-- Do not retry a failed `sudo` command verbatim after the user declines it — ask, or mark
-  the tier skipped.
+- Do not retry a `sudo` command the user declined, under another spelling or through another
+  tool: ask once more, or mark that tier skipped and say so in the verdict.

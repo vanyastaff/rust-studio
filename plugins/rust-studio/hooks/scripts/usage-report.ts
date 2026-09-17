@@ -13,12 +13,14 @@
 //
 // Per skill and per agent: invocations, split by whose hand (the model through the Skill or
 // Agent tool, the user through a typed `/name`), distinct sessions, and the projects they came
-// from (the working directory's basename; `rust-studio` is flagged as plugin development,
-// because a skill exercised only while building the plugin has not been needed by anyone).
-// Then the list that matters for pruning: every skill and agent on disk that the window never
-// saw. Names in the log that match nothing on disk — a built-in agent, another plugin's skill
-// — are listed separately as "outside the studio", since a model that spawns `Explore` where
-// `rust-scout` exists is a routing fact too.
+// from (the working directory's basename; `rust-studio` is flagged as plugin development and an
+// eval-harness sandbox as `(eval)`). The `genuine` column counts what is left once both are
+// removed, and it is the column the pruning decision reads, because the studio reaching for its
+// own skills is not demand. Then the lists that matter for pruning: what the window never saw,
+// and what only the plugin's own checkout or a sandbox reached for, which the rule counts as no
+// invocation either. Names in the log that match nothing on disk — a built-in agent, another
+// plugin's skill — are listed separately as "outside the studio", since a model that spawns
+// `Explore` where `rust-scout` exists is a routing fact too.
 //
 // This file replaces mining 1.7 GB of transcripts. It reads one file and the two directories.
 
@@ -32,6 +34,13 @@ const DAY = 86_400_000;
 export const DEFAULT_DAYS = 7;
 /** A working directory whose basename is one of these is the plugin's own checkout. */
 export const PLUGIN_DEV_PROJECTS: ReadonlySet<string> = new Set(["rust-studio"]);
+
+/** Path segments that mark a working directory as an eval-harness sandbox. `tools/eval-runner.ts`
+ *  names them from `mkdtemp` (`rs-eval-<case>-`, `rs-fx-<fixture>-`, `rs-live-<case>-`,
+ *  `rs-grader-`, and an `eval-plugin-<rand>/<case>` wrapper whose leaf is bare case name), so a
+ *  sandbox is the studio exercising itself: an invocation from one is not a project needing the
+ *  skill. Matched on any segment, which catches the wrapper's leaf by its parent. */
+export const EVAL_SANDBOX_SEGMENTS: readonly string[] = ["rs-eval-", "rs-fx-", "rs-live-", "rs-grader-", "eval-plugin-"];
 
 // ---------------------------------------------------------------- the catalog on disk
 
@@ -115,6 +124,15 @@ export function isPluginDev(project: string): boolean {
   return PLUGIN_DEV_PROJECTS.has(project);
 }
 
+/** True when the working directory is one the eval harness made. Takes the whole `cwd`, not the
+ *  basename: the harness has a shape whose leaf is the bare case name. */
+export function isEvalSandbox(cwd: string): boolean {
+  return cwd
+    .split(/[\\/]+/)
+    .filter(Boolean)
+    .some((seg) => EVAL_SANDBOX_SEGMENTS.some((prefix) => seg.startsWith(prefix)));
+}
+
 // ---------------------------------------------------------------- aggregation
 
 export interface NameStats {
@@ -122,11 +140,14 @@ export interface NameStats {
   total: number;
   model: number;
   user: number;
-  /** Invocations from a project that is not the plugin's own checkout. */
-  outsidePluginDev: number;
+  /** Invocations from a project that is neither the plugin's own checkout nor an eval sandbox:
+   *  the column the pruning rule reads, since the studio reaching for itself is not demand. */
+  genuine: number;
   sessions: number;
   /** project → invocations, most first. */
   projects: Array<[string, number]>;
+  /** The project basenames in `projects` that an eval sandbox produced. */
+  evalProjects: string[];
   first: string;
   last: string;
 }
@@ -140,8 +161,10 @@ export interface Report {
   malformed: number;
   sessions: number;
   root: string | null;
-  skills: { onDisk: number; used: NameStats[]; never: string[] };
-  agents: { onDisk: number; used: NameStats[]; never: string[] };
+  /** `used` had a genuine invocation; `selfOnly` was reached for by the plugin checkout or an
+   *  eval sandbox and by nothing else, which the decision rule counts as no invocation. */
+  skills: { onDisk: number; used: NameStats[]; selfOnly: NameStats[]; never: string[] };
+  agents: { onDisk: number; used: NameStats[]; selfOnly: NameStats[]; never: string[] };
   /** Names in the log that are neither a skill nor an agent on disk. */
   outside: NameStats[];
 }
@@ -150,18 +173,22 @@ function aggregate(rows: UsageRow[]): Map<string, NameStats> {
   const out = new Map<string, NameStats>();
   const sessions = new Map<string, Set<string>>();
   const projects = new Map<string, Map<string, number>>();
+  const evalProjects = new Map<string, Set<string>>();
   for (const r of rows) {
     let s = out.get(r.name);
     if (!s) {
-      s = { name: r.name, total: 0, model: 0, user: 0, outsidePluginDev: 0, sessions: 0, projects: [], first: r.ts, last: r.ts };
+      s = { name: r.name, total: 0, model: 0, user: 0, genuine: 0, sessions: 0, projects: [], evalProjects: [], first: r.ts, last: r.ts };
       out.set(r.name, s);
       sessions.set(r.name, new Set());
       projects.set(r.name, new Map());
+      evalProjects.set(r.name, new Set());
     }
     s.total += 1;
-    s[r.invoker] += 1;
     const p = projectOf(r);
-    if (!isPluginDev(p)) s.outsidePluginDev += 1;
+    const sandbox = isEvalSandbox(r.cwd);
+    if (sandbox) evalProjects.get(r.name)!.add(p);
+    if (!sandbox && !isPluginDev(p)) s.genuine += 1;
+    s[r.invoker] += 1;
     if (r.session_id) sessions.get(r.name)!.add(r.session_id);
     projects.get(r.name)!.set(p, (projects.get(r.name)!.get(p) ?? 0) + 1);
     if (r.ts < s.first) s.first = r.ts;
@@ -170,6 +197,7 @@ function aggregate(rows: UsageRow[]): Map<string, NameStats> {
   for (const [name, s] of out) {
     s.sessions = sessions.get(name)!.size;
     s.projects = [...projects.get(name)!].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    s.evalProjects = [...evalProjects.get(name)!].sort();
   }
   return out;
 }
@@ -190,8 +218,18 @@ export function buildReport(
   const outside: NameStats[] = [];
   const usedSkills: NameStats[] = [];
   const usedAgents: NameStats[] = [];
-  for (const s of skills.values()) (catalog.root == null || onDiskSkills.has(s.name) ? usedSkills : outside).push(s);
-  for (const s of agents.values()) (catalog.root == null || onDiskAgents.has(s.name) ? usedAgents : outside).push(s);
+  const selfOnlySkills: NameStats[] = [];
+  const selfOnlyAgents: NameStats[] = [];
+  for (const s of skills.values()) {
+    if (catalog.root != null && !onDiskSkills.has(s.name)) outside.push(s);
+    else if (s.genuine > 0) usedSkills.push(s);
+    else selfOnlySkills.push(s);
+  }
+  for (const s of agents.values()) {
+    if (catalog.root != null && !onDiskAgents.has(s.name)) outside.push(s);
+    else if (s.genuine > 0) usedAgents.push(s);
+    else selfOnlyAgents.push(s);
+  }
   return {
     generated: (opts.now ?? new Date()).toISOString(),
     file: opts.file,
@@ -201,8 +239,18 @@ export function buildReport(
     malformed: opts.malformed,
     sessions: new Set(windowed.map((r) => r.session_id).filter(Boolean)).size,
     root: catalog.root,
-    skills: { onDisk: catalog.skills.length, used: usedSkills.sort(byUse), never: catalog.skills.filter((n) => !skills.has(n)) },
-    agents: { onDisk: catalog.agents.length, used: usedAgents.sort(byUse), never: catalog.agents.filter((n) => !agents.has(n)) },
+    skills: {
+      onDisk: catalog.skills.length,
+      used: usedSkills.sort(byUse),
+      selfOnly: selfOnlySkills.sort(byUse),
+      never: catalog.skills.filter((n) => !skills.has(n)),
+    },
+    agents: {
+      onDisk: catalog.agents.length,
+      used: usedAgents.sort(byUse),
+      selfOnly: selfOnlyAgents.sort(byUse),
+      never: catalog.agents.filter((n) => !agents.has(n)),
+    },
     outside: outside.sort(byUse),
   };
 }
@@ -212,10 +260,14 @@ export function buildReport(
 function table(rows: NameStats[], head: string): string[] {
   if (!rows.length) return [`  (none)`];
   const w = Math.max(head.length, ...rows.map((r) => r.name.length));
-  const lines = [`  ${head.padEnd(w)}  total  model  user  sessions  projects`];
+  const lines = [`  ${head.padEnd(w)}  total  model  user  sessions  genuine  projects`];
   for (const r of rows) {
-    const projects = r.projects.map(([p, n]) => `${p}${isPluginDev(p) ? " (plugin-dev)" : ""}×${n}`).join(", ");
-    lines.push(`  ${r.name.padEnd(w)}  ${String(r.total).padStart(5)}  ${String(r.model).padStart(5)}  ${String(r.user).padStart(4)}  ${String(r.sessions).padStart(8)}  ${projects}`);
+    const projects = r.projects
+      .map(([p, n]) => `${p}${isPluginDev(p) ? " (plugin-dev)" : r.evalProjects.includes(p) ? " (eval)" : ""}×${n}`)
+      .join(", ");
+    lines.push(
+      `  ${r.name.padEnd(w)}  ${String(r.total).padStart(5)}  ${String(r.model).padStart(5)}  ${String(r.user).padStart(4)}  ${String(r.sessions).padStart(8)}  ${String(r.genuine).padStart(7)}  ${projects}`,
+    );
   }
   return lines;
 }
@@ -244,6 +296,11 @@ export function renderReport(r: Report): string {
   out.push("");
   out.push(`Skills — ${r.skills.used.length} invoked${r.root ? ` of ${r.skills.onDisk} on disk` : ""}`);
   out.push(...table(r.skills.used, "skill"));
+  if (r.skills.selfOnly.length) {
+    out.push("");
+    out.push(`Invoked only by the studio itself — plugin-dev or an eval sandbox (${r.skills.selfOnly.length}):`);
+    out.push(...table(r.skills.selfOnly, "skill"));
+  }
   if (r.root) {
     out.push("");
     out.push(`Never invoked — skills (${r.skills.never.length}):`);
@@ -252,6 +309,11 @@ export function renderReport(r: Report): string {
   out.push("");
   out.push(`Agents — ${r.agents.used.length} spawned${r.root ? ` of ${r.agents.onDisk} on disk` : ""}`);
   out.push(...table(r.agents.used, "agent"));
+  if (r.agents.selfOnly.length) {
+    out.push("");
+    out.push(`Spawned only by the studio itself — plugin-dev or an eval sandbox (${r.agents.selfOnly.length}):`);
+    out.push(...table(r.agents.selfOnly, "agent"));
+  }
   if (r.root) {
     out.push("");
     out.push(`Never spawned — agents (${r.agents.never.length}):`);
@@ -263,8 +325,10 @@ export function renderReport(r: Report): string {
     out.push(...table(r.outside, "name"));
   }
   out.push("");
-  out.push("Counts are invocations; `user` is a typed `/name`, `model` the Skill or Agent tool. A skill used only");
-  out.push("under plugin-dev has not been needed by a project yet. What to do with the numbers: docs/usage-telemetry.md.");
+  out.push("Counts are invocations; `user` is a typed `/name`, `model` the Skill or Agent tool.");
+  out.push("`genuine` counts the ones from a project that is neither the plugin's own checkout nor an");
+  out.push("eval-harness sandbox: the studio reaching for itself is not demand, so that is the column");
+  out.push("the pruning rule reads. What to do with the numbers: docs/usage-telemetry.md.");
   return out.join("\n") + "\n";
 }
 
@@ -282,7 +346,8 @@ const HELP = `usage-report — which studio skills and agents are actually used
 
 Reads <plugin data>/usage.jsonl, written by the PostToolUse hook (Skill and Agent tools) and
 the UserPromptSubmit hook (a typed /name). Prints per-skill and per-agent invocations, split by
-model/user, sessions and projects, then everything on disk the window never touched.
+model/user, sessions and projects with the genuine count beside them, then what only the studio's
+own checkout or an eval sandbox reached for, and what the window never touched.
 `;
 
 export function main(argv: string[], io: { out: (s: string) => void; err: (s: string) => void }): number {

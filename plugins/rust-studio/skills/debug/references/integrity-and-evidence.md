@@ -160,7 +160,11 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
   `CHECK:`/`EXPECT:` it proved, so an edited oracle or a hand-ticked box reads as stale, never met.
   The guard blocks a turn that reports COMPLETE while a ledger this session named has unmet
   gates (a question or an honest NEEDS WORK / BLOCKED passes) and releases after four such stops
-  without progress. On by default; fails open.
+  without progress. It also runs the checker's `--lint` on that ledger and blocks on its error
+  class: a `CHECK` that prints a fixed result, or an `EXPECT` that matches empty output. A gate
+  that cannot fail is met by construction, so a run and a tick prove nothing. The warnings
+  stay warnings: they are advice, and the guard blocks on facts. Before this ran on a live ledger
+  the audit only ever saw the shipped template. On by default; fails open.
 
 ## Kept Honest By Eval Fixtures
 

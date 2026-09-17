@@ -234,14 +234,20 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
 - **Acceptance guard (Stop)**: a turn that **reports completion** (its last verdict is COMPLETE,
   or it is a completion summary with no verdict) while a spec's acceptance ledger
   (`.rust-studio/specs/<slug>/acceptance.md`, written by `/spec-tasks` or `/acceptance`) that
-  **this session named** has gates that are unmet, stale (their `CHECK:`/`EXPECT:` changed since
+  **this session named** has gates that are unmet or stale (their `CHECK:`/`EXPECT:` changed since
   the evidence), or does not parse, is blocked (exit 2) with the qualified ids and the exact
-  `--reverify` command. A question to the user, the `/spec-tasks` approval checkpoint, and an
+  `--reverify` command. It blocks on the oracle too: a gate whose `CHECK` prints a fixed result, or
+  whose `EXPECT` matches empty output, passes whether or not the work was done, so a met box there
+  is not evidence. That audit is the checker's own `--lint`, read for its error class; its warnings
+  are advice and never block. A question to the user, the `/spec-tasks` approval checkpoint, and an
   honest NEEDS WORK / BLOCKED pass. The message is read only to tell a done-claim from a
   handoff; what it enforces is ledger *state*, and it never executes a `CHECK:`. The loop guard
-  is keyed to resolved gate state (turning a gate green rearms it, rewording a title does not)
-  and releases after four stops without progress. A ledger another session left half-done never
-  blocks this one; with no transcript to bind against it stays silent. On by default
+  is keyed to resolved gate state and the oracle findings (turning a gate green, or repairing a
+  `CHECK` so it can fail, rearms it; rewording a title does not)
+  and releases after four stops without progress. Binding follows a mention of the spec directory
+  anywhere in the transcript, so citing a peer's `specs/<slug>/` file is enough to make their
+  unfinished ledger block yours, and repairing it is theirs to do; with no transcript to bind
+  against it stays silent. On by default
   (`acceptance_guard`) and fails open. Format and checker:
   [`docs/acceptance-ledger.md`](docs/acceptance-ledger.md).
 - **Stop-guard (opt-in)**: the mechanical teeth for the integrity doctrine. When `stop_guard` is
@@ -299,7 +305,7 @@ verdict check) is always on, and the whole plugin disables with
 | **Project memory directory** (`memory_dir`) | — | Moves the studio's memory off the host's auto-memory directory (Claude Code then no longer loads that index itself; the session-start hook carries it). Leave empty to share the host's store. |
 | **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
 | **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
-| **Acceptance guard** (`acceptance_guard`) | on | The acceptance ledger becomes advisory: a turn may report COMPLETE with gates unmet, stale, or unparsed. The checker, `/spec-verify` and `/dev-task` still refuse to call an unmet ledger COMPLETE. |
+| **Acceptance guard** (`acceptance_guard`) | on | The acceptance ledger becomes advisory: a turn may report COMPLETE with gates unmet, stale, unparsed, or behind a `CHECK` that cannot fail. The checker, `/spec-verify` and `/dev-task` still refuse to call an unmet ledger COMPLETE. |
 | **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit. Capture stays manual (`/remember`, `/session-wrap`) and in-skill. |
 | **Irreversible-action guard** (`git_guard`) | on | The agent may again run commands nothing can undo: `git reset --hard`, `clean -f`, `checkout .`, `branch -D`, `stash drop`, plain force-push, `reflog expire`, and a real `cargo publish`/`yank`. Plain `git push`, `--force-with-lease`, and `publish --dry-run` are never blocked either way. |
 | **Progress visibility** (`progress_tracking`) | on | Orchestrating skills (`/dev-task`, `team-*`, `/refactor`, `/spec-verify`) stop keeping a live task list + per-phase result lines, so phases run without the checklist narration. |

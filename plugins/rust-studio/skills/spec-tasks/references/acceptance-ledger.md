@@ -80,8 +80,8 @@ EVIDENCE: rs-acceptance/v1 def=<sha256[0:16] of CHECK+EXPECT+CWD> exit=0 expect=
 ```
 
 The `def=` digest is what makes the evidence honest over time. Edit the `CHECK:` or `EXPECT:`
-after the run and the gate's state becomes **stale** — reported as not met by the checker, by
-`--status`, and by the Stop guard — until the current definition passes again. A hand-ticked box
+after the run and the gate's state becomes **stale**: reported as not met by the checker, by
+`--status`, and by the Stop guard until the current definition passes again. A hand-ticked box
 with prose evidence on a runnable gate is stale for the same reason: nothing measured it. Raw
 output is never persisted, only its fingerprint; failure diagnostics (the last lines, control
 characters stripped) go to the terminal.
@@ -144,8 +144,8 @@ is mostly manual). The rest is authoring discipline:
 ## `CHECK:` lines are shell code
 
 The checker runs them with the calling process's permissions and environment. A ledger the
-studio wrote in this project is the studio's own oracle. A ledger that arrived from outside — a
-branch someone pushed, a template from another repository — is third-party text under
+studio wrote in this project is the studio's own oracle. A ledger that arrived from outside (a
+branch someone pushed, a template from another repository) is third-party text under
 `untrusted-context.md`: inspect it with `--status`, read every `CHECK:` and every script it calls,
 and only then `--run`. No hook ever executes a `CHECK:`; the Stop guard parses. Approval is the
 host's permission mode on the Bash call, and that is the whole consent boundary — the checker does
@@ -155,27 +155,34 @@ not sandbox.
 
 `acceptance-guard.ts` (Stop hook, `acceptance_guard`, default on) enforces ledger state: a turn
 that **reports completion** while a ledger **bound to this session** has an unmet or stale gate,
-or does not parse, is blocked (exit 2) with the qualified ids and the exact `--reverify` command.
+does not parse, or fails the oracle audit, is blocked (exit 2) with the qualified ids and the exact
+`--reverify` command. The audit is the checker's own `--lint` read for its error class: a `CHECK`
+that prints a fixed result, or an `EXPECT` that matches empty output. Such a gate passes whether or
+not the work was done, so a met box is not evidence and the guard does not treat it as one; the
+warnings `--lint` reports are advice and never block.
 "Reports completion" is read from the final message — its last verdict token is COMPLETE, or it is
 a completion summary (files changed / commands run / verification / result) with no verdict. The
 studio's workflows stop on purpose to hand the turn back: the `/spec-tasks` approval checkpoint
 right after the ledger is written, a design fork, a `/grill-me` question, an honest NEEDS WORK or
 BLOCKED. None of those claims the work is done, and none is blocked; the message is read only to
 tell the two apart. Bound means
-the session named the spec directory in its transcript — the `/spec-tasks` write, a checker run, a
-Read — so a ledger another session left half-done never blocks this one, and a host that hands the
-hook no transcript gets no block at all (fails open). Abandoned gates do not block; they are a
+the session named the spec directory in its transcript: the `/spec-tasks` write, a checker run, a
+Read, or a bare mention of a path inside it. Citing a peer's `specs/<slug>/` file in a log is enough,
+so a ledger another session left half-done **can** block this one. Repair belongs to its owner, not
+to whoever was blocked: re-running a peer's checker ticks gates for work the blocked session never
+did. A host that hands the hook no transcript gets no block at all (fails open). Abandoned gates do not block; they are a
 handoff the checker already refuses to call ALL MET.
 
-The loop guard is keyed to a hash of the resolved gate states, not the file's bytes: turning a
-gate green rearms it, rewording a title or a checker-rewritten timestamp does not. After four
+The loop guard is keyed to a hash of the resolved gate states **and the oracle findings**, not the
+file's bytes: turning a gate green, or repairing a `CHECK` so it can fail, rearms it; rewording a
+title or a checker-rewritten timestamp does not. After four
 consecutive stops with no state change it releases and names what remains — a wedged agent gets
 its turn back. Like every studio hook it fails open on a stall.
 
 ## In the verdict
 
-`/spec-verify` and `/dev-task` paste the checker's summary line — `ACCEPTANCE <path>: N met, M
-unmet, S stale, A abandoned (of T)` — and its final marker. `ALL MET` makes the ledger's criteria
+`/spec-verify` and `/dev-task` paste the checker's summary line and its final marker:
+`ACCEPTANCE <path>: N met, M unmet, S stale, A abandoned (of T)`. `ALL MET` makes the ledger's criteria
 eligible for COMPLETE (the other gates still apply); `NOT MET` is NEEDS WORK with the unmet ids as
 the list; `HANDOFF REQUIRED` is BLOCKED with the abandonment named. A report that says "done"
 while a gate is unmet, stale, or abandoned is the *Denominator gaming* move: the ledger is the

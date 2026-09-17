@@ -64,7 +64,13 @@ SCOPE-GATE checks that the diff or plan matches the acceptance criteria — no o
 no under-scope — and that non-goals are stated explicitly.
 Before handing a plan to leads, verify:
 - [ ] Every story has an owner, acceptance criteria, and dependency links.
-- [ ] Cross-domain ripples are enumerated — no "will address later".
+- [ ] Every acceptance criterion is driven toward by at least one task. A criterion no task
+      covers is a criterion nothing will prove (`${CLAUDE_PLUGIN_ROOT}/docs/acceptance-ledger.md`);
+      name the task that proves it, or cut the criterion as an explicit decision — never leave it
+      standing for `/spec-verify` to discover.
+- [ ] Cross-domain ripples are enumerated — no "will address later" for the whole ripple or for
+      its hard half: the tractable subset done with the rest deferred is the `Quick-win / easy
+      subset` move, not a scope decision (`${CLAUDE_PLUGIN_ROOT}/docs/integrity-and-evidence.md`).
 - [ ] Scope boundaries are explicit; non-goals are listed.
 - [ ] Critical path is identified; work can start without hidden blockers.
 

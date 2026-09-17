@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import {
   MAX_BLOCKS, buildFeedback, claimsCompletion, decide, discoverLedgers, isBound, readStatus, type LedgerStatus,
 } from "./acceptance-guard.ts";
+import { formatEvidence } from "./acceptance-ledger.ts";
 
 let tmp: string;
 beforeEach(() => { tmp = mkdtempSync(join(tmpdir(), "rs-accg-")); });
@@ -21,9 +22,13 @@ function ledgerAt(slug: string, text: string): string {
   return p;
 }
 
-const st = (slug: string, states: Record<string, any>, errors: string[] = []): LedgerStatus => ({
-  path: `.rust-studio/specs/${slug}/acceptance.md`, slug, states, errors,
+const st = (slug: string, states: Record<string, any>, errors: string[] = [], oracle: string[] = []): LedgerStatus => ({
+  path: `.rust-studio/specs/${slug}/acceptance.md`, slug, states, errors, oracle,
 });
+
+/** An error-class oracle finding, spelled the way `readStatus` reports it. */
+const FIXED = (slug: string, id: string) =>
+  `${slug}:${id} [fixed-output] CHECK prints a fixed result; it cannot fail, so it proves nothing`;
 
 describe("decide", () => {
   test("all met → allow, counter cleared", () => {
@@ -38,6 +43,37 @@ describe("decide", () => {
     const d = decide([st("a", { G1: "met", G2: "abandoned" })], null);
     expect(d.action).toBe("allow");
     expect(d.handoffs).toEqual(["a:G2"]);
+  });
+
+  test("a gate whose CHECK cannot fail blocks even when every gate is met", () => {
+    const d = decide([st("a", { G1: "met" }, [], [FIXED("a", "G1")])], null);
+    expect(d.action).toBe("block");
+    expect(d.outstanding).toEqual([]);
+    expect(d.oracle).toEqual([FIXED("a", "G1")]);
+  });
+
+  test("an oracle defect enters the hash: repairing the gate rearms the counter", () => {
+    const bad = [st("a", { G1: "met" }, [], [FIXED("a", "G1")])];
+    const first = decide(bad, null);
+    expect(first.blocks).toBe(1);
+    const same = decide(bad, { hash: first.hash, blocks: first.blocks });
+    expect(same.blocks).toBe(2);
+    expect(same.hash).toBe(first.hash);
+    // The gate is still met; only the oracle changed. That is progress, so the count resets.
+    const repaired = decide([st("a", { G1: "met" })], { hash: same.hash, blocks: same.blocks });
+    expect(repaired.action).toBe("allow");
+    expect(repaired.blocks).toBe(0);
+    expect(repaired.hash).not.toBe(first.hash);
+  });
+
+  test("a turn that does not claim completion is allowed with an oracle defect and keeps the count", () => {
+    const bad = [st("a", { G1: "met" }, [], [FIXED("a", "G1")])];
+    const first = decide(bad, null);
+    expect(first.action).toBe("block");
+    const question = decide(bad, { hash: first.hash, blocks: 1 }, MAX_BLOCKS, false);
+    expect(question.action).toBe("allow");
+    expect(question.blocks).toBe(1);
+    expect(question.oracle).toEqual([FIXED("a", "G1")]);
   });
 
   test("a ledger that does not parse is outstanding, not an empty pipeline", () => {
@@ -143,6 +179,32 @@ describe("discovery and status", () => {
     expect(s.errors.length).toBeGreaterThan(0);
     expect(s.states).toEqual({});
   });
+
+  test("the oracle audit reports the error class and leaves the warnings to --lint", () => {
+    const p = ledgerAt("delta", [
+      "- [ ] G1: prints",
+      "  CHECK: echo ok",
+      "  EXPECT: ok",
+      "  EVIDENCE: pending",
+      "",
+      "- [ ] G2: the counter advances",
+      "  CHECK: cargo run -- status",
+      "  EXPECT: /^/",
+      "  EVIDENCE: pending",
+      "",
+      "- [ ] G3: the suite passes",
+      "  CHECK: cargo nextest run",
+      "  EXPECT: 1 passed",
+      "  EVIDENCE: pending",
+    ].join("\n") + "\n");
+    const s = readStatus({ slug: "delta", abs: p, path: ".rust-studio/specs/delta/acceptance.md" });
+    expect(s.errors).toEqual([]);
+    // G1: `echo` cannot fail (and its EXPECT is the weak "ok" and sits inside the command —
+    // both warnings, neither of which blocks). G2: `/^/` matches empty output. G3 is clean.
+    expect(s.oracle.map((o) => /\[([\w-]+)\]/.exec(o)![1])).toEqual(["fixed-output", "trivial-expect"]);
+    expect(s.oracle[0]).toContain("delta:G1");
+    expect(s.oracle[1]).toContain("delta:G2");
+  });
 });
 
 describe("feedback", () => {
@@ -154,6 +216,15 @@ describe("feedback", () => {
     expect(text).toContain("ABANDON: <id> <reason>");
     expect(text).toContain("HANDOFF REQUIRED: 1 abandoned — demo:G3");
     expect(text).toContain(`(block 1 of ${MAX_BLOCKS}`);
+  });
+
+  test("an oracle-only block names the defect and never says a gate is unmet", () => {
+    const d = decide([st("demo", { G1: "met" }, [], [FIXED("demo", "G1")])], null);
+    const text = buildFeedback(d, [".rust-studio/specs/demo/acceptance.md"], "/plugin/skills/acceptance/scripts/acceptance-check.ts");
+    expect(text).toContain("1 gate(s) cannot fail");
+    expect(text).not.toContain("gate(s) are not met");
+    expect(text).toContain("[fixed-output]");
+    expect(text).toContain("Repair the gate so it can fail");
   });
 });
 
@@ -206,6 +277,28 @@ describe("end to end (subprocess, real stdin payload)", () => {
       `{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":${JSON.stringify(DONE)}}]}}`,
     ].join("\n") + "\n");
     expect(run({ cwd: tmp, session_id: "s5", transcript_path: transcript }).exitCode).toBe(2);
+  });
+
+  test("a met ledger whose CHECK cannot fail blocks a COMPLETE, but not an honest report", () => {
+    const check = "echo ok";
+    const marker = "ok";
+    ledgerAt("demo", [
+      "- [x] G1: the marker prints",
+      `  CHECK: ${check}`,
+      `  EXPECT: ${marker}`,
+      `  EVIDENCE: ${formatEvidence({ check, expect: marker }, { exit: 0, matched: true, combined: "ok\n", cwd: tmp, shell: "bash" })}`,
+    ].join("\n") + "\n");
+    const transcript = join(tmp, "t.jsonl");
+    writeFileSync(transcript, "specs/demo\n");
+    const blocked = run({ cwd: tmp, session_id: "oracle", transcript_path: transcript, last_assistant_message: DONE });
+    expect(blocked.exitCode).toBe(2);
+    const err = new TextDecoder().decode(blocked.stderr);
+    expect(err).toContain("1 gate(s) cannot fail");
+    expect(err).toContain("[fixed-output]");
+    expect(err).not.toContain("gate(s) are not met");
+
+    const honest = run({ cwd: tmp, session_id: "oracle", transcript_path: transcript, last_assistant_message: "G1's CHECK cannot fail, so the tick proves nothing. Verdict: NEEDS WORK" });
+    expect(honest.exitCode).toBe(0);
   });
 
   test("the loop cap holds across done-claims of one session", () => {

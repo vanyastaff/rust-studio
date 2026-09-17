@@ -31,11 +31,14 @@ bun "scripts/usage-report.ts" --days 7
 
 The report is per skill and per agent: invocations split by whose hand (the model through
 the Skill or Agent tool, the user through a typed `/name`), sessions, and projects, with the
-plugin's own checkout flagged as plugin-dev. Then the two lists the pruning decision needs
-(every skill and agent on disk the window never saw) and the names the model reached for
-that are not the studio's. Relay it whole; do not summarise the never-lists away. What is
-recorded, where it lives, the per-host coverage and the decision rule the numbers feed:
-`references/usage-telemetry.md`. Apply that rule; do not reinterpret the numbers to taste.
+plugin's own checkout flagged as plugin-dev and an eval sandbox as `(eval)`, and beside them
+the `genuine` count that drops both: the number the decision rule reads. Then the lists it
+needs: what was reached for genuinely, what only the studio's own checkout or a sandbox
+reached for (no invocation, per the rule) and what the window never saw, plus the names the
+model reached for that are not the studio's. Relay it whole; do not summarise the never-lists
+away. What is recorded, where it lives, the per-host coverage and the decision rule the
+numbers feed: `references/usage-telemetry.md`. Apply that rule; do not reinterpret the numbers
+to taste.
 
 ## Phase 1 — Probe (read-only, no approval needed)
 Run every check; report what each one actually returned.

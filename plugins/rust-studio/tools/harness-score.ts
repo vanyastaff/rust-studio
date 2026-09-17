@@ -11,6 +11,11 @@
 //   bun tools/harness-score.ts            # the score file on stdout
 //   bun tools/harness-score.ts --detail   # also, on stderr, where each judged hit is
 //
+// Exit 2 when a metric could not be measured. The row is written as a `#` comment line, which
+// score-compare.sh skips, and the run fails: a metric missing from one side is reported there as
+// `gone (not judged)`, so an omitted row would let a broken checker read as NO CHANGE. A score
+// with an unmeasured metric cannot be compared against a checkpoint.
+//
 // Metrics:
 //   prose_errors / prose_warnings   hooks/scripts/prose-gate.ts over every shipped file, full
 //                                   scope (CI gates touched sentences; this is the backlog)
@@ -131,7 +136,22 @@ const rows: [string, number, "min" | "max" | "info"][] = [
   ["agent_count", agents.length, "info"],
   ["shipped_words", shippedWords, "info"],
 ];
+// An unmeasured metric is never dropped: dropping it is how a broken checker reads as NO CHANGE,
+// because score-compare.sh judges only the keys present on both sides and calls the rest `gone`.
+// It is recorded in-band as a comment (which score-compare.sh skips) and fails the run at the end.
+const unmeasured: string[] = [];
 for (const [k, v, g] of rows) {
-  if (Number.isNaN(v)) { console.error(`harness-score: ${k} could not be measured — omitted`); continue; }
+  if (Number.isNaN(v)) {
+    console.log(`# harness-score: ${k} could not be measured — the score is incomplete`);
+    unmeasured.push(k);
+    continue;
+  }
   console.log(`${k}\t${v}\t${g}`);
+}
+if (unmeasured.length > 0) {
+  console.error(
+    `harness-score: ${unmeasured.join(", ")} could not be measured — the checker did not run, ` +
+      `so this score cannot be compared against a checkpoint`,
+  );
+  process.exitCode = 2; // exitCode, not exit(): process.exit() truncates piped stdout
 }

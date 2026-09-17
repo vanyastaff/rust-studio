@@ -5,7 +5,7 @@ import { test, expect, describe } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildReport, readUsage, readCatalog, findPluginRoot, projectOf, renderReport, main, DEFAULT_DAYS } from "./usage-report.ts";
+import { buildReport, readUsage, readCatalog, findPluginRoot, projectOf, isEvalSandbox, renderReport, main, DEFAULT_DAYS } from "./usage-report.ts";
 import type { UsageRow } from "./usage-log.ts";
 
 const CLI = new URL("./usage-report.ts", import.meta.url).pathname;
@@ -85,14 +85,15 @@ describe("buildReport", () => {
   });
   test("skills: totals, the split by hand, sessions, projects with plugin-dev flagged", () => {
     const dev = report.skills.used.find((s) => s.name === "dev-task")!;
-    expect(dev).toMatchObject({ total: 3, model: 2, user: 1, sessions: 2, outsidePluginDev: 3 });
+    expect(dev).toMatchObject({ total: 3, model: 2, user: 1, sessions: 2, genuine: 3 });
     expect(dev.projects).toEqual([
       ["flui", 2],
       ["nebula", 1],
     ]);
-    const prose = report.skills.used.find((s) => s.name === "prose")!;
-    expect(prose).toMatchObject({ total: 1, outsidePluginDev: 0, projects: [["rust-studio", 1]] });
-    expect(report.skills.used.map((s) => s.name)).toEqual(["dev-task", "prose", "review"]);
+    // plugin-dev only: a real invocation, but not one from a project, so it is not demand
+    const prose = report.skills.selfOnly.find((s) => s.name === "prose")!;
+    expect(prose).toMatchObject({ total: 1, genuine: 0, projects: [["rust-studio", 1]] });
+    expect(report.skills.used.map((s) => s.name)).toEqual(["dev-task", "review"]);
   });
   test("never invoked is the catalog minus the window: the row from 12 days ago does not save fuzz", () => {
     expect(report.skills.never).toEqual(["fuzz"]);
@@ -122,13 +123,73 @@ describe("buildReport", () => {
     const text = renderReport(report);
     expect(text).toContain("last 7 days (since 2026-09-14): 9 invocations across 4 sessions");
     expect(text).toContain("(1 malformed line skipped)");
-    expect(text).toContain("Skills — 3 invoked of 4 on disk");
-    expect(text).toMatch(/dev-task\s+3\s+2\s+1\s+2\s+flui×2, nebula×1/);
-    expect(text).toMatch(/prose\s+1\s+1\s+0\s+1\s+rust-studio \(plugin-dev\)×1/);
+    expect(text).toContain("Skills — 2 invoked of 4 on disk");
+    expect(text).toMatch(/dev-task\s+3\s+2\s+1\s+2\s+3\s+flui×2, nebula×1/);
+    expect(text).toContain("Invoked only by the studio itself — plugin-dev or an eval sandbox (1):");
+    expect(text).toMatch(/prose\s+1\s+1\s+0\s+1\s+0\s+rust-studio \(plugin-dev\)×1/);
     expect(text).toContain("Never invoked — skills (1):\n  fuzz");
     expect(text).toContain("Never spawned — agents (1):\n  rust-scout");
     expect(text).toContain("Outside the studio (not on disk here) — 2:");
     expect(text).toContain("docs/usage-telemetry.md");
+  });
+});
+
+describe("the eval harness is not demand", () => {
+  test("both sandbox shapes are recognised, and ordinary work is not", () => {
+    expect(isEvalSandbox("/tmp/rs-eval-review-guard-preservation-0WfoaG")).toBe(true);
+    expect(isEvalSandbox("/tmp/rs-eval-review-guard-preservation-0WfoaG/src")).toBe(true);
+    expect(isEvalSandbox("/tmp/eval-plugin-4Xk2/review-guard-preservation")).toBe(true);
+    expect(isEvalSandbox("/tmp/rs-fx-reviewer_unwrap-and-cast-abc")).toBe(true);
+    expect(isEvalSandbox("/tmp/rs-live-simplify-spaghetti-x")).toBe(true);
+    expect(isEvalSandbox("/tmp/rs-grader-abc")).toBe(true);
+    expect(isEvalSandbox("/home/me/flui")).toBe(false);
+    expect(isEvalSandbox("/mnt/data/dev/rust-studio/plugins/rust-studio")).toBe(false);
+  });
+
+  /** A catalog of exactly the three skills the rows below name. */
+  const root = mkdtempSync(join(tmpdir(), "plugin-eval-"));
+  for (const s of ["review", "spec-tasks", "acceptance"]) {
+    mkdirSync(join(root, "skills", s), { recursive: true });
+    writeFileSync(join(root, "skills", s, "SKILL.md"), "---\nname: x\n---\n");
+  }
+  mkdirSync(join(root, "agents"), { recursive: true });
+
+  const rows = [
+    row({ name: "review", cwd: "/tmp/rs-eval-review-guard-preservation-a1" }),
+    row({ name: "review", cwd: "/tmp/rs-eval-review-guard-preservation-b2" }),
+    row({ name: "review", cwd: "/mnt/data/dev/nebula" }),
+    row({ name: "spec-tasks", cwd: "/tmp/rs-eval-task-resume-evidence-c3" }),
+    row({ name: "spec-tasks", cwd: "/tmp/eval-plugin-9z/spec-tasks" }),
+    row({ name: "acceptance", cwd: "/mnt/data/dev/rust-studio" }),
+  ];
+  const report = buildReport(rows, readCatalog(root), { file: "f", days: null, since: null, malformed: 0, now: NOW });
+
+  test("a skill a project also reached for keeps the genuine count the sandboxes cannot inflate", () => {
+    const review = report.skills.used.find((s) => s.name === "review")!;
+    expect(review).toMatchObject({ total: 3, genuine: 1 });
+    expect(review.projects).toEqual([
+      ["nebula", 1],
+      ["rs-eval-review-guard-preservation-a1", 1],
+      ["rs-eval-review-guard-preservation-b2", 1],
+    ]);
+    expect(review.evalProjects).toHaveLength(2);
+  });
+  test("a skill only the studio reached for is neither used nor never", () => {
+    expect(report.skills.used.map((s) => s.name)).toEqual(["review"]);
+    expect(report.skills.selfOnly.map((s) => [s.name, s.total, s.genuine])).toEqual([
+      ["spec-tasks", 2, 0],
+      ["acceptance", 1, 0],
+    ]);
+    expect(report.skills.never).toEqual([]);
+  });
+  test("the render flags the sandbox beside the project and names the section", () => {
+    const text = renderReport(report);
+    expect(text).toContain("Skills — 1 invoked of 3 on disk");
+    expect(text).toContain("Invoked only by the studio itself — plugin-dev or an eval sandbox (2):");
+    expect(text).toMatch(/rs-eval-review-guard-preservation-a1 \(eval\)×1/);
+    // the wrapper's leaf is the bare case name, so it is flagged by its cwd, not its basename
+    expect(text).toMatch(/spec-tasks \(eval\)×1/);
+    expect(text).toContain("Never invoked — skills (0):");
   });
 });
 
@@ -177,7 +238,7 @@ describe("the CLI", () => {
     expect(r.exitCode).toBe(0);
     const text = new TextDecoder().decode(r.stdout);
     expect(text).toContain("1 invocation across 1 session");
-    expect(text).toMatch(/review\s+1\s+0\s+1\s+1\s+x×1/);
+    expect(text).toMatch(/review\s+1\s+0\s+1\s+1\s+1\s+x×1/);
     expect(text).toContain("Never invoked — skills (");
   });
 });

@@ -185,7 +185,8 @@ model calls, naming/pattern/boundary tells; read-only).
   Evidence is bound to the exact oracle it proved, so an edited `CHECK:` goes stale on its own;
   `ABANDON:` is a visible handoff (BLOCKED), never a pass. `/spec-tasks` writes it, `/dev-task`
   and `/spec-verify` re-verify it; the `acceptance_guard` Stop hook blocks a turn that reports
-  COMPLETE while a ledger this session named has unmet gates.
+  COMPLETE while a ledger this session named has unmet gates, or a gate whose `CHECK` cannot fail
+  (fixed output, an `EXPECT` matching empty output) — the checker's own `--lint` error class.
 
 ### Quality & review
 

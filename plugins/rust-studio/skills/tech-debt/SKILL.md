@@ -29,17 +29,14 @@ and collect every hit with `file:line`:
 2. **Suppressed lints** — `rg` for `#[allow(...)]` attributes that have no
    inline comment explaining the justification (`// allow: <reason>`). Flag each
    one.
-3. **Panic paths in library code** — `rg` for `unwrap()`, `expect(`, `panic!(`,
-   and `unreachable!()` inside `src/lib.rs` or any path that is not a test
-   module, binary, example, or benchmark. (Calls inside `#[cfg(test)]` blocks
-   are exempt.) Use serena `find_referencing_symbols` to confirm whether a
-   panicking call is reachable from a public entry point.
-4. **Oversized units** — use `tokei` for file-level LOC; flag files over ~400
-   lines. For functions, use serena `get_symbols_overview` on flagged files to
-   surface functions longer than ~60 lines. Note actual counts.
-5. **Missing tests** — coordinate with **`qa-lead`**: use serena
-   `get_symbols_overview` to enumerate `pub` items, then cross-check against
-   `cargo llvm-cov` output for untested public surface and modules with no
+3. **Panic paths in library code** — `rg` for `unwrap()`, `expect(`, `panic!(` and
+   `unreachable!()` on `src/lib.rs` or any path that is not a test module, binary, example
+   or benchmark (calls inside `#[cfg(test)]` are exempt). Use serena
+   `find_referencing_symbols` to confirm a panicking call reaches a public entry point.
+4. **Oversized units** — `tokei` for file-level LOC, flagging files over ~400 lines; serena
+   `get_symbols_overview` on those for functions longer than ~60 lines. Note actual counts.
+5. **Missing tests** — with **`qa-lead`**: `get_symbols_overview` to enumerate `pub` items,
+   then cross-check `cargo llvm-cov` output for untested public surface and modules with no
    `#[cfg(test)]` block.
 6. **Slop and drift** — spawn **`slop-auditor`** on the same scope for the tree-level
    signals the passes above cannot see: near-duplicate functions and types (`similarity-rs`),
@@ -118,24 +115,21 @@ Once the list is approved, offer to file stories:
 > into actionable stories. Shall I proceed, and should I group them by area or by
 > priority?"
 
-If the user agrees, spawn **`product-steward`** with the approved debt list and
-the user's grouping preference. `product-steward` will turn the debt items into
-stories/tasks (see `/spec-tasks` and `references/templates/tasks.md`).
+If the user agrees, spawn **`product-steward`** with the approved debt list and the user's
+grouping preference; it turns the items into stories/tasks and writes the files (see
+`/spec-tasks` and `references/templates/tasks.md`), which this skill never does itself.
 
-Do **not** write story files directly — delegate to `product-steward`.
-
-For a single item rather than the whole approved list — or when the user wants a lightweight
-issue instead of a full spec-tasks breakdown — use **Durable capture** below instead of spawning
-`product-steward`.
+For a single item rather than the whole approved list, or a lightweight issue instead of a full
+spec-tasks breakdown, use **Durable capture** below instead of spawning `product-steward`.
 
 ## Durable capture — file a single finding
 
 A finding that is real, out of scope for the diff in front of you, and worth doing later must
-land somewhere that outlives the session — not a chat message that dies with it. This is where
-`/review`'s Accretion check, `/model-domain`'s RE-CUT ESCALATED, and `/scope-check`'s "split"
-disposition each route a lone finding; treat those pointers as "come here," not as a second
-definition of this mechanism. It differs from Phase 5 above: Phase 5 turns an *approved list*
-into stories; this section files *one* finding on its own, without a full scan.
+land somewhere that outlives the session, not in a chat message that dies with it. `/review`'s
+Accretion check, `/model-domain`'s RE-CUT ESCALATED and `/scope-check`'s "split" disposition each
+route a lone finding here; those pointers mean "come here", not a second definition of this
+mechanism. Unlike Phase 5, which turns an *approved list* into stories, this section files *one*
+finding on its own.
 
 ### 1. Dedup gate (always first)
 
@@ -147,27 +141,26 @@ shape observed. Check it against:
   filed by a session that never wrote, or never pulled, the ledger file.
 
 A match is not an automatic skip: a *closed* issue whose finding has recurred is a regression,
-not a duplicate. Present the match and ask the user: (a) already tracked — link it and stop;
-(b) closed but recurred — reopen it (rung 1) or append a "recurred" line (rung 2); (c) related
-but actually distinct — file fresh. Only file without asking when nothing matches.
+not a duplicate. Present the match and ask the user: (a) already tracked, link it and stop;
+(b) closed but recurred, reopen it (rung 1) or append a "recurred" line (rung 2); (c) related
+but distinct, file fresh. Only file without asking when nothing matches.
 
 ### 2. Draft the finding
 
-Fill `references/templates/debt-log-entry.md` — a one-line title is useless six weeks out. It
-needs the `file:line`, the shape observed (quoted, not paraphrased), the correct re-cut, and
-what triggered it, not just a title.
+A one-line title is useless six weeks out: fill `references/templates/debt-log-entry.md` with the
+`file:line`, the shape observed (quoted, not paraphrased), the correct re-cut, and what triggered
+it.
 
 ### 3. Pick the rung (fallback ladder)
 
 1. **GitHub issue** — only when all three hold: `gh` is installed, `gh auth status` is clean,
    and `gh repo view --json url` resolves (the remote is actually GitHub). Fall through on the
    first that doesn't.
-2. **`.rust-studio/debt-log.md`** — the floor, and always available: a file write can't fail the
-   way an API call can, it's git-tracked so it reviews and merges like code, and it's the only
-   rung that works for a GitLab/Jira/Linear/no-tracker repo alike. Append the drafted entry
-   under its own `## <date> — <title>` heading. On a non-GitHub tracker, still print the drafted
-   entry after appending it — this plugin holds no credentials for arbitrary trackers, so the
-   user pastes it in themselves.
+2. **`.rust-studio/debt-log.md`** — the floor, always available: a file write cannot fail the way
+   an API call can, it is git-tracked so it reviews and merges like code, and it is the only rung
+   that works for a GitLab/Jira/Linear/no-tracker repo alike. Append the drafted entry under its
+   own `## <date> — <title>` heading, and on a non-GitHub tracker still print it afterwards —
+   this plugin holds no credentials for arbitrary trackers, so the user pastes it in themselves.
 
 State which rung applies and why (no `gh`, no GitHub remote, or the user's own preference) —
 never downgrade silently.

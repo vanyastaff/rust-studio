@@ -67,6 +67,8 @@ from the skill directory. Its default mode never executes anything.
 - The ledger is the denominator. A report that says done while a gate is unmet, stale, or
   abandoned is *Denominator gaming*.
 - The `acceptance_guard` Stop hook blocks a turn that reports COMPLETE (or a completion summary)
-  while a ledger this session named has unmet gates, and releases after four such stops without
+  while a ledger this session named has unmet gates, or a gate the checker's `--lint` rejects at
+  error level (`CHECK` prints a fixed result, `EXPECT` matches empty output — a gate that cannot
+  fail proves nothing), and releases after four such stops without
   state change; the feedback carries the exact `--reverify` command. A question to the user or an
   honest NEEDS WORK / BLOCKED passes — the ledger's state is what it enforces.

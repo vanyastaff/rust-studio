@@ -45,17 +45,23 @@ bun "scripts/usage-report.ts" --json       # one object
 The script is bundled with `/studio-doctor`, which runs it under `--usage`; in the plugin
 checkout it is `hooks/scripts/usage-report.ts`. It prints, per skill and per agent:
 invocations split by hand, distinct sessions, and the projects they came from (the working
-directory's basename, with `rust-studio` flagged as plugin development). Then the list the
-pruning decision needs: every skill and agent on disk that the window never saw. Names in the
-log that match nothing on disk are listed separately as "outside the studio".
+directory's basename, with `rust-studio` flagged as plugin development and an eval-harness
+sandbox as `(eval)`), beside a `genuine` column that drops both — the count the decision rule
+reads. Then the lists the pruning decision needs: what only the plugin's own checkout or a
+sandbox reached for (which the rule below counts as no invocation), and what the window never
+saw at all. Names in the log that match nothing on disk are listed separately as "outside the
+studio".
 
 ## The decision rule
 
 Numbers from one week of real sessions decide what happens to a skill, and the rule was
 fixed before the week began so the numbers could not be read to taste:
 
-- **At least one genuine invocation** (model or user, from a project that is not the plugin
-  checkout) keeps the skill.
+- **At least one genuine invocation** (model or user, from a project that is neither the plugin
+  checkout nor an eval-harness sandbox) keeps the skill. That is what the `genuine` column
+  counts, and it is the whole of what "genuine" means here: an eval run is the studio exercising
+  itself on its own fixtures, so a skill only the harness reached for has had no invocation for
+  the purpose of the two bullets below, however many times the log shows its name.
 - **No invocation, and no demand**: the audit's scan of what users asked for found nothing
   the skill serves, or found it served by native git, by an agent, or by another skill. The
   skill is deleted. Deleted, not demoted: a skill nobody reaches for costs its description in
