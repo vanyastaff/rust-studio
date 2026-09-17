@@ -7,7 +7,7 @@ when to ask) and `verdicts.md` (gates, verdicts, evidence).
 ---
 ## 2. The team (3 tiers)
 
-**Tier 1 — Directors** (model: inherit — the session model). Own cross-cutting decisions and final gates.
+**Tier 1 — Directors** (model: inherit, the session model). Own cross-cutting decisions and final gates.
 - `chief-architect` — architecture, crate/module boundaries, ADRs, final technical gate.
 - `product-steward` — scope, priorities, milestones, story breakdown, change propagation.
 
@@ -114,7 +114,7 @@ the **Skipped discipline** cheat wearing a process costume
 That last one is worth separating from the gates, because they look alike and are opposites.
 A gate lens re-reads *someone else's* diff and that is the whole point (independence, above).
 Spawning a worker to re-check what **you** just concluded buys neither filtering nor
-independence — it inherits your framing in the brief you write for it — and current models
+independence (it inherits your framing in the brief you write for it), and current models
 reach for it unprompted. Anthropic's Opus 5 guidance is explicit that instructions like "use a
 subagent to verify" produce over-verification with no quality gain, and that the model already
 verifies and self-corrects without being told. Verify inline, with a command whose output you
@@ -125,8 +125,8 @@ readily than the models this section was first written against. Two consequences
 worker can do the job, send one rather than a fan-out; and when a host offers deterministic
 caps, they are cheaper than judgment. On Claude Code and the Agent SDK those are
 `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` (Claude Code
-2.1.217+), and the SDK's `max_budget_usd`. The studio sets none of them — they are the user's
-budget, not a plugin's to spend — but `/studio-doctor` reports what is in force so a runaway
+2.1.217+), and the SDK's `max_budget_usd`. The studio sets none of them: they are the user's
+budget, not a plugin's to spend. `/studio-doctor` reports what is in force so a runaway
 fan-out has an explanation.
 
 Skipping the *spawn* is a judgment call. Skipping the *phase* is not — scout before you plan,
@@ -171,7 +171,7 @@ run the named roles inline in the same dependency order, following
   instruction not to use it. Codex's default mode carries "Do not spawn sub-agents unless the
   user or applicable AGENTS.md/skill instructions explicitly ask for sub-agents, delegation, or
   parallel agent work" (its proactive mode lifts exactly that prior). So a skill must *name* the
-  spawn — "spawn `rust-reviewer`", "run these lenses in parallel" — because intent-only phrasing
+  spawn ("spawn `rust-reviewer`", "run these lenses in parallel"), because intent-only phrasing
   does not clear the gate. Where a spawn is declined, fall back to the inline path above; gates
   and verdicts are unchanged.
 
@@ -211,7 +211,7 @@ review request, it is a request to confirm, and you will get a confirmation whet
 lock ordering is wrong. A gate lens is bought with independence (§"When a handoff earns its
 cost"); framing in the brief spends it before the worker reads a line. Give the diff, the scope,
 and the bar. If you genuinely need a specific question answered, ask it as a question with both
-answers open — "does the lock ordering hold under `drop` in the error path?" — not as a finding
+answers open ("does the lock ordering hold under `drop` in the error path?"), not as a finding
 seeking a signature.
 
 **Mark third-party text as third-party inside the brief.** A crate README, a CI log, an issue
@@ -243,16 +243,16 @@ keep the same graph as an ordered checklist in working context. Durable files su
 
 **Write-zone exclusivity.** §3's domain boundaries and §6's single-writer protocol already point
 at this; the team model needs it stated because parallel waves are where it actually breaks.
-Every spawned unit declares its write zone — the files or directories its brief authorizes it to
-touch — in the same brief that carries scope and acceptance criteria. Two units in the same wave
+Every spawned unit declares its write zone (the files or directories its brief authorizes it to
+touch) in the same brief that carries scope and acceptance criteria. Two units in the same wave
 never declare the same write zone. When two tickets genuinely need the same file, they serialize:
 the later one is spawned only after the earlier one's result has landed, not launched alongside
 it on the promise that it will "wait its turn." This is not hypothetical — an orchestrator
 building this plugin fanned out three tickets that all touched `scripts/validate-distribution.sh`
 and caught the collision only because it happened to notice; nothing in the doctrine forced the
 check. It happened again on the same plugin, and that time nothing noticed at all: two units in
-one wave both edited `skills/review/SKILL.md` — one appending a bullet, one rewriting a sentence
-four lines below it — and both survived only because they targeted non-adjacent text and landed
+one wave both edited `skills/review/SKILL.md` (one appending a bullet, one rewriting a sentence
+four lines below it), and both survived only because they targeted non-adjacent text and landed
 at different moments. Surviving by timing is not the rule holding. It is the rule being broken
 without a bill arriving, which is how a rule quietly stops being enforced.
 
@@ -277,8 +277,8 @@ Two teeth on that exemption, both earned here rather than reasoned out:
   had edited a source and not yet run the generator. Run the generator before reporting, not once
   at the end of the wave.
 - **Never hand-edit a derived file.** It is an authored write wearing a disguise, and the next
-  regeneration discards it without a word. Nothing inside the file admits this — the bundled
-  copies carry no "generated, do not edit" banner — so the tell is the path (`references/`,
+  regeneration discards it without a word. Nothing inside the file admits this (the bundled
+  copies carry no "generated, do not edit" banner), so the tell is the path (`references/`,
   `agents/openai.yaml`), and `sync-references.sh --check` is what proves a copy is stale rather
   than deliberately different.
 
@@ -331,7 +331,7 @@ zone is that outcome-first brief applied to the one property that makes two spaw
 **Results and cleanup.** Collect results through the host's worker-result or messaging channel.
 Wait only on workers whose output blocks the next phase. **Relay a worker's verdict line
 verbatim.** The orchestrator's final message carries every gate lens's verdict token exactly as
-the lens wrote it — `NEEDS WORK`, `REDO-TO-BAR`, `DOESN'T SURVIVE`, `OVER SCOPE` — beside the
+the lens wrote it (`NEEDS WORK`, `REDO-TO-BAR`, `DOESN'T SURVIVE`, `OVER SCOPE`) beside the
 orchestrator's own; a paraphrase ("the critic had concerns") is not a verdict, and a measured
 run lost three verdicts this way: the critique was complete and the token never reached the
 user. Summarize the findings if you must; never the verdict. When the host supports explicit worker
@@ -360,8 +360,8 @@ unavailable tools.
   so a lead may now spawn its own specialists; `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1` disables
   it, and a per-session cap of 200 spawns applies (`CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION`,
   since 2.1.212). Codex custom agents default to depth 1 unless `[agents] max_depth` is raised,
-  so its orchestrator calls every role directly. Write skills against the floor — one level of
-  delegation — and treat deeper nesting as an optimization the host may or may not permit.
+  so its orchestrator calls every role directly. Write skills against the floor (one level of
+  delegation) and treat deeper nesting as an optimization the host may or may not permit.
   Workers inherit only the permissions and context the host documents.
 
 **A finding that repeats across a wave is a defect in the brief, not in N diffs.**
