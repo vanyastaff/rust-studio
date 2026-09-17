@@ -63,7 +63,7 @@ export interface StagedPlugin { dir: string; name: string; prefix: string }
 export function pluginName(root = PLUGIN_ROOT): string {
   return String(JSON.parse(readFileSync(join(root, ".claude-plugin", "plugin.json"), "utf8")).name);
 }
-export function stagePlugin(root = PLUGIN_ROOT): StagedPlugin {
+export function stagePlugin(root = PLUGIN_ROOT, opts: { inheritModels?: boolean } = {}): StagedPlugin {
   const name = `${pluginName(root)}-eval`;
   const dir = join(mkdtempSync(join(tmpdir(), "eval-plugin-")), name);
   const skip = new Set(["results", "node_modules", ".git"]);
@@ -81,14 +81,30 @@ export function stagePlugin(root = PLUGIN_ROOT): StagedPlugin {
   const m = JSON.parse(readFileSync(manifest, "utf8"));
   m.name = name;
   writeFileSync(manifest, JSON.stringify(m, null, 2) + "\n");
+  // With a subject model given, every agent brief in the SNAPSHOT runs on it: the briefs pin
+  // `model: sonnet|haiku|opus` for cost, and on an alternative endpoint those ids 404 while
+  // CLAUDE_CODE_SUBAGENT_MODEL_FORCE leaves a plugin agent's own `model:` line in force
+  // (measured 2026-09-17: api-design-lead still sent claude-sonnet-5 with the variable set).
+  // The source tree is untouched; only the staged copy is rewritten.
+  if (opts.inheritModels) {
+    const agentsDir = join(dir, "agents");
+    if (existsSync(agentsDir)) {
+      for (const f of readdirSync(agentsDir)) {
+        if (!f.endsWith(".md")) continue;
+        const p = join(agentsDir, f);
+        writeFileSync(p, readFileSync(p, "utf8").replace(/^model:\s*\S+\s*$/m, "model: inherit"));
+      }
+    }
+  }
   return { dir, name, prefix: `${name}:` };
 }
 export function bareName(id: string, prefix: string): string {
   return id.startsWith(prefix) ? id.slice(prefix.length) : id.replace(/^[a-z0-9-]+:/, "");
 }
 let STAGED: StagedPlugin | null = null;
+let STAGE_INHERIT = false;
 function staged(): StagedPlugin {
-  if (!STAGED) STAGED = stagePlugin();
+  if (!STAGED) STAGED = stagePlugin(PLUGIN_ROOT, { inheritModels: STAGE_INHERIT });
   return STAGED;
 }
 // An installed copy of the same plugin would still load beside the snapshot, and a prompt that
@@ -728,7 +744,9 @@ async function runLive(name: string, run: number, o: Options): Promise<LiveResul
         model: o.model,
         withPlugin: true,
       },
-      [],
+      // A live task may carry follow-ups.md too: a skill with an approval gate (/dev-task's
+      // Phase 3) ends its turn on a question, and the scripted reply is the human answering it.
+      existsSync(join(dir, "follow-ups.md")) ? parseFollowUps(readFileSync(join(dir, "follow-ups.md"), "utf8")) : [],
     );
     const { raw, ...rest } = trace;
     writeFileSync(join(o.out, `live__${name}.run${run}.stream.jsonl`), raw);
@@ -920,6 +938,7 @@ if (import.meta.main) {
     process.exit(0);
   }
   if (!Bun.which("claude")) throw new Error("claude CLI not on PATH");
+  STAGE_INHERIT = Boolean(o.model);
   mkdirSync(o.out, { recursive: true });
   const started = Date.now();
   const log = (s: string) => console.error(`[${((Date.now() - started) / 1000).toFixed(0)}s] ${s}`);

@@ -158,6 +158,16 @@ describe("plugin staging (the tree under test, not the installed copy)", () => {
     expect(existsSync(join(staged.dir, "node_modules"))).toBe(false);
     expect(existsSync(join(staged.dir, "evals", "routing-start", "prompt.md"))).toBe(true);
   });
+  test("with inheritModels every staged agent brief runs on the subject model", () => {
+    const st = stagePlugin(undefined, { inheritModels: true });
+    const models = readdirSync(join(st.dir, "agents")).filter((f) => f.endsWith(".md"))
+      .map((f) => /^model:\s*(\S+)/m.exec(readFileSync(join(st.dir, "agents", f), "utf8"))?.[1]);
+    expect(models.length).toBeGreaterThan(30);
+    expect(new Set(models)).toEqual(new Set(["inherit"]));
+    // the source tree keeps its pins
+    expect(readFileSync(join(process.cwd(), "agents", "api-design-lead.md"), "utf8")).toMatch(/^model:\s*sonnet/m);
+    rmSync(dirname(st.dir), { recursive: true, force: true });
+  });
   test("bareName strips the staged prefix and any other plugin prefix", () => {
     expect(bareName(`${staged.prefix}review`, staged.prefix)).toBe("review");
     expect(bareName("rust-studio:rust-reviewer", staged.prefix)).toBe("rust-reviewer");
