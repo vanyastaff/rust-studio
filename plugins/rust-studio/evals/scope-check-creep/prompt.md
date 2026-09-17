@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:scope-check, agent:product-steward]
 ---
 The story: "Add a `--json` flag to the `list` subcommand so scripts can consume its output." Here is what the branch actually changed. Is this diff in scope? What ships, what gets split out, and why?
 

@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:qa-lead, rule:testing]
 ---
 CI is green about nine runs in ten with no code changes. This is `tests/queue.rs`. Which tests are flaky, which cannot fail, and what does each need to become a real test? List findings with line numbers and end with a QA verdict.
 

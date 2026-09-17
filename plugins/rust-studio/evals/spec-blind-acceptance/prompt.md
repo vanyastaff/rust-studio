@@ -3,6 +3,7 @@ max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
+targets: [skill:spec-verify]
 ---
 Use `/rust-studio:spec-verify` to adjudicate this supplied verification record for a
 completed three-task CLI feature. This is a record-only evaluation: there is no project to

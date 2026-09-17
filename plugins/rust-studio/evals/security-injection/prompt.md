@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:security-audit, agent:security-auditor, rule:security]
 ---
 Security-review these HTTP request handlers (`crates/api/src/handlers/run.rs`); every argument comes from an untrusted client. Report each vulnerability with line number, severity, and the fix. End with a verdict.
 

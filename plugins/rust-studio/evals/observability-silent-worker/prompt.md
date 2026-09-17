@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:observability-engineer, rule:observability]
 ---
 This settlement worker in `src/workers/settle.rs` 'works', but when it fails in production nobody can tell why from the logs. Review its observability and diagnostics; list findings with line numbers and end with a verdict.
 

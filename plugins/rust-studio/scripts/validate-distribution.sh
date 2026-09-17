@@ -41,7 +41,7 @@ _json_escape() { # minimal JSON string escaping for the fields below
 #   RS-DATA-0xx      rules/*.json data files                   next: 076
 #   RS-AGENT-0xx     agent briefs and their generation         next: 084
 #   RS-DOC-0xx       docs and README staying true to the tree  next: 096
-#   RS-EVAL-0xx      eval cases                                next: 106
+#   RS-EVAL-0xx      eval cases                                next: 108
 #   RS-REF-1xx       bundled skill references                  next: 111
 #
 # fail <code> <subject> <problem> [fix]
@@ -758,6 +758,21 @@ for case_dir in evals/*/; do
   if grep -rnE 'TODO|/home/|~/' "$case_dir" >/dev/null; then
     fail RS-EVAL-104 "evals/$case" "carries a TODO placeholder or a machine-specific path, which passes here and fails on every other machine" "replace it with a repo-relative path or real content"
   fi
+  # A case declares what it measures, so `eval-runner --target <skill>` finds it and `--coverage`
+  # can say which skills, agents and rules have no case at all. Every id must exist: a target
+  # that names a renamed skill would keep the case "covering" nothing.
+  targets=$(grep -E '^targets:' <<<"$fm" | sed -E 's/^targets:[[:space:]]*\[?//; s/\]?[[:space:]]*$//')
+  [[ -n ${targets//[[:space:]]/} ]] || fail RS-EVAL-106 "evals/$case/prompt.md frontmatter" "no targets: line, so no --target run and no coverage row can find it" "add targets: [skill:<name>, agent:<name>, rule:<name>] naming what the case measures"
+  for t in ${targets//,/ }; do
+    kind=${t%%:*}; id=${t#*:}
+    case $kind in
+      skill) target_path=skills/$id/SKILL.md ;;
+      agent) target_path=agents/$id.md ;;
+      rule)  target_path=rules/$id.md ;;
+      *)     target_path="" ;;
+    esac
+    [[ -n $target_path && -f $target_path ]] || fail RS-EVAL-107 "evals/$case/prompt.md#targets" "target '$t' does not resolve to a skill, agent or rule file" "use skill:<dir under skills/>, agent:<file under agents/> or rule:<file under rules/>"
+  done
 done
 (( eval_cases >= 1 )) || fail RS-EVAL-105 "evals/" "no eval cases found" "the suite the manifest advertises does not exist — add a case or drop experimental.evals"
 jq -e '.experimental.evals == "./evals"' .claude-plugin/plugin.json >/dev/null ||

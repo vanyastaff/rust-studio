@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:architecture, agent:chief-architect, rule:architecture]
 ---
 This is `crates/acme-domain/src/lib.rs`, the lowest layer of our workspace (its README says: pure business rules, no transport, no storage, no framework types). We are about to add a `refund` flow to it. Is the crate in shape to extend? Give the pre-code maintainer verdict and say what you would change first.
 

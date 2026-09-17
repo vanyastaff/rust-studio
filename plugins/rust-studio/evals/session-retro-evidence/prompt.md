@@ -3,6 +3,7 @@ max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
+targets: [skill:session-wrap]
 ---
 Use `/rust-studio:session-wrap` for the following session record. Assess the process and
 suggest useful environment improvements as part of the wrap. This is record-only: there

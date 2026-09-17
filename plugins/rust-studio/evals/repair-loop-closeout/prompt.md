@@ -3,6 +3,7 @@ max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
+targets: [skill:dev-task]
 ---
 Use `/rust-studio:dev-task` to adjudicate the next action from this supplied task record.
 This is a workflow simulation, not a checkout: read the skill and relevant references, but

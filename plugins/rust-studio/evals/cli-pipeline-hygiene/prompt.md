@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:cli-ux-lead, rule:cli]
 ---
 This is `src/main.rs` of a small CLI that deduplicates lines. It works when I run it by hand. Review it before we ship it to people who will call it from scripts and pipelines; list findings with line numbers and end with a verdict.
 

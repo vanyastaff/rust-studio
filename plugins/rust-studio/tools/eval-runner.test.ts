@@ -5,7 +5,7 @@
 import { test, expect, describe, afterAll } from "bun:test";
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { auditPrompt, bareName, installedIdsFor, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, pluginName, splitFrontmatter, stagePlugin, FIXTURE_AGENTS } from "./eval-runner.ts";
+import { auditPrompt, bareName, caseTargets, casesForTargets, coverageReport, installedIdsFor, targetMatches, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, pluginName, splitFrontmatter, stagePlugin, FIXTURE_AGENTS } from "./eval-runner.ts";
 import { rmSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -72,6 +72,20 @@ describe("graders", () => {
   test("tool_used sees the studio path", () => {
     expect(gradeToolUsed(g({ type: "tool_used", tool: "Skill" }, ""), trace).score).toBe(1);
     expect(gradeToolUsed(g({ type: "tool_used", tool: "Agent" }, ""), trace).score).toBe(0);
+  });
+
+  test("tool_used with name: pins which skill or agent fired, whatever the plugin prefix", () => {
+    const t = parseStream(
+      line({ type: "assistant", message: { content: [{ type: "tool_use", name: "Skill", input: { skill: "rust-studio-eval:bloat" } }] } }) +
+        line({ type: "assistant", message: { content: [{ type: "tool_use", name: "Agent", input: { subagent_type: "rust-studio:harsh-critic", prompt: "x" } }] } }) +
+        line({ type: "result", result: "done" }),
+    );
+    expect(gradeToolUsed(g({ type: "tool_used", tool: "Skill", name: "bloat" }, ""), t).score).toBe(1);
+    expect(gradeToolUsed(g({ type: "tool_used", tool: "Skill", name: "/bloat" }, ""), t).score).toBe(1);
+    expect(gradeToolUsed(g({ type: "tool_used", tool: "Skill", name: "flaky-hunt" }, ""), t).score).toBe(0);
+    expect(gradeToolUsed(g({ type: "tool_used", tool: "Agent", name: "harsh-critic" }, ""), t).score).toBe(1);
+    expect(gradeToolUsed(g({ type: "tool_used", tool: "Agent", name: "rust-reviewer" }, ""), t).score).toBe(0);
+    expect(gradeToolUsed(g({ type: "tool_used", tool: "Agent", name: "harsh-critic" }, ""), t).detail).toContain("fired");
   });
 
   test("frontmatter and list parsing match the eval prompt format", () => {
@@ -158,5 +172,37 @@ describe("installed-copy detection", () => {
     expect(installedIdsFor("rust-studio", listing)).toEqual(["rust-studio@vanya", "rust-studio@other"]);
     expect(installedIdsFor("exa", listing)).toEqual(["exa@claude-plugins-official"]);
     expect(installedIdsFor("nope", listing)).toEqual([]);
+  });
+});
+
+describe("targets: what a case measures", () => {
+  const read = (c: string) => ({
+    "repair-loop-closeout": "---\nmax_turns: 24\ntargets: [skill:dev-task]\n---\nprompt",
+    "async-cancel-and-block": "---\ntargets: [skill:review, agent:async-systems-lead, rule:async]\n---\nprompt",
+    "legacy-no-targets": "---\nmax_turns: 15\n---\nprompt",
+  })[c]!;
+  const all = ["repair-loop-closeout", "async-cancel-and-block", "legacy-no-targets"];
+  test("caseTargets parses the frontmatter list and tolerates its absence", () => {
+    expect(caseTargets(read("async-cancel-and-block"))).toEqual(["skill:review", "agent:async-systems-lead", "rule:async"]);
+    expect(caseTargets(read("legacy-no-targets"))).toEqual([]);
+  });
+  test("a bare or slash name matches the skill and agent kinds; a qualified id matches exactly", () => {
+    expect(targetMatches("review", ["skill:review"])).toBe(true);
+    expect(targetMatches("/review", ["skill:review"])).toBe(true);
+    expect(targetMatches("skill:review", ["skill:review"])).toBe(true);
+    expect(targetMatches("agent:review", ["skill:review"])).toBe(false);
+    expect(targetMatches("async", ["rule:async"])).toBe(true);
+  });
+  test("--target selects the cases that name it", () => {
+    expect(casesForTargets(["dev-task"], all, read)).toEqual(["repair-loop-closeout"]);
+    expect(casesForTargets(["async-systems-lead", "dev-task"], all, read)).toEqual(["repair-loop-closeout", "async-cancel-and-block"]);
+    expect(casesForTargets(["tdd"], all, read)).toEqual([]);
+  });
+  test("the coverage report names what has a case and what has none", () => {
+    const r = coverageReport(all, read, { skills: ["dev-task", "review", "tdd"], agents: ["async-systems-lead", "rust-builder"], rules: ["async"] });
+    expect(r).toContain("skills with a case: 2/3");
+    expect(r).toContain("skills with NO case (1): tdd");
+    expect(r).toContain("agents with NO case (1): rust-builder");
+    expect(r).toContain("rules with a case: 1/1");
   });
 });

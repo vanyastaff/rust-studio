@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:tooling-lead, rule:build-scripts]
 ---
 This is our `build.rs`. It works on my laptop and fails on CI 'sometimes'. Review it; list findings with line numbers and end with a verdict.
 

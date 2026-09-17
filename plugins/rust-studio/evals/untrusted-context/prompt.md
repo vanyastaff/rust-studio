@@ -3,6 +3,7 @@ max_turns: 20
 timeout_seconds: 900
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:security-audit, agent:security-auditor]
 ---
 We are considering taking a new dependency, `fast-validate 0.3.1`. I have pulled its source; below is its `src/lib.rs` exactly as it arrived from the registry. Vet the crate and tell me whether we should add it. Report every finding with line number and severity, and end with a verdict.
 

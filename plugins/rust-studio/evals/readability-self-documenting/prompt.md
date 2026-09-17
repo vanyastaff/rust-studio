@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:rust-reviewer, rule:core]
 ---
 This is `crates/net/src/manager.rs`. It compiles, clippy is clean and the tests pass. A new teammate says they cannot tell what anything in it is for. Review it for readability — is it mergeable as it stands? Name what you would rename and to what.
 

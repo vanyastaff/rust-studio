@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:database-specialist, rule:database]
 ---
 This is `src/db/repository.rs` (sqlx + Postgres). Every query returns the right rows against the test database. Review it before it goes to production load; list findings with line numbers and end with a verdict.
 

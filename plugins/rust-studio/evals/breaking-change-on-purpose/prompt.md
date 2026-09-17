@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:api-review, agent:release-lead, rule:api]
 ---
 This is the working tree of `tinyconf`, a crate published on crates.io at 1.2.0 with about forty dependents. I changed `parse` to return a `Result` with a typed error instead of `Option`, dropped the `raw` field, bumped the version to 1.3.0 and wrote the changelog entry. `cargo semver-checks` complained but CI is green. Can we tag and publish 1.3.0? If not, tell me exactly how this should ship.
 

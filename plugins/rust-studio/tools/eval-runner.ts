@@ -10,6 +10,8 @@
 //
 //   bun tools/eval-runner.ts                         # every evals/*/ case, one run each
 //   bun tools/eval-runner.ts --case simplify-spaghetti --case routing-start
+//   bun tools/eval-runner.ts --target dev-task            # every case whose `targets:` names it
+//   bun tools/eval-runner.ts --coverage                   # which skills/agents/rules have a case
 //   bun tools/eval-runner.ts --runs 3                # three runs per case: min / mean / max
 //   bun tools/eval-runner.ts --fixtures              # every benchmarks/fixtures/*/*/ via its agent
 //   bun tools/eval-runner.ts --fixture api/leaky-surface
@@ -112,6 +114,8 @@ function shadowSettings(): string | null {
 
 interface Options {
   cases: string[];
+  targets: string[];
+  coverage: boolean;
   fixtures: string[];
   allFixtures: boolean;
   liveTasks: string[];
@@ -135,6 +139,8 @@ interface Options {
 function parseArgs(argv: string[]): Options {
   const o: Options = {
     cases: [],
+    targets: [],
+    coverage: false,
     fixtures: [],
     allFixtures: false,
     liveTasks: [],
@@ -150,6 +156,8 @@ function parseArgs(argv: string[]): Options {
     const a = argv[i];
     const next = () => argv[++i];
     if (a === "--case") o.cases.push(next());
+    else if (a === "--target") o.targets.push(next());
+    else if (a === "--coverage") o.coverage = true;
     else if (a === "--fixture") o.fixtures.push(next());
     else if (a === "--fixtures") o.allFixtures = true;
     else if (a === "--live-task") o.liveTasks.push(next());
@@ -314,6 +322,15 @@ export function gradeToolUsed(g: Grader, trace: RunTrace): GraderResult {
   const tool = g.fm.tool;
   const used = trace.toolsUsed.includes(tool);
   const extra = tool === "Skill" ? ` skills=${JSON.stringify(trace.skills)}` : tool === "Agent" ? ` agents=${JSON.stringify(trace.agents)}` : "";
+  // `name:` pins WHICH skill or agent had to fire (bare, any plugin prefix): a routing case
+  // asserts its route instead of "some studio skill ran". Without it the grader is the old
+  // presence check.
+  const want = (g.fm.name ?? "").replace(/^["']|["']$/g, "").replace(/^\//, "");
+  if (want) {
+    const ids = tool === "Skill" ? trace.skills : tool === "Agent" ? trace.agents : [];
+    const hit = ids.some((id) => id === want || id.endsWith(`:${want}`));
+    return { file: g.file, type: g.type, weight: g.weight, score: hit ? 1 : 0, detail: `${tool} ${want} ${hit ? "fired" : "did not fire"}${extra}` };
+  }
   return { file: g.file, type: g.type, weight: g.weight, score: used ? 1 : 0, detail: `${tool} ${used ? "used" : "not used"}${extra}` };
 }
 
@@ -732,6 +749,33 @@ function listCases(): string[] {
   return readdirSync(dir).filter((d) => existsSync(join(dir, d, "prompt.md"))).sort();
 }
 
+// Every case declares what it measures: `targets: [skill:review, agent:rust-reviewer, rule:async]`.
+// `--target review` (or `skill:review`) selects the cases that name it; `--coverage` lists what
+// no case names, which is where a target-driven /evolve round has to write a case first.
+export function caseTargets(promptText: string): string[] {
+  return parseList(splitFrontmatter(promptText).fm.targets ?? "");
+}
+export function targetMatches(target: string, ids: string[]): boolean {
+  const bare = target.replace(/^\//, "");
+  return ids.some((id) => id === bare || id.endsWith(`:${bare}`));
+}
+export function casesForTargets(targets: string[], all: string[], read: (c: string) => string): string[] {
+  return all.filter((c) => targets.some((t) => targetMatches(t, caseTargets(read(c)))));
+}
+export function coverageReport(all: string[], read: (c: string) => string, names: { skills: string[]; agents: string[]; rules: string[] }): string {
+  const count = new Map<string, string[]>();
+  for (const c of all) for (const id of caseTargets(read(c))) count.set(id, [...(count.get(id) ?? []), c]);
+  const lines: string[] = [];
+  for (const [kind, list] of [["skill", names.skills], ["agent", names.agents], ["rule", names.rules]] as const) {
+    const covered = list.filter((n) => count.has(`${kind}:${n}`));
+    lines.push(`${kind}s with a case: ${covered.length}/${list.length}`);
+    for (const n of covered) lines.push(`  ${kind}:${n}  ${count.get(`${kind}:${n}`)!.join(", ")}`);
+    const bare = list.filter((n) => !count.has(`${kind}:${n}`));
+    if (bare.length) lines.push(`${kind}s with NO case (${bare.length}): ${bare.join(" ")}`);
+  }
+  return lines.join("\n");
+}
+
 function listFixtures(): string[] {
   const root = join(PLUGIN_ROOT, "benchmarks", "fixtures");
   const out: string[] = [];
@@ -841,6 +885,21 @@ export function renderSummary(cases: CaseResult[], fixtures: FixtureResult[], li
 
 if (import.meta.main) {
   const o = parseArgs(process.argv.slice(2));
+  const readCase = (c: string) => readFileSync(join(PLUGIN_ROOT, "evals", c, "prompt.md"), "utf8");
+  const studioNames = {
+    skills: readdirSync(join(PLUGIN_ROOT, "skills")).filter((d) => existsSync(join(PLUGIN_ROOT, "skills", d, "SKILL.md"))).sort(),
+    agents: readdirSync(join(PLUGIN_ROOT, "agents")).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)).sort(),
+    rules: readdirSync(join(PLUGIN_ROOT, "rules")).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)).sort(),
+  };
+  if (o.coverage) {
+    console.log(coverageReport(listCases(), readCase, studioNames));
+    process.exit(0);
+  }
+  if (o.targets.length) {
+    const hit = casesForTargets(o.targets, listCases(), readCase);
+    if (!hit.length) throw new Error(`no eval case names ${o.targets.join(", ")} in its targets: — write one before tuning it (eval-improvement.md), or run --coverage`);
+    for (const c of hit) if (!o.cases.includes(c)) o.cases.push(c);
+  }
   const explicit = o.cases.length || o.fixtures.length || o.liveTasks.length || o.allFixtures || o.allLive;
   const cases = o.cases.length ? o.cases : explicit ? [] : listCases();
   const fixtures = o.allFixtures ? listFixtures() : o.fixtures;

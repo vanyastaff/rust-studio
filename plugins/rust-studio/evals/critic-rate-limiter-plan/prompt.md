@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:doc-review, agent:harsh-critic]
 ---
 Before we build it, attack this design. Give me the strongest case against it, what it is missing, and whether it survives.
 

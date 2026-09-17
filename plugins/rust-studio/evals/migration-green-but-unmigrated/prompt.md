@@ -3,6 +3,7 @@ max_turns: 18
 timeout_seconds: 900
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:rust-reviewer]
 ---
 Review this edition-migration PR before I merge it. It moves `crates/core` from edition 2021 to 2024. CI is green: the workspace builds, clippy is clean with `-D warnings`, and the test count is unchanged at 41. Report every finding with line number and severity, and end with a verdict.
 

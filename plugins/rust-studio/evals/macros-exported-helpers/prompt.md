@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:macro-specialist, rule:macros]
 ---
 These `#[macro_export]`ed helpers live in `src/macros.rs` of our util crate and three sibling crates use them. Both tests pass. Review them; list findings with line numbers and end with a verdict.
 

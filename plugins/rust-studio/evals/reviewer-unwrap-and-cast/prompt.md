@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:rust-reviewer]
 ---
 Review this Rust library code before I merge it. It lives at `crates/config/src/parse.rs` and callers depend on it not panicking. List every real problem with its line number and a severity, say how to fix each, and end with a merge verdict.
 

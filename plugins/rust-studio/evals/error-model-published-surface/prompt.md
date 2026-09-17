@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:error-architect, rule:error-model]
 ---
 We are about to publish 1.0 of `acme-store`. This is `src/error.rs` and the functions that use it. Review the error handling as the crate's public contract; list every finding with line number and severity, and end with a verdict.
 

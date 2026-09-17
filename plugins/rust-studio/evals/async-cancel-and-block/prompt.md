@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:async-systems-lead, rule:async]
 ---
 This is `src/service/fanout.rs` in our gateway — it fans a request out to upstreams and aggregates. Clippy is clean and the integration test passes. Review it for async correctness before it lands on the hot path; list every finding with line number and severity, and end with a verdict.
 

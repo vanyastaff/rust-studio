@@ -3,6 +3,7 @@ max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
+targets: [skill:acceptance]
 ---
 Use `/rust-studio:acceptance` to adjudicate this supplied acceptance record for a finished
 feature. This is a record-only evaluation: there is no project to run here. Do not invent

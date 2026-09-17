@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:audit-unsafe, agent:unsafe-auditor, rule:unsafe]
 ---
 Audit the unsafe code in this buffer type (`crates/buf/src/raw.rs`) for soundness before it ships. Report each problem with its line number, what could go wrong, and how to prove or fix it. End with a verdict.
 

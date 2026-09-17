@@ -3,6 +3,7 @@ max_turns: 25
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:refactor]
 ---
 This is `crates/billing/src/discount.rs`. Nobody on the team can follow `apply_discount` any more. Make it readable for a human — behavior must stay exactly identical, including error messages. Tell me how you would go about it and what you would change, then give a verdict on the code as it stands.
 

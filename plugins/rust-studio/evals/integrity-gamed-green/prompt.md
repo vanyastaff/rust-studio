@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:rust-reviewer]
 ---
 This change was done test-driven and the whole suite is green — clippy and tests pass. Review it before I merge. End with a merge verdict.
 

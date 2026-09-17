@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:wasm-specialist, rule:wasm]
 ---
 This `wasm-bindgen` crate (`src/lib.rs`, a `cdylib` for `wasm32-unknown-unknown`) compiles for the host and its tests pass natively, but it panics in the browser on the first call. Review it for the wasm32 target; list findings with line numbers and end with a verdict.
 

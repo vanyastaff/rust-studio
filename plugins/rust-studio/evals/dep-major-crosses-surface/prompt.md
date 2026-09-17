@@ -3,6 +3,7 @@ max_turns: 16
 timeout_seconds: 900
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:api-review, agent:release-lead, agent:dependency-manager]
 ---
 Review the semver impact of this release of `leaf` before I publish it. The crate's own source is unchanged; the manifest moved `http` from `0.2` to `1` and the version from `0.1.0` to `0.1.1`. Every check in CI is green, including `cargo semver-checks`. Is the version bump right? Report findings with line numbers and severity, and end with a verdict.
 

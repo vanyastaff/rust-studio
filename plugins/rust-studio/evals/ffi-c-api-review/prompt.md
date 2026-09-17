@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:ffi-specialist, rule:ffi]
 ---
 This is `src/ffi.rs`, the C API of our `-sys` crate (edition 2024, default profile). It links and the smoke test passes. Review it before the Python and Go binding teams build on it; list findings with line numbers and severity and end with a verdict.
 

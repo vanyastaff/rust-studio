@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:release-lead, rule:cargo-manifest]
 ---
 This is the `Cargo.toml` of a published workspace member (shown verbatim in the doc comment) and the top of its `src/lib.rs`. `cargo build` and `cargo publish --dry-run` succeed. Review it before we publish 0.4.2; list findings with line numbers and end with a verdict.
 

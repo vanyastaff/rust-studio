@@ -3,6 +3,7 @@ max_turns: 24
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
+targets: [skill:spec-tasks]
 ---
 Use `/rust-studio:spec-tasks` to decide how to resume this interrupted approved plan.
 This is a supplied-record exercise; no real repository or tracker is available. Read the

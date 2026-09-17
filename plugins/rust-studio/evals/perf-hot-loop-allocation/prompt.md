@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:systems-perf-lead, rule:perf]
 ---
 These two functions run on the per-request hot path of `acme-engine`. The output is correct and the tests pass. Is this ready to merge? Be specific about what you would change and how you would prove it.
 

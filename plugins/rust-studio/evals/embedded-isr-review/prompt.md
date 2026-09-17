@@ -3,6 +3,7 @@ max_turns: 15
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 runs: 3
+targets: [skill:review, agent:embedded-specialist, rule:embedded]
 ---
 This is `src/bin/sensor.rs`, firmware for a Cortex-M4 board (`thumbv7em-none-eabihf`). It flashes and runs, but the board resets 'randomly' under load. Review the ISR and the main loop; list findings with line numbers and end with a verdict.
 
