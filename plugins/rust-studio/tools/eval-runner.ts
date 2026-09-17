@@ -380,7 +380,16 @@ async function runSession(a: SessionRunArgs): Promise<RunTrace & { raw: string }
   }
   if (a.allowedTools.length) args.push("--allowedTools", ...a.allowedTools);
   if (a.model) args.push("--model", a.model);
-  const r = await runProcess(["claude", ...args], a.cwd, a.timeoutSec * 1000);
+  // 20 of the 34 agent briefs pin `model: sonnet|haiku|opus`; on an alternative endpoint (an
+  // Ollama run) every pinned model 404s and the lens never starts, so only `inherit` agents
+  // were ever measured. With a subject model given, the host's force override puts every
+  // spawned agent on it — the same model drives the orchestrator and its lenses.
+  const env = cleanEnv();
+  if (a.model) {
+    env.CLAUDE_CODE_SUBAGENT_MODEL = a.model;
+    env.CLAUDE_CODE_SUBAGENT_MODEL_FORCE = a.model;
+  }
+  const r = await runProcess(["claude", ...args], a.cwd, a.timeoutSec * 1000, env);
   const trace = parseStream(r.stdout);
   trace.stderrTail = r.stderr.slice(-2000);
   if (r.timedOut) {
