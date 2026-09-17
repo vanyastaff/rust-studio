@@ -95,8 +95,35 @@ or a boundary that does not match a concept.
   `info` row is recorded and never judged. `--table` renders the scoreboard, best judged value
   per row in bold. `slop-audit.sh --scores` and `tools/harness-score.ts` produce the files.
 
+- **Every eval case names what it measures.** `targets: [skill:…, agent:…, rule:…]` on all
+  38 cases (RS-EVAL-106/107 keep it present and resolvable); `tool_used` graders take `name:` so
+  a routing case fails when it routes elsewhere; `bun tools/eval-runner.ts --target <name>`
+  selects a target's cases and `--coverage` lists what no case names (18 of 65 skills, 21 of 34
+  agents, 18 of 22 rules had one). `/evolve plugin --target <skill>` runs from that: a target
+  with no case gets one first, written from a real failure and reviewed before it is run.
+- **`benchmarks/live/dev-task-interpolation`**: the kvconf feature as a story for `/dev-task`,
+  `check.sh` deciding, `follow-ups.md` answering the approval gate. Live tasks now send
+  `follow-ups.md` (only eval cases did), so a skill with an approval gate can be measured end
+  to end.
+- **`tools/trajectory-report.ts`**: the studio measured from the real session transcripts
+  under `~/.claude/projects`, per skill and per agent, eval sandboxes excluded, no prompt text
+  quoted. `docs/benchmarks.md` carries the first week's leads.
+- **`tools/harness-score.ts`** and **`scripts/score-compare.sh`**: see above.
+
 ### Changed
 
+- **`/dev-task` spawns every worker in the foreground** (`6c7c676`, `4d4944f`): one rule in
+  §Orchestration replaces the per-phase "background subagents" / "as teammates" sentences,
+  Phase 3 ends on one approval question, and the two restatements the study found are gone.
+  Judged on the live benchmark against its checkpoint: PASS 2/2 either way, session segments
+  19 → 5 with every spawn foreground; words 2528 → 2552 for the rule; kept-tokens 41/41.
+- **`tools/eval-runner.ts` measures the source tree** (`c7ae6db`, `d0b469e`, `92c7a68`,
+  `3597824`): `--plugin-dir` loses silently to an installed plugin of the same name, so the
+  runner stages a renamed snapshot and disables the installed copy for the run; with `--model`
+  the snapshot's agent briefs inherit the subject model (pinned models 404 on an Ollama
+  endpoint and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` does not override a plugin agent's pin);
+  a run's turn count is the sum over its invocations. Three /evolve rounds had scored the
+  installed copy before the first fix.
 - **`/refactor` locks the tests mechanically.** Phase 2 records an oracle ref (the commit that
   holds the characterization tests, or `git stash create` for an uncommitted tree); Phase 6
   diffs the test paths against it and greps the source diff for a removed `assert`, `#[test]`,
