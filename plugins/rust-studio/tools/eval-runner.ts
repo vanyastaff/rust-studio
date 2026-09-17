@@ -283,7 +283,8 @@ export function parseStream(raw: string): RunTrace {
       if (texts.length) lastAssistantText = texts.join("\n");
     } else if (o.type === "result") {
       t.costUsd = Number(o.total_cost_usd ?? 0);
-      t.turns = Number(o.num_turns ?? 0);
+      // a resumed session emits one result event per invocation; the run's turns are their sum
+      t.turns += Number(o.num_turns ?? 0);
       t.durationMs = Number(o.duration_ms ?? 0);
       t.isError = Boolean(o.is_error);
       t.subtype = String(o.subtype ?? "");
