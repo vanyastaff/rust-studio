@@ -50,6 +50,62 @@ import { VERDICT } from "../hooks/scripts/subagent-stop.ts";
 
 const PLUGIN_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
+// The plugin under test is a SNAPSHOT of the source tree, staged under a name no installed
+// plugin can shadow. `claude --plugin-dir` silently loses to an installed plugin of the same
+// name: with `rust-studio@vanya` installed, every run loaded `~/.claude/plugins/cache/...` and
+// the source tree was never measured (found 2026-09-17 — three /evolve rounds scored noise).
+// A renamed copy also pins the tree at launch, so an edit made while cases are in flight
+// changes nothing mid-run. Skill and agent ids carry the staged prefix (`rust-studio-eval:`);
+// reports strip it back to the bare name.
+export interface StagedPlugin { dir: string; name: string; prefix: string }
+export function pluginName(root = PLUGIN_ROOT): string {
+  return String(JSON.parse(readFileSync(join(root, ".claude-plugin", "plugin.json"), "utf8")).name);
+}
+export function stagePlugin(root = PLUGIN_ROOT): StagedPlugin {
+  const name = `${pluginName(root)}-eval`;
+  const dir = join(mkdtempSync(join(tmpdir(), "eval-plugin-")), name);
+  const skip = new Set(["results", "node_modules", ".git"]);
+  cpSync(root, dir, {
+    recursive: true,
+    filter: (src) => {
+      const rel = relative(root, src);
+      if (!rel) return true;
+      const top = rel.split(/[\\/]/);
+      if (top[0] === "evals" && top[1] === "results") return false;
+      return !top.some((seg) => skip.has(seg));
+    },
+  });
+  const manifest = join(dir, ".claude-plugin", "plugin.json");
+  const m = JSON.parse(readFileSync(manifest, "utf8"));
+  m.name = name;
+  writeFileSync(manifest, JSON.stringify(m, null, 2) + "\n");
+  return { dir, name, prefix: `${name}:` };
+}
+export function bareName(id: string, prefix: string): string {
+  return id.startsWith(prefix) ? id.slice(prefix.length) : id.replace(/^[a-z0-9-]+:/, "");
+}
+let STAGED: StagedPlugin | null = null;
+function staged(): StagedPlugin {
+  if (!STAGED) STAGED = stagePlugin();
+  return STAGED;
+}
+// An installed copy of the same plugin would still load beside the snapshot, and a prompt that
+// says "/review" could route to either. Every installed plugin whose name matches is switched
+// off for the run through `--settings`, which the host merges over the user's settings.
+export function installedIdsFor(name: string, listing: string): string[] {
+  const ids: string[] = [];
+  for (const m of listing.matchAll(/^\s*[❯>*-]?\s*([a-z0-9-]+)@([a-z0-9-]+)\s*$/gim)) if (m[1] === name) ids.push(`${m[1]}@${m[2]}`);
+  return ids;
+}
+let SHADOW_SETTINGS: string | null | undefined;
+function shadowSettings(): string | null {
+  if (SHADOW_SETTINGS !== undefined) return SHADOW_SETTINGS;
+  const r = Bun.spawnSync(["claude", "plugin", "list"], { stdout: "pipe", stderr: "pipe" });
+  const ids = installedIdsFor(pluginName(), new TextDecoder().decode(r.stdout));
+  SHADOW_SETTINGS = ids.length ? JSON.stringify({ enabledPlugins: Object.fromEntries(ids.map((id) => [id, false])) }) : null;
+  return SHADOW_SETTINGS;
+}
+
 // ---------------------------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------------------------
@@ -317,7 +373,11 @@ interface SessionRunArgs {
 async function runSession(a: SessionRunArgs): Promise<RunTrace & { raw: string }> {
   const args = ["-p", a.prompt, "--output-format", "stream-json", "--verbose", "--max-turns", String(a.maxTurns), "--max-budget-usd", String(a.budgetUsd)];
   args.push(a.resume ? "--resume" : "--session-id", a.sessionId);
-  if (a.withPlugin) args.push("--plugin-dir", PLUGIN_ROOT);
+  if (a.withPlugin) {
+    args.push("--plugin-dir", staged().dir);
+    const shadow = shadowSettings();
+    if (shadow) args.push("--settings", shadow);
+  }
   if (a.allowedTools.length) args.push("--allowedTools", ...a.allowedTools);
   if (a.model) args.push("--model", a.model);
   const r = await runProcess(["claude", ...args], a.cwd, a.timeoutSec * 1000);
@@ -550,7 +610,7 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
           ? "Map this code: definitions, implementors, callers, and tests. Return the file:line table."
           : "Review this Rust code as the final gate before merge. List every real defect with file:line, severity, and the fix direction; end with a verdict.");
     const prompt =
-      `Spawn the \`rust-studio:${agent}\` sub-agent (Agent tool, subagent_type \`rust-studio:${agent}\`) on ${target === "." ? "the crate/workspace rooted in this directory" : `\`${target}\` in this directory`} with exactly this task:\n\n` +
+      `Spawn the \`${staged().prefix}${agent}\` sub-agent (Agent tool, subagent_type \`${staged().prefix}${agent}\`) on ${target === "." ? "the crate/workspace rooted in this directory" : `\`${target}\` in this directory`} with exactly this task:\n\n` +
       `"${task}"\n\n` +
       `Tell it to read the code itself and to answer in its own native output format. When it returns, reply with the sub-agent's complete findings and verdict verbatim — add nothing, summarize nothing, and do not review the code yourself.`;
     const trace = await runConversation({ prompt, cwd, allowedTools: ["Read", "Glob", "Grep", "Agent"], maxTurns: 12, timeoutSec: 900 * o.timeoutScale, budgetUsd: o.budget, model: o.model, withPlugin: true }, []);
@@ -629,8 +689,8 @@ async function runLive(name: string, run: number, o: Options): Promise<LiveResul
     const task = body.trim();
     const prompt =
       targetKind === "skill"
-        ? `/rust-studio:${target} ${task}`
-        : `Spawn the \`rust-studio:${target}\` sub-agent (Agent tool, subagent_type \`rust-studio:${target}\`) in this repository with exactly this task, and let it do the work itself:\n\n${task}\n\nWhen it returns, reply with its complete report and verdict verbatim — add nothing, and do not redo or "improve" its work.`;
+        ? `/${staged().prefix}${target} ${task}`
+        : `Spawn the \`${staged().prefix}${target}\` sub-agent (Agent tool, subagent_type \`${staged().prefix}${target}\`) in this repository with exactly this task, and let it do the work itself:\n\n${task}\n\nWhen it returns, reply with its complete report and verdict verbatim — add nothing, and do not redo or "improve" its work.`;
     const trace = await runConversation(
       {
         prompt,
@@ -722,7 +782,7 @@ export function renderSummary(cases: CaseResult[], fixtures: FixtureResult[], li
     lines.push("## Eval cases", "", `| case | mean | min | max | studio path fired | cost |`, "|---|---|---|---|---|---|");
     for (const [name, rs] of [...byCase.entries()].sort()) {
       const s = stats(rs.map((r) => r.score).filter((x): x is number => x != null));
-      const fired = [...new Set(rs.flatMap((r) => [...r.trace.skills.map((k) => `/${k.replace(/^rust-studio:/, "")}`), ...r.trace.agents.map((a) => a.replace(/^rust-studio:/, ""))]))].join(", ") || "—";
+      const fired = [...new Set(rs.flatMap((r) => [...r.trace.skills.map((k) => `/${bareName(k, staged().prefix)}`), ...r.trace.agents.map((a) => bareName(a, staged().prefix))]))].join(", ") || "—";
       const err = rs.filter((r) => r.trace.isError).map((r) => r.trace.subtype);
       lines.push(`| ${name} | ${pct(s.mean)} | ${pct(s.min)} | ${pct(s.max)} | ${fired} | $${rs.reduce((a, r) => a + r.trace.costUsd, 0).toFixed(2)}${err.length ? ` ⚠ ${err.join(",")}` : ""} |`);
     }
@@ -795,6 +855,8 @@ if (import.meta.main) {
   mkdirSync(o.out, { recursive: true });
   const started = Date.now();
   const log = (s: string) => console.error(`[${((Date.now() - started) / 1000).toFixed(0)}s] ${s}`);
+  log(`plugin under test: ${staged().dir} (snapshot of ${PLUGIN_ROOT}, loaded as \`${staged().name}\`${shadowSettings() ? `; installed copy disabled for the run: ${shadowSettings()}` : ""})`);
+  process.on("exit", () => { try { if (STAGED) rmSync(dirname(STAGED.dir), { recursive: true, force: true }); } catch {} });
   let spent = 0;
   const overBudget = () => o.totalBudget != null && spent >= o.totalBudget;
   const EMPTY_TRACE: Trace = { lastMessage: "", toolsUsed: [], skills: [], agents: [], costUsd: 0, turns: 0, durationMs: 0, isError: true, subtype: "runner-error" };

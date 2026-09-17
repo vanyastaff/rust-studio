@@ -2,10 +2,12 @@
 // Tests for the parts of the eval runner that decide a score without spending money: the
 // stream-json parser, the grader arithmetic, and the ground-truth readers. Run with `bun test`.
 
-import { test, expect, describe } from "bun:test";
+import { test, expect, describe, afterAll } from "bun:test";
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { auditPrompt, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, splitFrontmatter, FIXTURE_AGENTS } from "./eval-runner.ts";
+import { auditPrompt, bareName, installedIdsFor, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, pluginName, splitFrontmatter, stagePlugin, FIXTURE_AGENTS } from "./eval-runner.ts";
+import { rmSync } from "node:fs";
+import { dirname } from "node:path";
 
 const line = (o: unknown) => JSON.stringify(o) + "\n";
 
@@ -121,5 +123,40 @@ describe("ground-truth readers, against every shipped fixture", () => {
     const firstPass = fixtures.filter((f) => fixtureMode(readFileSync(join(root, f, "ground-truth.md"), "utf8")) === "first-pass");
     expect(firstPass).toContain("architecture/wrong-crate-helper");
     expect(firstPass).toContain("reviewer/spaghetti-accretion");
+  });
+});
+
+describe("plugin staging (the tree under test, not the installed copy)", () => {
+  // `claude --plugin-dir` loses silently to an installed plugin of the same name, so the runner
+  // measures a renamed snapshot. The snapshot must carry the tree, drop the results, and answer
+  // to a name no marketplace install can shadow.
+  const staged = stagePlugin();
+  test("the staged copy has a distinct name and the source tree's skills", () => {
+    expect(staged.name).toBe(`${pluginName()}-eval`);
+    expect(staged.prefix).toBe(`${staged.name}:`);
+    const manifest = JSON.parse(readFileSync(join(staged.dir, ".claude-plugin", "plugin.json"), "utf8"));
+    expect(manifest.name).toBe(staged.name);
+    expect(existsSync(join(staged.dir, "skills", "review", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(staged.dir, "hooks", "scripts", "session-start.ts"))).toBe(true);
+  });
+  test("eval results and node_modules are not copied", () => {
+    expect(existsSync(join(staged.dir, "evals", "results"))).toBe(false);
+    expect(existsSync(join(staged.dir, "node_modules"))).toBe(false);
+    expect(existsSync(join(staged.dir, "evals", "routing-start", "prompt.md"))).toBe(true);
+  });
+  test("bareName strips the staged prefix and any other plugin prefix", () => {
+    expect(bareName(`${staged.prefix}review`, staged.prefix)).toBe("review");
+    expect(bareName("rust-studio:rust-reviewer", staged.prefix)).toBe("rust-reviewer");
+    expect(bareName("review", staged.prefix)).toBe("review");
+  });
+  afterAll(() => rmSync(dirname(staged.dir), { recursive: true, force: true }));
+});
+
+describe("installed-copy detection", () => {
+  const listing = `Installed plugins:\n\n  ❯ exa@claude-plugins-official\n    Version: 3.4.1\n\n  ❯ rust-studio@vanya\n    Version: 0.56.0\n    Status: ✔ enabled\n\n  ❯ rust-studio@other\n`;
+  test("finds every install of the plugin under test and nothing else", () => {
+    expect(installedIdsFor("rust-studio", listing)).toEqual(["rust-studio@vanya", "rust-studio@other"]);
+    expect(installedIdsFor("exa", listing)).toEqual(["exa@claude-plugins-official"]);
+    expect(installedIdsFor("nope", listing)).toEqual([]);
   });
 });
