@@ -36,6 +36,14 @@ that checks it, the write zone, and the verdict you expect back
 a builder briefed with your answer implements your answer, and a reviewer briefed with your
 suspicion confirms your suspicion.
 
+**Every spawn in this pipeline runs in the foreground**, because every one blocks the next
+phase (scout, lead, plan lens, builder, review lens, repair): spawn one phase's, or one review
+stage's, workers in one message with `run_in_background: false` where the agent tool takes it,
+block on the result where it does not (a resumed builder answers by message), and write the
+next line with their reports in hand. The session is blocked while they run; that is the cost.
+Backgrounded, the reply to the last completion notice becomes the final message, and a headless
+host delivers only that (`references/delegation.md` §"Coordinating a wave").
+
 When the host has a task or plan surface, keep one item per phase live and update it as results
 arrive. Otherwise maintain a concise in-message checklist. At every boundary surface the result
 in one line (edit-site map, plan verdict, diff summary, review findings) before moving on. The
@@ -137,8 +145,7 @@ above:
 - **full** — spawn `harsh-critic` **plus** the relevant domain reviewer as a concurrent second
   lens, chosen by what the plan touches: `unsafe-auditor` (any `unsafe`/FFI), `security-auditor`
   (untrusted input, auth, deserialization), `api-design-lead` (public surface / semver), or
-  `systems-perf-lead` (hot path / allocation). Run them as sibling tasks / background subagents
-  (read-only, so they parallelize).
+  `systems-perf-lead` (hot path / allocation), both in one message.
 
 Reviewers target the plan, not code: wrong or oversized decomposition, a simpler approach
 missed, an unhandled failure/edge case, a boundary/semver hazard, an ownership/sibling-reuse
@@ -149,7 +156,8 @@ survives this pass reaches Phase 3 — the user approves a design that has alrea
 
 ## Phase 3 — Approve (gate)
 9. **Request explicit approval through the host's plan surface.** If the host has no plan UI,
-   present the complete plan in chat and ask for approval there. Include the build commands the
+   present the complete plan in chat and end that same message with one question: "Approve this
+   plan as written?" Include the build commands the
    plan needs (for example tests, clippy, and fmt). If the user rejects or requests changes,
    loop back to Phase 2 and rewrite the plan in the same surface.
 
@@ -193,7 +201,7 @@ repair is not automatic. Recheck any earlier acceptance/gate affected by a later
 13. **Stage 5b — code quality.** Task owned by **`rust-reviewer`** on the diff for correctness,
     soundness, standards, and tests. For **full** mode, also run the owning lead's gate checklist as
     sibling tasks (and `unsafe-auditor` if `unsafe` was touched, `security-auditor` for
-    input/auth/deserialization) — these read-only lenses run concurrently as teammates.
+    input/auth/deserialization), read-only, in one message.
 14. If either stage returns NEEDS WORK, send blocking findings to `rust-builder` within the
     shared repair budget. Resume the same implementer for the same task when usable; retain
     independent review. Recheck the repaired findings, new repair regressions and affected
