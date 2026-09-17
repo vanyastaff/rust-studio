@@ -52,8 +52,12 @@ contract, rather than on every round.
    ```
 
    For the plugin as target, `Off-limits` also names skill and agent descriptions while a
-   routing measurement is running (`references/usage-telemetry.md`), and the gate is
-   `./scripts/validate-distribution.sh` + `bun test` + `claude plugin validate --strict`.
+   routing measurement is running (`references/usage-telemetry.md`); the gate is
+   `./scripts/validate-distribution.sh` + `bun test` + `claude plugin validate --strict`; the
+   judged metric is the eval suite on a fixed case set (`bun tools/eval-runner.ts --case …`,
+   mean score, max), with the holdout discipline of `references/eval-improvement.md` when a
+   round tunes the very brief a case exercises; `tools/harness-score.ts` is the no-regression
+   floor. The contract names the case set and its price per run before the user approves.
 2. Prompt the user with the contract. Nothing runs until they approve it as written or with
    their edits — this is the approval the rounds spend.
 
@@ -71,10 +75,17 @@ contract, rather than on every round.
 
 ## Round N — one change, three-part gate, one decision
 
-7. **Pick.** The top open item inside the blast radius: from `slop-auditor`'s ledger or
-   `scripts/slop-audit.sh` for a crate, from `bun tools/harness-score.ts --detail` for the
-   plugin, or from the objective's own metric. State it in one line with the metric it should
-   move and by how much. Never a move class the log already rejected.
+7. **Pick.** The top open item inside the blast radius, ranked by what a user of the code
+   would notice, then by the metric: a duplicated primitive three crates re-implement before a
+   restating comment, a review lens that misses a class of bug before a dash in a doc. For a
+   crate the sources are `slop-auditor`'s ledger, `scripts/slop-audit.sh` and the objective's
+   own metric; for the plugin they are the eval cases scoring under 100% (`bun tools/eval-runner.ts`
+   over the contract's case set), a dry-run of a skill or agent on a real task with its
+   brief feedback, and only then `bun tools/harness-score.ts --detail`. State the pick in one
+   line with the metric it should move and by how much. A round that only moves a style
+   metric (prose, restated sentences) is allowed once per run, not as the default; the floor
+   metrics exist so a behavioral round cannot regress them, not to be the target. Never a
+   move class the log already rejected.
 
    **Research as a candidate source.** With `Research: on`, a round may look outside the tree
    for the move: `/research` for primary sources (the crate's docs.rs and release notes, the
