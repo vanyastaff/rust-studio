@@ -15,11 +15,17 @@ import { join, resolve } from "node:path";
 const SCRIPT = resolve(import.meta.dir, "./slop-audit.sh");
 
 function has(cmd: string[]): boolean {
-  const r = Bun.spawnSync(cmd, { stdout: "ignore", stderr: "ignore" });
-  return r.exitCode === 0;
+  // Bun.spawnSync throws ENOENT for a binary that is not on PATH; absent is the answer, not an error
+  try {
+    const r = Bun.spawnSync(cmd, { stdout: "ignore", stderr: "ignore" });
+    return r.exitCode === 0;
+  } catch {
+    return false;
+  }
 }
 const hasCargo = has(["cargo", "--version"]);
 const hasModules = hasCargo && has(["cargo", "modules", "--version"]);
+const hasTokei = has(["tokei", "--version"]);
 
 interface Run { code: number | null; stdout: string; stderr: string }
 function run(args: string[], cwd: string): Run {
@@ -108,7 +114,9 @@ describe.skipIf(!hasCargo)("slop-audit.sh on the fixture crate", () => {
     const sc = run(["--scores", "--skip", "clippy,deny"], dir);
     expect(sc.code).toBe(0);
     const lines = sc.stdout.trim().split("\n").filter(Boolean);
-    expect(lines.length).toBeGreaterThan(0);
+    // a bare machine (CI) has none of the optional tools, so no line is a valid answer there;
+    // where tokei is installed its two rows must be present
+    if (hasTokei) expect(lines.length).toBeGreaterThan(0);
     for (const l of lines) expect(l).toMatch(/^[a-z_]+\t-?\d+(\.\d+)?\t(min|max|info)$/);
     expect(sc.stdout).not.toContain("warnings_beyond_gate");
     expect(sc.stdout).not.toContain("deny_errors");
