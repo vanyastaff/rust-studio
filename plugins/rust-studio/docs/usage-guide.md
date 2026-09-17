@@ -10,7 +10,7 @@ see `agent-roster.md`; for the gates and the autonomy-first protocol see
 
 Five moving parts:
 
-- **Agents** (33) — a tiered team of specialists. They are the *workforce*: you (or a skill)
+- **Agents** (34) — a tiered team of specialists. They are the *workforce*: you (or a skill)
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
@@ -67,7 +67,7 @@ Plan only when the approach is uncertain or the change spans files.
 
 ---
 
-## The agents (33)
+## The agents (34)
 
 ### Tier 1 — Directors (inherit — run at the session model)
 - **`chief-architect`** — crate/module boundaries, layering, ADRs, big refactors, cross-lead
@@ -104,7 +104,9 @@ CLI: **`cli-specialist`** (clap derive, ratatui, completions, signals).
 Quality: **`test-engineer`** (proptest, criterion, nextest, fixtures), **`security-auditor`** (opus;
 RUSTSEC, input/secret/auth/DoS), **`dependency-manager`** (sonnet; cargo-deny, features, MSRV),
 **`build-engineer`** (*implements* build.rs, CI, cross, xtask).
-Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially — no praise, read-only).
+Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially, no praise, read-only),
+**`slop-auditor`** (inherit; the tree-level slop ledger: duplicates, orphans, cycles, dead `pub`, untyped
+model calls, naming/pattern/boundary tells; read-only).
 
 ### Execution (4) — the hands
 - **`rust-scout`** (haiku, read-only) — locates symbols/impls/tests via serena, returns a

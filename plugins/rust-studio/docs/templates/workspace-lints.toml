@@ -10,6 +10,9 @@
 
 [workspace.lints.rust]
 unsafe_code = "forbid"            # drop to "deny" (then re-allow per-module) if you genuinely need unsafe
+unreachable_pub = "warn"          # a `pub` item nothing outside its crate can reach: generated code's
+                                  # favourite residue, and `dead_code` never sees it (it is "used" by
+                                  # being pub). Pairs with `redundant_pub_crate = "allow"` below.
 
 [workspace.lints.clippy]
 # --- broad groups: negative priority so the specific levels below win ---
@@ -32,6 +35,9 @@ let_underscore_must_use = "warn"
 # on every unsafe block, stated in 10 doctrine files) ships with no mechanical guard.
 undocumented_unsafe_blocks = "warn"     # requires the `// SAFETY:` comment
 multiple_unsafe_ops_per_block = "warn"  # requires one unsafe op per `unsafe { }` block
+# `nursery` turns on `redundant_pub_crate`, which asks for `pub` exactly where `unreachable_pub`
+# above asks for `pub(crate)`; the two fight, and the rustc lint is the one that finds dead surface.
+redundant_pub_crate = "allow"
 # --- gate self-protection ---
 allow_attributes_without_reason = "deny"   # no silent #[allow]; a reason is mandatory
 allow_attributes = "warn"                  # prefer #[expect] over #[allow] where it fits

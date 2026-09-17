@@ -96,7 +96,9 @@ usually arrives with a suite that cannot say that, so establish the oracle first
 5. **Discover the project's gate** — `justfile`, `Makefile`, `xtask`, cargo-make, lefthook, or
    the CI lint/test job — and run it as-is (`references/project-gate.md`). Record the exact
    command, the test count, and the clippy state: this is the baseline every later step is
-   compared against. A red baseline blocks — fix the build first (`/fix-build`), or every later
+   compared against. Beside it, `scripts/slop-audit.sh -p <crate>` (skip `clippy` if the gate
+   already ran pedantic) records the before-numbers the verdict reports against: warnings
+   beyond the gate, duplicate pairs, orphans, cycles, the largest files. A red baseline blocks — fix the build first (`/fix-build`), or every later
    failure is ambiguous. Only a project with no gate falls back to the studio defaults
    (`cargo nextest run`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt`).
    If no command can run here at all (no shell, a denied tool), say so once, write `BASELINE:
@@ -116,7 +118,9 @@ usually arrives with a suite that cannot say that, so establish the oracle first
    large or structured output. These are regression guards, not correctness proofs
    (`references/integrity-and-evidence.md` §"The Evidence Rules"); they exist to make the next
    phases falsifiable. Commit them green before the first reshape when the user wants bisectable
-   history.
+   history. Either way record the **oracle ref** the Phase 6 test-lock diffs against: that
+   commit, or for an uncommitted tree the hash `git stash create` prints (a snapshot of the
+   working tree; nothing is stored or moved).
 8. **Calibrate the oracle.** Break one behavior in scope on purpose — swap two branches, flip a
    comparison, drop an early return — run the gate, confirm it goes red, revert. If it stays
    green the suite is blind there: either add the test that sees it or state the blind spot on
@@ -139,7 +143,16 @@ usually arrives with a suite that cannot say that, so establish the oracle first
 
    Categorize hits by the rule file that owns them: naming / idiom → `references/core.md`;
    API surface → `references/api.md`; async → `references/async.md`; performance →
-   `references/perf.md`; unsafe → `references/unsafe.md`; tests → `references/testing.md`.
+   `references/perf.md`; unsafe → `references/unsafe.md`; tests → `references/testing.md`;
+   a model call → `references/llm.md` (the answer lands in a closed type, the branch in a
+   `match`).
+
+   **Tree signals.** For a scope that spans files or crates, spawn **`slop-auditor`** on it:
+   near-duplicate functions and types (`similarity-rs`), orphan files and module cycles
+   (`cargo modules`), `pub` nothing reaches (`unreachable_pub`). Its ledger names a reshape per
+   line; carry each line into the plan as a signal with its command as evidence. Without
+   sub-agents, `scripts/slop-audit.sh -p <crate>` runs the same layer as one report
+   (`references/tooling.md` §"Slop and drift").
 10. **Reading signals — what no lint fires on.** These are first-class refactor targets, not
     afterthoughts:
     - **intent-hiding names** — `x`, `tmp`, `data`, `res`, `mgr`, unit-ambiguous (`timeout` not
@@ -155,6 +168,11 @@ usually arrives with a suite that cannot say that, so establish the oracle first
     - **misplacement** — a helper living where it was convenient rather than where its concept
       lives; a module that has outgrown its crate (`references/architecture.md`
       §"Crate-extraction tells" — and the counter-case beside them; the default is to leave it).
+    - **residue** — a comment restating the line under it, a `// ... existing code ...` marker,
+      a one-line wrapper that adds only a name, a `#[derive]` list copied onto every type, an
+      `#[allow(dead_code)]` on an item to delete (`references/core.md` §"Clarity is design, not
+      size"). Size itself is not on this list: a long function with one job and a name that
+      states it stays; the 15-line one whose body must be read to know what it does goes.
 11. Prioritize by impact — state your ranking and rationale, then proceed to Phase 4.
 
 ---
@@ -179,7 +197,12 @@ usually arrives with a suite that cannot say that, so establish the oracle first
       source.
 13. If a step touches the public API surface, flag `API-GATE` (owner: `api-design-lead`).
     If it touches `unsafe`, flag `SAFETY-GATE` (owner: `systems-perf-lead` +
-    `unsafe-auditor`). Present 2–4 options when there is a real design choice.
+    `unsafe-auditor`). Present 2–4 options when there is a real design choice; a choice that
+    sets a boundary, a dependency direction or a pattern the rest of the crate will follow is
+    proposed as an ADR draft (`/adr`), never decided inside a refactor step. State the blast
+    radius at the top of the plan (lines, files, crates): past roughly 300 lines or more than
+    one crate the plan is a direction-changing fork — split it, or name the size and get the
+    explicit go for that size.
 14. Prompt the user: show the full plan and get explicit approval. If the user wants
     changes, loop back to step 12. Nothing is written until this is approved.
 
@@ -189,7 +212,9 @@ usually arrives with a suite that cannot say that, so establish the oracle first
 
 15. For each approved step, spawn **`rust-builder`** with:
     - the single approved step description and its scope boundary,
-    - the instruction to **make no other changes** — not even "while I'm here" cleanups,
+    - the instruction to **make no other changes** — not even "while I'm here" cleanups, and
+      no new dependency: a crate the reshape seems to need is a `/add-dep` question for the
+      user, not a line in `Cargo.toml`,
     - the twin-branch rule: two paths that differ in one detail (a floor on one and not the
       other, an off-by-one, a different error string) are **not** duplication to unify — the
       difference is behavior, and "this normalization is safe" is exactly the argument a
@@ -211,7 +236,13 @@ usually arrives with a suite that cannot say that, so establish the oracle first
 
 ## Phase 6 — Review (gate)
 
-18. Spawn **`rust-reviewer`** on the complete refactor diff with the explicit instruction
+18. **Test-lock, mechanically, before any reviewer reads.** Against the Phase 2 oracle ref:
+    `git diff --stat <oracle-ref> -- '*/tests/*' '*_test.rs' '*/tests.rs'` prints nothing, and
+    `git diff <oracle-ref> -- '*.rs' | rg -n '^-\s*(assert|#\[test\]|#\[ignore|#\[should_panic)'`
+    prints nothing. A hit is a test weakened, removed or silenced during the reshape:
+    **BLOCKED** until the user rules on it as a `/dev-task` behavior decision. The reviewer
+    does not start on a tree that fails this check.
+    Then spawn **`rust-reviewer`** on the complete refactor diff with the explicit instruction
     to check:
     - no behavior change (API, semantics, visible side effects, error text),
     - no scope creep (changes outside the agreed boundary),
@@ -237,7 +268,9 @@ usually arrives with a suite that cannot say that, so establish the oracle first
     BASELINE:  <gate command> · <tests before> · <calibration: the break the suite caught | blind to: class>
     PINNED:    <characterization tests added, and the behaviors they record>
     AFTER:     <tests after> · <clippy> · <miri | semver-checks where run>
+    SLOP:      <slop-audit before → after: warnings beyond gate, duplicate pairs, orphans, cycles, largest file>
     GATES:     <passed>
+    ADR:       <decisions the refactor surfaced that need one — drafted via /adr, not taken here>
     DEFERRED:  <items left out of scope — stated, never silently dropped>
     ```
 23. End with **COMPLETE / NEEDS WORK / BLOCKED**.

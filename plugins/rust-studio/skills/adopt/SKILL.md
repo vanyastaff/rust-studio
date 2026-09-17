@@ -32,7 +32,9 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
    - presence or absence of: `deny.toml`, `.cargo/config.toml`, `rust-toolchain.toml`,
      `clippy.toml`, `rustfmt.toml`, CI config files, benchmark harness, test fixtures.
 2. Do not guess or assume — `rust-scout` is the source of truth for layout. Read-only;
-   no writes at this phase.
+   no writes at this phase. Where `cargo-modules` is installed, `cargo modules structure`
+   per crate gives the scout the module tree as the compiler sees it, and `cargo modules
+   orphans --cfg-test` names the source files no `mod` links (`references/tooling.md`).
 
 ---
 
@@ -79,8 +81,15 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
    - `release-lead` — no `CHANGELOG`, missing `[badges]` or `[package.metadata]`,
      incomplete `[package]` fields required for crates.io publish.
    - `api-design-lead` — already engaged in Phase 3; add semver / breakage risk items here.
+   - `slop-auditor` — the tree-level baseline an inherited or AI-authored codebase needs
+     before anyone edits it: duplicated functions and types, orphan files, module cycles,
+     dead `pub`, unused dependencies, untyped model calls, and the naming / pattern /
+     boundary tells (`references/core.md` §"Clarity is design, not size"). Its ledger is
+     the register's opening balance, and `scripts/slop-audit.sh -p <crate>` (the report it
+     starts from) is what a later `/tech-debt` re-runs to measure the drift.
 8. Collect all findings. Group by: **MISSING TOOLING**, **MISSING TESTS**,
-   **UNSAFE / SOUNDNESS**, **API HYGIENE**, **ASYNC / CONCURRENCY**, **RELEASE HYGIENE**.
+   **UNSAFE / SOUNDNESS**, **API HYGIENE**, **ASYNC / CONCURRENCY**, **RELEASE HYGIENE**,
+   **SLOP / DRIFT**.
 
 ---
 

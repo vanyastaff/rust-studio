@@ -12,9 +12,9 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 
 - **64 skills**: design, spec-driven build, TDD, review, test, release, git/PR shipping,
   build-fixing, edition & major-dependency migration, CI gates, cross-session memory.
-- **33 agents**: 2 directors → 7 leads → 20 specialists (including an adversarial
-  `harsh-critic`) + a scout / builder / resolver / reviewer execution group.
-- **21 path-scoped rule sets**: the right Rust standard surfaces the moment you open a matching
+- **34 agents**: 2 directors → 7 leads → 21 specialists (including an adversarial
+  `harsh-critic` and a read-only `slop-auditor`) + a scout / builder / resolver / reviewer execution group.
+- **22 path-scoped rule sets**: the right Rust standard surfaces the moment you open a matching
   file. The agent reads the full rule on demand, so the window stays lean.
 - **15 Claude hook handlers across 10 events**: stack detection and memory recall, rule pointers, a
   sub-agent brief, lint and lifecycle nudges, verdict checks, an acceptance-ledger guard, a usage
@@ -461,6 +461,7 @@ cargo install cargo-nextest cargo-deny cargo-audit
 | `/msrv-check` | `cargo-msrv` | `cargo install cargo-msrv` |
 | `/coverage` | `cargo-llvm-cov` (or `cargo-tarpaulin`) | `cargo install cargo-llvm-cov` |
 | `/deps-check` | `cargo-hack`, `cargo-shear`, `cargo-hakari` (20+ crates) | `cargo binstall cargo-hack cargo-shear cargo-hakari` |
+| `/tech-debt`, `/adopt`, `/refactor` (the `slop-auditor` lens) | `similarity-rs`, `cargo-modules`, `cargo-shear`, `cargo-public-api` | `cargo binstall similarity-rs cargo-modules cargo-shear cargo-public-api` |
 | macro crates | `cargo-expand` | `cargo install cargo-expand` |
 | snapshot tests | `cargo-insta` | `cargo install cargo-insta` |
 | mutation testing | `cargo-mutants` | `cargo install cargo-mutants` |

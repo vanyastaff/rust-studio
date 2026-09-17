@@ -41,6 +41,7 @@ my-crate/                or   my-workspace/
 | `**/Cargo.toml` | `cargo-manifest.md` | Feature hygiene, MSRV, metadata, no wildcard versions |
 | `**/ffi*.rs`, `**/src/ffi/**`, `*-sys` crates | `ffi.md` | `extern` ABI, `#[repr(C)]`, null/ownership at the boundary, `// SAFETY:` |
 | `**/*-macros`, `**/proc-macro*`, `**/macros/**` | `macros.md` | Hygiene, span-correct errors, generated-code soundness, no leaked deps |
+| `**/llm/**`, `**/prompts/**`, `**/agents/**`, `**/*prompt*.rs` | `llm.md` | Typed model decisions, `match` in Rust not in the prompt, prompts as tested code, bounded retries, model output as untrusted input |
 | any `.rs` containing `unsafe` | `unsafe.md` (via hook) | `// SAFETY:` invariants, miri, no UB |
 
 The `inject-rules` hook injects a *pointer* to each matching rule (name + one-line summary +

@@ -75,6 +75,33 @@ Applies to every `.rs` file.
 - A name that needs a comment to explain *what it is* is the wrong name — fix the name, drop the
   comment. Reserve comments for *why*, not *what*.
 
+## Clarity is design, not size
+- What makes code hard to read is not its length, its function count, or a complexity score.
+  It is a name that hides intent, a pattern that is missing where the shape calls for one, and
+  a system design too weak to say where a concept lives. A 120-line function with one job and a
+  name that states it reads fine; a 15-line one whose body must be read to learn what it does is
+  the finding. Line counts and `cognitive_complexity` numbers say *where to look*; the finding
+  itself is named in terms of the name, the pattern, or the boundary.
+- A missing pattern is a reading tell: a state machine written as a cluster of `bool`s and
+  `Option`s; a strategy written as `match kind: &str`; a builder written as twelve setters that
+  never validate; a pipeline written as one function that parses, decides and performs I/O; a
+  domain type written as `HashMap<String, serde_json::Value>`. Name the pattern the shape is
+  reaching for (enum + `match`, typestate, a builder whose `build()` returns `Result`, a pure
+  core with an I/O shell, a struct) and cut to it. `types.md` §"Design-drift tells" holds the
+  full list.
+- Weak system design shows as boundaries that do not match concepts: a module that owns two
+  ideas, one idea spread over three modules, a `utils`/`helpers`/`common` module that grows by
+  accretion, sibling modules that `use` each other in both directions. The fix is a boundary,
+  not a smaller function (`architecture.md`).
+- Generated-code residue is the mechanical layer of the same problem, the tells of code produced
+  faster than it was designed: a comment that restates the line below it; a `// ... existing
+  code ...` or `// rest unchanged` marker committed; `todo!()`/`unimplemented!()` on a shipped
+  path; a one-line wrapper that adds a name and nothing else; a near-duplicate of a sibling
+  function or type (`similarity-rs` finds these); a file no `mod` links (`cargo modules
+  orphans`); `#[allow(dead_code)]` where the item should be deleted; a `#[derive]` list copied
+  onto every type regardless of use; "Note:"/"Important:" comment sediment; a `pub` nothing
+  outside the module reaches. Each one is deleted or reshaped, never annotated.
+
 ## Drop & raw pointers
 - Variables drop in **reverse** declaration order within a scope; struct/tuple/variant fields
   drop in **declaration** order; array/slice elements drop first-to-last. When a `Drop` impl or

@@ -2,13 +2,13 @@
 
 <p>
   <img src="https://img.shields.io/badge/skills-64-111111?style=flat-square" alt="64 skills">
-  <img src="https://img.shields.io/badge/agents-33-111111?style=flat-square" alt="33 agents">
+  <img src="https://img.shields.io/badge/agents-34-111111?style=flat-square" alt="34 agents">
   <img src="https://img.shields.io/badge/works%20with-70%2B%20hosts-111111?style=flat-square" alt="Works with 70+ hosts">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
 A Rust engineering studio for coding agents: 64 skills that carry the standards a strict crate
-maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
+maintainer would apply, 34 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
 **New in 0.53.0:** independent acceptance from the original request, controlled instruction
@@ -38,8 +38,8 @@ your row if you'd rather do it by hand:
 
 | You use | Run this | You get |
 |---|---|---|
-| **Claude Code** | `/plugin marketplace add <owner>/rust-studio` then `/plugin install rust-studio@rust-studio` | Everything: skills, 33 agents, hooks, LSP, status line |
-| **Codex** | `codex plugin marketplace add <owner>/rust-studio` then `codex plugin add rust-studio@rust-studio` | Skills, host-neutral hooks, 33 agents after one generator step (below) |
+| **Claude Code** | `/plugin marketplace add <owner>/rust-studio` then `/plugin install rust-studio@rust-studio` | Everything: skills, 34 agents, hooks, LSP, status line |
+| **Codex** | `codex plugin marketplace add <owner>/rust-studio` then `codex plugin add rust-studio@rust-studio` | Skills, host-neutral hooks, 34 agents after one generator step (below) |
 | **Cursor · Zed · Copilot · OpenCode · ~70 more** | `npx skills add .` | The skills, each self-contained |
 
 Safe to re-run. No npm publish is needed: the [skills CLI](https://github.com/vercel-labs/skills)
@@ -54,7 +54,7 @@ Prerequisites (Bun, rust-analyzer), local-clone installs and the `settings.json`
 <br>
 
 **Codex sub-agents take one extra command.** The plugin ships agent briefs as Markdown but Codex
-wants TOML, so generate them once — this writes all 33 into `~/.codex/agents/` (pass a path for a
+wants TOML, so generate them once — this writes all 34 into `~/.codex/agents/` (pass a path for a
 project-local `.codex/agents/`). Re-run after upgrading.
 
 ```bash
@@ -185,11 +185,11 @@ and what lies, with reproductions, is in
 
 ## What's under the hood
 
-- **Agents (33)** are the workforce, in three tiers: directors decide, leads own a domain and its
+- **Agents (34)** are the workforce, in three tiers: directors decide, leads own a domain and its
   quality gate, specialists do the work. Each runs in its own context, so their reading never
   crowds your conversation.
 - **Skills (62)** are the workflows. A skill orchestrates the right agents through phases.
-- **Rules (21)** are path-scoped standards. Edit a matching file and a *pointer* to the relevant
+- **Rules (22)** are path-scoped standards. Edit a matching file and a *pointer* to the relevant
   rule is injected automatically. The agent pulls the full text on demand. `core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `macros.md` inside macros.
 - **Hooks (10 events)** cover stack briefing and memory recall at session start, rule pointers after
@@ -227,7 +227,7 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 |---|---|---|---|
 | 64 skills | yes | yes | yes |
 | Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
-| 33 named studio agents | no (phases run inline) | yes, after one generator step | yes, spawned per phase |
+| 34 named studio agents | no (phases run inline) | yes, after one generator step | yes, spawned per phase |
 | Session briefing + path-scoped rule injection | no | yes | yes |
 | Irreversible-action guard | no | yes | yes |
 | Acceptance ledger (`/acceptance` checker) + Stop guard | checker only (the skill bundles it) | yes (the guard binds through the transcript path Codex hands its hooks) | yes |
@@ -250,7 +250,7 @@ installed alone. Two clearly labeled Claude utilities remain in the catalog for 
 
 The skills are [Agent Skills](https://agentskills.io) and run on any skill-capable host. Claude
 Code gets the full ambient studio. Codex gets the portable skills, host-neutral hooks (session
-briefing, routing and rustfmt nudges) and the 33 agents as generated Codex custom agents — never
+briefing, routing and rustfmt nudges) and the 34 agents as generated Codex custom agents — never
 Claude-specific lifecycle code.
 
 ---
@@ -309,7 +309,7 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .claude-plugin/plugin.json
 │       ├── .codex-plugin/plugin.json
 │       ├── .lsp.json                # bundled rust-analyzer LSP
-│       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
+│       ├── agents/                  # 34 Claude agents + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
 │       ├── skills/                  # 64 skills + references + OpenAI metadata
 │       ├── evals/                   # claude plugin eval suite (plugin only)

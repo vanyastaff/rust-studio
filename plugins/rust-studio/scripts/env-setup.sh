@@ -103,6 +103,7 @@ FULL_TOOLS=(
   "samply|samply"
   "hyperfine|hyperfine"
   "cargo modules|cargo-modules"
+  "similarity-rs|similarity-rs"
   "cargo llvm-lines|cargo-llvm-lines"
   "cargo insta|cargo-insta"
   "cargo hakari|cargo-hakari"

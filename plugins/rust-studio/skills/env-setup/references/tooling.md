@@ -105,10 +105,37 @@ A green under different flags is a green about a different build: `project-gate.
 | Unsafe / UB | `cargo +nightly miri test`, `cargo careful` |
 | Macro expansion | `cargo expand` |
 | Perf: profile / bench / compare | `cargo flamegraph`, `samply`, `criterion`, `hyperfine` |
-| Module tree | `cargo modules` |
+| Module tree, orphan files, module cycles | `cargo modules structure`; `cargo modules orphans -p <crate> --lib --cfg-test` (without `--cfg-test` every `#[cfg(test)] mod tests;` file is reported); `cargo modules dependencies -p <crate> --lib --no-fns --no-externs --no-sysroot` (cycle one-liner below) |
+| Duplicate functions / types (AST) | `similarity-rs <crate>/src --skip-test --min-lines 10 --threshold 0.9` per crate — `--experimental-types` adds structs and enums, `--print` shows both bodies |
+| Dead or accidental `pub` | `cargo clippy --all-targets -- -W unreachable_pub`; `cargo public-api` for the surface actually shipped |
 | Watch loop | `bacon` |
 | LOC / size | `tokei` |
 | Readable diffs | `delta` (or `git diff`) |
+
+### Slop and drift — the tree-level signals a diff reader cannot see
+The rows above marked duplicates, orphans, cycles, dead `pub` and unused deps are the
+mechanical layer of `rules/core.md` §"Clarity is design, not size"; `slop-auditor` runs them
+and `/tech-debt`, `/adopt` and `/refactor` read the ledger. A hit is a lead to read, not a
+finding — the finding is the name, the pattern or the boundary. `similarity-rs` at its
+defaults flags every three-line trait impl (`fmt`, `from`, `default`) as a pair; start at
+`--min-lines 10 --threshold 0.9` on one crate and widen only after that pass is triaged.
+`--skip-test` skips `#[test]` functions only: pairs inside `tests.rs`, `*_tests.rs`, `tests/`
+or a `#[cfg(test)] mod tests` block are fixtures, not findings (the audit script counts them
+separately). Module cycles from the `cargo modules` graph, listed as pairs. A parent ↔ child
+pair is usually a re-export; a sibling ↔ sibling pair is the finding, except when every
+sibling pairs with every other: that clique is one `use super::*` per file, one finding, and
+the real cycles are what survives a re-run after named imports.
+
+```
+cargo modules dependencies -p <crate> --lib --no-fns --no-externs --no-sysroot \
+  | rg -o '"([^"]+)" -> "([^"]+)" \[label="uses"' -r '$1 $2' \
+  | awk '{ if (($2" "$1) in seen) print "cycle: " $1 " <-> " $2; seen[$1" "$2]=1 }'
+```
+
+`similarity-rs` is a standalone binary (`cargo install similarity-rs` or `cargo binstall`), not
+a cargo subcommand; `/env-setup` installs it with the full tool set. `scripts/slop-audit.sh -p
+<package>` runs every row of this section as one Markdown report, skipping what is not installed
+and naming it; `/tech-debt`, `/adopt` and `/refactor` carry a copy.
 
 ## Rule
 Never use Bash `grep`/`find`/`cat`/`sed`/`awk` for searching or navigating code when a

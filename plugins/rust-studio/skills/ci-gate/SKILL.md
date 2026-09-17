@@ -31,6 +31,7 @@ Owners: `tooling-lead` (policy / BUILD-GATE) and `build-engineer` (implementatio
 | Hung CI job overall | CI `timeout-minutes` hard ceiling | `ci-anti-hang.yml` |
 | **Silently `#[allow]`-ing a lint** | clippy `allow_attributes_without_reason = "deny"` → a reason is mandatory and visible to review | `workspace-lints.toml` |
 | **Removing a ban / raising a timeout to pass** | `check-gate.sh` asserts the gate is intact (run in lefthook + CI) | `scripts/check-gate.sh` |
+| **A `pub` item nothing outside the crate reaches** | rustc `unreachable_pub = "warn"` (`dead_code` treats `pub` as used, so it never fires here); `redundant_pub_crate` allowed because the two fight | `workspace-lints.toml` |
 
 Templates: `references/templates/` — `clippy.toml`, `workspace-lints.toml`,
 `nextest.toml`, `lefthook.yml`, `scripts/check-gate.sh`, `ci-anti-hang.yml`, `deny.toml`,

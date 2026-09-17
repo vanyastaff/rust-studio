@@ -7,6 +7,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+The studio's anti-slop bar lived in one place: `rust-reviewer`'s shape audit, which reads a
+diff. A diff reader cannot see the tree the change sits in: the function a sibling crate
+already owns, the file no `mod` links, the `pub` nothing reaches, the two modules that `use`
+each other. That is where generated code accumulates. This release adds the tree-level
+lens, the rule for the code that calls a model, and the sentence the whole bar rests on: what
+makes code hard to read is not its size but a name that hides intent, a pattern that is missing,
+or a boundary that does not match a concept.
+
+### Added
+
+- **`slop-auditor`** (agent 34, `inherit`, read-only, `memory: project`): the tree-level slop
+  ledger. Runs the mechanical layer (`similarity-rs` for near-duplicate functions and types,
+  `cargo modules orphans --cfg-test` and the module graph for orphan files and cycles,
+  `unreachable_pub` and `cargo public-api` for dead or accidental surface, `cargo shear` for
+  unused dependencies, a one-off pedantic probe), then reads for the tells no lint fires on,
+  and returns one fingerprinted line per finding (DUP / CYCLE / DEAD / DRIFT / RESIDUE /
+  UNTYPED-LLM) with the reshape and the skill that owns it. Size is a lead, never a finding.
+  Wired into `/tech-debt` (scan 6, new triage categories), `/adopt` (the register's opening
+  balance), `/refactor` (tree signals in Phase 3), and `/review` (a lens when the diff adds a
+  file, a module, a dependency or a model call). Roster, delegation and README counts follow.
+  The brief was dry-run on a 31k-line crate of a 40-crate workspace before it shipped: a
+  15-line ledger with a REDO-TO-BAR verdict (an identical 70-line function pair, one decision
+  hand-written four times, seven submodules sharing one glob namespace, 91 plan IDs in doc
+  comments), two high-similarity leads withdrawn on reading, and twelve notes on the brief,
+  which it absorbed: test fixtures count in the baseline rather than on the ledger, a clique
+  of sibling cycles is one `use super::*` finding, the top ten leads are read and the rest
+  listed as unread, a multi-site finding fingerprints on its definition site, and a tree audit
+  splits its verdict by layer (mechanical hard fail → NEEDS WORK, reading-layer findings →
+  REDO-TO-BAR).
+- **`rules/llm.md`**: the path-scoped standard for code that calls a language model
+  (`**/llm/**`, `**/prompts/**`, `**/agents/**`, `**/ai/**`, `*prompt*.rs`, `*llm*.rs`,
+  `*completion*.rs`). Deterministic Rust owns the control flow; the model answers one typed
+  question at a time: a closed `enum`/struct through serde and a schema, an exhaustive `match`
+  in code rather than a branch table in the prompt, a state machine for multi-step flows with
+  side effects recorded before the next step, prompts as versioned code with a snapshot test and
+  a parser test on recorded responses, bounded retries that feed the validation error back and
+  then surface a typed `LlmError`, model output as untrusted input, the client behind a trait so
+  the core is tested without a network. Listed in `directory-conventions.md`; `/review` names it
+  among the domain checklists a lens carries.
+- **`rules/core.md` §"Clarity is design, not size"**: length, function count and complexity
+  scores locate; the finding is the name, the missing pattern (a state machine written as
+  `bool`s, a strategy as `match kind: &str`, a builder as setters that never validate, a
+  pipeline as one function that parses, decides and does I/O) or the weak boundary (a module
+  owning two ideas, a `utils` that grows by accretion, siblings that `use` each other both
+  ways). Generated-code residue is the mechanical layer of the same list.
+- **`docs/tooling.md` §"Slop and drift"**: the commands above with the flags that make them
+  usable, measured on a 40-crate, 460k-line workspace: `similarity-rs` at its defaults reported
+  377 pairs on one crate, almost all three-line `fmt` impls, and 50 at `--min-lines 10
+  --threshold 0.9`; `cargo modules orphans` without `--cfg-test` reported every `#[cfg(test)]
+  mod tests;` file and nothing else. A `uses` edge in both directions between two modules is a
+  cycle, listed by a one-liner over the graph; a parent ↔ child pair is usually a re-export.
+  `similarity-rs` joins `/env-setup`'s full tier and the `/studio-doctor` fallback table.
+- **`scripts/slop-audit.sh`**: the mechanical layer as one Markdown report, host-neutral bash.
+  `-p <package>` scopes it to one workspace member; each section prints the command it ran and
+  a tool that is not installed is a row in the report, not a failure (exit 0 always; exit 2 only
+  outside a Cargo project or for an unknown package). Sections: a one-off `clippy::pedantic` +
+  `nursery` + `unreachable_pub` probe tallied by lint code, `cargo shear` (`cargo machete` as
+  the fallback), `cargo deny check`, `similarity-rs` at the flags above, `cargo modules`
+  orphans, cycles and a depth-2 structure, `tokei` with the largest files. Bundled into
+  `/tech-debt`, `/adopt` and `/refactor`; `scripts/slop-audit.test.ts` pins the contract on a
+  fixture crate with a planted orphan and a sibling cycle.
+- **`workspace-lints.toml`**: `unreachable_pub = "warn"` under `[workspace.lints.rust]`.
+  `dead_code` treats `pub` as used, so a `pub` item nothing outside the crate reaches is
+  invisible to the gate without it. `redundant_pub_crate = "allow"` goes with it, because
+  `nursery` turns that one on and the two ask for opposite visibility. `/ci-gate`'s table has
+  the row.
+
+### Changed
+
+- **`/refactor` locks the tests mechanically.** Phase 2 records an oracle ref (the commit that
+  holds the characterization tests, or `git stash create` for an uncommitted tree); Phase 6
+  diffs the test paths against it and greps the source diff for a removed `assert`, `#[test]`,
+  `#[ignore]` or `#[should_panic]` line before the reviewer reads anything. A hit is
+  **BLOCKED** until the user rules on it as a behavior decision. The reviewer's "none weakened"
+  check was prose; this is the command.
+- **`/refactor` reports before and after, and names its blast radius.** Phase 2 records the
+  slop-audit numbers beside the gate baseline; the verdict carries a `SLOP:` line (warnings
+  beyond the gate, duplicate pairs, orphans, cycles, largest file, before → after) and an `ADR:`
+  line for the decisions the reshape surfaced and did not take. A plan states its size at the
+  top, and past roughly 300 lines or more than one crate it is a direction-changing fork: split
+  it or get the explicit go for that size. The builder's brief adds "no new dependency" (a
+  needed crate is an `/add-dep` question), and Phase 3 routes a model call to `llm.md`.
+- **`/refactor` Phase 3** names residue as a reading signal beside naming, drift, accretion and
+  misplacement, and says in the same breath that a long function with one job and a name that
+  states it is not a target.
+- **`/tech-debt` severity**: an oversized unit is Medium for the change risk it carries, never
+  for its line count; a Dup / Drift / Residue line files the reshape it names, not "shorten
+  this".
+
 ## [0.56.0] - 2026-09-15
 
 The question "which of the 64 skills does anyone use?" led somewhere else first. An audit of

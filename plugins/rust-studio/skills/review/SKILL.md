@@ -232,9 +232,14 @@ an instruction to silently change behavior; the implementer must verify it befor
    - `cli-ux-lead` (`main.rs`, clap, exit codes), `qa-lead` (a diff that is mostly tests),
      `tooling-lead` (`build.rs`, CI, the feature matrix), `release-lead` (`Cargo.toml`
      versions, semver impact, MSRV).
+   - `slop-auditor` if the diff adds a file, a module, a dependency, or a model call — it
+     reads the **tree** the change sits in, which no diff reader can: a function the diff adds
+     that a sibling crate already owns (`similarity-rs`), a file no `mod` links, a `pub`
+     nothing reaches, an answer parsed as text where `llm.md` wants a type. Its DUP / DEAD /
+     UNTYPED-LLM lines merge into the report as 🟣 REDO findings.
    - **The domain checklist is carried by the rule file, not by an implementer.** Where the
      diff lands in a domain whose specialist writes code (`ffi.md`, `database.md`, `macros.md`,
-     `embedded.md`, `wasm.md`, `observability.md`, `perf.md`), the lens that owns that gate
+     `embedded.md`, `wasm.md`, `observability.md`, `perf.md`, `llm.md`), the lens that owns that gate
      reads `references/<domain>.md` and walks the list itself. The unsafe lens alone finds the
      UB in an FFI diff but not the ownership contract: the *checklist* carries the domain, and
      the checklist is the rule file. Spawning the implementer to get it puts writes in a review

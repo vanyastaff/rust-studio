@@ -3,9 +3,9 @@
 The org chart. Each agent's `model`, the domain it owns, what it explicitly does
 **not** own, and the gate it answers for. Mirrors `coordination-protocol.md`.
 
-**Model policy** (rationale in `claude-5-compat.md`): judgment-heavy agents — the two
-directors, `harsh-critic`, `rust-reviewer`, `unsafe-auditor` — use `inherit`, so they run at
-the **session model** and never judge below the model that wrote the code. Specialists stay
+**Model policy** (rationale in `claude-5-compat.md`): the judgment-heavy agents (the two
+directors, `harsh-critic`, `rust-reviewer`, `unsafe-auditor`, `slop-auditor`) use `inherit`, so
+they run at the **session model** and never judge below the model that wrote the code. Specialists stay
 `sonnet` and the scout `haiku` for cost. `security-auditor` stays **pinned to `opus`** so that
 a cyber-classifier trip falls back inside the audit instead of switching the whole session.
 **No agent pins `effort`** — every one of them inherits the session's level, which is what
@@ -34,6 +34,7 @@ makes effort the user's dial rather than the roster's.
 
  Cross-cutting (reports to directors/leads):
    harsh-critic (inherit, adversarial design review, read-only)
+   slop-auditor (inherit, tree-level slop ledger, read-only)
 
  Execution (4) (the hands):
    rust-scout (haiku, read-only) → rust-builder (sonnet, writes)
@@ -46,8 +47,9 @@ makes effort the user's dial rather than the roster's.
 
 Tool access is not a detail of the brief — it is the roster's load-bearing split. **Directors and
 leads never write.** They decide, hold a gate, and delegate; all nine declare
-`disallowedTools: Write, Edit, NotebookEdit`, as do the five read-only auditors
-(`rust-reviewer`, `harsh-critic`, `rust-scout`, `unsafe-auditor`, `security-auditor`) — 14 of 33.
+`disallowedTools: Write, Edit, NotebookEdit`, as do the six read-only auditors
+(`rust-reviewer`, `harsh-critic`, `rust-scout`, `unsafe-auditor`, `security-auditor`,
+`slop-auditor`) — 15 of 34.
 
 Implementation belongs to `rust-builder` and `rust-build-resolver`, plus the Tier-3 specialists
 whose briefs say they implement — `test-engineer`, `build-engineer`, `docs-engineer`,
@@ -105,6 +107,7 @@ carried by `rules/<domain>.md`, read by the lens that owns the gate.
 | `dependency-manager` | sonnet | `cargo-deny`, feature unification, MSRV, version conflicts, bloat |
 | `build-engineer` | sonnet | `build.rs`, workspace layout, cross-compilation, CI matrix, feature combos |
 | `harsh-critic` | inherit | Adversarial critic. Attacks designs/specs/plans — challenges the premise, builds failure scenarios, proposes alternatives. No praise, no fixes (read-only). |
+| `slop-auditor` | inherit | Tree-level slop ledger: duplicated functions/types (`similarity-rs`), orphan files and module cycles (`cargo modules`), dead `pub`, unused deps, untyped model calls, naming/pattern/boundary tells. Fingerprinted findings with a reshape each; no fixes (read-only). |
 
 ## Execution (4)
 
@@ -126,4 +129,5 @@ carried by `rules/<domain>.md`, read by the lens that owns the gate.
 - **A CLI** → `cli-ux-lead` + `cli-specialist`
 - **Embedded / `no_std`** → `systems-perf-lead` + `embedded-specialist` + `ffi-specialist`
 - **Adversarial design review** → `harsh-critic` (skill: `/doc-review`)
+- **An inherited or AI-authored tree** → `slop-auditor` (skills: `/adopt`, `/tech-debt`, `/refactor`)
 - **Test strategy / implementation** → `qa-lead` + `test-engineer` (skills: `/test-plan`, `/tdd`)

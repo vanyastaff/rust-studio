@@ -105,6 +105,7 @@ degrades without it:
 | `cargo-semver-checks` | `/api-review` loses a mechanical check | `cargo public-api`, then manual |
 | `cargo-llvm-cov` | `/coverage` | `cargo-tarpaulin` |
 | `cargo-shear` | `/deps-check` unused-dependency scan | `cargo-machete`, `cargo-udeps` |
+| `similarity-rs`, `cargo-modules` | `slop-auditor`'s duplicate, orphan and cycle passes in `/tech-debt`, `/adopt`, `/refactor` | the reading tells still run; the ledger loses its mechanical layer |
 | `cargo-mutants`, `cargo-fuzz` | `/mutants`, `/fuzz` | none — the skill is unavailable |
 | `miri` (nightly) | SAFETY-GATE loses its strongest evidence | none |
 

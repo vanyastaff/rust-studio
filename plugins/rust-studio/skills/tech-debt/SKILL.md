@@ -41,6 +41,16 @@ and collect every hit with `file:line`:
    `get_symbols_overview` to enumerate `pub` items, then cross-check against
    `cargo llvm-cov` output for untested public surface and modules with no
    `#[cfg(test)]` block.
+6. **Slop and drift** — spawn **`slop-auditor`** on the same scope for the tree-level
+   signals the passes above cannot see: near-duplicate functions and types (`similarity-rs`),
+   orphan files and module cycles (`cargo modules`), dead or accidental `pub`
+   (`unreachable_pub`, `cargo public-api`), unused dependencies (`cargo shear`), untyped
+   model calls (`references/llm.md`), and the reading tells in `references/core.md`
+   §"Clarity is design, not size". It returns a fingerprinted ledger, one line per finding
+   with the reshape direction; merge it into the inventory as-is. The spawn buys filtering: the
+   tools print pages, the ledger is what you triage. Inline, `scripts/slop-audit.sh -p <crate>`
+   is the same mechanical layer as one Markdown report (commands: `references/tooling.md`
+   §"Slop and drift").
 
 Run the project's own lint gate for supporting evidence — `justfile`, `Makefile`, `xtask`,
 cargo-make, lefthook, or the CI lint job, with its exact features and env
@@ -59,7 +69,7 @@ Present findings grouped by category. For each item record:
 | Field      | Value |
 |------------|-------|
 | Location   | `file:line` |
-| Category   | Marker / Allow / Panic-path / Oversized / Test-gap |
+| Category   | Marker / Allow / Panic-path / Oversized / Test-gap / Dup / Cycle / Dead / Drift / Residue / Untyped-LLM |
 | Severity   | High / Medium / Low |
 | Est. effort| Small (< 1 hr) / Medium (half-day) / Large (multi-day) |
 | Notes      | Brief context |
@@ -69,9 +79,14 @@ Present findings grouped by category. For each item record:
   caller; `FIXME` that documents a known correctness bug; completely untested
   public surface.
 - Medium — unjustified `#[allow(...)]`; `TODO` that blocks a planned feature;
-  oversized module making future change risky.
+  oversized module making future change risky; a primitive duplicated across crates; a
+  module cycle; a model answer parsed as text or branched on inside the prompt.
 - Low — stylistic `HACK` notes; mildly oversized functions; coverage gaps in
-  non-critical paths.
+  non-critical paths; orphan files, dead `pub`, restating comments and other residue.
+
+Size is a lead, not a severity: an oversized unit is Medium for the change risk it carries,
+never for its line count. The reshape a Dup / Drift / Residue line names is what gets filed,
+not "shorten this".
 
 Sort the final list by severity × effort (high-severity, low-effort items
 first). Skip categories with zero findings.

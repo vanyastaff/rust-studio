@@ -26,7 +26,8 @@ when to ask) and `verdicts.md` (gates, verdicts, evidence).
 - Systems/perf: `concurrency-specialist`, `unsafe-auditor` (inherit), `ffi-specialist`, `perf-engineer`, `embedded-specialist`
 - CLI: `cli-specialist`
 - Quality: `test-engineer`, `security-auditor` (opus), `dependency-manager`, `build-engineer`
-- Cross-cutting: `harsh-critic` (inherit) — adversarial design/spec/plan critic, read-only.
+- Cross-cutting: `harsh-critic` (inherit), the adversarial design/spec/plan critic, and
+  `slop-auditor` (inherit), the tree-level slop ledger; both read-only.
 
 **Execution (4)** (the hands — they actually touch code).
 - `rust-scout` (haiku) — read-only locator; returns a `file:line` map.
@@ -87,7 +88,7 @@ wall-clock. Spawning is a tool with a price, not a sign of rigor.
    The value is the tokens that *never come back*. If the worker would return most of what it
    read, the filter is not there and you have paid the tax for nothing.
 2. **Independence** — the verdict must not come from the author. `rust-reviewer`,
-   `harsh-critic`, `unsafe-auditor`, and `security-auditor` are worth a full re-read precisely
+   `harsh-critic`, `unsafe-auditor`, `security-auditor`, and `slop-auditor` are worth a full re-read precisely
    *because* they do not inherit the reasoning that produced the code: an author reviewing their
    own diff re-derives why it was right. This is separation of duties, and it is
    non-negotiable at a gate — the agent that wrote the change never signs off on it
@@ -306,10 +307,10 @@ rebuild each and N copies of the artifacts. Worktrees that share one `target/` s
 
 Read-only work is exempt, and that exemption is the whole asymmetry the model rests on: a lens
 that only reads never contends for a write zone, which is why review fan-out (`rust-reviewer`,
-`harsh-critic`, `unsafe-auditor`, `security-auditor`) parallelizes freely while a wave of
+`harsh-critic`, `unsafe-auditor`, `security-auditor`, `slop-auditor`) parallelizes freely while a wave of
 `rust-builder` tasks touching the same file does not. The studio makes that asymmetry structural,
 not a habit an orchestrator has to enforce under load: `rust-scout`, `rust-reviewer`,
-`harsh-critic`, `unsafe-auditor`, and `security-auditor` all carry `disallowedTools: Write, Edit,
+`harsh-critic`, `unsafe-auditor`, `security-auditor`, and `slop-auditor` all carry `disallowedTools: Write, Edit,
 NotebookEdit` in their own definitions, so they are parallel-safe *by construction* — minimum
 tool grant, not orchestrator care, is what actually prevents the conflict. Grant a role only the
 tools its job requires; the serialization rule above only has teeth where a role is capable of

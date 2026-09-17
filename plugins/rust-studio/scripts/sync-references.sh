@@ -89,9 +89,13 @@ done
 # acceptance-ledger.ts the same way (the Stop guard shares that parser from hooks/scripts/);
 # prose-gate.ts imports stripQuoted from _lib.ts, so /prose carries its own copy of that too;
 # usage-report.ts imports the row parser from usage-log.ts and pluginRoot from _lib.ts, so
-# /studio-doctor carries all three.
+# /studio-doctor carries all three. slop-audit.sh is the mechanical layer of the slop ledger;
+# /tech-debt, /adopt and /refactor each carry it so a standalone skill install can run it.
 assets=(
   scripts/env-setup.sh:skills/env-setup/scripts/env-setup.sh
+  scripts/slop-audit.sh:skills/tech-debt/scripts/slop-audit.sh
+  scripts/slop-audit.sh:skills/adopt/scripts/slop-audit.sh
+  scripts/slop-audit.sh:skills/refactor/scripts/slop-audit.sh
   hooks/scripts/memory-doctor.ts:skills/memory-doctor/scripts/memory-doctor.ts
   hooks/scripts/memory-store.ts:skills/memory-doctor/scripts/memory-store.ts
   hooks/scripts/_lib.ts:skills/memory-doctor/scripts/_lib.ts

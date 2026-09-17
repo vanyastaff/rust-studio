@@ -26,7 +26,7 @@ npx skills add <owner>/rust-studio --skill dev-task --agent codex
 ```
 
 The 62 host-neutral workflows bundle the standards and deterministic helpers they need. What you
-*don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
+*don't* get this way: the 34 sub-agents, the hooks (session briefing, path-scoped rule injection,
 stop-guard), the status line, and working versions of the two clearly labeled Claude-only
 utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
 that phase inline (see
@@ -60,7 +60,7 @@ Accept the trust prompt in your first interactive session and the session briefi
 from then on (trust is persisted per hook in `~/.codex/config.toml`).
 
 Codex plugins cannot bundle agent definitions, so `./install.sh` (from a clone, with node)
-also generates the 33 studio agents into `~/.codex/agents/` as Codex custom agents. Manual
+also generates the 34 studio agents into `~/.codex/agents/` as Codex custom agents. Manual
 equivalent:
 
 ```text
