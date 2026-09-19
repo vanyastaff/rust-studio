@@ -25,7 +25,7 @@ const VERDICT = /\b(COMPLETE|NEEDS WORK|REDO-TO-BAR|BLOCKED|APPROVE|REJECT|ACCEP
 // An assistant turn that only acknowledges a sub-agent's completion notice — the shape that,
 // on a headless host, becomes the final message and loses the deliverable.
 const NOTICE_REPLY = /completion (event|notice)|already folded in|standing by for|when (it|they) (lands?|reports?|returns?)|still running|I'll (merge|fold|report) .* when/i;
-const READ_ONLY_AGENTS = new Set(["rust-reviewer", "harsh-critic", "rust-scout", "unsafe-auditor", "security-auditor", "slop-auditor", "chief-architect", "product-steward", "api-design-lead", "async-systems-lead", "cli-ux-lead", "systems-perf-lead", "qa-lead", "release-lead", "tooling-lead"]);
+const READ_ONLY_AGENTS = new Set(["rust-reviewer", "harsh-critic", "rust-scout", "unsafe-auditor", "security-auditor", "slop-auditor", "chief-architect", "product-steward", "api-design-lead", "async-systems-lead", "systems-perf-lead", "qa-lead", "release-lead", "tooling-lead"]);
 
 interface Opts { project?: string; since?: string; json: boolean }
 function parseArgs(argv: string[]): Opts {

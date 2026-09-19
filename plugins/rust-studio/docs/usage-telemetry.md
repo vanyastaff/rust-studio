@@ -54,8 +54,9 @@ studio".
 
 ## The decision rule
 
-Numbers from one week of real sessions decide what happens to a skill, and the rule was
-fixed before the week began so the numbers could not be read to taste:
+Use at least one week of real sessions to identify candidates. The 2026-09-19 audit
+retains the observation categories but replaces automatic retirement with a coverage and
+caller check: a missing invocation is evidence about the observed window, not lifetime value.
 
 - **At least one genuine invocation** (model or user, from a project that is neither the plugin
   checkout nor an eval-harness sandbox) keeps the skill. That is what the `genuine` column
@@ -64,8 +65,8 @@ fixed before the week began so the numbers could not be read to taste:
   the purpose of the two bullets below, however many times the log shows its name.
 - **No invocation, and no demand**: the audit's scan of what users asked for found nothing
   the skill serves, or found it served by native git, by an agent, or by another skill. The
-  skill is deleted. Deleted, not demoted: a skill nobody reaches for costs its description in
-  every session's context.
+  skill becomes a retirement candidate. Before removal, verify host coverage, rare-event
+  value, and callers; absence in this window alone does not establish lack of value.
 - **No invocation but demand**: users asked for what the skill does and the model did not
   pick it. The description is the suspect. Sharpen it to say what the skill buys over the
   bare agent (its gates, its evidence, its verdict), add a routing eval in the language the

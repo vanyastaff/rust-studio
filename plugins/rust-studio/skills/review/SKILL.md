@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Use when reviewing a Rust diff or path for correctness, soundness, scope creep, tests, and standards violations."
+description: "Use to audit a Rust diff or path for defects, scope, tests, and standards."
 ---
 
 # /review — audit a Rust change
@@ -239,7 +239,7 @@ an instruction to silently change behavior; the implementer must verify it befor
      surface (API-GATE / semver).
    - `async-systems-lead` if it touches async/handlers, workers, jobs, or service
      instrumentation (ASYNC-GATE).
-   - `cli-ux-lead` (`main.rs`, clap, exit codes), `qa-lead` (a diff that is mostly tests),
+   - `cli-specialist` (`main.rs`, clap, exit codes), `qa-lead` (a diff that is mostly tests),
      `tooling-lead` (`build.rs`, CI, the feature matrix), `release-lead` (`Cargo.toml`
      versions, semver impact, MSRV).
    - `slop-auditor` if the diff adds a file, a module, a dependency, or a model call — it

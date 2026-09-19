@@ -1,6 +1,6 @@
 ---
 name: spec-verify
-description: "Use when verifying Rust implementation against a spec with tests, clippy, fmt, and gates before archiving."
+description: "Use to verify a Rust implementation meets an existing spec before closing it."
 ---
 
 # /spec-verify — verify against the spec (verify → archive)
@@ -8,14 +8,15 @@ description: "Use when verifying Rust implementation against a spec with tests, 
 > Hosts without the studio's sub-agents run each named phase inline, under that agent's
 > brief — see `references/sub-agents.md`.
 
-Prove the work meets `.rust-studio/specs/<slug>/spec.md`. Evidence over assertion
+Prove the work meets `.rust-studio/specs/<slug>/spec.md`.
+Evidence over assertion
 (`references/verdicts.md`, §7). You are the orchestrator:
 **delegate writes (the verify report) to `rust-builder`**; do not write files directly.
 
 ## When NOT this skill
 - You're not checking against a written spec — you want to restructure existing code
   without changing behavior → `/refactor`. `/spec-verify` only checks already-finished
-  work against `.rust-studio/specs/<slug>/spec.md`; it doesn't touch code.
+  work against an existing `.rust-studio/specs/<slug>/spec.md`; it doesn't touch code.
 - No spec is in play and you just need cargo fmt/clippy/tests driven green →
   `/verify-loop`: a bounded auto-fix loop with no notion of a spec. `/spec-verify` checks
   the result against a spec's acceptance criteria one by one and produces the archiving
@@ -37,17 +38,11 @@ final dump.
    host cannot isolate the context or the original request is missing, continue the ordinary
    checks but record required blind acceptance as **unverified**, never passed.
    A small-change skip needs its applicability reason in the report.
-2. Read the spec's **acceptance criteria**. Then read
-   `intent.md` beside it, if the spec was written through `/spec` Phase 0, and check the
-   trace the spec claims: **every criterion must answer to something in intent's "What
-   'fixed' looks like".** Phase 4 asserts that trace when it drafts the spec; nothing
-   audits it afterwards, so a criterion that proves only that the chosen approach works
-   rides through to a green verdict for the wrong problem. Report an untraceable criterion
-   as a finding, not a failure — it is either scope the user never asked for or a gap in
-   the intent — and check the reverse direction too: a line in "What 'fixed' looks like"
-   with **no** criterion pointing at it is the more dangerous of the two, because
-   everything present passes and the missing thing is what the user actually asked for.
-   No `intent.md` means skip this step, not fail it.
+2. Read the spec's **acceptance criteria**. When its linked intent, normally
+   `intent/<slug>.md`, exists, check that each criterion supports the **Proposed outcome** and
+   respects its **Constraints**. Carry unresolved **Open questions** into the report instead of
+   silently deciding them in implementation. Report a mismatch as a finding: a technically green
+   implementation can still solve the wrong problem. No intent means skip this trace, not fail it.
 3. **First among ordinary checks, run the spec-level outer acceptance test** — a green outer test is the primary
    executable proof the feature is met (`references/testing-model.md`). Where the spec has an
    acceptance ledger (`.rust-studio/specs/<slug>/acceptance.md`), re-verify it next through

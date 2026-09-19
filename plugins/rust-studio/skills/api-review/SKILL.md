@@ -1,9 +1,13 @@
 ---
 name: api-review
-description: "Use when reviewing Rust public API changes for semver hazards, accidental exports, and version bumps."
+description: "Use to audit an existing Rust public API change for semver and export hazards."
 ---
 
 # /api-review — audit a public API change for semver hazards
+
+## When NOT this skill
+
+- Shape a future public API before implementation → `/design-api`.
 
 Analyze the public API diff, classify every change by semver impact, flag
 accidental breaks and leaked types, and recommend the required version bump

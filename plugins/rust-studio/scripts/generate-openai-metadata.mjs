@@ -57,7 +57,19 @@ function readFrontmatter(file) {
   return fields;
 }
 
+const displayNames = new Map([
+  ["start", "Rust Studio Start"],
+  ["help", "Rust Studio Catalog"],
+  ["review", "Rust Code Review"],
+  ["dev-task", "Rust Implementation"],
+  ["fix-build", "Rust Build Repair"],
+  ["verify-loop", "Rust Verification"],
+  ["grill-me", "Requirements Interview"],
+  ["bloat", "Rust Binary Size"],
+]);
+
 function displayName(name) {
+  if (displayNames.has(name)) return displayNames.get(name);
   return name
     .split("-")
     .map((part) => acronyms.get(part) ?? part[0].toUpperCase() + part.slice(1))
@@ -123,7 +135,9 @@ function render(name, fields) {
   }
 
   const sentence = firstSentence(description);
-  const defaultPrompt = sentence.replace(/^Use\b/u, `Use $${name}`);
+  const defaultPrompt = /^Use\b/u.test(sentence)
+    ? sentence.replace(/^Use\b/u, `Use $${name}`)
+    : `Use $${name}: ${sentence}`;
   const lines = [
     "interface:",
     `  display_name: ${yamlString(displayName(name))}`,

@@ -81,11 +81,9 @@ export function stagePlugin(root = PLUGIN_ROOT, opts: { inheritModels?: boolean 
   const m = JSON.parse(readFileSync(manifest, "utf8"));
   m.name = name;
   writeFileSync(manifest, JSON.stringify(m, null, 2) + "\n");
-  // With a subject model given, every agent brief in the SNAPSHOT runs on it: the briefs pin
-  // `model: sonnet|haiku|opus` for cost, and on an alternative endpoint those ids 404 while
-  // CLAUDE_CODE_SUBAGENT_MODEL_FORCE leaves a plugin agent's own `model:` line in force
-  // (measured 2026-09-17: api-design-lead still sent claude-sonnet-5 with the variable set).
-  // The source tree is untouched; only the staged copy is rewritten.
+  // The optional rewrite makes an alternative-endpoint evaluation use its declared subject
+  // model. Production briefs keep their role classes; this staging-only path avoids an
+  // unsupported Claude alias turning a model comparison into a 404 comparison.
   if (opts.inheritModels) {
     const agentsDir = join(dir, "agents");
     if (existsSync(agentsDir)) {
@@ -414,10 +412,7 @@ async function runSession(a: SessionRunArgs): Promise<RunTrace & { raw: string }
   }
   if (a.allowedTools.length) args.push("--allowedTools", ...a.allowedTools);
   if (a.model) args.push("--model", a.model);
-  // 20 of the 34 agent briefs pin `model: sonnet|haiku|opus`; on an alternative endpoint (an
-  // Ollama run) every pinned model 404s and the lens never starts, so only `inherit` agents
-  // were ever measured. With a subject model given, the host's force override puts every
-  // spawned agent on it — the same model drives the orchestrator and its lenses.
+  // The subject-model override puts each spawned agent on the same model as the orchestrator.
   const env = cleanEnv();
   if (a.model) {
     env.CLAUDE_CODE_SUBAGENT_MODEL = a.model;
@@ -567,7 +562,7 @@ export const FIXTURE_AGENTS: Record<string, string> = {
   async: "async-runtime-specialist",
   "error-model": "error-architect",
   testing: "qa-lead",
-  cli: "cli-ux-lead",
+  cli: "cli-specialist",
   ffi: "ffi-specialist",
   macros: "macro-specialist",
   observability: "observability-engineer",

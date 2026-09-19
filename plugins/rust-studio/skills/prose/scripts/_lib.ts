@@ -48,6 +48,20 @@ export function done(): never {
   process.exit(0);
 }
 
+/** The two hosts use different Stop-hook block contracts. Claude Code turns exit 2 plus stderr
+ * into feedback. Codex requires a JSON decision on stdout for Stop, so returning Claude's shape
+ * there becomes an "invalid stop hook JSON output" error instead of a continuation. */
+export function isCodexHook(): boolean {
+  return Boolean(process.env.PLUGIN_ROOT) && !process.env.CLAUDE_PLUGIN_ROOT;
+}
+
+/** Block a Stop hook and return its feedback using the active host's contract. */
+export function blockStop(reason: string): never {
+  if (isCodexHook()) emit({ decision: "block", reason });
+  process.stderr.write(reason);
+  process.exit(2);
+}
+
 /** Run a command synchronously with a hard timeout. Returns null on any error
  *  or timeout — callers treat that as "couldn't check, stay silent". A child
  *  killed by the timeout reports exitCode:null + signalCode, NOT a failure

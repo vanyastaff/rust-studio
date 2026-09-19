@@ -7,43 +7,48 @@ when to ask) and `verdicts.md` (gates, verdicts, evidence).
 ---
 ## 2. The team (3 tiers)
 
-**Tier 1 — Directors** (model: inherit, the session model). Own cross-cutting decisions and final gates.
+**Tier 1 — Directors** (session model). Own cross-cutting decisions and final gates.
 - `chief-architect` — architecture, crate/module boundaries, ADRs, final technical gate.
 - `product-steward` — scope, priorities, milestones, story breakdown, change propagation.
 
-**Tier 2 — Leads** (model: sonnet). Own a domain and its quality gate.
+**Tier 2 — Leads** (session model). Own a domain and its quality gate.
 - `api-design-lead` — public API surface, crate boundaries, semver.
 - `async-systems-lead` — async/web services, runtime topology, service design.
-- `cli-ux-lead` — CLI/TUI ergonomics, command structure, terminal UX.
+- `cli-specialist` — CLI/TUI command structure, ergonomics, terminal UX, and CLI-GATE.
 - `systems-perf-lead` — performance, `no_std`, `unsafe`, FFI, memory.
 - `qa-lead` — test strategy, coverage, flakiness, CI gates.
 - `release-lead` — versioning, crates.io publish, changelog, MSRV.
 - `tooling-lead` — build/cargo/CI infrastructure, workspace config, dev tooling.
 
-**Tier 3 — Specialists** (model: sonnet; judgment-heavy ones inherit, `security-auditor` pinned opus). Do focused work.
+**Tier 3 — Specialists** (session model). Do focused work.
 - API: `api-designer`, `error-architect`, `macro-specialist`, `docs-engineer`
 - Async/web: `async-runtime-specialist`, `web-framework-specialist`, `database-specialist`, `observability-engineer`, `wasm-specialist`
-- Systems/perf: `concurrency-specialist`, `unsafe-auditor` (inherit), `ffi-specialist`, `perf-engineer`, `embedded-specialist`
+- Systems/perf: `concurrency-specialist`, `unsafe-auditor`, `ffi-specialist`, `perf-engineer`, `embedded-specialist`
 - CLI: `cli-specialist`
-- Quality: `test-engineer`, `security-auditor` (opus), `dependency-manager`, `build-engineer`
-- Cross-cutting: `harsh-critic` (inherit), the adversarial design/spec/plan critic, and
-  `slop-auditor` (inherit), the tree-level slop ledger; both read-only.
+- Quality: `test-engineer`, `security-auditor`, `dependency-manager`, `build-engineer`
+- Cross-cutting: `harsh-critic`, the adversarial design/spec/plan critic, and
+  `slop-auditor`, the tree-level slop ledger; both read-only.
 
 **Execution (4)** (the hands — they actually touch code).
-- `rust-scout` (haiku) — read-only locator; returns a `file:line` map.
-- `rust-builder` (sonnet) — implements within an approved plan; writes code + tests.
-- `rust-build-resolver` (sonnet) — gets a failing build green; fixes the root cargo/rustc error.
-- `rust-reviewer` (inherit) — diff auditor and final gate.
+- `rust-scout` — read-only locator; returns a `file:line` map.
+- `rust-builder` — implements within the authorized scope; writes code + tests.
+- `rust-build-resolver` — gets a failing build green; fixes the root cargo/rustc error.
+- `rust-reviewer` — diff auditor and final gate.
 
 See `agent-roster.md` for the full org chart and who-owns-what.
 
 ---
 ## 3. Delegation model
 
-Agents follow a structured delegation model:
+The roster is the team's compact operating contract. For every non-trivial task, the current
+session or `product-steward` names one owning lead, the specialist roles that materially help, and
+the gate that can accept the result. It assigns only the roles the task needs, then carries their
+evidence and unresolved decisions forward.
 
-1. **Vertical delegation** — directors delegate to leads, leads delegate to
-   specialists. Never skip tiers for complex decisions.
+1. **Name the owner and expertise, then choose the cheapest sound surface.** For a complex
+   decision, identify the owning director, lead, or specialist. Consult that role in a separate
+   handoff when its independence or filtering is needed; otherwise apply its brief inline. A tier
+   is an ownership boundary, not a mandatory chain of messages.
 2. **Horizontal consultation** — same-tier agents may consult each other but must
    not make binding decisions outside their own domain. This consultation may happen
    **at build time**: the builder may pull a same-tier specialist for a design pass
@@ -72,6 +77,25 @@ When a host exposes sub-agents (§8), this same model runs over its native task 
 surfaces instead of sequential inline phases. The tiers, gates, and verdicts are unchanged —
 only the coordination surface differs.
 
+### Model and effort routing
+
+Route by the work's uncertainty and blast radius, never by a provider name. The host maps the
+chosen class to a model and reasoning-effort setting it actually offers.
+
+- **Current session** — a bounded lookup, established local edit, or quick triage. Do it inline
+  when the needed context is already open.
+- **Standard session** — ordinary multi-file implementation and normal review. Start here when
+  the task has a known shape but needs fresh reading or tests.
+- **Elevated session** — public API, `unsafe`, security, release, cross-crate architecture, or
+  a result that remains uncertain after a concrete probe. Spend the stronger model or effort on
+  the decisive design or independent review step, not on every preliminary lookup.
+
+Use the smallest class that can produce the required evidence. Escalate because a probe, a
+failed check, or material uncertainty calls for it; do not guess through a ladder of model
+aliases. An agent running on a host without per-worker selection uses the current session and
+may state the recommended class in its handoff. It must not claim that a provider-specific
+effort label has the same meaning on another model.
+
 ### When a handoff earns its cost
 
 §8 decides whether a spawn is *possible*. This decides whether it is *worth it*. A handoff is
@@ -79,6 +103,12 @@ not free: the worker starts blind, so the brief has to restate context the orche
 holds; nuance that lived in the conversation does not cross; the same files get re-read on the
 other side; and the round trip costs several times the tokens of doing the step inline, plus
 wall-clock. Spawning is a tool with a price, not a sign of rigor.
+
+First satisfy the host's delegation policy. Spawn only when the user, a loaded skill, or a
+project instruction authorizes it. Then use a worker only for an available specialist, an
+independent parallel stream, or a multi-file read where the returned synthesis saves context.
+For a known symbol, file, or single-fact lookup, read it directly. Once a lookup is delegated,
+wait for its result instead of duplicating it in the parent session.
 
 **Two things a separate process buys that an inline phase cannot. A spawn needs one of them:**
 
@@ -129,9 +159,10 @@ caps, they are cheaper than judgment. On Claude Code and the Agent SDK those are
 budget, not a plugin's to spend. `/studio-doctor` reports what is in force so a runaway
 fan-out has an explanation.
 
-Skipping the *spawn* is a judgment call. Skipping the *phase* is not — scout before you plan,
-plan before you write, read the diff back adversarially before you call it done, whatever the
-process count (`references/sub-agents.md`).
+For non-trivial work, establish the edit sites and constraints before writing, then check the
+finished diff from a fresh review perspective before calling it done. The task determines
+whether that takes a scout, a written plan, a specialist, or an inline pass; a mechanical phase
+sequence does not.
 
 ### When sub-agents are unavailable
 
@@ -142,11 +173,10 @@ The full rule is `references/sub-agents.md`.
 ---
 ## 6. File-write protocol
 
-- Orchestrator skills (`team-*`, `dev-task`) **delegate all writes to sub-agents**;
-  they do not call Write/Edit directly. This holds whether the orchestrator is a
-  single-session lead or a team lead running over the shared task list (§8) — `rust-builder`
-  still owns every write.
-- Before writing, show a draft or a diff and get approval (per `collaboration.md` §1).
+- A coordinating skill uses `rust-builder` when it delegates implementation. In a single
+  session, the active agent writes within the authorized scope.
+- Within the user's authorization, write the smallest complete change. Ask only when direction,
+  permission, or an irreversible outward action is unresolved (per `collaboration.md` §1).
 - `rust-builder` writes code and tests; `rust-scout` and `rust-reviewer` never write.
 - Never bypass these for "speed" — the protocol is the product.
 - Where no sub-agent exists to delegate to (§3), the orchestrator writes — but only after

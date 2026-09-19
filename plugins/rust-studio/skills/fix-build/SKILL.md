@@ -1,6 +1,6 @@
 ---
 name: fix-build
-description: "Use when fixing Rust build or cargo check failures involving borrows, lifetimes, traits, types, features, or deps."
+description: "Use for a failing cargo build or check: diagnose and fix the reported compiler error."
 ---
 
 # /fix-build — make it compile

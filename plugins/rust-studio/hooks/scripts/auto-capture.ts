@@ -3,8 +3,8 @@
 //
 // When a turn finishes a real unit of work but nothing was persisted to project
 // memory, nudge the agent ONCE to run /remember for any durable learning. A command
-// hook cannot judge what was learned, so it blocks the stop (exit 2 + stderr) and the
-// agent — which can — continues and captures into the host-native memory store.
+// hook cannot judge what was learned, so it blocks the stop and the agent — which can — continues
+// and captures into the host-native memory store.
 //
 // Fires only when ALL hold:
 //   * auto_capture userConfig is on (default ON),
@@ -24,12 +24,12 @@
 // HARD RULE (every studio hook): never freeze the session. Watchdog fails OPEN
 // (exit 0 = allow). Mechanism note: since Claude Code v2.1.163 a Stop hook MAY return
 // hookSpecificOutput.additionalContext to hand the model text and continue the turn, but
-// we deliberately keep exit 2 + stderr — we want to *block* the stop once (forcing the
-// agent to act on the nudge), not merely append context it can ignore.
+// we deliberately block the stop once through `blockStop` (forcing the agent to act on the nudge),
+// not merely append context it can ignore.
 
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
-import { readInput, watchdog, optionBool, run, which, pluginRoot, pluginData } from "./_lib.ts";
+import { blockStop, readInput, watchdog, optionBool, run, which, pluginRoot, pluginData } from "./_lib.ts";
 import { getEvidenceGroups, lastAssistantFromTranscript } from "./stop-guard.ts";
 import { budgetLine, indexHealth, resolveStore, type StoreInfo } from "./memory-store.ts";
 
@@ -286,8 +286,7 @@ if (import.meta.main) {
       }
       bumpNudges(sessionId);
     }
-    process.stderr.write(buildCaptureFeedback(store));
-    process.exit(2); // block the stop; stderr becomes feedback to Claude
+    blockStop(buildCaptureFeedback(store));
   }
   process.exit(0);
 }

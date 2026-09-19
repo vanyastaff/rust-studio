@@ -98,6 +98,7 @@ assets=(
   scripts/slop-audit.sh:skills/refactor/scripts/slop-audit.sh
   scripts/slop-audit.sh:skills/evolve/scripts/slop-audit.sh
   scripts/score-compare.sh:skills/evolve/scripts/score-compare.sh
+  scripts/plan-status.ts:skills/spec-tasks/scripts/plan-status.ts
   hooks/scripts/memory-doctor.ts:skills/memory-doctor/scripts/memory-doctor.ts
   hooks/scripts/memory-store.ts:skills/memory-doctor/scripts/memory-store.ts
   hooks/scripts/_lib.ts:skills/memory-doctor/scripts/_lib.ts

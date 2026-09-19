@@ -38,12 +38,12 @@
 // releases — a wedged agent gets its turn back with the outstanding ids named.
 //
 // HARD RULE (every studio hook): never freeze the session. Watchdog fails OPEN (exit 0).
-// Blocking uses exit 2 + stderr like the other studio guards; the feedback names the ids,
-// the checker command, and the rule for an impossible gate.
+// `blockStop` selects Claude's exit-2 feedback or Codex's JSON decision. The feedback names the
+// ids, checker command, and rule for an impossible gate.
 
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { readInput, watchdog, optionBool, pluginRoot, pluginData } from "./_lib.ts";
+import { blockStop, readInput, watchdog, optionBool, pluginRoot, pluginData } from "./_lib.ts";
 import { gateState, lintLedger, parseLedger, qualify, sha256, type GateState } from "./acceptance-ledger.ts";
 import { getEvidenceGroups, lastAssistantFromTranscript } from "./stop-guard.ts";
 import { asText } from "./auto-capture.ts";
@@ -299,6 +299,5 @@ if (import.meta.main) {
     process.exit(0);
   }
   const checker = join(pluginRoot(), "skills", "acceptance", "scripts", "acceptance-check.ts").replace(/\\/g, "/");
-  process.stderr.write(buildFeedback(d, bound.map((l) => l.path), existsSync(checker) ? checker : "acceptance-check.ts"));
-  process.exit(2);
+  blockStop(buildFeedback(d, bound.map((l) => l.path), existsSync(checker) ? checker : "acceptance-check.ts"));
 }

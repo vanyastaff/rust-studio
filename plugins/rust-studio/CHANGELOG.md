@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-09-19
+
+This release makes the studio a smaller, clearer team of agents and fixes Codex Stop-hook
+blocking: a guard can now ask Codex to continue with its documented JSON response instead of
+failing the hook protocol.
+
+### Changed
+
+- **Focused routing and roster:** consolidated the studio to 61 skills and 33 agents. Retired
+  the overlapping `team-*` wrappers and merged CLI UX ownership into `cli-specialist`; shortened
+  triggers and role briefs so the router selects an owning specialist before adding independent
+  review only where the risk warrants it.
+- **`/spec` and `/spec-tasks`:** preserve product intent in the source-controlled
+  `intent/<slug>.md`, keep execution records local under `.rust-studio/specs/<slug>/`, and make
+  task generation coordinate owners, reviewers, dependencies, and file overlap.
+- **Model routing:** added a provider-neutral routing guide and Codex agent generation support
+  for an optional local model-routing map. The default roster keeps model choice adaptive so a
+  task receives enough capability and reasoning effort without pinning unavailable providers.
+- **Codex hooks:** `stop-guard`, `acceptance-guard`, and `auto-capture` emit a valid
+  `{ "decision": "block", "reason": "..." }` response under Codex while retaining Claude
+  Code's exit-code contract. This removes the `invalid stop hook JSON output` failure.
+
 ## [0.58.0] - 2026-09-18
 
 The studio's tooling doctrine said "prefer-if-available" for serena and exa, but the skills did

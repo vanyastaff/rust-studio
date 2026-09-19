@@ -1,4 +1,4 @@
 interface:
-  display_name: "Grill Me"
+  display_name: "Requirements Interview"
   short_description: "Requirements or a consequential decision need user input"
   default_prompt: "Use $grill-me when requirements or a consequential decision need user input; interview one focused question at a time."

@@ -1,9 +1,13 @@
 ---
 name: security-audit
-description: "Use when auditing Rust code for injection, unsafe input, auth flaws, secret leaks, and RUSTSEC advisories."
+description: "Use to audit Rust code or dependencies for security defects and RUSTSEC risk."
 ---
 
 # /security-audit — run a security audit
+
+## When NOT this skill
+
+- Audit dependency inventory, licenses, or feature resolution → `/deps-check`.
 
 Run the full security audit pipeline through **scope → scan → review → report → fix**,
 honoring the collaboration protocol (`references/collaboration.md`).

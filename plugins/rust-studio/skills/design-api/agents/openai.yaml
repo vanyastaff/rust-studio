@@ -1,4 +1,4 @@
 interface:
   display_name: "Design API"
-  short_description: "Designing one Rust public API surface: types, traits"
-  default_prompt: "Use $design-api when designing one Rust public API surface: types, traits, signatures, errors, and semver impact."
+  short_description: "To design one Rust public API: types, signatures, errors"
+  default_prompt: "Use $design-api to design one Rust public API: types, signatures, errors, and semver impact."

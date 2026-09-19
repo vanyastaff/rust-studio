@@ -1,6 +1,6 @@
 ---
 name: audit-unsafe
-description: "Use when auditing Rust unsafe blocks or FFI boundaries for invariants, soundness, and Miri evidence."
+description: "Use to audit Rust unsafe code or FFI for soundness and stated invariants."
 ---
 
 # /audit-unsafe — safety audit of all unsafe code

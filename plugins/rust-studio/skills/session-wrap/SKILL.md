@@ -38,7 +38,7 @@ or a teammate's) starts ahead. Ties the memory system (`/remember`, `/recall`, `
    without before/after evidence. Separate these proposed improvements from work already
    done; no observed friction means no manufactured retrospective checklist.
 3. **State of play** — list done / in-progress / blocked with the next action for each open
-   item. If a spec is active (`.rust-studio/specs/`), update its task
+   item. If a local spec is active (`.rust-studio/specs/`), update its task
    statuses and execution entries, preserving destination-tree evidence, repair counts and
    facts that dependent tasks need (`references/task-continuity.md`). Do not turn stale
    worker evidence into a done row or conflate local completion with remote merge.

@@ -81,7 +81,7 @@ Use this when:
 
 After approval, suggest and offer to invoke the natural next step (confirm before starting):
 - **Needs a durable spec** → `/spec` (the synthesis seeds the spec's context and approaches).
-- **Public API surface** → `/design-api` or `/team-api`.
+- **Public API surface** → `/design-api`, then `/dev-task` to ship it.
 - **Cross-crate / architectural** → `/architecture` (ADR + boundaries with `chief-architect`).
 - **Ready to build** → `/dev-task`.
 

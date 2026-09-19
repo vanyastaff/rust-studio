@@ -21,10 +21,10 @@ message the user reads, attributed to the lens it came from, next to your own; i
 differs, say so and say why, rather than quietly merging a blocking verdict into a passing
 one. The full contract, including what each token means, is in `references/verdicts.md`.
 
-Where a skill says the orchestrator must never write and must delegate to `rust-builder`, and
-no `rust-builder` exists: **you write** — but only after running the scout and plan phases you
-would otherwise have handed off. The protocol exists to keep those phases from collapsing into
-one hurried edit. Skipping the delegation is fine. Skipping the phase is not.
+Where a skill names `rust-builder` and no worker exists: **you write** within the authorized
+scope. Establish edit sites and constraints when the task needs them; use a fresh review
+perspective when the risk calls for it. A scout, plan, or separate review earns its cost through
+filtering or independence, not because a fixed sequence requires it.
 
 **A refused tool is a fact about the host, not a transient error.** When a command tool is
 absent or a call is denied (no shell, a permission refusal, a sandbox without `cargo`), do not

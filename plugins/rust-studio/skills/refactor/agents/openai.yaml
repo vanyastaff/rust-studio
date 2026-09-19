@@ -1,4 +1,4 @@
 interface:
   display_name: "Refactor"
-  short_description: "Refactoring or simplifying tangled Rust code without behavior"
-  default_prompt: "Use $refactor when refactoring or simplifying tangled Rust code without behavior changes: tests and the project gate as the oracle."
+  short_description: "To simplify Rust code while preserving behavior proved by tests"
+  default_prompt: "Use $refactor to simplify Rust code while preserving behavior proved by tests and the project gate."

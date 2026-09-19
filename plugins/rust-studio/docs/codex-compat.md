@@ -30,11 +30,11 @@ them completed. That manifest is withdrawn and the regression is guarded by `RS-
 (ADR 0002). Anything that still says "Codex does not run plugin hooks" is stale — check with
 `/studio-doctor`, which probes rather than assumes.
 
-**Agent briefs lose their model pin on purpose.** The generator drops `model:` and never emits
-`model_reasoning_effort`, so every generated agent inherits the session's model and effort.
-Codex custom-agent files *do* accept both fields, and pinning them is the same
-model-agnosticism break the Claude side rejects: it would decide for the user which model
-judges their code. Same decision, both hosts — effort is the user's dial.
+**Generated agents inherit by default.** Without a routing file, the generator drops the Claude
+role label and emits neither `model` nor `model_reasoning_effort`; the parent session decides.
+Codex custom-agent files accept both fields. A user-owned mapping passed through `--routing`
+can assign a suitable Codex model and effort to each role class without putting provider IDs in
+the shared plugin. See `model-routing.md`.
 
 ## The prompt shape Codex documents, and what the studio already supplies
 

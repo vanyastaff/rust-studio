@@ -16,7 +16,7 @@ gate has an ID so it can be referenced in stories and reviews.
 | `SCOPE-GATE`    | product-steward     | Diff/plan matches acceptance criteria; over-scope/under-scope flagged; non-goals stated. |
 | `API-GATE`      | api-design-lead     | Public items documented; semver impact understood; `#[non_exhaustive]`/sealed where needed; no accidental pub. |
 | `ASYNC-GATE`    | async-systems-lead  | No blocking in async; cancellation-safe; `Send`/`'static` bounds correct; backpressure considered. |
-| `CLI-GATE`      | cli-ux-lead         | Exit codes correct; stdout=data / stderr=diagnostics; `--help` complete; errors actionable. |
+| `CLI-GATE`      | cli-specialist      | Exit codes correct; stdout=data / stderr=diagnostics; `--help` complete; errors actionable. |
 | `PERF-GATE`     | systems-perf-lead   | Hot paths allocation-aware; benchmarked before/after; no needless clones; complexity justified. |
 | `SAFETY-GATE`   | systems-perf-lead + unsafe-auditor | Every `unsafe` has a `// SAFETY:` invariant; miri-clean where feasible; no UB. |
 | `QA-GATE`       | qa-lead             | Tests cover acceptance criteria + edge cases; no flaky tests; coverage not regressed. |

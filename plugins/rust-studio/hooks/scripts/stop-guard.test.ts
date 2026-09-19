@@ -2,6 +2,8 @@
 // docs/integrity-and-evidence.md): each test pins a concrete block/allow decision,
 // not merely "it ran".
 import { test, expect, describe } from "bun:test";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import {
   evaluate,
   guardDefault,
@@ -60,6 +62,21 @@ describe("hard hits always block", () => {
     const d = evaluate("The change is in place. You'll need to run the migration yourself.", cfg());
     expect(d.block).toBe(true);
     expect(d.hardHits.some((h) => h.category === "handoff-to-user")).toBe(true);
+  });
+});
+
+describe("Codex Stop output", () => {
+  test("a block is a JSON decision, not Claude-style stderr", () => {
+    const env = { ...process.env, PLUGIN_ROOT: import.meta.dir, PLUGIN_DATA: join(tmpdir(), "rs-codex-stop-test"), RUST_STUDIO_STOP_GUARD: "on" };
+    delete env.CLAUDE_PLUGIN_ROOT;
+    const result = Bun.spawnSync(["bun", join(import.meta.dir, "stop-guard.ts")], {
+      stdin: new TextEncoder().encode(JSON.stringify({ session_id: "codex-test", last_assistant_message: "Should I continue?" })),
+      env,
+      timeout: 10_000,
+    });
+    expect(result.exitCode).toBe(0);
+    expect(new TextDecoder().decode(result.stderr)).toBe("");
+    expect(JSON.parse(new TextDecoder().decode(result.stdout))).toMatchObject({ decision: "block" });
   });
 });
 

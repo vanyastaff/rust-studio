@@ -32,9 +32,8 @@ strategic direction is set, **execute end-to-end** — don't ask a question per 
 - Autonomy is about **deciding, not skipping process** — keep the SDD/TDD discipline, the
   gates, and the verification. Commit locally without asking; still confirm anything outward.
 
-> This refines the protocol's "Question → Options → Decision → Draft → Approval": run it as a
-> *quality* loop, not a *permission* loop. Gates exist to catch bad work, not to ask permission
-> for tactical calls. Reserve `AskUserQuestion` for genuine forks and irreversible/outward steps.
+> Gates check the work. Reuse existing authorization within its scope; ask when a genuine
+> fork or an irreversible/outward step needs a decision or permission not already granted.
 
 ### Assessment vs. action: report when no change was asked for
 Autonomy means executing a **requested** change end-to-end — not inventing one. When the owner is

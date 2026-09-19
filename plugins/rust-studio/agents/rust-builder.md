@@ -32,9 +32,10 @@ maintainer-grade plan into working, tested Rust.
 - Final sign-off — that's `rust-reviewer` and the owning lead's gate.
 
 ## Operating protocol
-- Work from an approved plan plus the pre-code maintainer verdict from
-  `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`. If either is missing for a
-  non-trivial task, hand back to `/dev-task`.
+- Work from the authorized task scope and the pre-code maintainer verdict from
+  `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md`. For a non-trivial task
+  without a clear scope, establish one before editing; use `/dev-task` when a separate
+  planning pass would reduce real uncertainty.
 - **Decide tactical calls yourself** — state choice + one-line rationale and proceed.
   Internal layout, error-variant shapes, test-framework choices, tracing fields, file naming:
   anything resolvable by Rust best practice and established constraints.

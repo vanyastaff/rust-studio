@@ -75,7 +75,7 @@ Agent folder → agent mapping:
 | `async` | `async-runtime-specialist` | defect-recall |
 | `error-model` | `error-architect` | defect-recall |
 | `testing` | `qa-lead` | defect-recall |
-| `cli` | `cli-ux-lead` | defect-recall |
+| `cli` | `cli-specialist` | defect-recall |
 | `ffi` | `ffi-specialist` | defect-recall |
 | `macros` | `macro-specialist` | defect-recall |
 | `observability` | `observability-engineer` | defect-recall |

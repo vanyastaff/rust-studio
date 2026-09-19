@@ -89,5 +89,5 @@ Architecture decision and review as a structured plan or inline diff notes. End 
 verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED** (REDO-TO-BAR: correct but wrong
 SHAPE — reshape the touched area, see coordination-protocol §5) plus evidence (clippy
 output, test run
-summary, or the specific line reference for each finding). Hand off to `/team-async`,
+summary, or the specific line reference for each finding). Hand off to `/dev-task`,
 `async-runtime-specialist`, or `web-framework-specialist`.

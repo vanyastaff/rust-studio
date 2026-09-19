@@ -10,12 +10,12 @@ see `agent-roster.md`; for the gates and the autonomy-first protocol see
 
 Five moving parts:
 
-- **Agents** (34) — a tiered team of specialists. They are the *workforce*: you (or a skill)
+- **Agents** (33) — a tiered team of specialists. They are the *workforce*: you (or a skill)
   delegate focused work to them; each runs in its own context so reads stay out of the main
   conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
   and an execution trio does the hands-on locate → build → review.
-- **Skills** (65) — slash commands. They are *workflows*: a skill orchestrates the right agents
-  through phases for a task ("design an API", "fix the build", "ship a release"). Invoke with
+- **Skills** (61) — slash commands. They are focused workflows that select only needed work
+  for a task ("design an API", "fix the build", "ship a release"). Invoke with
   `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
 - **Rules** (21) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
   relevant standard is auto-injected (a hook does this) and the agent reads the full rule on
@@ -53,9 +53,9 @@ opinion (`working-preferences.md`).
 ```
 /start                 # detect stack, brief the team, route
 /recall <area>         # pull prior learnings before you touch the area
-/spec <feature>        # (big/cross-crate) intent → explore → 2–4 approaches → approved spec
-  /spec-tasks <slug>   #   break it into ordered tasks, each run via /dev-task
-/dev-task <task>       # (one unit) scout → plan → approve → build → review
+/spec <feature>        # (long/cross-session) record intent, decision, and acceptance criteria
+  /spec-tasks <slug>   #   local task plan: paths, dependencies, conflicts, and status
+/dev-task <task>       # (one unit) choose the smallest fitting path → build → review as risk requires
 /tdd <behavior>        # (alt) build a behavior test-first: RED → GREEN → REFACTOR
 /verify-loop           # drive checks to green with bounded auto-fix
 /review --full         # parallel multi-lens audit before merge
@@ -63,25 +63,33 @@ opinion (`working-preferences.md`).
 /session-wrap          # recap + capture learnings to memory for next time
 ```
 Small change? Skip the spec — `/dev-task` or even a direct `/lint` + `/review` is enough.
-Plan only when the approach is uncertain or the change spans files.
+Plan only when the approach is uncertain or the change spans files. The agent starts on
+authorized work and asks only for an unresolved direction, permission, or outward action.
+
+### Model and effort
+
+Agent briefs choose a routing class: `haiku` for low-cost locating, `sonnet` for normal work,
+`opus` for the security audit, and `inherit` for gates. Select the smallest available class that
+can earn the task's evidence. Map the class to the provider's model and effort in the host; the
+portable policy and Claude/Codex setup are in `model-routing.md`.
 
 ---
 
-## The agents (34)
+## The agents (33)
 
-### Tier 1 — Directors (inherit — run at the session model)
+### Tier 1 — Directors (session model)
 - **`chief-architect`** — crate/module boundaries, layering, ADRs, big refactors, cross-lead
   technical conflicts. Holds ARCH-GATE. Call for any change that ripples across many crates.
 - **`product-steward`** — scope, milestones, story breakdown, prioritization, cross-domain
   coordination. Call to turn a goal into ordered work or settle what's in/out of scope.
 
-### Tier 2 — Leads (sonnet; own a domain + a gate)
+### Tier 2 — Leads (session model; own a domain + a gate)
 - **`api-design-lead`** — public API surface, crate boundaries, semver, `#[non_exhaustive]`/
   sealing. API-GATE.
 - **`async-systems-lead`** — async architecture, tokio topology, web stack choice, backpressure,
   shutdown. ASYNC-GATE.
-- **`cli-ux-lead`** — CLI/TUI command structure, terminal UX, stdout/stderr discipline, exit
-  codes. CLI-GATE.
+- **`cli-specialist`** — CLI/TUI command structure, terminal UX, stdout/stderr discipline,
+  exit codes, and CLI-GATE.
 - **`systems-perf-lead`** — performance budgets, `unsafe` policy, FFI, `no_std`, memory model.
   PERF-GATE + SAFETY-GATE.
 - **`qa-lead`** — test strategy, coverage targets, flakiness, the quality bar. QA-GATE.
@@ -89,7 +97,7 @@ Plan only when the approach is uncertain or the change spans files.
 - **`tooling-lead`** — *decides* build/CI/dev-tooling policy + matrix strategy. BUILD-GATE.
   (Delegates implementation to `build-engineer`.)
 
-### Tier 3 — Specialists (sonnet; auditors inherit/opus)
+### Tier 3 — Specialists (session model)
 API & types: **`api-designer`** (traits, type-state, builders, conversions), **`error-architect`**
 (thiserror/anyhow boundary, error taxonomy), **`macro-specialist`** (proc/derive/`macro_rules!`),
 **`docs-engineer`** (rustdoc, doc-tests, README).
@@ -97,31 +105,31 @@ Async & web: **`async-runtime-specialist`** (tokio, cancellation, spawn), **`web
 (axum/actix, extractors, middleware), **`database-specialist`** (sqlx/diesel, migrations, pools),
 **`observability-engineer`** (tracing, metrics, OTel), **`wasm-specialist`** (wasm32, wasm-bindgen, size).
 Systems & perf: **`concurrency-specialist`** (atomics, lock-free, loom), **`unsafe-auditor`**
-(inherit; reviews every `unsafe` for soundness, miri — read-only), **`ffi-specialist`** (bindgen/cbindgen,
+(reviews every `unsafe` for soundness, miri — read-only), **`ffi-specialist`** (bindgen/cbindgen,
 C ABI), **`perf-engineer`** (criterion, flamegraph, allocations, SIMD), **`embedded-specialist`**
 (`no_std`, embedded-hal, cortex-m).
 CLI: **`cli-specialist`** (clap derive, ratatui, completions, signals).
-Quality: **`test-engineer`** (proptest, criterion, nextest, fixtures), **`security-auditor`** (opus;
-RUSTSEC, input/secret/auth/DoS), **`dependency-manager`** (sonnet; cargo-deny, features, MSRV),
+Quality: **`test-engineer`** (proptest, criterion, nextest, fixtures), **`security-auditor`**
+(RUSTSEC, input/secret/auth/DoS), **`dependency-manager`** (cargo-deny, features, MSRV),
 **`build-engineer`** (*implements* build.rs, CI, cross, xtask).
-Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially, no praise, read-only),
-**`slop-auditor`** (inherit; the tree-level slop ledger: duplicates, orphans, cycles, dead `pub`, untyped
+Cross-cutting: **`harsh-critic`** (attacks designs/specs adversarially, no praise, read-only),
+**`slop-auditor`** (the tree-level slop ledger: duplicates, orphans, cycles, dead `pub`, untyped
 model calls, naming/pattern/boundary tells; read-only).
 
 ### Execution (4) — the hands
-- **`rust-scout`** (haiku, read-only) — locates symbols/impls/tests via the language-server
+- **`rust-scout`** (read-only) — locates symbols/impls/tests via the language-server
   layer (serena when the user has it, `LSP`/`rg` otherwise), returns a
   `file:line` map. Never writes or proposes fixes.
-- **`rust-builder`** (sonnet) — the only agent that routinely writes source; implements an
+- **`rust-builder`** — the only agent that routinely writes source; implements an
   approved plan, runs cargo check/clippy/test/fmt, reports a diff.
-- **`rust-build-resolver`** (sonnet) — gets a failing build green; fixes the root cargo/rustc
+- **`rust-build-resolver`** — gets a failing build green; fixes the root cargo/rustc
   error (borrowck, trait bounds, lifetimes) in a check→fix loop.
-- **`rust-reviewer`** (inherit, read-only) — final gate before merge; severity-tagged findings,
+- **`rust-reviewer`** (read-only) — final gate before merge; severity-tagged findings,
   no praise, flags only correctness/requirement gaps.
 
 ---
 
-## The skills (65)
+## The skills (61)
 
 ### Onboarding & navigation
 - **`/start`** — orient: detect stack, brief the team, route to the next skill.
@@ -139,7 +147,7 @@ model calls, naming/pattern/boundary tells; read-only).
 
 ### Design & architecture
 - **`/brainstorm`** — explore an idea before any design (2–4 approaches, no code).
-- **`/design-api`** — design one public API surface (lighter than `/team-api`).
+- **`/design-api`** — design one public API surface; use `/dev-task` to ship it.
 - **`/architecture`** — design/revise module/crate layout; records ADRs.
 - **`/adr`** — write and file one architecture decision record.
 - **`/model-domain`** — encode a domain in the type system (newtype, type-state, make illegal
@@ -164,13 +172,15 @@ model calls, naming/pattern/boundary tells; read-only).
 - **`/ci-gate`** — audit or install the anti-hang / anti-silencing CI gate (clippy, nextest
   timeouts, lefthook).
 
-### Spec-driven (big / cross-crate work, persisted in `.rust-studio/specs/`)
-- **`/spec`** — intent (the problem in your words, frozen) → explore → weigh approaches →
-  an approved spec doc.
-- **`/spec-tasks`** — break a spec into ordered tasks, drive each via `/dev-task`.
-  On resume, reconcile destination state and evidence before unblocking dependencies.
-  Task records carry producer/consumer contracts, discoveries and repair history; local
-  integration and external PR merge are separate states.
+### Planned work (optional intent, local execution records)
+- **`/spec`** — record a durable design: when product direction could be guessed, a compact,
+  source-controlled `intent/<slug>.md` captures users, outcome, constraints, and open questions;
+  `spec.md` records the approach, risks, and observable criteria. Use it when this context must
+  survive the current session.
+- **`/spec-tasks`** — make the local task plan: expected paths, dependencies, conflicts,
+  acceptance slices, and status. Run `bun "scripts/plan-status.ts" <tasks.md>` for a read-only
+  ready/blocked summary. On resume, reconcile destination state and evidence before unblocking a
+  dependent task; local completion and external PR merge are separate states.
 - **`/spec-verify`** — prove the implementation meets the spec's acceptance criteria. For
   multi-task, cross-crate or observable behavior changes, a fresh read-only checker also
   verifies the original user request without the spec/tasks/history; `--blind` requests
@@ -274,12 +284,6 @@ happy-path test does not establish preserved behavior.
 - **`/publish`** — RELEASE-GATE checklist → dry-run → hands you the exact publish command
   (never publishes itself).
 
-### Teams (multi-agent presets for end-to-end features)
-- **`/team-api`** — design + ship a public API with the API team.
-- **`/team-async`** — build an async service feature with the async team.
-- **`/team-perf`** — performance + safety hardening with the systems team.
-- **`/team-release`** — the full release pipeline (audit + deps + MSRV + changelog + dry-run).
-
 ### Following progress (visibility)
 - Per-sub-agent rows in the agent panel are customized automatically (the plugin's
   `subagentStatusLine`): `● <type>: <description> · <elapsed> · <tokens>`.
@@ -343,7 +347,9 @@ happy-path test does not establish preserved behavior.
 
 **Cut a release**
 ```
-/team-release 0.4.0      # security audit + deps + MSRV + changelog + dry-run
+/deps-check              # dependency and supply-chain review
+/msrv-check              # verify supported Rust version
+/changelog               # draft the release entry
 /publish my-crate        # gate + dry-run, then run the printed command yourself
 ```
 

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Bloat"
-  short_description: "Reducing Rust binary size or monomorphization with cargo-bloat"
-  default_prompt: "Use $bloat when reducing Rust binary size or monomorphization with cargo-bloat and llvm-lines."
+  display_name: "Rust Binary Size"
+  short_description: "To diagnose and reduce Rust binary size or monomorphization"
+  default_prompt: "Use $bloat to diagnose and reduce Rust binary size or monomorphization growth."

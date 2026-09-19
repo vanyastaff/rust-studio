@@ -380,8 +380,9 @@ openai_metadata_count=$(find skills -path '*/agents/openai.yaml' -type f | wc -l
 (( description_chars <= 6500 )) || fail RS-SKILL-070 "skills/*/SKILL.md#description (total)" "$description_chars characters against a 6500 budget" "shorten the longest descriptions; every one is loaded into the router context on every session"
 
 unknown_keys=$(awk '
-  FNR == 1 { yaml = 0 }
-  /^---$/ { yaml = !yaml; next }
+  FNR == 1 { frontmatter = 0; yaml = 0 }
+  FNR == 1 && /^---$/ { frontmatter = 1; yaml = 1; next }
+  frontmatter && yaml && /^---$/ { yaml = 0; next }
   yaml && /^[A-Za-z0-9_-]+:/ {
     key = $1
     sub(/:.*/, "", key)

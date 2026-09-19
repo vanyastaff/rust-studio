@@ -1,4 +1,4 @@
-# Ground truth — cli/streams-and-exit-codes (agent: `cli-ux-lead`, verdict: NEEDS WORK)
+# Ground truth — cli/streams-and-exit-codes (agent: `cli-specialist`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Review this CLI before we ship it to people who will call it from scripts and pipelines. List every finding with file:line and severity, then give a CLI-GATE verdict."* It works when run by hand; every defect is one `rules/cli.md` names.
 

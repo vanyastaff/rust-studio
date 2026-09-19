@@ -22,9 +22,8 @@ and hold the API-GATE.
 - Release timing and version bumping → defer to `release-lead`.
 
 ## Operating protocol
-Follow **Question → Options → Decision → Draft → Approval**
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`) as a **quality** loop, not a
-permission loop.
+Use the lightest process that preserves an intentional public API and semver evidence.
+Explore alternatives only when the choice changes the API contract or project direction.
 
 - **Decide tactical calls yourself** — state the choice + one-line rationale, proceed.
   API naming, `#[non_exhaustive]` placement, sealed-trait pattern, re-export tree shape,

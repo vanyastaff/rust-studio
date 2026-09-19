@@ -17,7 +17,7 @@ path. It is safe to re-run, and `--dry-run` prints the commands without running 
 
 ## Just the skills, on any agent
 
-The 65 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
+The 61 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
 Codex, Cursor, OpenCode, Zed and ~70 other hosts, with no npm publish and no clone:
 
 ```text
@@ -25,8 +25,8 @@ npx skills add .                                      # from a local clone
 npx skills add <owner>/rust-studio --skill dev-task --agent codex
 ```
 
-The 63 host-neutral workflows bundle the standards and deterministic helpers they need. What you
-*don't* get this way: the 34 sub-agents, the hooks (session briefing, path-scoped rule injection,
+The 59 host-neutral workflows bundle the standards and deterministic helpers they need. What you
+*don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
 stop-guard), the status line, and working versions of the two clearly labeled Claude-only
 utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
 that phase inline (see
@@ -45,7 +45,7 @@ silent (no session briefing, no path-scoped standards) and Codex's plugin panel 
 beside it.
 
 Clients that implement Agent Plugins install through `npx skills add` (below) instead, and a
-client that does gets the 65 skills all the same — that path reads the flat `skills/` directory
+client that does gets the 61 skills all the same — that path reads the flat `skills/` directory
 and needs no manifest at all.
 
 ## Codex plugin
@@ -60,7 +60,7 @@ Accept the trust prompt in your first interactive session and the session briefi
 from then on (trust is persisted per hook in `~/.codex/config.toml`).
 
 Codex plugins cannot bundle agent definitions, so `./install.sh` (from a clone, with node)
-also generates the 34 studio agents into `~/.codex/agents/` as Codex custom agents. Manual
+also generates the 33 studio agents into `~/.codex/agents/` as Codex custom agents. Manual
 equivalent:
 
 ```text

@@ -11,8 +11,8 @@ from the start: manifest metadata, lint config, deny policy, toolchain pin, CI s
 and a ready-to-extend source file. You are the orchestrator: **you do not write files
 yourself — you delegate all writes to `rust-builder`.**
 
-Honor the collaboration protocol (`references/collaboration.md`):
-decide tactical calls yourself; gate only at phase boundaries and before file writes.
+Honor the collaboration protocol (`references/collaboration.md`): decide tactical calls
+yourself; ask only for missing crate-defining inputs or a genuine scope fork.
 
 ## Input
 
@@ -46,7 +46,7 @@ Edition is always `2024`; state this and proceed without asking.
 ## Phase 2 — Pick defaults by domain
 
 Once the domain is known, select the canonical deps and feature flags without asking
-again. Present choices as part of the draft.
+again. State the selected defaults with the file set.
 
 | Domain    | Default deps (prod + dev)                                        | Notes                         |
 |-----------|------------------------------------------------------------------|-------------------------------|
@@ -62,10 +62,10 @@ Consult the domain rule for dep/feature guidance:
 
 ---
 
-## Phase 3 — Draft the file set
+## Phase 3 — Define the file set
 
-Produce a **draft** for user review. Show each file as a named block; do not write
-anything yet.
+State the selected file set and material defaults before building. The skill invocation
+authorizes the scaffold within that scope.
 
 ### `Cargo.toml`
 Build per `references/cargo-manifest.md`. Must include:
@@ -107,19 +107,10 @@ Fill in crate name, one-line description, license badge, and MSRV badge if appli
 
 ---
 
-## Phase 4 — Approve (gate)
+## Phase 4 — Build
 
-Prompt the user: present the draft file set and ask the user to confirm or adjust.
-Include workspace membership status. Revise and re-present if the user requests changes.
-**Do not delegate to `rust-builder` until the user gives explicit approval** — writing
-files is irreversible.
-
----
-
-## Phase 5 — Build
-
-Spawn **`rust-builder`** with the approved plan. Instruct it to:
-- Write all files exactly as approved.
+Spawn **`rust-builder`** with the defined scope. Instruct it to:
+- Write all files in that scope.
 - If workspace: `true`, add the new path to `[workspace.members]` in the root `Cargo.toml`.
 - Run `cargo check -p <name>` and `cargo clippy -p <name> --all-targets -- -D warnings`
   after writing to confirm the scaffold compiles clean.
@@ -129,7 +120,7 @@ Spawn **`rust-builder`** with the approved plan. Instruct it to:
 
 ---
 
-## Phase 6 — Verdict and next steps
+## Phase 5 — Verdict and next steps
 
 Summarize: files written, `cargo check`/`clippy` result, workspace status.
 End with **COMPLETE / NEEDS WORK / BLOCKED**.

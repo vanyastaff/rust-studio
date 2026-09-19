@@ -1,6 +1,6 @@
 ---
 name: publish
-description: "Use when preparing a crate for crates.io: gates, a dry-run, never publishing."
+description: "Use to prepare a Rust crate release through checks and a crates.io dry run."
 disable-model-invocation: true
 ---
 
@@ -16,8 +16,8 @@ You are the orchestrator: **you do not write files directly — delegate all fil
 
 ## When NOT this skill
 - The crate hasn't been through semver, security, dependency, MSRV, or changelog work
-  yet → `/team-release`: it runs those audits and drafts the changelog, THEN reaches the
-  same RELEASE-GATE checklist and dry-run `/publish` performs. `/publish` assumes that
+  yet → run `/deps-check`, `/msrv-check`, `/changelog`, and `/security-audit` as needed. Then
+  reach the same RELEASE-GATE checklist and dry-run `/publish` performs. `/publish` assumes that
   prep is already done and only walks the gate, the dry-run, and hands you the command.
 - You need the changelog written, not just referenced → `/changelog`.
 

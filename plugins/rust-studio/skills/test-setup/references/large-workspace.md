@@ -200,7 +200,7 @@ it does **not** load that crate's CLAUDE.md/rules/skills.)
   no-quick-wins / finish-the-ripple bar.)
 - **Save the plan to a file before editing.** A long cross-crate session compacts its context;
   a written plan survives where chat history doesn't. The studio already does this — `/spec`
-  persists `spec.md` and `/spec-tasks` persists `tasks.md` under `.rust-studio/specs/`. Use
+  persists `spec.md` and `/spec-tasks` persists `tasks.md` under `.rust-studio/specs/<slug>/`. Use
   them for any change spanning more than one crate.
 
 ## 8. Studio entry points

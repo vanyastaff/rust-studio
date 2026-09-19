@@ -1,9 +1,14 @@
 ---
 name: deps-check
-description: "Use when auditing Rust dependencies for advisories, licenses, sources, duplicates, versions, features, and MSRV."
+description: "Use to audit existing Rust dependencies: security, licenses, sources, features, and MSRV."
 ---
 
 # /deps-check — audit workspace dependencies
+
+## When NOT this skill
+
+- Evaluate one dependency before adding it → `/add-dep`.
+- Audit application security beyond dependency risk → `/security-audit`.
 
 Run a full dependency health audit through **dependency-manager**, honoring the
 collaboration protocol (`references/collaboration.md`). You are

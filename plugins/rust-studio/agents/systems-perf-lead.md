@@ -63,4 +63,4 @@ Before this gate passes, verify:
 - [ ] No optimization lands without numbers attached.
 
 ## Output
-- A performance or safety analysis, a root-cause summary, and a recommended plan. End with verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED** (REDO-TO-BAR: correct but wrong SHAPE — reshape the touched area, see coordination-protocol §5) plus evidence (criterion output, miri result, or blocker name). Hand off to `/team-perf`, `/perf`, or `/audit-unsafe`.
+- A performance or safety analysis, a root-cause summary, and a recommended plan. End with verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED** (REDO-TO-BAR: correct but wrong SHAPE — reshape the touched area, see coordination-protocol §5) plus evidence (criterion output, miri result, or blocker name). Hand off to `/dev-task`, `/perf`, or `/audit-unsafe`.

@@ -1,10 +1,14 @@
 ---
 name: add-dep
-description: "Use when adding a Rust dependency: RUSTSEC, license, MSRV, features first."
+description: "Use before adding a Rust dependency to assess security, license, MSRV, and features."
 disable-model-invocation: true
 ---
 
 # /add-dep — vet and add a Rust dependency
+
+## When NOT this skill
+
+- Audit dependencies already in the manifest → `/deps-check`.
 
 Run a crate through the full vetting pipeline before it touches `Cargo.toml`, honoring the
 collaboration protocol (`references/collaboration.md`). You are the
@@ -170,7 +174,7 @@ Summarize: crate added, version pinned, features selected, MSRV status, license 
 advisory status, anything deferred. End with **COMPLETE / NEEDS WORK / BLOCKED**.
 
 Suggest next steps: `/dev-task` to wire up the new API, `/review` if the integration
-touches a public surface, `/team-release` if this bumps MSRV or changes the public dependency
+touches a public surface, `/publish` if this bumps MSRV or changes the public dependency
 surface of a published crate.
 
 ## Error recovery

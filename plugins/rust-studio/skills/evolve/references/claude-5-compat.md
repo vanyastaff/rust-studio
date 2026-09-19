@@ -167,6 +167,10 @@ Three phrasings raise the false-positive rate, and two of them are ours to contr
   worse than a slightly older reviewer.
 - **Specialists stay `sonnet`, the scout `haiku`** — routine, well-scoped work; the cost
   tiering is intentional and unchanged.
+- **Gateway users map the aliases once.** `ANTHROPIC_DEFAULT_HAIKU_MODEL`,
+  `ANTHROPIC_DEFAULT_SONNET_MODEL`, and `ANTHROPIC_DEFAULT_OPUS_MODEL` must name models the
+  gateway actually exposes. Keep the mapping and any effort setting in user-owned configuration
+  (`model-routing.md`), not in a shared agent brief.
 - **No agent pins `effort`, and that is the decision.** Subagent frontmatter accepts `effort`
   (`low`…`max`) alongside `model`; omitting it means the subagent inherits the session's
   effort. That inheritance is what makes "effort is the user's dial" true for the whole roster

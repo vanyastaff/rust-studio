@@ -1,32 +1,34 @@
 ---
 name: dev-task
-description: "Use when implementing one scoped Rust feature or multi-file task end to end: scout, plan, build, test, and review."
+description: "Use to implement a scoped Rust change with the checks its risk requires."
 ---
 
 # /dev-task — implement one unit of work
 
-Run a single task through **scout → plan → plan-review → approve → build → review** — or a
-**fast path** for genuinely trivial changes (Phase 0) — honoring the
+Run a single task through the smallest useful combination of discovery, design, build,
+verification, and review. For trivial changes, use the **fast path** (Phase 0). Honor the
 collaboration protocol (`references/collaboration.md`;
 `references/delegation.md` §8 team execution). You are the orchestrator: **you do not write code
 or tests yourself — you delegate writes to `rust-builder` when workers are available, or run that
 role inline otherwise.** Use the host's native plan/approval surface when available; otherwise
-present the same plan in the conversation and obtain explicit approval. Use a user prompt only
+present the same plan in the conversation. Existing authorization to implement covers the
+plan within that scope; use Phase 3 to resolve missing authorization. Use a user prompt only
 for genuine design forks and BLOCKED recovery. Decide tactical calls yourself and state choice +
 one-line rationale.
 
 ## Orchestration & progress
-Run the phases (scout → plan → plan-review → build → review) using the capabilities described in
+Use discovery, design, building, and review only to the degree the task needs, following
 **`references/delegation.md` §8**. Parallelize independent read-only work when workers are
-available; otherwise execute each named role inline and pass its result to the next phase.
+available; otherwise execute the necessary roles inline and pass each result forward.
 
 Availability is not a reason to spawn. A separate process costs a brief that restates what you
 already hold, a re-read on the other side, and several times the tokens — so it has to buy
 either **filtering** (the worker reads far more than it returns: `rust-scout` over an
 unfamiliar crate) or **independence** (the verdict must not come from the author:
 `harsh-critic`, `rust-reviewer`). A few edits in a file whose contents and plan are already in
-your context buys neither — run that phase inline (`references/delegation.md` §"When a handoff
-earns its cost"). Skipping the *spawn* is a judgment call; skipping the *phase* is not.
+your context buys neither — run the needed work inline (`references/delegation.md` §"When a handoff
+earns its cost"). Skip discovery or a formal plan when the task is already clear; never skip
+the checks required by its risk.
 
 When you do spawn, the brief is the whole relationship — the worker has none of this
 conversation. Write it complete and let it run: goal, context as **paths not pasted text**,
@@ -96,7 +98,7 @@ changes the approach. If nothing surfaces, proceed
 0. **Open the planning surface when available.** Use the host's native plan UI/file for the
    read-only scout and planning phases. If none exists, keep the draft in the conversation. A
    user prompt is allowed for genuine design forks (Phase 2 step 7); no code is written before
-   the Phase 3 approval gate.
+   the Phase 3 authorization gate.
 1. Restate the task as **acceptance criteria in observable form** — given/when/then, or
    input → effect → edge case. Enumerate the scenarios the behavior **really** has: the happy path
    **plus** error paths, boundaries, and (for async) concurrency/cancellation — happy-path-only is
@@ -107,14 +109,17 @@ changes the approach. If nothing surfaces, proceed
    now (the highest-level test that asserts the feature from outside) and confirm it **fails** (red).
    Pure internal refactors with no external behavior change skip the acceptance test — their
    existing unit tests are the anchor.
-2. Task owned by **`rust-scout`** to map the edit sites and existing tests. Don't guess the
-   layout.
-3. Identify the owning lead from the domain (see `references/agent-roster.md`).
+2. Map the edit sites and existing tests. Use **`rust-scout`** when the crate is unfamiliar,
+   the change crosses files/crates, or search would benefit from filtering; otherwise locate
+   the bounded edit yourself. Don't guess the layout.
+3. Identify the owning expertise from the domain (see `references/agent-roster.md`). Consult
+   that role when the decision is boundary-moving or its independent judgment would change the
+   result; otherwise use the relevant standards inline.
 
 ## Phase 2 — Plan (blocked by scout)
-4. Task owned by the **owning lead** (e.g. `api-design-lead`, `async-systems-lead`) — or
-   `chief-architect` if the design is non-trivial — to produce a short plan: files to
-   change, the approach, test strategy, risks, and which gate(s) apply.
+4. Produce a short plan: files to change, the approach, test strategy, risks, and applicable
+   gates. Have the owning lead (or `chief-architect` for a real architecture decision) review
+   it when the decision is boundary-moving; routine choices stay with the implementer.
 5. Require a **Maintainer-grade pre-code verdict** from
    `references/maintainer-grade-development.md`: `ACCEPTABLE`,
    `RESHAPE NEEDED`, or `BLOCKED`. The verdict must cover crate ownership, sibling-crate
@@ -130,7 +135,7 @@ changes the approach. If nothing surfaces, proceed
    `ACCEPTABLE / RESHAPE NEEDED / BLOCKED` maintainer verdict into it. Keep mirroring each
    phase's one-line result to the task list as before (progress visibility is unchanged).
 
-## Phase 2.5 — Plan review (adversarial gate, before approval)
+## Phase 2.5 — Plan review (adversarial gate, before implementation)
 The lead's maintainer verdict in Phase 2 is a *self*-check; this gate adds an **independent**
 adversarial pass so a flawed plan is caught **before any code is written**, not after. Reviewers
 are read-only — they attack the PLAN, never edit. Scale the depth to the **review mode** chosen
@@ -138,7 +143,8 @@ above:
 - **solo** — run it only when the plan is boundary-moving (public API, `unsafe`, cross-crate, a
   new dependency, or data/migration). Then spawn `harsh-critic` to attack the plan; otherwise
   state *"solo: plan-review skipped — localized change, no boundary"* and proceed.
-- **lean** — always spawn `harsh-critic` for one adversarial pass over the plan.
+- **lean** — use one adversarial pass when the plan has a meaningful failure mode or design
+  choice. A localized implementation with an established shape can proceed to code review.
 - **full** — spawn `harsh-critic` **plus** the relevant domain reviewer as a concurrent second
   lens, chosen by what the plan touches: `unsafe-auditor` (any `unsafe`/FFI), `security-auditor`
   (untrusted input, auth, deserialization), `api-design-lead` (public surface / semver), or
@@ -148,21 +154,22 @@ Reviewers target the plan, not code: wrong or oversized decomposition, a simpler
 missed, an unhandled failure/edge case, a boundary/semver hazard, an ownership/sibling-reuse
 miss. Each returns **ACCEPTABLE / RESHAPE NEEDED / BLOCKED** with concrete reasons (no praise).
 **Gate:** any `RESHAPE NEEDED` → fold the findings in and loop back to Phase 2 to rewrite the
-plan before approval; any `BLOCKED` → stop and surface the blocker. Only a plan that
-survives this pass reaches Phase 3 — the user approves a design that has already been reviewed.
+plan before implementation; any `BLOCKED` → stop and surface the blocker. Only a plan that
+survives this pass reaches Phase 3 — authorization is checked against a reviewed design.
 
-## Phase 3 — Approve (gate)
-9. **Request explicit approval through the host's plan surface.** If the host has no plan UI,
-   present the complete plan in chat and end that same message with one question: "Approve this
-   plan as written?" Include the build commands the
-   plan needs (for example tests, clippy, and fmt). If the user rejects or requests changes,
-   loop back to Phase 2 and rewrite the plan in the same surface.
+## Phase 3 — Confirm authorization (gate)
+9. **Check the reviewed plan against the user's request.** If implementation is already
+   authorized and the plan stays within scope, state the approach and verification commands,
+   then proceed. A planning-only request ends with the reviewed plan. Ask for approval when
+   a direction-changing decision remains, the plan expands scope, or an action requires
+   permission not already granted. Use the host's approval surface when required; otherwise
+   ask in chat. Incorporate requested changes into the plan before building.
 
-## Phase 4 — Build (blocked by approval)
+## Phase 4 — Build (requires authorization)
 **Inner loop drives toward the outer acceptance test.** Each unit-level red→green cycle moves the
 Phase-1 acceptance test closer to green; build is complete only when that outer test (where one was
 written) passes — not merely when the unit tests do.
-10. Task owned by **`rust-builder`** with the approved plan and the maintainer-grade verdict
+10. Task owned by **`rust-builder`** with the reviewed, authorized plan and the maintainer-grade verdict
    (pass them in the spawn prompt —
    teammates don't inherit it). Instruct it to:
    - for any **behavior** change, write the test FIRST and show it **failed before the fix**
@@ -170,7 +177,7 @@ written) passes — not merely when the unit tests do.
      (assert the value/effect, not `is_ok()` or a tautology),
    - implement the smallest correct architecture-compatible change, not the smallest textual
      diff,
-   - reshape touched code when the approved plan requires it; no compatibility shims or
+   - reshape touched code when the reviewed, authorized plan requires it; no compatibility shims or
      half-migrations in active-dev mode,
    - verify with the **project's own gate** where it has one — `justfile`, `Makefile`, `xtask`,
      cargo-make, lefthook, or the CI lint/test job, run with its exact feature sets and env
@@ -192,7 +199,7 @@ repair is not automatic. Recheck any earlier acceptance/gate affected by a later
     (`.rust-studio/specs/<slug>/acceptance.md`), re-verify the gates in this task's acceptance
     slice through `/acceptance` and paste the summary line — a gate the checker reports unmet or
     stale is a 5a gap, whatever the diff looks like. Then check the diff against the Phase-1 acceptance criteria
-    and the approved plan: exactly what was specified — nothing missing, nothing extra (scope
+    and the reviewed, authorized plan: exactly what was specified — nothing missing, nothing extra (scope
     creep)? Use `rust-reviewer` with a spec-compliance lens (or `product-steward` for scope). On a
     gap, hand back to `rust-builder` and re-run 5a. **Do not start 5b until 5a is ✅.**
 13. **Stage 5b — code quality.** Task owned by **`rust-reviewer`** on the diff for correctness,

@@ -1,6 +1,6 @@
 ---
 name: bloat
-description: "Use when reducing Rust binary size or monomorphization with cargo-bloat and llvm-lines."
+description: "Use to diagnose and reduce Rust binary size or monomorphization growth."
 ---
 
 # /bloat — measure binary size, cut it, prove the delta

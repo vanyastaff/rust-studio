@@ -237,6 +237,17 @@ describe("end to end (subprocess, real stdin payload)", () => {
       timeout: 15_000,
     });
 
+  const runCodex = (payload: object) => {
+    const env = { ...process.env, PLUGIN_ROOT: import.meta.dir, PLUGIN_DATA: join(tmp, "codex-data") };
+    delete env.CLAUDE_PLUGIN_ROOT;
+    delete env.CLAUDE_PLUGIN_DATA;
+    return Bun.spawnSync(["bun", hook], {
+      stdin: new TextEncoder().encode(JSON.stringify(payload)),
+      env,
+      timeout: 15_000,
+    });
+  };
+
   const DONE = "Files changed: src/x.rs. Commands run: cargo nextest run. Verification: 3 passed. Result: COMPLETE";
 
   test("a done-claim on a bound, half-done ledger blocks with exit 2; a stranger session passes; the option turns it off", () => {
@@ -254,6 +265,16 @@ describe("end to end (subprocess, real stdin payload)", () => {
 
     const off = run({ cwd: tmp, session_id: "s1", transcript_path: transcript, last_assistant_message: DONE }, { CLAUDE_PLUGIN_OPTION_ACCEPTANCE_GUARD: "false" });
     expect(off.exitCode).toBe(0);
+  });
+
+  test("a Codex block is a valid JSON decision", () => {
+    ledgerAt("demo", "- [ ] G1: prints\n  CHECK: true\n  EXPECT: x\n  EVIDENCE: pending\n");
+    const transcript = join(tmp, "codex.jsonl");
+    writeFileSync(transcript, "edit .rust-studio/specs/demo/acceptance.md\n");
+    const blocked = runCodex({ cwd: tmp, session_id: "codex", transcript_path: transcript, last_assistant_message: DONE });
+    expect(blocked.exitCode).toBe(0);
+    expect(new TextDecoder().decode(blocked.stderr)).toBe("");
+    expect(JSON.parse(new TextDecoder().decode(blocked.stdout))).toMatchObject({ decision: "block" });
   });
 
   test("the /spec-tasks approval checkpoint and an honest NEEDS WORK pass; the same ledger blocks a COMPLETE", () => {

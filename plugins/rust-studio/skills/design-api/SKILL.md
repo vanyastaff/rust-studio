@@ -1,6 +1,6 @@
 ---
 name: design-api
-description: "Use when designing one Rust public API surface: types, traits, signatures, errors, and semver impact."
+description: "Use to design one Rust public API: types, signatures, errors, and semver impact."
 ---
 
 # /design-api — design a focused public API surface
@@ -21,12 +21,10 @@ sealed / `#[non_exhaustive]`) over caller discipline, and carry a forward view. 
 Maintainer Gate (Phase 2.5) runs ON TOP OF `API-GATE`.
 
 ## When NOT this skill
-- Cross-crate scope, a major breaking change, or you want the design taken all the way
-  through build, tests, docs, and review in one run → `/team-api`: it runs the whole team
-  (`api-design-lead` + `api-designer` + `error-architect` + `docs-engineer` +
-  `test-engineer` + `rust-builder` + `rust-reviewer`) through Design → Build → Validate →
-  Sign-off. `/design-api` stops at an approved design doc and hands implementation off to
-  `/dev-task`.
+- Audit a public API diff that already exists → `/api-review`.
+- Cross-crate scope, a major breaking change, or a design that must ship immediately → use
+  `/dev-task` after this design and add `api-design-lead`, `api-designer`, or the other
+  specialists only when their expertise is needed. `/design-api` stops at a design document.
 - The idea isn't shaped yet — you don't know if this is one API or a bigger concept →
   `/brainstorm` first.
 
@@ -34,8 +32,8 @@ Maintainer Gate (Phase 2.5) runs ON TOP OF `API-GATE`.
 
 `input` is the type or feature to design. If empty, ask: "What API surface are
 we designing?" and suggest running `/architecture` or `/brainstorm` first for
-non-trivial or cross-crate work (those warrant `/team-api`). If the feature involves
-multiple crates or a major breaking change, recommend `/team-api` instead.
+non-trivial or cross-crate work. If the feature involves multiple crates or a major breaking
+change, recommend `/dev-task` with `api-design-lead`.
 
 ## Phase 1 — Question (clarify scope)
 

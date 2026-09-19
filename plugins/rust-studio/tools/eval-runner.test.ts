@@ -164,7 +164,6 @@ describe("plugin staging (the tree under test, not the installed copy)", () => {
       .map((f) => /^model:\s*(\S+)/m.exec(readFileSync(join(st.dir, "agents", f), "utf8"))?.[1]);
     expect(models.length).toBeGreaterThan(30);
     expect(new Set(models)).toEqual(new Set(["inherit"]));
-    // the source tree keeps its pins
     expect(readFileSync(join(process.cwd(), "agents", "api-design-lead.md"), "utf8")).toMatch(/^model:\s*sonnet/m);
     rmSync(dirname(st.dir), { recursive: true, force: true });
   });

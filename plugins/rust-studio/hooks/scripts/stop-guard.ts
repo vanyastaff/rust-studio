@@ -5,8 +5,8 @@
 // failure the studio forbids (docs/integrity-and-evidence.md): ownership-dodging,
 // permission-seeking, premature stopping, test avoidance, incomplete-work / stub
 // signals, handing the work back to the user, or a weak/speculative "done" with no
-// evidence. Exit 2 + stderr = block the stop; the stderr text becomes feedback to
-// Claude. Exit 0 = allow.
+// evidence. Claude Code blocks with exit 2 + stderr; Codex blocks with a JSON decision.
+// `blockStop` selects the host contract. Exit 0 without a block allows the stop.
 //
 // OPT-IN: inert unless `stop_guard` userConfig is on — blocking stops is aggressive,
 // so the studio ships it off by default. `stop_guard_strict` also blocks soft signals
@@ -18,7 +18,7 @@
 
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
-import { readInput, watchdog, option, optionBool, pluginData, stripQuoted } from "./_lib.ts";
+import { blockStop, readInput, watchdog, option, optionBool, pluginData, stripQuoted } from "./_lib.ts";
 
 type Severity = "hard" | "soft";
 
@@ -603,8 +603,7 @@ if (import.meta.main) {
       );
       process.exit(0);
     }
-    process.stderr.write(`${buildFeedback(decision, cfg.minEvidence)}\n\n(stop-guard block ${n}/${MAX_BLOCKS})`);
-    process.exit(2); // block the stop; stderr becomes feedback to Claude
+    blockStop(`${buildFeedback(decision, cfg.minEvidence)}\n\n(stop-guard block ${n}/${MAX_BLOCKS})`);
   }
   resetBlocks(sessionId); // a clean stop resets the streak
   process.exit(0);

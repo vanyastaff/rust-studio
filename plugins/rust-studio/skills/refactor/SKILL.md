@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: "Use when refactoring or simplifying tangled Rust code without behavior changes: tests and the project gate as the oracle."
+description: "Use to simplify Rust code while preserving behavior proved by tests and the project gate."
 ---
 
 # /refactor — behavior-preserving refactor pass
@@ -180,19 +180,19 @@ usually arrives with a suite that cannot say that, so establish the oracle first
     - rename via `ast-grep`/`sg` across the tree, not regex on Rust source.
 13. If a step touches the public API surface, flag `API-GATE` (owner: `api-design-lead`); if it
     touches `unsafe`, flag `SAFETY-GATE` (owner: `systems-perf-lead` + `unsafe-auditor`). Present
-    2–4 options when there is a real design choice, and propose a choice that sets a boundary, a
-    dependency direction or a crate-wide pattern as an ADR draft (`/adr`), never decided inside a
-    refactor step. State the blast radius at the top of the plan (lines, files, crates): past
-    roughly 300 lines or more than one crate the plan is a direction-changing fork, so split it or
-    get an explicit go for that size.
-14. Prompt the user: show the full plan and get explicit approval. If the user wants changes, loop
-    back to step 12. Nothing is written until this is approved.
+    alternatives only when there is a real design choice. A choice that sets a boundary,
+    dependency direction, or crate-wide pattern belongs in an ADR draft (`/adr`), not an implicit
+    refactor step. State the blast radius at the top of the plan; split or ask when it creates a
+    direction-changing scope decision.
+14. Proceed with the plan when it stays within the authorized behavior-preserving scope. Ask only
+    when a plan changes that scope or leaves a material design choice unresolved.
 
 ---
 
 ## Phase 5 — Refactor (step-by-step)
 
-15. For each approved step, spawn **`rust-builder`** with that one step, its scope boundary, and
+15. For each selected step, use **`rust-builder`** when a handoff earns its cost, with that step,
+    its scope boundary, and
     the standing rules in `references/builder-brief.md`, which it needs in full: the no-side-change
     rule that keeps the public surface fixed, the twin-branch rule, the gate run after the step,
     and the `unsafe` case.

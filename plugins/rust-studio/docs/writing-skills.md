@@ -1,9 +1,9 @@
 # Writing Studio Skills
 
 How to add or edit a `SKILL.md` so the studio stays predictable. **Predictability** means
-the agent takes the same *process* every run — not that it emits the same text. A review
-skill that finds different bugs each run is working; one that sometimes skips the clippy
-evidence is not.
+the agent respects the same task boundaries and evidence requirements across runs. Let it
+choose the method when several approaches satisfy those requirements. A review may find
+different bugs; it must still disclose which checks ran and what remains unverified.
 
 `CONTRIBUTING.md` holds the mechanics (frontmatter keys, the reference-bundling invariant,
 what CI enforces). This is the editorial standard behind them. The vocabulary is adapted
@@ -47,7 +47,9 @@ All descriptions share a 6,500-character budget, so every word is spent against 
 - **Cut identity the body already states.** Triggers earn their place; a restated summary
   does not.
 
-The house form is one sentence: `"Use when <trigger>: <the distinct cases>."`
+Use one sentence naming the task and its distinguishing scope. `"Use when <trigger>: <cases>."`
+is an optional form, not required boilerplate. Change established descriptions with routing
+evidence; respect any active measurement window in `usage-telemetry.md`.
 
 ---
 ## 3. Information hierarchy

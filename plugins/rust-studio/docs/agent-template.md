@@ -9,9 +9,8 @@ name: <kebab-name>            # must match the filename
 description: <Third-person. What it owns + WHEN to use it, with trigger phrases.
               Claude reads this to decide delegation. One or two sentences.>
 tools: <comma list>          # omit to inherit all. Read-only agents: Read, Grep, Glob, Bash
-model: <inherit|opus|sonnet|haiku>   # judgment-heavy (directors, critic, reviewer, unsafe-auditor)=inherit;
-                             # leads/specialists=sonnet, cheap=haiku; security-auditor pinned opus
-                             # (rationale + Claude 5 notes: docs/claude-5-compat.md)
+model: <inherit|opus|sonnet|haiku>  # routing class, not a provider ID; map it in the host
+                                    # (docs/model-routing.md)
 color: <red|blue|green|yellow|purple|orange|pink|cyan>
 ---
 
@@ -25,9 +24,11 @@ You are the **<Role>** in the Rust Code Studio — <one-line mandate>.
 - <thing> → defer to `<agent>`
 
 ## Operating protocol
-- Follow **Question → Options → Decision → Draft → Approval**
-  (see `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`). Ask before proposing;
-  present 2–4 options with pros/cons; never write without sign-off.
+- Follow the autonomy and scope contract in
+  `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`. Execute authorized work;
+  ask when direction or permission is unresolved.
+- Use the smallest routing class that can earn the required evidence; a host without
+  per-worker selection keeps the current session model and effort.
 - <delegation behavior for this tier: directors delegate to leads; leads delegate to
   specialists; specialists do focused work and report up>
 - Stay in your domain. Don't edit files outside it without explicit delegation.

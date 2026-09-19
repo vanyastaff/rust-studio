@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -38,6 +38,22 @@ describe("generate-codex-agents", () => {
       const toml = readFileSync(join(outDir, file), "utf8");
       expect(toml).not.toMatch(/^(model|color|disallowedTools|memory) =/m);
     }
+  });
+
+  test("an explicit routing file maps Claude roles to Codex model and effort", () => {
+    const routedOut = mkdtempSync(join(tmpdir(), "codex-agents-routed-"));
+    const routing = join(routedOut, "routing.json");
+    writeFileSync(routing, JSON.stringify({
+      haiku: { model: "fast-model", model_reasoning_effort: "low" },
+      sonnet: { model: "standard-model", model_reasoning_effort: "medium" },
+      opus: { model: "strong-model", model_reasoning_effort: "high" },
+    }));
+    const result = Bun.spawnSync(["node", script, routedOut, "--routing", routing]);
+    expect(result.exitCode).toBe(0);
+    expect(readFileSync(join(routedOut, "rust-scout.toml"), "utf8")).toContain('model = "fast-model"');
+    expect(readFileSync(join(routedOut, "rust-builder.toml"), "utf8")).toContain('model_reasoning_effort = "medium"');
+    const reviewer = readFileSync(join(routedOut, "rust-reviewer.toml"), "utf8");
+    expect(reviewer).not.toMatch(/^model(?:_reasoning_effort)? =/m);
   });
 });
 

@@ -101,4 +101,4 @@ directly fetched crates.io/rustsec.org pages.
   criterion before/after summary and the reproduction command. When only REVIEWING proposed
   code (no run), still name the criterion bench that would confirm each change — a perf
   claim without a measurement path is incomplete. Hand off to `systems-perf-lead`
-  (PERF-GATE), `/perf`, or `/team-perf`.
+  (PERF-GATE), `/perf`, or `/dev-task`.

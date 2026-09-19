@@ -11,19 +11,23 @@ a cyber-classifier trip falls back inside the audit instead of switching the who
 **No agent pins `effort`** — every one of them inherits the session's level, which is what
 makes effort the user's dial rather than the roster's.
 
+These labels are routing classes. Claude Code resolves them through its model aliases; a gateway
+maps those aliases to its own available models. Codex uses the optional local routing file from
+`model-routing.md`. Provider IDs never belong in these shared agent briefs.
+
 ```
                          ┌───────────────────────────────────┐
               Tier 1     │  chief-architect (inherit)        │  product-steward (inherit)
               Directors  │  ARCH-GATE                        │  scope / milestones / propagation
                          └──────────────┬────────────────────┘
                                         │ delegates to
-        ┌───────────────┬───────────────┼───────────────┬───────────────┬──────────────┐
- Tier 2 │ api-design    │ async-systems │ cli-ux         │ systems-perf  │ qa-lead       │ release-lead
- Leads  │ -lead         │ -lead         │ -lead          │ -lead         │ QA-GATE       │ RELEASE-GATE
-        │ API-GATE      │ ASYNC-GATE    │ CLI-GATE       │ PERF/SAFETY   │               │ + tooling-lead
+        ┌───────────────┬───────────────┼───────────────┬──────────────┐
+ Tier 2 │ api-design    │ async-systems │ systems-perf  │ qa-lead       │ release-lead
+ Leads  │ -lead         │ -lead         │ -lead          │ QA-GATE       │ RELEASE-GATE
+        │ API-GATE      │ ASYNC-GATE    │ PERF/SAFETY   │               │ + tooling-lead
         └──────┬────────┴──────┬────────┴───────┬────────┴──────┬────────┴───────────────┘ BUILD-GATE
                │ delegates to  │                │               │
- Tier 3   api-designer    async-runtime    cli-specialist   concurrency-specialist
+ Tier 3   api-designer    async-runtime    cli-specialist (CLI-GATE)   concurrency-specialist
  Special  error-architect web-framework                     unsafe-auditor (inherit)
  -ists    macro-specialist database-spec                    ffi-specialist
           docs-engineer   observability                     perf-engineer
@@ -49,7 +53,7 @@ Tool access is not a detail of the brief — it is the roster's load-bearing spl
 leads never write.** They decide, hold a gate, and delegate; all nine declare
 `disallowedTools: Write, Edit, NotebookEdit`, as do the six read-only auditors
 (`rust-reviewer`, `harsh-critic`, `rust-scout`, `unsafe-auditor`, `security-auditor`,
-`slop-auditor`) — 15 of 34.
+`slop-auditor`) — 14 of 33.
 
 Implementation belongs to `rust-builder` and `rust-build-resolver`, plus the Tier-3 specialists
 whose briefs say they implement — `test-engineer`, `build-engineer`, `docs-engineer`,
@@ -77,7 +81,6 @@ carried by `rules/<domain>.md`, read by the lens that owns the gate.
 |-------|-------|------|------|
 | `api-design-lead` | sonnet | Public API surface, crate boundaries, semver discipline, re-exports | API-GATE |
 | `async-systems-lead` | sonnet | Async architecture, runtime topology, service design, web stack choices | ASYNC-GATE |
-| `cli-ux-lead` | sonnet | CLI/TUI command structure, ergonomics, terminal UX, output discipline | CLI-GATE |
 | `systems-perf-lead` | sonnet | Performance budgets, `no_std`, `unsafe` policy, FFI, memory model | PERF-GATE, SAFETY-GATE |
 | `qa-lead` | sonnet | Test strategy, coverage targets, flakiness, CI gates | QA-GATE |
 | `release-lead` | sonnet | Versioning, crates.io publishing, changelog, MSRV policy | RELEASE-GATE |
@@ -122,11 +125,11 @@ carried by `rules/<domain>.md`, read by the lens that owns the gate.
 
 ## Domain → who to call
 
-- **Designing a public crate API** → `api-design-lead` + `api-designer` + `docs-engineer` (skill: `/team-api`)
-- **Building an async service** → `async-systems-lead` + `async-runtime-specialist` + `web-framework-specialist` + `database-specialist` + `observability-engineer` (skill: `/team-async`)
-- **Making it fast / safe** → `systems-perf-lead` + `perf-engineer` + `concurrency-specialist` + `unsafe-auditor` (skill: `/team-perf`)
-- **Shipping a release** → `release-lead` + `security-auditor` + `dependency-manager` + `docs-engineer` (skill: `/team-release`)
-- **A CLI** → `cli-ux-lead` + `cli-specialist`
+- **Designing a public crate API** → `/dev-task`, then `api-design-lead` when the public contract changes
+- **Building an async service** → `/dev-task`, then the async, web, database, or observability specialist the task needs
+- **Making it fast / safe** → `/perf` or `/dev-task`, then `systems-perf-lead` and the relevant safety specialist
+- **Shipping a release** → `/publish`, adding release, security, dependency, and docs review as needed
+- **A CLI** → `cli-specialist`
 - **Embedded / `no_std`** → `systems-perf-lead` + `embedded-specialist` + `ffi-specialist`
 - **Adversarial design review** → `harsh-critic` (skill: `/doc-review`)
 - **An inherited or AI-authored tree** → `slop-auditor` (skills: `/adopt`, `/tech-debt`, `/refactor`)

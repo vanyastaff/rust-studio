@@ -1,6 +1,6 @@
 ---
 name: perf
-description: "Use when profiling and optimizing Rust performance with flamegraphs, Criterion, and before/after measurements."
+description: "Use to measure and improve a Rust performance bottleneck with before/after evidence."
 ---
 
 # /perf — profile, bench, optimize, prove
@@ -54,5 +54,5 @@ The bottleneck found, the change, and before/after numbers (verbatim, not summar
 **Persist what settled:** a proven win + why (and any rejected attempt) is durable — sweep agent
 verdicts for `MEMORY:` lines and `/remember` each (it dedups); `/remember` the win too — or state
 "nothing durable" (`references/memory-protocol.md`).
-Hand off to `/review` (or `/team-perf` for a full systems+safety hardening pass); if the
+Hand off to `/review` (or `/dev-task` with the systems and safety specialists); if the
 concern is artifact size rather than speed, that's `/bloat`.

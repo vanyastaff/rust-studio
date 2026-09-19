@@ -11,7 +11,7 @@ import { existsSync, mkdtempSync, writeFileSync, utimesSync } from "node:fs";
 //      vocabulary, so the hook nagged that agent on every run.
 
 import { afterEach, describe, expect, test } from "bun:test";
-import { run, option, optionBool, pluginData, pruneState } from "./_lib.ts";
+import { isCodexHook, run, option, optionBool, pluginData, pruneState } from "./_lib.ts";
 import { pathMatches } from "./inject-rules.ts";
 import { hasVerdict } from "./subagent-stop.ts";
 
@@ -108,6 +108,25 @@ describe("option() precedence across hosts", () => {
     process.env[ALT] = "   ";
     expect(option("git_guard")).toBeNull();
     restore();
+  });
+});
+
+describe("Stop hook host contract", () => {
+  const saved = { claude: process.env.CLAUDE_PLUGIN_ROOT, codex: process.env.PLUGIN_ROOT };
+
+  afterEach(() => {
+    if (saved.claude === undefined) delete process.env.CLAUDE_PLUGIN_ROOT;
+    else process.env.CLAUDE_PLUGIN_ROOT = saved.claude;
+    if (saved.codex === undefined) delete process.env.PLUGIN_ROOT;
+    else process.env.PLUGIN_ROOT = saved.codex;
+  });
+
+  test("Codex is recognized only from its plugin root", () => {
+    delete process.env.CLAUDE_PLUGIN_ROOT;
+    process.env.PLUGIN_ROOT = "/plugin";
+    expect(isCodexHook()).toBe(true);
+    process.env.CLAUDE_PLUGIN_ROOT = "/claude-plugin";
+    expect(isCodexHook()).toBe(false);
   });
 });
 

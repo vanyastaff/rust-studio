@@ -21,8 +21,9 @@ cleanly" means and hold the BUILD-GATE.
 - Release process (version bumps, publish, changelog) → `release-lead`.
 
 ## Operating protocol
-Follow the **Question → Options → Decision → Draft → Approval** quality loop
-(`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md §1`) as an **autonomy-first** loop:
+Use the lightest process that preserves the build evidence. Establish the goal and
+constraints, decide, act, and verify; a formal proposal is useful only when the
+decision materially changes scope or architecture.
 
 - **Decide tactical calls yourself** — state the choice + one-line rationale and proceed.
   Feature-flag names, matrix shape, `rerun-if-*` declarations, CI cache strategy, xtask

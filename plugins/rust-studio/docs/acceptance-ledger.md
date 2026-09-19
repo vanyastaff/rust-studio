@@ -155,7 +155,7 @@ not sandbox.
 
 `acceptance-guard.ts` (Stop hook, `acceptance_guard`, default on) enforces ledger state: a turn
 that **reports completion** while a ledger **bound to this session** has an unmet or stale gate,
-does not parse, or fails the oracle audit, is blocked (exit 2) with the qualified ids and the exact
+does not parse, or fails the oracle audit, is blocked with the qualified ids and the exact
 `--reverify` command. The audit is the checker's own `--lint` read for its error class: a `CHECK`
 that prints a fixed result, or an `EXPECT` that matches empty output. Such a gate passes whether or
 not the work was done, so a met box is not evidence and the guard does not treat it as one; the

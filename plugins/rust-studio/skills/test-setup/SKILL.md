@@ -8,20 +8,21 @@ description: "Use when setting up a Rust test toolchain with proptest, Criterion
 Bootstrap the project's testing infrastructure end-to-end: property tests, benchmarks,
 snapshot tests (optional), a nextest runner config, and a coverage path via
 `cargo-llvm-cov`. You are the orchestrator: **you do not write files yourself — you
-delegate all writes to `rust-builder`.** Gate with a user prompt only at phase
-boundaries (scope, plan approval, BLOCKED recovery) — decide tactical calls yourself,
-state choice + one-line rationale. See `references/collaboration.md`.
+delegate all writes to `rust-builder`.** Ask only for missing scope, a genuine design fork,
+or BLOCKED recovery. Decide tactical calls yourself, state choice + one-line rationale.
+See `references/collaboration.md`.
 
 ## Phase 1 — Clarify scope
 
-1. Prompt the user (batch in one ask):
+1. Inspect the workspace first. Ask in one batch only for inputs the task and repository do
+   not establish:
    - Which crates/workspace members need test infrastructure?
    - Is `insta` (snapshot testing) wanted, or proptest + criterion only?
    - What coverage threshold should CI enforce (e.g. 80 %)?
    - Does the project already have a `.cargo/nextest.toml` or `Cargo.toml`
      `[profile.test]` block that would conflict?
 
-2. Spawn **`rust-scout`** to locate existing test files, bench files, dev-dependencies,
+2. Use **`rust-scout`** when the workspace map is not already known to locate existing test files, bench files, dev-dependencies,
    and any current nextest or coverage config. Scout uses the language-server layer (harness
    `LSP` tool or serena MCP when configured) for symbol/file navigation and `rg` for
    config-gated or generated sites it can't see — never Bash `grep`/`find`; without one,
@@ -47,15 +48,9 @@ state choice + one-line rationale. See `references/collaboration.md`.
    — direction-changing, not resolvable by ecosystem convention — as 2–4 options with
    a recommended default.
 
-## Phase 3 — Approve (gate)
+## Phase 3 — Build
 
-5. Prompt the user: show `test-engineer`'s plan as a structured list (deps to add,
-   files to create, config to write). Get explicit sign-off before any file is touched.
-   If the user requests changes, loop back to Phase 2.
-
-## Phase 4 — Build
-
-6. Spawn **`rust-builder`** with the approved plan. Instruct it to:
+5. Spawn **`rust-builder`** with the selected plan. Instruct it to:
    - Add dev-deps to the correct `[dev-dependencies]` blocks (workspace root or
      per-crate, whichever applies).
    - Write `.cargo/nextest.toml` (create if absent) with the agreed profile.
@@ -75,28 +70,28 @@ state choice + one-line rationale. See `references/collaboration.md`.
      resolves features without the siblings, so it can report a false green. See
      `references/large-workspace.md` § "Per-crate commands".
 
-7. `rust-builder` reports a diff summary and command output. Show it to the user.
+6. `rust-builder` reports a diff summary and command output. Show it to the user.
 
-## Phase 5 — QA gate
+## Phase 4 — QA gate
 
-8. Spawn **`qa-lead`** to clear `QA-GATE`:
+7. Spawn **`qa-lead`** to clear `QA-GATE`:
    - Stubs compile and nextest discovers them.
    - No test is unconditionally `#[ignore]`d without a tracking comment.
    - Coverage invocation is reproducible (`cargo llvm-cov --tests -- --test-threads 1`
      or equivalent).
    - `test-engineer` confirms proptest and criterion APIs match `rules/testing.md`.
 
-9. If `QA-GATE` finds issues, hand them back to `rust-builder` (loop Phase 4) until
+8. If `QA-GATE` finds issues, hand them back to `rust-builder` (loop Phase 3) until
    clean or the user decides to stop.
 
-## Phase 6 — Verdict and hand-off
+## Phase 5 — Verdict and hand-off
 
-10. Summarize what was wired up: dep versions, files created, nextest profile,
+9. Summarize what was wired up: dep versions, files created, nextest profile,
     coverage alias/script, and the QA-GATE evidence.
 
-11. End with **COMPLETE / NEEDS WORK / BLOCKED**.
+10. End with **COMPLETE / NEEDS WORK / BLOCKED**.
 
-12. Suggest next steps:
+11. Suggest next steps:
     - `/coverage` to run the full coverage report and view the HTML output.
     - `/dev-task` to implement the first real property test or benchmark.
     - `/review` if CI config was also modified and needs an audit pass.

@@ -1,6 +1,6 @@
 ---
 name: help
-description: "Use when choosing a Rust Code Studio workflow or specialist; list the available skills and agents by purpose."
+description: "Use to find a Rust Studio skill or agent by task outcome."
 ---
 
 # /help — studio catalog
@@ -10,7 +10,8 @@ Print a grouped catalog. If `input` names a topic (e.g. "async", "release",
 
 Treat the host's available-skills list as the live source of truth. Use the curated map below for
 grouping, omit unavailable entries, and mention that named studio agents run inline when the host
-does not provide them.
+does not provide them. The short names below refer to Rust Studio skills; when another installed
+skill shares a name, show the qualified name from the host catalog or its exact path.
 
 ## When NOT this skill
 - You want the studio to look at *this* project and tell you what to do next →
@@ -37,12 +38,11 @@ list of every installed skill is generated below it.
 **Memory (cross-session):** `/remember` · `/recall` (verified) · `/memory-doctor` (audit, promote, import) · `/session-wrap`
 **Release:** `/publish` · `/changelog` · `/msrv-check`
 **Ship (git):** `/commit` · `/pr` · `/resolve-pr` (work through PR review feedback) · `/merge-conflicts` (resolve a stopped merge or rebase) · `/worktree-sweep` (prune leftover worktrees)
-**Teams (multi-agent presets):** `/team-api` · `/team-async` · `/team-perf` · `/team-release`
 
 ## Agents
 
 **Directors:** `chief-architect` (ARCH-GATE) · `product-steward`
-**Leads:** `api-design-lead` · `async-systems-lead` · `cli-ux-lead` · `systems-perf-lead` · `qa-lead` · `release-lead` · `tooling-lead`
+**Leads:** `api-design-lead` · `async-systems-lead` · `systems-perf-lead` · `qa-lead` · `release-lead` · `tooling-lead`
 **Specialists:** `api-designer` · `error-architect` · `macro-specialist` · `docs-engineer` · `async-runtime-specialist` · `web-framework-specialist` · `database-specialist` · `observability-engineer` · `wasm-specialist` · `concurrency-specialist` · `unsafe-auditor` · `ffi-specialist` · `perf-engineer` · `embedded-specialist` · `cli-specialist` · `test-engineer` · `security-auditor` · `dependency-manager` · `build-engineer` · `harsh-critic`
 **Execution:** `rust-scout` (locate) · `rust-builder` (implement) · `rust-build-resolver` (fix the build) · `rust-reviewer` (audit)
 

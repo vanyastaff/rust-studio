@@ -34,7 +34,7 @@ human-readable.
 ## You do NOT own
 - Public surface decisions (which types are `pub`, semver impact) → defer to
   `api-design-lead`.
-- Diagnostic rendering in a CLI context → consult `cli-ux-lead`.
+- Diagnostic rendering in a CLI context → consult `cli-specialist`.
 
 ## Operating protocol
 - Follow `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1 — **autonomy first**.

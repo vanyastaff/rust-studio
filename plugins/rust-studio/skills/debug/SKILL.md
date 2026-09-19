@@ -1,6 +1,6 @@
 ---
 name: debug
-description: "Use when debugging a Rust failure, panic, deadlock, hang, or wrong output; fix the cause and add a regression test."
+description: "Use for a Rust panic, hang, wrong output, or runtime failure with an unknown cause."
 ---
 
 # /debug — root-cause a Rust bug

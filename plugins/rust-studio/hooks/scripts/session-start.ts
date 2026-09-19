@@ -47,12 +47,12 @@ export function routeByDomain(domains: string[]): string {
   // was one scoped change rather than a cross-cutting feature, none of the offers fit and the
   // session fell back to spawning `rust-builder` raw, skipping the scout/plan/gate phases.
   if (domains.includes("async/web"))
-    picks.push("`/dev-task` for one scoped change, `/team-async` when it spans runtime + web + db, `/design-api` for the surface");
+    picks.push("`/dev-task` for implementation, `async-systems-lead` when boundaries need design, `/design-api` for the surface");
   if (domains.includes("systems/embedded"))
-    picks.push("`/dev-task` for one scoped change, `/team-perf` for perf/safety, `/audit-unsafe` to review unsafe");
+    picks.push("`/dev-task` for implementation, `/perf` for measurements, `/audit-unsafe` to review unsafe");
   if (domains.includes("cli")) picks.push("`/dev-task` for a subcommand or one scoped change");
   if (domains.includes("library/crate"))
-    picks.push("`/dev-task` for one scoped change, `/design-api` or `/team-api` for the public surface");
+    picks.push("`/dev-task` for implementation and `/design-api` for the public surface");
   if (!picks.length)
     return "run `/detect-stack` to classify the stack, then `/start` for guided onboarding.";
   return picks.join("; ") + ".";
@@ -186,7 +186,7 @@ if (!manifestExists) {
     "## Rust Code Studio active\n\n" +
     "Rust Code Studio plugin is active, but no Cargo.toml was found at the session root. " +
     "If this is a Rust project, run /detect-stack from its root. " +
-    "Studio protocol: Question → Options → Decision → Draft → Approval.\n\n" +
+    "Studio protocol: proceed within the authorized scope; ask for unresolved direction or permission.\n\n" +
     "**Rust work without a checkout still routes through the studio:** code pasted for review → " +
     "`/review` (add `/audit-unsafe`, `/security-audit`, `/api-review` for their lenses); a design or " +
     "plan to attack → `/brainstorm` (spawns `harsh-critic`); crate/module boundaries → `/architecture`; " +

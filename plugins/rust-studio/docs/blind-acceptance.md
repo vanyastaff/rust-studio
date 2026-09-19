@@ -14,13 +14,12 @@ required check, not grounds to downgrade the trigger or report a pass.
 
 ## Prepare the input boundary
 
-Use `intent.md`'s **Asked for**, plus the exact user messages in **User amendments** and any
-verbatim user correction in an older **Corrections** log. Preserve their order and provenance;
-later user instructions resolve conflicts. Redact secret values before quoting or persisting
-them. Summaries of corrections, assistant-authored criteria, and an implementation plan are
-not original user messages. If the old record lacks a required quotation, use the actual
-message from available history; never reconstruct it from the spec. Record unresolved
-ambiguity as unverified and request the missing original input while other checks proceed.
+Use `intent.md`'s **Problem**, **Proposed outcome**, **Affected users and systems**, and
+**Constraints** when it exists, plus the actual user messages that changed the request. Preserve
+provenance and later instructions. Assistant-authored criteria and an implementation plan are not
+original input. If the intent is absent or incomplete, use the available user message; never
+reconstruct requirements from the spec. Record unresolved ambiguity as unverified while other
+checks proceed.
 
 Spawn a fresh **`qa-lead`** with only those quotations, the repository location, and neutral
 environment/run prerequisites. No inherited conversation, forked design context, previous

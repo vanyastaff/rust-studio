@@ -1,6 +1,6 @@
 ---
 name: flaky-hunt
-description: "Use when reproducing, diagnosing, and fixing or quarantining an intermittent Rust test failure."
+description: "Use for an intermittent Rust test failure that needs reproduction or containment."
 ---
 
 # /flaky-hunt — hunt and fix flaky tests

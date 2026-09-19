@@ -33,9 +33,9 @@ rigor (`verdicts.md` §7) — it adds a higher bar on top.
 ---
 ## 1. Collaborative Protocol (a quality loop, not a permission loop)
 
-The shape is **Question → Options → Decision → Draft → Approval** — but run it as a
-**quality** loop, not a per-step permission loop. The default is **autonomy: decide and
-execute**. See `working-preferences.md` for the full operating mode.
+Understand the task, choose an approach, implement, and verify within the authorized scope.
+Ask when an unresolved direction or missing permission prevents progress; existing authorization
+does not expire at a phase boundary. See `working-preferences.md` for the full operating mode.
 
 > Tools named below (`AskUserQuestion`, `EnterPlanMode`, `ExitPlanMode`) are one host's
 > names for asking the owner a structured question and for gating a plan on approval. If

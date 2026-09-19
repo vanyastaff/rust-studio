@@ -10,9 +10,9 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 
 ## In the box
 
-- **65 skills**: design, spec-driven build, TDD, review, test, release, git/PR shipping,
+- **61 skills**: design, spec-driven build, TDD, review, test, release, git/PR shipping,
   build-fixing, edition & major-dependency migration, CI gates, cross-session memory.
-- **34 agents**: 2 directors → 7 leads → 21 specialists (including an adversarial
+- **33 agents**: 2 directors → 6 leads → 21 specialists (including an adversarial
   `harsh-critic` and a read-only `slop-auditor`) + a scout / builder / resolver / reviewer execution group.
 - **22 path-scoped rule sets**: the right Rust standard surfaces the moment you open a matching
   file. The agent reads the full rule on demand, so the window stays lean.
@@ -30,7 +30,7 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 /start            # detect the stack and route you
 /dev-task <task>  # implement one unit of work: scout → plan → approve → build → review
 /review           # audit your current diff against the gates
-/team-api <api>   # design & ship a public API with the API team
+/dev-task <api>   # implement a public API; add API review when the contract changes
 ```
 
 ## Before you start
@@ -59,14 +59,13 @@ itself is in [`../../INSTALL.md`](../../INSTALL.md).
 - **Onboarding**: `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt` · `/studio-doctor` (is the studio actually live here?)
 - **Design**: `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
 - **Build**: `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/migrate` (edition / major-dependency upgrade, with the semantic review `cargo fix` can't do) · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
-- **Spec-driven**: `/spec` · `/spec-tasks` · `/spec-verify` (persisted in `.rust-studio/specs/`)
+- **Planned work**: `/spec` · `/spec-tasks` · `/spec-verify` (optional intent in `intent/`, local execution records in `.rust-studio/specs/`)
 - **TDD & verify**: `/tdd` · `/verify-loop` · `/acceptance` (criteria as checker-decided gates)
 - **Quality**: `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
 - **Testing**: `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
 - **Memory**: `/remember` · `/recall` · `/memory-doctor` · `/session-wrap` (cross-session, in the host's auto-memory store, with no MCP and no vault)
 - **Ship**: `/commit` · `/pr`
 - **Release**: `/publish` · `/changelog` · `/msrv-check`
-- **Teams**: `/team-api` · `/team-async` · `/team-perf` · `/team-release`
 
 ## If your project is a workspace
 
@@ -117,7 +116,7 @@ cites under `skills/<name>/references/`, so it stays self-contained when install
 
 **Directors** (inherit the session model): `chief-architect` (ARCH-GATE), `product-steward` (scope & sequencing).
 
-**Leads** (sonnet): `api-design-lead`, `async-systems-lead`, `cli-ux-lead`,
+**Leads** (sonnet): `api-design-lead`, `async-systems-lead`,
 `systems-perf-lead`, `qa-lead`, `release-lead`, `tooling-lead`. Each owns a quality gate.
 
 **Specialists** (sonnet/haiku; judgment-heavy auditors inherit): API (`api-designer`,
@@ -235,7 +234,7 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
   or it is a completion summary with no verdict) while a spec's acceptance ledger
   (`.rust-studio/specs/<slug>/acceptance.md`, written by `/spec-tasks` or `/acceptance`) that
   **this session named** has gates that are unmet or stale (their `CHECK:`/`EXPECT:` changed since
-  the evidence), or does not parse, is blocked (exit 2) with the qualified ids and the exact
+  the evidence), or does not parse, is blocked with the qualified ids and the exact
   `--reverify` command. It blocks on the oracle too: a gate whose `CHECK` prints a fixed result, or
   whose `EXPECT` matches empty output, passes whether or not the work was done, so a met box there
   is not evidence. That audit is the checker's own `--lint`, read for its error class; its warnings
@@ -251,7 +250,7 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
   (`acceptance_guard`) and fails open. Format and checker:
   [`docs/acceptance-ledger.md`](docs/acceptance-ledger.md).
 - **Stop-guard (opt-in)**: the mechanical teeth for the integrity doctrine. When `stop_guard` is
-  on, it **blocks** the turn from ending (exit 2 → feedback to the model) if the final message
+  on, it blocks the turn from ending and feeds a reason to the model if the final message
   dodges ownership, seeks permission, stops early, avoids tests, leaves stubs, hands the work back
   to you, or claims done without evidence. Off by default (it's aggressive). It fails open: a
   stall allows the stop, never freezes the turn.
@@ -314,8 +313,9 @@ verdict check) is always on, and the whole plugin disables with
 > remove `rust-analyzer` from PATH or disable the whole plugin to turn off the LSP.
 
 **Stop-guard (opt-in enforcement)**: mechanical teeth for the integrity doctrine. Off by default
-because it's aggressive (it can block legitimate stops). When on, the Stop hook returns exit 2 and
-feeds the reason back to the model so it keeps working instead of ending the turn:
+because it's aggressive (it can block legitimate stops). When on, the Stop hook feeds the reason
+back to the model so it keeps working instead of ending the turn. Claude Code uses exit 2 and
+stderr; Codex receives its required JSON block decision:
 
 | Option | Default | Effect |
 |--------|---------|--------|
@@ -369,7 +369,10 @@ changes how reviews are *reported*.
 - **The project's gate is the oracle**: a prescribed `cargo` command set reports on a hand-rolled build, not the one that governs merging, and it fails in both directions: `--all-features` silences lints that fire under the shipped default features, and a plain `nextest run` invents failures in a crate the repo's gate runs headless. The studio discovers the repo's own gate first (`justfile`, `Makefile`, `xtask`, cargo-make, lefthook, the CI lint/test job), runs *every* invocation it makes with its exact flags and env, and treats the cargo defaults as the fallback for a project that has none ([`docs/project-gate.md`](docs/project-gate.md)). A green from a command the merge gate does not run is an `Off-gate green`, an `INTEGRITY` finding rather than a pass
 - **Untrusted-context standard**: a Rust session reads a lot of text nobody on the project wrote (crate READMEs and `//!` docs, `docs.rs`, a dependency's `build.rs` output, PR threads, CI logs), and it all lands in the window looking like the agent's own reasoning. A doctrine ([`docs/untrusted-context.md`](docs/untrusted-context.md)) + a provenance pointer from the PreToolUse hook + `🚩 UNTRUSTED` findings in `rust-reviewer` / `security-auditor` / `dependency-manager` make third-party text **material to report on, never to act on**: a crate whose docs tell tooling to add a dep, ignore an advisory, or silence a lint is a `/add-dep` **block**, and Trojan-Source bidi codepoints in dependency source are a finding. Kept honest by the `security/untrusted-context` fixture, which scores whether the studio reports the planted instructions *and* still finds the two real defects they distract from
 - **Measured, not asserted**: every eval case and every agent fixture runs over the headless CLI with the plugin loaded (`tools/eval-runner.ts`), so a prompt edit is scored before it ships. The 0.45.0 run: 31 cases three times each, 45 fixtures twice each, 21 agents, and three live tasks where `rust-builder`, `rust-build-resolver` and `/refactor` work a real crate and its own `check.sh` decides; the numbers and the misses are in the CHANGELOG, and a miss is filed against the agent's brief or, twice so far, against a rule that turned out to be wrong
-- **Current-model ready, on both hosts**: judgment-heavy agents (directors, critic, reviewer, unsafe auditor) inherit the session model so gates never judge below the model that wrote the code, and no agent pins an effort level, so effort stays the user's dial. `security-auditor` stays pinned to Opus so a cyber-classifier trip falls back inside the audit instead of switching the whole session. Authoring rules track Anthropic's Opus 5 / Fable 5.1 guidance and OpenAI's Codex guidance: report-everything review, no self-verification scaffolding, no enumerated recipes ([`docs/claude-5-compat.md`](docs/claude-5-compat.md), [`docs/codex-compat.md`](docs/codex-compat.md))
+- **Current-model ready, on both hosts**: agent briefs declare a task class, while provider IDs
+  and effort stay in user-owned routing. Gates inherit the parent session and never judge below
+  the model that wrote the code. Authoring rules track Anthropic and OpenAI guidance; the setup
+  is in [`docs/model-routing.md`](docs/model-routing.md).
 
 ### Script safety gate
 
@@ -505,4 +508,3 @@ just makes the relevant skill report it's unavailable and point you at the insta
 ## License
 
 MIT — see [LICENSE](LICENSE).
-

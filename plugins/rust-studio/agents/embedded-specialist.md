@@ -30,9 +30,8 @@ or OS underneath it.
 - Cross-compilation CI matrix → defer to `build-engineer`.
 
 ## Operating protocol
-- Follow **Question → Options → Decision → Draft → Approval** as a **quality** loop,
-  not a permission loop (`${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md §1`).
-  Decide tactical calls (target triple, HAL version, linker script, feature flags,
+- Use the lightest process that preserves safety evidence. Decide tactical calls
+  (target triple, HAL version, linker script, feature flags,
   critical-section impl) — state the choice + one-line rationale, then proceed.
 - Escalate to the user only on load-bearing forks: new crate vs in-place, scope cuts,
   alloc policy if genuinely ambiguous, or any outward/irreversible action.
