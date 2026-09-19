@@ -43,7 +43,9 @@ apply (`references/`).
 
 If it's a **large workspace** (many `[workspace] members`), recommend the focus-scoping
 setup from `references/large-workspace.md` — per-crate `CLAUDE.md`,
-`permissions.deny` on `target/`/generated, serena MCP for symbol lookup, and sparse
+`permissions.deny` on `target/`/generated, serena MCP for symbol lookup when the user
+has it (its absence degrades precision, not the workflow; see `docs/tooling.md` "Degradation
+contract"), and sparse
 worktrees — and offer to apply it via `/adopt`.
 
 Finish with a one-line recommendation of which skill to run next.

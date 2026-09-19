@@ -25,11 +25,36 @@ one universal setup command). Register servers with the host: `claude mcp add �
 `~/.claude.json` / project `.mcp.json` on Claude Code, `codex mcp add …` or `[mcp_servers.*]` in
 `~/.codex/config.toml` on Codex — the studio ships neither, so both hosts need this once. See each
 project's README — serena (`github.com/oraios/serena`) and exa
-(`github.com/exa-labs/exa-mcp-server`). serena/exa are
-*prefer-if-available*: every workflow falls back cleanly to `rg`/Glob for navigation and `gh`/web
-for evidence, just less precisely.
+(`github.com/exa-labs/exa-mcp-server`). serena/exa are *prefer-if-available*: every workflow falls back cleanly to `rg`/Glob for
+navigation and `gh`/web for evidence, just less precisely. The per-skill obligations that make
+that true live in "Degradation contract" below.
 
 **Project memory needs no server.** `/recall`, `/remember`, `/memory-doctor`, and the session-start / prompt hooks use the host's auto-memory directory for the repository through the harness's own Read/Write/Grep — the same `MEMORY.md` index Claude Code loads at session start, shared with Codex sessions. Contract and path rule: `memory-protocol.md`.
+
+## Degradation contract — skills must survive missing serena/exa
+
+These servers are optional companions, and a user's machine may not have them at all (nothing
+registered, the server failing to start, or a machine that never installed them). Skills and
+agents therefore never treat a serena/exa call as load-bearing:
+
+- **Name the fallback next to the tool name.** Every skill that names a serena/exa operation
+  also names what to do without it — usually the harness layer: Grep/Glob/Read, the `LSP` tool,
+  `cargo doc`, or plain web pages fetched by the harness.
+- **Degradation is precision, never correctness.** Missing serena makes symbol search
+  text-based; missing exa makes evidence claims cite-or-declare-version only (state the
+  last-verified version instead of claiming a fresh check). The studio's evidence bar is
+  unchanged — a claim without the tool is reported as such, never silently asserted.
+- **Never stall on a missing server.** Do not retry, do not ask the user to install anything
+  mid-task, do not treat the absence as an error to report and stop. One line in the final
+  message ("symbol search ran text-only — serena unavailable") is the whole ceremony.
+- **`/studio-doctor` reports, others degrade.** Detecting whether the servers are configured
+  is a doctor's job (it lists what is present); workflows just pick the tools they find and
+  proceed.
+- **Suggest the setup once, outside the task.** When the absence actually cost precision,
+  `/env-setup` and `docs/tooling.md` §above are the pointer for the user's next session — not
+  a detour inside this one.
+
+Skill phrasing follows this template: *use X when available; without it, do Y and say so once.*
 
 ## Code navigation — semantic first
 Two semantic layers exist, and either beats text search for anything about symbols. Reach

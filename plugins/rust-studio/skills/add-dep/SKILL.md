@@ -19,7 +19,8 @@ caller also specifies a version constraint or feature list, record it for valida
 ## Phase 1 — Scope check (autonomous)
 
 Before vetting, decide tactical questions yourself and state the rationale:
-- Does an existing workspace dep already cover the need? Check with `cargo tree` or serena.
+- Does an existing workspace dep already cover the need? Check with `cargo tree` or the
+  language-server layer (serena / harness `LSP`); `rg` over workspace `Cargo.toml`s when neither.
 - Could a stdlib type or a small local helper replace it? State your conclusion and proceed.
 - Record any caller-supplied version, feature, or target constraints (WASM, `no_std`, MSRV).
 
@@ -29,7 +30,9 @@ problem does this crate solve?" Then proceed.
 ## Phase 2 — Vet (spawn dependency-manager)
 
 Spawn **`dependency-manager`** to run the full vetting checklist. Use the **exa** MCP
-(`web_search_exa`, `web_fetch_exa`) for external evidence rather than guessing: crates.io
+(`web_search_exa`, `web_fetch_exa`) for external evidence when configured — otherwise
+`gh` search over the repo, the crate's crates.io/docs.rs pages fetched directly, and
+cite-or-declare-version instead of a fresh claim: crates.io
 trajectory, RUSTSEC advisories, peer-project adoption.
 Every item below must be reported; "unknown" is valid, silence is not.
 
@@ -52,7 +55,8 @@ Every item below must be reported; "unknown" is valid, silence is not.
 
 ### Maintenance & popularity
 - Last release date, open issues trend, active maintainers, archived/read-only repo.
-- crates.io download trajectory (growing / flat / declining) — use exa for this.
+- crates.io download trajectory (growing / flat / declining) — via exa when configured,
+  otherwise the crate's crates.io www page fetched directly; cite-or-declare-version.
 - If effectively unmaintained, surface an alternative.
 
 ### License vs. `deny.toml`

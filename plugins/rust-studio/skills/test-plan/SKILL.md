@@ -14,7 +14,7 @@ Run a feature through **scope → map criteria → choose types → enumerate ca
 ## Phase 1 — Scope
 
 1. Restate the feature and its acceptance criteria in 1–5 bullets. If criteria are missing, draft a plausible list from context and proceed — surface the draft in the Phase 4 output rather than stopping to ask.
-2. Spawn **`rust-scout`** (read-only) to locate existing tests, the module under test, and any related fixtures or helpers. Scout uses serena MCP (`find_symbol`, `find_referencing_symbols`) for symbol/reference navigation and `rg` (harness Grep) for macro-generated or `cfg`-gated sites serena can't see — never Bash `grep`/`find`.
+2. Spawn **`rust-scout`** (read-only) to locate existing tests, the module under test, and any related fixtures or helpers. Scout uses the language-server layer (harness `LSP` tool or serena MCP when configured) for symbol/reference navigation and `rg` (harness Grep) for macro-generated or `cfg`-gated sites the language server can't see — never Bash `grep`/`find`; without one, Grep/Glob navigation and say so once.
 3. Identify the owning lead from the domain (see `references/agent-roster.md`). If the feature spans domains, note each one.
 
 ## Phase 2 — Map criteria to tests

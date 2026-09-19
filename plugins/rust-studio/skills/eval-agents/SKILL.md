@@ -38,8 +38,9 @@ background by default and notifies you as each finishes; there is nothing to opt
 agent teams are enabled, the same fan-out can run as teammates over the shared task list
 (one `TaskCreate` task per fixture, findings collected via `SendMessage`, the lead scores;
 shut teammates down at the end with `SendMessage {type:"shutdown_request"}`). Sub-agents do
-not inherit this context — pass the fixture's source in the spawn prompt, never the ground
-truth — and do not get bundled MCP (they rely on the user's ambient serena/exa).
+not inherit this context (pass the fixture's source in the spawn prompt, never the ground
+truth), and do not get bundled MCP: they see only the user's ambient serena/exa, and degrade
+per `docs/tooling.md`, "Degradation contract", when those are absent.
 
 The same fixtures also ship as a **`claude plugin eval` suite** under `<plugin-root>/evals/`
 (one prompt + graders per case, scored against a no-plugin baseline arm). When your account

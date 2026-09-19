@@ -27,12 +27,13 @@ the mapping and options, and say when a recalled note changes the approach. If n
 proceed (`references/memory-protocol.md`).
 1. Spawn **`rust-scout`** to produce a `file:line` map of all crate roots (`Cargo.toml`),
    `lib.rs` / `main.rs` entry points, `pub use` re-exports, and existing module boundaries in
-   scope. Use **serena** (`find_symbol`, `get_symbols_overview`) for symbol
+   scope. Use the language-server layer (serena `find_symbol`, `get_symbols_overview`; harness
+   `LSP` tool equivalents; `rg`/Grep when neither is configured) for symbol
    and boundary navigation; use **`cargo modules`** to render the module tree; use **`rg`** for
-   macro-generated or `cfg`-gated sites serena can't see. Do not guess the layout.
+   macro-generated or `cfg`-gated sites a language server can't see. Do not guess the layout.
 2. **Sibling-crate reuse survey (mandatory, BEFORE proposing any new type/trait/helper).** Have
-   the scout enumerate via **serena** (`find_symbol` / `find_implementations` / `find_referencing_symbols`
-   across crates) what primitives, traits, error types, builders, and helpers already exist in
+   the scout enumerate via the language-server layer (serena `find_symbol` / `find_implementations` /
+   `find_referencing_symbols`; `rg` across the workspace when neither layer is available) what primitives, traits, error types, builders, and helpers already exist in
    sibling crates that bear on this design. For every new type/trait/helper the architecture would
    introduce, you must later justify reuse-vs-new against this inventory — reinventing a sibling
    crate's primitive is a Maintainer-Rejection-Test failure.
@@ -64,8 +65,9 @@ proceed (`references/memory-protocol.md`).
      responsibility still sit in the right crate? Not just a one-line trade-off.
    - **Freshness (cite-or-declare-version):** when the decision depends on ecosystem behavior
      (a crate's API shape, an adoption pattern, RUSTSEC posture), cite the docs.rs / release-notes
-     / source you checked via **exa** (`web_search_exa`, `web_fetch_exa`) — or a crate-docs MCP
-     (cratesio/context7/rust-docs) if one is configured — OR state the last-verified version. Silence is a gap, not a pass.
+     / source you checked: **exa** (`web_search_exa`, `web_fetch_exa`), a crate-docs MCP
+     (cratesio/context7/rust-docs) if one is configured, directly fetched docs.rs/crates.io
+     pages when neither is available, OR state the last-verified version. Silence is a gap, not a pass.
    Mark the architect's recommended default. **Spawn `harsh-critic` by DEFAULT** for any new-crate,
    cross-crate, or boundary-moving plan — not opt-in "load-bearing only": it attacks the recommended
    option (challenge the premise, propose a radically different decomposition) — let the design

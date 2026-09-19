@@ -50,7 +50,8 @@ Never write the vault yourself.
 2. Choose the runtime topology: single-threaded vs. multi-threaded, dedicated thread pools
    for blocking work, `spawn_blocking` policy.
 3. Propose the web stack and tower middleware chain; ground the recommendation in ecosystem
-   adoption data (exa: `web_search_exa`, `web_fetch_exa`) — evidence
+   adoption data (exa: `web_search_exa`, `web_fetch_exa` when configured, directly fetched
+   crates.io/docs.rs pages otherwise) — evidence
    over opinion.
 4. Define the concurrency model: channel types, bounded capacities, backpressure strategy,
    timeout budget per I/O operation. Default: typed errors, no `Arc<Mutex<_>>` across `.await`

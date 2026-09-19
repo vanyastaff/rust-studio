@@ -49,7 +49,8 @@ the options and say when a recalled note changes the approach. If nothing surfac
 2. Identify the consumer: internal crate, external downstream, or public crates.io
    surface — this drives semver and stability strictness. Resolve from context if
    obvious; otherwise include in the batched ask.
-3. Spawn **`rust-scout`** (uses serena MCP + `rg` under the hood) to locate the
+3. Spawn **`rust-scout`** (uses the language-server layer, i.e. the harness `LSP` tool or serena
+   MCP, plus `rg` under the hood) to locate the
    current module, any existing types or traits it builds on, and the test files.
    Do not guess the layout.
 4. Decide tactical defaults autonomously (state choice + one-line rationale):
@@ -65,8 +66,9 @@ the options and say when a recalled note changes the approach. If nothing surfac
 ## Phase 2 — Options (present alternatives)
 
 5. **Sibling-crate reuse survey (mandatory, BEFORE drafting any new type/trait/error).** Have
-   `rust-scout` (or `api-designer`) enumerate via **serena** (`find_symbol` /
-   `find_implementations` across crates) the types, traits, error types, and conversions sibling
+   `rust-scout` (or `api-designer`) enumerate via the language-server layer (serena `find_symbol` /
+   `find_implementations`, `LSP` `findReferences`/`goToImplementation`, `rg` across the workspace
+   when neither is configured) the types, traits, error types, and conversions sibling
    crates already own that this surface could reuse. Every new item the design introduces must be
    justified reuse-vs-new against this inventory; reinventing a sibling primitive (or duplicating
    an error taxonomy) fails the Maintainer Rejection Test.
@@ -90,8 +92,9 @@ the options and say when a recalled note changes the approach. If nothing surfac
    - Key trade-off in one sentence.
    **Freshness (cite-or-declare-version, REQUIRED when the shape depends on ecosystem behavior):**
    cite the crates.io adoption pattern / RUSTSEC advisory / docs.rs API shape you checked via
-   **exa MCP** (`web_search_exa` / `web_fetch_exa`) — or a crate-docs MCP
-   (cratesio/context7/rust-docs) if one is configured — OR state the last-verified version. Silence is a gap, not a pass.
+   **exa MCP** (`web_search_exa` / `web_fetch_exa`), or a crate-docs MCP
+   (cratesio/context7/rust-docs) if one is configured, or directly fetched docs.rs/crates.io
+   pages when neither is available, OR state the last-verified version. Silence is a gap, not a pass.
    **Spawn `harsh-critic` by DEFAULT** for any new-trait, cross-crate, or boundary-moving surface:
    it attacks the recommended shape (premise, failure modes, radically different decomposition);
    fold real findings into the options before the gate.

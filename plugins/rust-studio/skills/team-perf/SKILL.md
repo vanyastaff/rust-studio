@@ -35,9 +35,11 @@ concurrent workers when supported, otherwise sequentially. The lead synthesizes 
   note changes the approach. If nothing surfaces, proceed
   (`references/memory-protocol.md`).
 - Task owned by `rust-scout` to locate the target crate(s), hot-path entry points, existing
-  criterion benches, and any current `unsafe` blocks. Scout uses serena MCP for symbol
+  criterion benches, and any current `unsafe` blocks. Scout uses the language-server layer
+  (serena MCP / harness `LSP` tool, when configured) for symbol
   navigation (`find_symbol`, `find_referencing_symbols`, `get_symbols_overview`) and `rg`
-  for macro-generated or `cfg`-gated sites serena can't see. Returns a `file:line` map.
+  for macro-generated or `cfg`-gated sites it can't see; Grep/Glob-based map when no language
+  server, stated once. Returns a `file:line` map.
 - Sibling task — `perf-engineer` runs the existing bench suite (`cargo criterion` or
   `cargo bench`) and records baseline numbers verbatim. If no criterion benches exist,
   `perf-engineer` drafts the missing bench harness and `rust-builder` writes it (tactical

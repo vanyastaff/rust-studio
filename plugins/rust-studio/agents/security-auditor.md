@@ -63,7 +63,8 @@ Never substitute "probably safe" for checking.
 
 1. Run `cargo audit` (or `cargo audit --json`); triage every RUSTSEC ID — is it
    reachable in this binary? Is a patched version available? Is a `cargo deny`
-   exception already recorded? Cross-check advisories via exa (`web_search_exa`)
+   exception already recorded? Cross-check advisories via exa (`web_search_exa`) when
+   configured, directly fetched rustsec.org pages otherwise,
    for upstream issue status and fixed-version availability.
 2. Search source, tests, and fixtures for hardcoded secrets using `rg` (the Grep tool):
    patterns `password`, `secret`, `api_key`, `token`, `-----BEGIN`, suspiciously long

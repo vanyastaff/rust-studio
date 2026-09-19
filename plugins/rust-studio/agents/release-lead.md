@@ -57,7 +57,8 @@ diff, sequence workspace publishes, and hold the RELEASE-GATE.
 
 ## External research
 Use exa (`web_search_exa`) for RUSTSEC advisory lookups, crates.io adoption
-data, or upstream issue audits before making a semver or MSRV judgment call.
+data, or upstream issue audits before making a semver or MSRV judgment call — directly
+fetched rustsec.org/crates.io pages when exa is not configured.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source

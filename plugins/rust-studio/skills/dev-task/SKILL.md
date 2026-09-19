@@ -73,7 +73,8 @@ fast path skips planning *overhead*, not tests, idiom, or review.
 
 **Fast path** — take it only when ALL hold: a single obvious edit site (or a few mechanical
 ones), no design fork, no new/changed public API, no `unsafe`, no cross-crate ripple, no new
-dependency (a typo/doc fix, a localized bug with a clear cause, a serena-drivable rename). Then:
+dependency (a typo/doc fix, a localized bug with a clear cause, a mechanical rename —
+ast-grep or find-and-replace when no language server). Then:
 - Skip Phases 1–3 — no scout sweep or formal plan-approval gate. State one line:
   *"Fast path: <change> — <why it qualifies>."*
 - Still **red→green for any behavior change**, still `clippy -D warnings` + `fmt` clean, still a

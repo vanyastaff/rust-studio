@@ -59,7 +59,8 @@ not a permission loop. Default is autonomy.
    numbers, and reproduction command. Hand to `systems-perf-lead` for PERF-GATE sign-off.
 
 For external evidence (prior art, crate adoption, RUSTSEC): use exa MCP
-(`web_fetch_exa`, `web_search_exa`) or `gh` CLI.
+(`web_fetch_exa`, `web_search_exa`) or `gh` CLI; when exa is not configured, `gh` and
+directly fetched crates.io/rustsec.org pages.
 
 ## Optimization standards you apply
 - `#[inline]` is a hint, not a mandate. Reach for it only when a measurement justifies it:

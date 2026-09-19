@@ -45,7 +45,8 @@ ref is also needed, batch both into a single user prompt before proceeding.
    - identify every criterion that has **no** corresponding change in the diff (missing
      coverage),
    - note any change that conflicts with or partially contradicts a criterion (mis-alignment).
-   - use `rg` to locate specific file:line references in the diff; use serena MCP for symbol
+   - use `rg` to locate specific file:line references in the diff; use the language-server
+     layer (serena MCP / harness `LSP` tool) for symbol
      navigation if resolving a type or trait reference — never Bash `grep`/`find`.
 4. `product-steward` returns three lists: **ADDED** (not asked for), **MISSING** (required
    but absent), **MISALIGNED** (present but inconsistent with the criterion). It does not

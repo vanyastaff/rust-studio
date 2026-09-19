@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.0] - 2026-09-18
+
+The studio's tooling doctrine said "prefer-if-available" for serena and exa, but the skills did
+not honor it: eighteen skills gave serena-only instructions for symbol navigation and a dozen
+more named exa as the only evidence path, with no fallback named and no degradation stated —
+on a machine where the servers are not configured (or an MCP server that fails to start), the
+workflow either invented a fallback on the spot or stalled. This release writes the degradation
+contract down and carries it through every skill, agent, and doc that names the tools: a
+serena/exa call is never load-bearing; the fallback is named next to the tool; degradation
+costs precision, never correctness; the workflow never stalls or asks the user to install
+anything mid-task; one line in the final message states which layer ran.
+
+### Added
+
+- **`docs/tooling.md` §"Degradation contract — skills must survive missing serena/exa"**: the
+  contract itself. Name the fallback next to the tool name (harness `LSP` tool, Grep/Glob/Read,
+  `rg`, `cargo doc`, directly fetched docs.rs/crates.io/rustsec.org pages); degradation is
+  precision, never correctness (a claim without the tool is reported as such, never silently
+  asserted, cite-or-declare-version still applies); never stall on a missing server (no
+  retries, no mid-task install asks); `/studio-doctor` reports server presence while workflows
+  just degrade; the setup pointer (`/env-setup`, `tooling.md`) is offered outside the task,
+  when the absence actually cost precision. Skill phrasing template: *use X when available;
+  without it, do Y and say so once.*
+- **`/studio-doctor` serena/exa check**: reports whether either server is registered for the
+  host (`claude mcp list`, `[mcp_servers.*]` in `~/.codex/config.toml`, project `.mcp.json`),
+  treats absence as normal (not an error), and points at `tooling.md` §"Prerequisites" as the
+  one-line fix only when a skill's precision actually depended on them.
+
+### Changed
+
+- **18 skills' serena instructions** rewritten to the language-server layer with an explicit
+  ladder (serena → harness `LSP` tool → Grep/`rg` with a one-line notice): `start` (no longer
+  instructs serena `find_file`/`list_dir`, which the harness typically disables — Glob/Read
+  first, `get_symbols_overview` when a language server is available), `spec`, `spec-verify`,
+  `test-plan`, `test-setup`, `architecture`, `design-api`, `api-review`, `add-dep`, `adr`,
+  `brainstorm`, `grill-me`, `tech-debt`, `scope-check`, `team-async`, `team-perf`,
+  `detect-stack`, `dev-task` (fast-path rename no longer "serena-drivable": ast-grep /
+  find-and-replace when no language server).
+- **12 agents' exa instructions** rewritten to "exa when configured, directly fetched
+  crates.io/docs.rs/rustsec.org pages otherwise": api-design-lead, async-systems-lead,
+  chief-architect (serena ladder included), database-specialist, dependency-manager,
+  perf-engineer, release-lead, rust-reviewer (LSP/serena ladder included), security-auditor,
+  systems-perf-lead, tooling-lead, wasm-specialist.
+- **`docs/`**: `collaboration.md` (reuse survey and "source from the code first" no longer
+  name serena alone), `delegation.md` (the no-bundled-MCP gotcha now states the degradation
+  contract instead of only the ambient assumption), `agent-template.md` (new agents name the
+  fallback next to the tool), `usage-guide.md` (rust-scout description, prefer-if-available
+  note).
+- **`/msrv-check`**, **`/security-audit`**, **`/add-dep`**: evidence lookups fall back to
+  direct fetches of crates.io/rustsec.org pages with cite-or-declare-version preserved.
+
 ## [0.57.0] - 2026-09-17
 
 The studio's anti-slop bar lived in one place: `rust-reviewer`'s shape audit, which reads a

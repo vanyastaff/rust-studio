@@ -15,10 +15,11 @@ Orient and route. Keep it short and concrete.
   detects the stack and routes to one skill; it does not list everything (see Notes below).
 
 ## Steps
-1. **Detect the project.** Use serena `find_file` / `list_dir` to locate `Cargo.toml`
-   (workspace or single-crate), then `get_symbols_overview` on key modules to classify
-   the domain: library, async/web, CLI, systems/embedded. Use `rg` to confirm feature
-   flags or `cfg`-gated targets serena can't resolve. If there's no `Cargo.toml`, ask
+1. **Detect the project.** Locate `Cargo.toml` (workspace or single-crate) with Glob and read
+   it; classify the domain (library, async/web, CLI, systems/embedded) from the manifest,
+   directory shape, and `get_symbols_overview` on key modules when the language-server layer
+   is available (harness `LSP` tool or serena). Use `rg` to confirm feature
+   flags or `cfg`-gated targets the language server can't resolve. If there's no `Cargo.toml`, ask
    whether to scaffold one with `/new-crate`.
 2. **Brief the user** in a few lines: the detected stack, which leads/specialists are
    relevant, and how the studio works — **autonomy-first quality loop**: tactical calls

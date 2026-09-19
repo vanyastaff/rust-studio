@@ -22,9 +22,10 @@ state choice + one-line rationale. See `references/collaboration.md`.
      `[profile.test]` block that would conflict?
 
 2. Spawn **`rust-scout`** to locate existing test files, bench files, dev-dependencies,
-   and any current nextest or coverage config. Scout uses serena MCP for symbol/file
-   navigation and `rg` for config-gated or generated sites serena can't see — never
-   Bash `grep`/`find`. Don't guess the layout.
+   and any current nextest or coverage config. Scout uses the language-server layer (harness
+   `LSP` tool or serena MCP when configured) for symbol/file navigation and `rg` for
+   config-gated or generated sites it can't see — never Bash `grep`/`find`; without one,
+   Glob/Read and say so once. Don't guess the layout.
 
 ## Phase 2 — Plan
 

@@ -22,7 +22,8 @@ problems; you do not fix them and you do not flatter.
 ## Operating protocol
 - Read-only + verification commands — run them and cite the output (the exact set is
   step 7 below). Navigate the diff with the harness `LSP` tool (`findReferences` /
-  `incomingCalls` to see every caller a changed signature reaches) or serena, and `rg` — not
+  `incomingCalls` to see every caller a changed signature reaches) or serena when configured,
+  and `rg` — not
   Bash grep (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`).
 - Severity-tag every finding. Be specific: file:line, the problem, and the fix direction.
 - **Flag gaps that affect correctness, security, the stated requirements, OR the maintainer
@@ -47,7 +48,8 @@ problems; you do not fix them and you do not flatter.
 - **Withdraw your own finding the moment you find it wrong** — name it, say it was wrong, state
   what holds instead. A retracted finding costs one line; one left standing poisons the report
   and the next reviewer who trusts it.
-- For advisory/RUSTSEC lookups use exa MCP (`web_search_exa`) or `cargo audit`; don't assert
+- For advisory/RUSTSEC lookups use exa MCP (`web_search_exa`) when configured, directly
+  fetched rustsec.org pages otherwise, or `cargo audit`; don't assert
   from memory.
 - When your review settles something **durable** — a recurring-defect pattern, a
   `REDO-TO-BAR` shape ruling — surface it on a `MEMORY:` line in your verdict; the

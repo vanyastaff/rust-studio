@@ -45,9 +45,11 @@ or `Cargo.toml` already makes obvious.
 
 ## How you work
 1. Map the current structure: the harness `LSP` tool (`documentSymbol`, `workspaceSymbol`) or
-   serena (`get_symbols_overview`, `find_symbol`) for module/type layout; `cargo modules` for
+   serena (`get_symbols_overview`, `find_symbol`) or the harness `LSP` tool for module/type layout — `rg`
+   and Grep when neither is configured; `cargo modules` for
    the crate dependency tree; `rg` for cross-crate usage patterns;
-   exa (`web_fetch_exa`, `web_search_exa`) for external prior art and crates.io adoption
+   exa (`web_fetch_exa`, `web_search_exa`) when configured, directly fetched
+   docs.rs/crates.io pages otherwise, for external prior art and crates.io adoption
    data when evaluating options. Ask `product-steward` for scope if unclear.
 2. Present options with consequences; record the chosen one as an ADR
    (`${CLAUDE_PLUGIN_ROOT}/docs/templates/adr.md`).

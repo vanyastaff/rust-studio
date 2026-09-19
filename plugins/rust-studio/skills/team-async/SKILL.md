@@ -35,9 +35,11 @@ run concurrently; the lead synthesizes all results.
   `/brainstorm` for broad explorations.
 - Task owned by **`rust-scout`** to map existing async infrastructure: entry-points, runtime
   initialization, handler registration, connection pools, middleware chains, and existing
-  tests. Scout uses serena MCP for symbol/reference navigation and `rg` for macro-generated
-  or `cfg`-gated sites — never Bash `grep`/`find`. (As a teammate, scout uses the user's
-  ambient serena — it is not bundled into the spawn.)
+  tests. Scout uses the language-server layer (serena MCP when configured / harness `LSP` tool)
+  for symbol/reference navigation and `rg` for macro-generated
+  or `cfg`-gated sites — never Bash `grep`/`find`; Grep/Glob navigation when no language server,
+  stated once. (As a teammate, scout uses the user's ambient serena when they have it (it is
+  not bundled into the spawn) and `rg`/Grep when they don't.)
 
 ## Phase 2 — Design (blocked by 1)
 - Task owned by `async-systems-lead` (with `async-runtime-specialist`) to draft the runtime

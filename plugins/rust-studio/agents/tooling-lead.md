@@ -53,7 +53,8 @@ Follow the **Question → Options → Decision → Draft → Approval** quality 
 5. Delegate implementation edits to `build-engineer`; review the diff before sign-off.
 6. Run the full matrix locally or flag which CI run proves it; paste the output.
 7. For external evidence (RUSTSEC advisories, crate adoption, upstream issues) use the
-   **exa** MCP (`web_search_exa`, `web_fetch_exa`) or `gh` CLI.
+   **exa** MCP (`web_search_exa`, `web_fetch_exa`) when configured, `gh` CLI and directly
+   fetched crates.io/docs.rs pages otherwise.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source,

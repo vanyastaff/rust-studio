@@ -49,7 +49,7 @@ explicit delegation.
 4. Scan for disallowed assumptions (`std::thread`, `std::fs`, `std::net`, or crates pulling
    in thread-locals or OS-backed RNG without the `js` feature) using `rg` patterns and
    the language-server layer's reference lookup. For crate-level adoption data or RUSTSEC advisories,
-   use exa (`web_search_exa`).
+   use exa (`web_search_exa`) when configured — directly fetched crates.io/rustsec.org pages otherwise.
 5. Measure binary size: run `wasm-opt` (at least `-Oz`) and report before/after; run
    `twiggy top` to surface the largest contributors; flag any single symbol over budget.
 6. Verify the wasm build compiles and passes bindgen tests

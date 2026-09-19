@@ -61,7 +61,8 @@ the approaches and say when a recalled note changes the direction. If nothing su
 
    For ecosystem-alternative unknowns, pull data before presenting — use the **exa** MCP
    (`web_search_exa` for crates.io adoption / RUSTSEC, `web_fetch_exa` to read the
-   docs/source pages found). Evidence over opinion (`references/working-preferences.md`).
+   docs/source pages found) when configured; directly fetched crates.io/docs.rs/repo pages
+   otherwise. Evidence over opinion (`references/working-preferences.md`).
 
 5. If a `[BLOCKER]` is present, surface it immediately and prompt the user with options
    before continuing.
@@ -88,7 +89,8 @@ the approaches and say when a recalled note changes the direction. If nothing su
    DEFAULT — attack the leading approach and offer a radically different decomposition before
    recommending — so the idea is not echo-chamber-validated.
    **Freshness (cite-or-declare-version):** when an approach leans on ecosystem behavior, cite the
-   crates.io / RUSTSEC / docs source you checked via exa (already pulled in Phase 2) OR state the
+   crates.io / RUSTSEC / docs source you checked (exa per Phase 2; a directly fetched page when
+   exa is not configured) OR state the
    last-verified version; silence is a gap, not a pass.
 7. State a **default recommendation** and the reason; make clear it is a starting point,
    not a decision.

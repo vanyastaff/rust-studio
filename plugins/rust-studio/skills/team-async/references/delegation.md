@@ -355,7 +355,8 @@ unavailable tools.
 - **No bundled MCP** — teammates do *not* receive a subagent definition's bundled
   `skills`/`mcpServers`; they load skills and MCP from the user's own project + user settings.
   The studio's serena/exa reliance works only because the **user** has them configured ambient
-  — state that assumption when scouting depends on them.
+  — and when they are absent, every workflow degrades per `tooling.md` "Degradation contract"
+  instead of stalling; state which layer ran when scouting depended on them.
 - **Status can lag** — update the host task surface after integrating a result; don't infer
   completion from silence.
 - **Nesting depth is host-specific, and it moves** — check before a worker spawns workers.

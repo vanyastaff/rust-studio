@@ -56,11 +56,15 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
 ## Phase 1 — Explore
 3. Restate the goal in one line **from `intent.md`**, not from your reading of the code.
 4. `/recall <area>` to surface prior learnings; spawn `rust-scout` to map the affected code,
-   existing types, and tests. Scout uses serena MCP for symbol/reference navigation and `rg`
-   for macro-generated or `cfg`-gated sites — never Bash `grep`/`find`. Note constraints
+   existing types, and tests. Scout uses the language-server layer (harness `LSP` tool or
+   serena MCP when configured) for symbol/reference navigation and `rg`
+   for macro-generated or `cfg`-gated sites — never Bash `grep`/`find`; without a language
+   server, navigation is Grep/Glob-based and the scout says so once. Note constraints
    (MSRV, no_std, async runtime, public surface).
 5. **Sibling-crate reuse survey (mandatory, BEFORE proposing any new type/trait/helper).** Have
-   the scout enumerate via **serena** (`find_symbol` / `find_implementations` across crates) the
+   the scout enumerate (via the language-server layer: `find_symbol` / `find_implementations`
+   on serena, `findReferences`/`goToImplementation`/`workspaceSymbol` on the `LSP` tool,
+   `rg` across the workspace when neither is available) the
    primitives, traits, error types, and helpers sibling crates already own that bear on this work.
    Every new type/trait/helper a proposed approach introduces must be justified reuse-vs-new
    against this inventory; reinventing a sibling primitive fails the Maintainer Rejection Test.
@@ -77,7 +81,7 @@ Gate (Phase 2.5) runs ON TOP OF the approach gate.
      responsibility still sit in the right crate? Not just a one-line trade-off.
    **Freshness (cite-or-declare-version):** when an approach depends on ecosystem behavior (a
    crate's API shape, adoption pattern, RUSTSEC posture), cite the docs.rs / release-notes / source
-   you checked (exa, or a crate-docs MCP if configured) OR state the last-verified version. Silence
+   you checked (exa or a crate-docs MCP if configured; directly fetched docs.rs/crates.io pages otherwise) OR state the last-verified version. Silence
    is a gap. **Spawn `harsh-critic` by DEFAULT** for any new-crate, cross-crate, or boundary-moving
    approach (not just hard-to-reverse ones): it attacks the recommended option (premise, failure
    modes, radically different decomposition) before the gate — no echo-chamber; fold real findings in.

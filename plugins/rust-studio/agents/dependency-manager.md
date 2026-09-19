@@ -56,7 +56,8 @@ who keeps the dependency graph sound, minimal, and license-clean.
 4. Evaluate the candidate crate: maintenance status, transitive depth, license
    compatibility, MSRV, binary-size contribution (`cargo bloat --release`), and whether
    a lighter alternative exists. Use **exa MCP** (`web_search_exa`) to check crates.io
-   adoption, peer-project patterns, and open RUSTSEC advisories — evidence over opinion.
+   adoption, peer-project patterns, and open RUSTSEC advisories — directly fetched
+   crates.io/rustsec.org pages when exa is not configured. Evidence over opinion.
 5. Feature flags: always prefer `default-features = false` with explicit enables; flag
    any feature that pulls in heavier transitive trees than its value justifies.
 6. Verify MSRV: `cargo +<MSRV> check --all-features` must stay green. If a new dep

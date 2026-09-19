@@ -31,11 +31,14 @@ and collect every hit with `file:line`:
    one.
 3. **Panic paths in library code** — `rg` for `unwrap()`, `expect(`, `panic!(` and
    `unreachable!()` on `src/lib.rs` or any path that is not a test module, binary, example
-   or benchmark (calls inside `#[cfg(test)]` are exempt). Use serena
-   `find_referencing_symbols` to confirm a panicking call reaches a public entry point.
+   or benchmark (calls inside `#[cfg(test)]` are exempt). Use the language-server layer when
+   available (serena `find_referencing_symbols` or `LSP` `findReferences`) to confirm a panicking
+   call reaches a public entry point; `rg`-based call-site inspection when not.
 4. **Oversized units** — `tokei` for file-level LOC, flagging files over ~400 lines; serena
-   `get_symbols_overview` on those for functions longer than ~60 lines. Note actual counts.
-5. **Missing tests** — with **`qa-lead`**: `get_symbols_overview` to enumerate `pub` items,
+   `get_symbols_overview` on those for functions longer than ~60 lines (or `LSP`
+   `documentSymbol`; plain reading when neither). Note actual counts.
+5. **Missing tests** — with **`qa-lead`**: `get_symbols_overview` (serena or `LSP`, plain
+   listing when neither) to enumerate `pub` items,
    then cross-check `cargo llvm-cov` output for untested public surface and modules with no
    `#[cfg(test)]` block.
 6. **Slop and drift** — spawn **`slop-auditor`** on the same scope for the tree-level

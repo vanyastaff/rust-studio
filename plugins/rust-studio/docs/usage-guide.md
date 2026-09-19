@@ -109,7 +109,8 @@ Cross-cutting: **`harsh-critic`** (inherit; attacks designs/specs adversarially,
 model calls, naming/pattern/boundary tells; read-only).
 
 ### Execution (4) — the hands
-- **`rust-scout`** (haiku, read-only) — locates symbols/impls/tests via serena, returns a
+- **`rust-scout`** (haiku, read-only) — locates symbols/impls/tests via the language-server
+  layer (serena when the user has it, `LSP`/`rg` otherwise), returns a
   `file:line` map. Never writes or proposes fixes.
 - **`rust-builder`** (sonnet) — the only agent that routinely writes source; implements an
   approved plan, runs cargo check/clippy/test/fmt, reports a diff.
@@ -350,7 +351,9 @@ happy-path test does not establish preserved behavior.
 
 ## Tooling, memory, and large workspaces
 - Agents prefer **serena** (semantic code nav) and `rg`/`ast-grep` over Bash search, **exa** for
-  external evidence, and purpose-built `cargo` subcommands — see `tooling.md`.
+  external evidence, and purpose-built `cargo` subcommands — see `tooling.md`. All three are
+  prefer-if-available: workflows degrade cleanly without them (`tooling.md` "Degradation
+  contract").
 - Memory has two layers, both host-managed directories — no MCP, no vault:
   - the **project store** — Claude Code's auto-memory directory for the repository
     (`~/.claude/projects/<project-key>/memory/`, or `autoMemoryDirectory`; a Codex session

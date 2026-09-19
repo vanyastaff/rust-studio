@@ -25,8 +25,9 @@ Use this when:
    API, a true business/deadline constraint. Anything resolvable by analysis, Rust best practice,
    or reading the code is a **tactical call you make**, not a question. If you've researched it
    and have a defensible answer, that's not a question — it's a decision to state.
-2. **Source from the code first.** Before asking a hypothetical, look. Use **serena MCP**
-   (`find_symbol`, `get_symbols_overview`, `find_referencing_symbols`) or spawn **`rust-scout`**
+2. **Source from the code first.** Before asking a hypothetical, look. Use the language-server
+   layer (serena MCP when configured: `find_symbol`, `get_symbols_overview`,
+   `find_referencing_symbols`; harness `LSP`/Grep otherwise) or spawn **`rust-scout`**
    to answer it from the codebase. Ask the user only what the code genuinely cannot tell you.
    "I checked X and it already does Y, so I'll assume Z — correct?" beats "how should X work?".
 3. **Cheap to answer, every time.** A good question is answered by picking the default or
@@ -35,7 +36,8 @@ Use this when:
 
 ## Phase 1 — Map the decision tree (no questions yet)
 
-1. Restate the plan/decision in one sentence. Spawn **`rust-scout`** (or use serena directly) to
+1. Restate the plan/decision in one sentence. Spawn **`rust-scout`** (or map it yourself with the
+   language-server layer / Grep) to
    map the affected types, traits, call sites, and constraints. Note the MSRV, async/sync posture,
    public-API exposure, and any sibling-crate ownership relevant to the decision.
 2. Build the **decision tree**: list every fork the plan contains, and for **each** mark:

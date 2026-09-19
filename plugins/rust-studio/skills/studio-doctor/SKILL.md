@@ -86,6 +86,12 @@ orchestrating skill does.
 of resolving symbols, and diagnostics after an edit stop arriving. Slower and blunter, not
 broken.
 
+**serena / exa MCP.** Is either server registered for this host (`claude mcp list`, the
+`[mcp_servers.*]` section of `~/.codex/config.toml`, or the project's `.mcp.json`)? Absent is
+normal, not an error: skills degrade per `docs/tooling.md` "Degradation contract". Report only
+when a skill's precision actually depended on them — and then point at `docs/tooling.md`
+§"Prerequisites" as the one-line fix.
+
 **Memory store.** Does the store resolve to a real directory, and does its index agree with the
 files beside it? Report the resolved path, the note count, and the index budget against the
 host's load limit. Anything worse than a clean bill routes to `/memory-doctor`

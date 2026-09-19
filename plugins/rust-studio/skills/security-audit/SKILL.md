@@ -29,7 +29,8 @@ Spawn **`security-auditor`** to run all of the following and collect raw output:
 - **`cargo audit`** — check dependencies against the RustSec advisory database (RUSTSEC).
   Treat any `RUSTSEC-` advisory as a finding. Note yanked crates and unmaintained warnings.
   Use the exa MCP (`web_search_exa`) to look up RUSTSEC advisory details or upstream fix
-  status when the `cargo audit` summary is thin.
+  status when the `cargo audit` summary is thin — direct fetch of
+  rustsec.org / the repo's advisory pages when exa is not configured.
 - **Supply-chain incident sweep** — when an advisory names a hijacked release (a version
   published then deleted, e.g. `arrayref 0.3.10` on 2026-08-20), check more than the current
   lockfile: `~/.cargo/registry/cache` on every build machine and the `Cargo.lock` of every

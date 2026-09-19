@@ -56,8 +56,10 @@ final dump.
    with the unmet and stale ids as the list, `HANDOFF REQUIRED` is BLOCKED with the abandonment
    named (`references/acceptance-ledger.md`). The checker rewrites evidence lines itself; that
    is not a source write. Then, for each remaining criterion, find and run the evidence:
-   - Use serena MCP (`find_symbol`) and the harness Grep (ripgrep) to locate test functions
-     and impl sites relevant to each criterion — never Bash `grep` for symbols.
+   - Use the language-server layer (serena `find_symbol` or the harness `LSP` tool when
+     available) and the harness Grep (ripgrep) to locate test functions
+     and impl sites relevant to each criterion — never Bash `grep` for symbols; Grep-only
+     when no language server, and say so once.
    - the project's gate (`references/project-gate.md`), including `--doc` for doc-tests — map
      test names to criteria in the report. Only where the project has none: `cargo nextest run`
      (fall back to `cargo test`) and `cargo clippy --all-targets --all-features -- -D warnings`.

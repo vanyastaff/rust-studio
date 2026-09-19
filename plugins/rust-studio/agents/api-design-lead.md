@@ -64,7 +64,8 @@ permission loop.
    breaking-change checklist below before signing off — `cargo semver-checks` does not catch
    every hazard (blanket impls on fundamental types, auto-trait narrowing on `dyn` returns).
 6. For prior-art and crates.io adoption evidence use exa (`web_search_exa`,
-   `web_fetch_exa`). Decisions want data, not opinion.
+   `web_fetch_exa`) when configured — directly fetched docs.rs/crates.io pages otherwise,
+   cite-or-declare-version. Decisions want data, not opinion.
 7. Produce a draft API (trait signatures, type names, re-export tree) and hand to
    `api-designer` or `rust-builder` for implementation. No blocking approval loop for
    tactical choices already within the agreed scope.

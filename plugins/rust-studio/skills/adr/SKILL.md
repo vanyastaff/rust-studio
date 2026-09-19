@@ -37,8 +37,8 @@ nothing surfaces, proceed (`references/memory-protocol.md`).
    - List `docs/adr/` using Glob / `fd` and identify the highest-numbered
      `NNNN-*.md` file to determine the next sequence number.
    - Note any code, tests, or `Cargo.toml` sections that bear directly on the
-     decision area (use serena `get_symbols_overview` for
-     symbol-level context; `rg` for cfg-gated / macro-generated sites).
+     decision area (serena `get_symbols_overview` or the harness `LSP` tool for
+     symbol-level context — `rg` alone when neither is configured; `rg` for cfg-gated / macro-generated sites).
    - Collect any linked tickets, PRs, or discussions the user has already shared
      in `input`. Do not ask for more context before scouting.
 3. Spawn **`chief-architect`** to surface key forces — constraints, non-negotiables,
@@ -61,8 +61,9 @@ nothing surfaces, proceed (`references/memory-protocol.md`).
    - any gate triggered (`SAFETY-GATE`, `API-GATE`, …).
    - **Freshness (cite-or-declare-version):** when the decision depends on ecosystem behavior
      (a crate's API shape, adoption pattern, RUSTSEC posture), cite the docs.rs / release-notes /
-     source you checked via exa MCP (`web_search_exa` / `web_fetch_exa`) — or a crate-docs MCP
-     (cratesio/context7/rust-docs) if one is configured — OR state the last-verified version. Silence is a gap, not a pass.
+     source you checked: exa MCP (`web_search_exa` / `web_fetch_exa`), a crate-docs MCP
+     (cratesio/context7/rust-docs) if one is configured, directly fetched docs.rs/crates.io
+     pages when neither is available, OR state the last-verified version. Silence is a gap, not a pass.
    - For a boundary-moving / cross-crate / new-primitive decision, spawn **`harsh-critic`** by
      DEFAULT to attack the recommended option (premise, failure modes, radically different
      decomposition) and fold real findings into the options before the gate.

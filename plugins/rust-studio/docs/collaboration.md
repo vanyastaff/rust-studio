@@ -10,7 +10,8 @@ team execution) and `verdicts.md` (gates, verdicts, evidence).
 First-pass quality is the contract; everything downstream — gates, reviews, verdicts — is a
 safety net, **not** where quality is created. Before the first source edit on anything that adds
 or moves logic, the planning AND the writing agent run the **maintainer-grade pre-code gate**:
-crate ownership; a sibling-crate reuse survey (serena) before inventing; verify crate
+crate ownership; a sibling-crate reuse survey (the language-server layer — serena when the user
+has it, `rg` otherwise) before inventing; verify crate
 version/current docs before coding from memory (via a docs MCP server such as
 cratesio/context7/rust-docs **if the user has one configured**; otherwise docs.rs via
 WebFetch or a local `cargo doc`); the
@@ -94,9 +95,9 @@ in **`/dev-task`**; rolls out to `/spec`, `/architecture`, `/refactor` once vali
 
 **Never offload your own analysis as a question.** If you have a defensible answer, that is a
 tactical call — decide it, state how reversible it is, and let the user veto. Ask only when the
-answer genuinely lives in the **user** — taste, product priority, risk appetite, willingness to
+answer genuinely lives in the **user**: taste, product priority, risk appetite, willingness to
 break an API, a true business constraint — not in analysis you have done or could do (source it
-from the code with serena first; the answer is often already there).
+from the code first — the language-server layer or `rg`; the answer is often already there).
 
 **When the answer really is the user's, ask grill-me-style, not one heavy fork.** Decompose a
 big decision into a short sequence of **small, concrete questions asked one at a time**, each with

@@ -55,7 +55,8 @@ cargo metadata --format-version 1 --no-deps | jq '.packages[] | {name, version, 
 ```
 
 For any dep not covered by `cargo metadata`, query crates.io via the **exa** MCP
-(`web_search_exa`) or `gh` to find its published MSRV. Flag any dep whose
+(`web_search_exa`) or `gh`, with a direct fetch of the crate's crates.io page when exa is not
+configured, to find its published MSRV. Flag any dep whose
 minimum `rust-version` exceeds the current declared MSRV. Produce a table:
 
 ```

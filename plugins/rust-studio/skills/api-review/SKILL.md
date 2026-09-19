@@ -46,8 +46,9 @@ the diff bumps a dependency, decide separately whether that dependency's types c
 public surface; if they do, the release is breaking regardless of the tool's verdict.
 
 If either tool is absent, note it clearly and fall back to a manual
-`cargo doc` + `git diff` inspection via **`rust-scout`** (use serena
-`get_symbols_overview` to map the public surface per crate). Never substitute
+`cargo doc` + `git diff` inspection via **`rust-scout`** (map the public surface per crate with
+`get_symbols_overview` / `documentSymbol` when the language-server layer is available, `rg`
+over `pub` items when it is not — and say which ran). Never substitute
 "probably fine" for running the check.
 
 Also collect:
