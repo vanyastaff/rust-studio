@@ -2,6 +2,7 @@
 // docs/integrity-and-evidence.md): each test pins a concrete block/allow decision,
 // not merely "it ran".
 import { test, expect, describe } from "bun:test";
+import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -67,7 +68,7 @@ describe("hard hits always block", () => {
 
 describe("Codex Stop output", () => {
   test("a block is a JSON decision, not Claude-style stderr", () => {
-    const env = { ...process.env, PLUGIN_ROOT: import.meta.dir, PLUGIN_DATA: join(tmpdir(), "rs-codex-stop-test"), RUST_STUDIO_STOP_GUARD: "on" };
+    const env = { ...process.env, PLUGIN_ROOT: import.meta.dir, PLUGIN_DATA: mkdtempSync(join(tmpdir(), "rs-codex-stop-test-")), RUST_STUDIO_STOP_GUARD: "on" };
     delete env.CLAUDE_PLUGIN_ROOT;
     const result = Bun.spawnSync(["bun", join(import.meta.dir, "stop-guard.ts")], {
       stdin: new TextEncoder().encode(JSON.stringify({ session_id: "codex-test", last_assistant_message: "Should I continue?" })),

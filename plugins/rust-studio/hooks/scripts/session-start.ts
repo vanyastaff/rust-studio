@@ -13,7 +13,7 @@
 
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { readInput, emit, watchdog, option, optionBool, pluginRoot, pluginData, pruneState } from "./_lib.ts";
+import { readInput, emitAdditionalContext, watchdog, option, optionBool, pluginRoot, pluginData, pruneState } from "./_lib.ts";
 import { USAGE_FILE } from "./usage-log.ts";
 import { summarizeManifest } from "./cargo-manifest.ts";
 import {
@@ -263,10 +263,6 @@ try {
 
 const recall = optionBool("memory_recall", true) ? buildRecall(cwd) : "";
 
-emit({
-  hookSpecificOutput: {
-    hookEventName: "SessionStart",
-    additionalContext: briefing + (recall ? "\n\n" + recall : ""),
-    ...(title ? { sessionTitle: title } : {}),
-  },
+emitAdditionalContext("SessionStart", briefing + (recall ? "\n\n" + recall : ""), {
+  ...(title ? { sessionTitle: title } : {}),
 });

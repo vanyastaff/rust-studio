@@ -43,6 +43,41 @@ export function emit(obj: unknown): never {
   process.exit(0);
 }
 
+/** Emit model-visible context using the active host's hook output contract.
+ *
+ * Claude Code still consumes the older `hookSpecificOutput` wrapper on the hooks this studio
+ * targets. Codex 0.155 validates stdout as a hook-output JSON object and expects
+ * `additionalContext` at the top level; a Claude-shaped wrapper is parseable JSON but invalid
+ * for those events. Keep that host split in one place so hook scripts don't accidentally write
+ * plain prompt text or the wrong wrapper to stdout. */
+export function emitAdditionalContext(
+  event: string,
+  additionalContext: string,
+  opts: { sessionTitle?: string } = {},
+): never {
+  if (isCodexHook()) emit({ additionalContext });
+  emit({
+    hookSpecificOutput: {
+      hookEventName: event,
+      additionalContext,
+      ...(opts.sessionTitle ? { sessionTitle: opts.sessionTitle } : {}),
+    },
+  });
+}
+
+/** UserPromptSubmit is the one studio hook where Claude's contract is plain stdout context,
+ * while Codex validates stdout as JSON. Preserve Claude's long-standing behavior and adapt
+ * only the Codex side. */
+export function emitUserPromptContext(additionalContext: string): never {
+  if (isCodexHook()) emit({ additionalContext });
+  try {
+    process.stdout.write(additionalContext);
+  } catch {
+    /* non-fatal */
+  }
+  process.exit(0);
+}
+
 /** Exit 0 with no output (the common "nothing to do" path). */
 export function done(): never {
   process.exit(0);

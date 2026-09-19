@@ -24,7 +24,7 @@
 
 import { readdirSync, readFileSync, statSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
-import { readInput, emit, done, watchdog, pluginRoot, option, pluginData } from "./_lib.ts";
+import { readInput, emitAdditionalContext, done, watchdog, pluginRoot, option, pluginData } from "./_lib.ts";
 import { crateFloor } from "./cargo-manifest.ts";
 import { loadTimeline, resolveFloor, renderTimeline } from "./stdlib-timeline.ts";
 
@@ -421,10 +421,5 @@ if (import.meta.main) {
     );
   }
 
-  emit({
-    hookSpecificOutput: {
-      hookEventName: event,
-      additionalContext: sections.join("\n\n"),
-    },
-  });
+  emitAdditionalContext(event, sections.join("\n\n"));
 }

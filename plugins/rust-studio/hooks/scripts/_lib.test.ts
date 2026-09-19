@@ -130,6 +130,55 @@ describe("Stop hook host contract", () => {
   });
 });
 
+describe("context hook host contract", () => {
+  const helper = new URL("./_lib.ts", import.meta.url).pathname;
+
+  function runSnippet(source: string, env: Record<string, string | undefined>): string {
+    const childEnv: Record<string, string> = { ...process.env } as Record<string, string>;
+    for (const [key, value] of Object.entries(env)) {
+      if (value === undefined) delete childEnv[key];
+      else childEnv[key] = value;
+    }
+    const result = Bun.spawnSync(["bun", "-e", source], {
+      stdout: "pipe",
+      stderr: "pipe",
+      env: childEnv,
+    });
+    expect(result.exitCode).toBe(0);
+    return new TextDecoder().decode(result.stdout);
+  }
+
+  test("Codex additional context is top-level JSON, not Claude's wrapper", () => {
+    const out = runSnippet(
+      `import { emitAdditionalContext } from ${JSON.stringify(helper)}; emitAdditionalContext("SessionStart", "hello");`,
+      { PLUGIN_ROOT: "/plugin", CLAUDE_PLUGIN_ROOT: undefined },
+    );
+    expect(JSON.parse(out)).toEqual({ additionalContext: "hello" });
+  });
+
+  test("Claude additional context keeps the hookSpecificOutput wrapper", () => {
+    const out = runSnippet(
+      `import { emitAdditionalContext } from ${JSON.stringify(helper)}; emitAdditionalContext("SessionStart", "hello", { sessionTitle: "t" });`,
+      { PLUGIN_ROOT: undefined, CLAUDE_PLUGIN_ROOT: "/plugin" },
+    );
+    expect(JSON.parse(out)).toEqual({
+      hookSpecificOutput: {
+        hookEventName: "SessionStart",
+        additionalContext: "hello",
+        sessionTitle: "t",
+      },
+    });
+  });
+
+  test("UserPromptSubmit preserves Claude plain stdout and emits JSON on Codex", () => {
+    const source = `import { emitUserPromptContext } from ${JSON.stringify(helper)}; emitUserPromptContext("note");`;
+    expect(runSnippet(source, { PLUGIN_ROOT: undefined, CLAUDE_PLUGIN_ROOT: "/plugin" })).toBe("note");
+    expect(JSON.parse(runSnippet(source, { PLUGIN_ROOT: "/plugin", CLAUDE_PLUGIN_ROOT: undefined }))).toEqual({
+      additionalContext: "note",
+    });
+  });
+});
+
 describe("pluginData", () => {
   // Both hosts hand a plugin its own state dir; the names differ and Claude wins where both
   // are set, mirroring pluginRoot(). Verified against the shipped binaries, not the docs.

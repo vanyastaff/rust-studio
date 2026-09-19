@@ -34,7 +34,7 @@
 // Never blocks (no decision:block) and never fails the session. Codex delivers the
 // same event; if its payload carries no `prompt`, only the nudge runs.
 
-import { readInput, watchdog, optionBool, pluginRoot, pluginData } from "./_lib.ts";
+import { emitUserPromptContext, readInput, watchdog, optionBool, pluginRoot, pluginData } from "./_lib.ts";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -222,6 +222,6 @@ if (import.meta.main) {
   }
 
   disarm();
-  if (out.length) process.stdout.write(out.join("\n\n"));
+  if (out.length) emitUserPromptContext(out.join("\n\n"));
   process.exit(0);
 }

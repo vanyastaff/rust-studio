@@ -18,7 +18,7 @@
 
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { readInput, emit, done, watchdog, option, pluginRoot } from "./_lib.ts";
+import { readInput, emitAdditionalContext, done, watchdog, option, pluginRoot } from "./_lib.ts";
 import { summarizeManifest, type ManifestSummary } from "./cargo-manifest.ts";
 import { BUILTIN_DENY, normalizeAgentType, studioRoster } from "./subagent-stop.ts";
 import { readIndex, resolveStore } from "./memory-store.ts";
@@ -164,12 +164,7 @@ if (import.meta.main) {
       docsDir: join(pluginRoot(), "docs").replace(/\\/g, "/"),
     });
     disarm();
-    emit({
-      hookSpecificOutput: {
-        hookEventName: "SubagentStart",
-        additionalContext: brief,
-      },
-    });
+    emitAdditionalContext("SubagentStart", brief);
   } catch {
     disarm();
     done(); // fail open: a missing brief is cheaper than a broken spawn

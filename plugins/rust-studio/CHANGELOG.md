@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.1] - 2026-09-19
+
+### Fixed
+
+- **Codex hook output:** `SessionStart`, `UserPromptSubmit`, `SubagentStart`, and path-scoped
+  rule injection now emit Codex's validated top-level `{ "additionalContext": "..." }` hook
+  output instead of Claude Code's `hookSpecificOutput` wrapper or plain prompt text. This fixes
+  `invalid session start JSON output`, `invalid user prompt submit JSON output`, and related
+  Codex hook protocol failures while preserving Claude Code's existing contracts.
+
 ## [0.59.0] - 2026-09-19
 
 This release makes the studio a smaller, clearer team of agents and fixes Codex Stop-hook
