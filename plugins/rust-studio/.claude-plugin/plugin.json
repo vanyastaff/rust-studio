@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Rust engineering workflows through 11 outcome skills and five execution roles with reusable domain profiles. Fresh design review, implementation handoff, independent acceptance, path-scoped standards and cargo-aware hooks for libraries, async services, CLIs and systems code.",
-  "version": "0.62.0",
+  "version": "0.62.1",
   "author": {
     "name": "Rust Studio contributors"
   },

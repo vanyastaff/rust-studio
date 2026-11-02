@@ -154,6 +154,10 @@ for pair in "${assets[@]}"; do
   asset_src=${pair%%:*}
   asset_dest=${pair#*:}
   if (( check )); then
+    if [[ $asset_dest == *.sh && ! -x $asset_dest ]]; then
+      echo "not executable: $asset_dest"
+      stale=1
+    fi
     if ! cmp -s <(asset_content "$asset_src") "$asset_dest"; then
       echo "stale: $asset_dest"
       stale=1

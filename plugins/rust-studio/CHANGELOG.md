@@ -5,6 +5,15 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.62.1] - 2026-11-02
+
+### Fixed
+
+- Preserve executable Git modes for bundled shell helpers in fresh installations. Windows
+  staging had omitted the modes even though regenerated Linux bundles passed validation.
+- Reference synchronization checks every bundled shell helper's executable mode, so a
+  content-identical but non-runnable package fails before installation.
+
 ## [0.62.0] - 2026-11-02
 
 ### Changed
