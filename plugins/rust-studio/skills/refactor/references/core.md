@@ -19,7 +19,9 @@ Applies to every `.rs` file.
 
 ## Ownership & types
 - Take the cheapest sufficient borrow: `&str` over `&String`, `&[T]` over `&Vec<T>`,
-  `impl AsRef<Path>` for path args. Return owned values; borrow in parameters.
+  `&Path` when a borrowed path suffices. Use `AsRef<Path>` when real callers benefit.
+  Return a borrow or iterator when it fits the lifetime and avoids allocation; return owned
+  data when callers need ownership or the implementation already produces it.
 - Make illegal states unrepresentable: prefer enums/newtypes over bool flags and
   stringly-typed data. Parse, don't validate.
 - Derive `Debug` on public types. Derive `Clone`/`Copy`/`PartialEq` only when the
@@ -35,8 +37,11 @@ Applies to every `.rs` file.
   that wraps past a bounds check is a bug whether or not the wrap is caught.
 
 ## Idiom
-- Iterators over manual index loops; `?`-friendly combinators over nested matches.
-- No needless `.clone()` to satisfy the borrow checker — restructure or borrow.
+- Use short iterator chains for transformations; prefer a direct loop when branching,
+  mutation or error handling is clearer. Avoid indexing when iteration suffices.
+- Borrow instead of an unnecessary deep copy. Use `Rc`/`Arc` for genuine shared ownership;
+  cloning either increments a reference count rather than copying the underlying value.
+  Review cycles and synchronization, and keep a deep copy when independent ownership needs it.
 - `#[must_use]` on builders, `Result`-like returns, and guard types — anywhere a silently
   discarded value is a bug.
 - Modules small and cohesive; `pub(crate)` by default, `pub` only when intended.
@@ -116,7 +121,9 @@ Applies to every `.rs` file.
   reference first — UB on unaligned, uninitialized, or `#[repr(packed)]` places).
 
 ## Hygiene
-- Zero `cargo clippy --all-targets --all-features -- -D warnings`.
+- Pass the repository's lint gate with its exact features, targets and environment. If no
+  gate exists, run `cargo clippy --all-targets -- -D warnings` and applicable feature checks;
+  an all-features run does not replace the default-feature run.
 - `cargo fmt` clean. No commented-out code, no stray `dbg!`/`println!` debugging.
 - No `#[allow(...)]` without a one-line justification comment.
 - Two compiler diagnostics are security signals, not lint nits, and both surfaced from a real

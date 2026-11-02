@@ -40,9 +40,11 @@ Codex: with that manifest present, Codex CLI 0.153 loads the plugin through its 
 path, which reads skills, MCP servers and apps but **not hooks**
 ([openai/codex#16430](https://github.com/openai/codex/issues/16430)). Every studio hook went
 silent (no session briefing, no path-scoped standards) and Codex's plugin panel reported
-"No plugin hooks" without a warning. The standard makes `$schema` required and forbids a
-`hooks` key, so no manifest satisfies both. The file is withdrawn until Codex runs plugin hooks
-beside it.
+"No plugin hooks" without a warning. That is historical evidence from 0.153.4. Current OpenAI
+documentation supports hooks under `extensions.com.openai` and still supports our
+`.codex-plugin/plugin.json` fallback. This release retains that working layout; migrating the
+manifest requires a host-delivery regression probe, not just a schema check. See
+[`Codex compatibility`](plugins/rust-studio/docs/codex-compat.md).
 
 Clients that implement Agent Plugins install through `npx skills add` (below) instead, and a
 client that does gets the 61 skills all the same — that path reads the flat `skills/` directory

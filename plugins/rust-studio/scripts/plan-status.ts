@@ -17,16 +17,20 @@ function cells(line: string): string[] {
 }
 
 function state(value: string): TaskState {
-  const text = value.toLowerCase();
-  if (value.includes("☑") || /\bdone\b|\bcomplete/.test(text)) return "done";
-  if (value.includes("⊘") || /\bblocked\b/.test(text)) return "blocked";
-  if (value.includes("◐") || /\bin[ -]?progress\b|\bactive\b/.test(text)) return "in-progress";
-  return "todo";
+  const text = value.trim().toLowerCase();
+  if (/^(☑|done|complete|completed)$/.test(text)) return "done";
+  if (/^(⊘|blocked)$/.test(text)) return "blocked";
+  if (/^(◐|in[ -]?progress|active)$/.test(text)) return "in-progress";
+  if (/^(☐|todo|to-do|pending)$/.test(text)) return "todo";
+  throw new Error(`unknown task status: ${value || "(empty)"}`);
 }
 
+const taskId = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 function ids(value: string | undefined): string[] {
   if (!value || /^(—|-|none|n\/a)$/i.test(value.trim())) return [];
-  return [...value.matchAll(/\b\d+\b/g)].map((match) => match[0]);
+  const result = value.trim().split(/[,\s]+/);
+  if (result.some((id) => !taskId.test(id))) throw new Error(`invalid task references: ${value}`);
+  return [...new Set(result)];
 }
 
 export function parsePlan(markdown: string): Task[] {
@@ -40,14 +44,19 @@ export function parsePlan(markdown: string): Task[] {
   const conflictIndex = headings.findIndex((cell) => /conflicts?/.test(cell));
   if (idIndex < 0 || statusIndex < 0) throw new Error("task table needs '#' and 'Status' columns");
 
+  const separator = cells(lines[lines.indexOf(header) + 1] ?? "");
+  if (separator.length !== headings.length || separator.some((cell) => !/^:?-+:?$/.test(cell))) {
+    throw new Error("task table needs a Markdown separator row");
+  }
   const start = lines.indexOf(header) + 2;
   const tasks: Task[] = [];
   for (const line of lines.slice(start)) {
-    if (!line.startsWith("|")) break;
-    if (/^\|\s*-+\s*\|/.test(line)) continue;
+    if (!line.trimStart().startsWith("|")) break;
     const row = cells(line);
     const id = row[idIndex]?.trim();
-    if (!/^\d+$/.test(id ?? "")) continue;
+    if (row.length !== headings.length || !taskId.test(id ?? "")) {
+      throw new Error(`malformed task row: ${line.trim()}`);
+    }
     tasks.push({
       id,
       dependsOn: ids(row[dependencyIndex]),
@@ -55,17 +64,51 @@ export function parsePlan(markdown: string): Task[] {
       state: state(row[statusIndex] ?? ""),
     });
   }
+  validatePlan(tasks);
   return tasks;
 }
 
+function validatePlan(tasks: Task[]): void {
+  if (tasks.length === 0) throw new Error("task table is empty");
+  const byId = new Map<string, Task>();
+  for (const task of tasks) {
+    if (byId.has(task.id)) throw new Error(`duplicate task id: ${task.id}`);
+    byId.set(task.id, task);
+  }
+  for (const task of tasks) {
+    for (const id of [...task.dependsOn, ...task.conflictsWith]) {
+      if (id === task.id) throw new Error(`task ${task.id} references itself`);
+      if (!byId.has(id)) throw new Error(`task ${task.id} references unknown task ${id}`);
+    }
+  }
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  function visit(id: string): void {
+    if (visiting.has(id)) throw new Error(`dependency cycle at task ${id}`);
+    if (visited.has(id)) return;
+    visiting.add(id);
+    for (const dependency of byId.get(id)!.dependsOn) visit(dependency);
+    visiting.delete(id);
+    visited.add(id);
+  }
+  for (const task of tasks) visit(task.id);
+}
+
 export function summarize(tasks: Task[]): Summary {
+  validatePlan(tasks);
   const byId = new Map(tasks.map((task) => [task.id, task]));
   const counts: Record<TaskState, number> = { todo: 0, "in-progress": 0, done: 0, blocked: 0 };
   for (const task of tasks) counts[task.state]++;
-  const ready = tasks.filter((task) => task.state === "todo" &&
-    task.dependsOn.every((id) => byId.get(id)?.state === "done") &&
-    task.conflictsWith.every((id) => byId.get(id)?.state === "done"))
-    .map((task) => task.id);
+  // A conflict is mutual exclusion, not a dependency. Pick a deterministic batch
+  // in table order, considering declarations from either side and active tasks.
+  const reserved = tasks.filter((task) => task.state === "in-progress");
+  const ready: string[] = [];
+  for (const task of tasks) {
+    if (task.state !== "todo" || !task.dependsOn.every((id) => byId.get(id)?.state === "done")) continue;
+    if (reserved.some((other) => task.conflictsWith.includes(other.id) || other.conflictsWith.includes(task.id))) continue;
+    ready.push(task.id);
+    reserved.push(task);
+  }
   return { tasks, ready, counts };
 }
 

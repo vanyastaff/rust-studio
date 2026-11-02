@@ -21,7 +21,7 @@ This is the static gate (BUILD-GATE-adjacent). Evidence over assertion — cite 
    of the shipped build: it silences lints that fire under default features.
 1. **Format.** Check mode (default): `cargo fmt --all --check`. With `--fix`: `cargo fmt --all`.
    Respect the project's `rustfmt.toml` if present.
-2. **Clippy.** `cargo clippy --all-targets --all-features -- -D warnings`. With `--fix`:
+2. **Clippy.** `cargo clippy --all-targets -- -D warnings`. With `--fix`:
    `cargo clippy --fix --all-targets --all-features --allow-dirty` first, then re-run with
    `-D warnings` to confirm clean.
 3. **Triage** the findings: group by lint. Separate genuine issues from noise. Fix genuine ones

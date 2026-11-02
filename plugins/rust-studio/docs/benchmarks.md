@@ -52,7 +52,9 @@ round-6 run. Foreground was not slower (review-guard 114 s and 122 s against 307
 Two instrument defects surfaced on the way and are fixed in the runner: the shadowed
 `--plugin-dir` (`c7ae6db`), and pinned agent models (`model: sonnet|haiku|opus`, 20 of 34
 briefs) that 404 on an Ollama endpoint, so only `inherit` agents had ever run (`d0b469e` sets
-`CLAUDE_CODE_SUBAGENT_MODEL_FORCE` to the subject model).
+`CLAUDE_CODE_SUBAGENT_MODEL_FORCE` to the subject model in that historical runner).
+The current Claude contract uses `CLAUDE_CODE_SUBAGENT_MODEL=<model>` together with
+`CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`; the 0.60.0 runner follows that contract.
 
 Results: `evals/results/evolve-plugin-2026-09-17/` (`staged-ck`, `staged-r6`, `staged-r6-holdout`
 are the tree measurements). Reproduce a column:

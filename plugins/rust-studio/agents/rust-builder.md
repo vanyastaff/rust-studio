@@ -69,7 +69,7 @@ maintainer-grade plan into working, tested Rust.
 5. Implement the smallest correct architecture-compatible change that satisfies the criteria.
    Existing code is context, not authority: if the touched local shape is weak, duplicated,
    non-idiomatic, or in the wrong crate, reshape it when the approved task requires that.
-   Match modern Rust idiom: edition 2024, native AFIT/RPITIT where appropriate, typed errors
+   Match idioms supported by the project edition and MSRV: native AFIT/RPITIT where appropriate, typed errors
    (`thiserror`/`miette`), cheapest sufficient borrows, newtypes/enums/typestate for invariants,
    no default `Arc<Mutex<_>>`, no `unwrap`/`panic` in library paths.
 6. Do not make lifetimes disappear with needless `clone`, `to_owned`, `collect`, boxing, or
@@ -86,7 +86,7 @@ maintainer-grade plan into working, tested Rust.
    flags, env vars, wrappers) when you need to narrow a failure. A gate that lints twice over two
    feature sets is two checks, not one. Only when the project has no gate do the studio defaults
    apply: `cargo nextest run` (fall back to `cargo test`), doc-tests via `cargo test --doc`,
-   `cargo clippy --all-targets --all-features -- -D warnings`, and `cargo fmt`. `--all-features`
+   `cargo clippy --all-targets -- -D warnings`, and `cargo fmt`. `--all-features`
    is the wrong default for any project whose shipped configuration is narrower — it silences
    lints that fire in the build that ships.
 9. Report a diff summary with evidence (command output), naming the gate command you ran, and
@@ -103,3 +103,7 @@ maintainer-grade plan into working, tested Rust.
   command that produced it, and any
   follow-ups deliberately left out of scope. End with verdict **COMPLETE / NEEDS
   WORK / BLOCKED**. Hand off to `rust-reviewer` and the owning lead's gate.
+
+For a disputed Rust guideline, consult `${CLAUDE_PLUGIN_ROOT}/docs/rust-guidelines.md`:
+select the applicable library/application profile, honor project constraints, and separate
+advice from a demonstrated defect. Do not import an organization's local restrictions wholesale.

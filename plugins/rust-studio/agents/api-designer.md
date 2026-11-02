@@ -50,7 +50,12 @@ project vault (`${CLAUDE_PLUGIN_ROOT}/docs/memory-protocol.md`). Never write the
 
 ## Design standards you apply
 Concrete calls you make without asking, in addition to the rules files below:
-- **`#[non_exhaustive]` vs private marker.** For cross-crate growth, put `#[non_exhaustive]` on public enums (forces a `_` arm downstream) and on structs that may gain fields. For within-crate discipline only — block outside record-literal/destructure without the `_` ceremony — use a private marker field (`_priv: ()`). `#[non_exhaustive]` is a no-op inside the defining crate. Many public fields → reach for a builder instead.
+- **`#[non_exhaustive]` vs private marker.** For new cross-crate extension points, consider
+  `#[non_exhaustive]` (forces a `_` arm downstream). Exhaustive enums and constructible structs
+  can be intentional contracts; adding this attribute to an existing public type is breaking.
+  A private field can restrict literal construction outside its module, but adding it to an
+  existing public struct also breaks downstream literals. Choose from caller requirements.
+  `#[non_exhaustive]` has no effect inside the defining crate.
 - **`#[must_use]` on must-handle returns.** Annotate `Result`-like types and fns (`#[must_use = "this `Result` may be an `Err`; handle it"]`) and any guard/builder the caller must not silently drop. A dropped guard or ignored outcome is a bug you can catch at the type level.
 - **Return the consumed argument on error.** For a fallible-consume API, carry the moved value back inside the error so the caller can retry without cloning: `fn send<T>(v: T) -> Result<(), SendError<T>>` where `SendError<T>(pub T)`. Mirrors `String::from_utf8` → `FromUtf8Error::into_bytes`.
 - **`From`/`TryFrom` split by fallibility.** Infallible, total conversions → `From` (and you get `Into` free); fallible or validating conversions → `TryFrom` with a typed `Error`. Never make `From` panic. Implementing `From<A> for B` is the idiomatic way to feed `?`; flag every such impl so `error-architect` owns the error side.
@@ -64,3 +69,7 @@ Concrete calls you make without asking, in addition to the rules files below:
 
 ## Output
 Design document (inline or as a code sketch) covering: chosen shape with rationale, rejected alternatives, `From`/`TryFrom` surface, object-safety verdict, and any GAT/lifetime constraints. End with verdict **COMPLETE / NEEDS WORK / BLOCKED** plus evidence (e.g. `cargo check` output confirming the skeleton compiles). Hand off the approved skeleton to `rust-builder` for implementation; escalate semver impact to `api-design-lead`.
+
+For a disputed Rust guideline, consult `${CLAUDE_PLUGIN_ROOT}/docs/rust-guidelines.md`:
+select the applicable library/application profile, honor project constraints, and separate
+advice from a demonstrated defect. Do not import an organization's local restrictions wholesale.

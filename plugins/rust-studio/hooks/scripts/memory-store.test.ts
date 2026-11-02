@@ -146,7 +146,7 @@ describe("ranking", () => {
 
 describe("host settings + store resolution", () => {
   const saved: Record<string, string | undefined> = {};
-  const keys = ["CLAUDE_CONFIG_DIR", "CLAUDE_PLUGIN_ROOT", "CLAUDECODE", "CLAUDE_CODE_DISABLE_AUTO_MEMORY", "RUST_STUDIO_MEMORY_DIR", "CLAUDE_PLUGIN_OPTION_MEMORY_DIR"];
+  const keys = ["CLAUDE_CONFIG_DIR", "CLAUDE_PLUGIN_ROOT", "PLUGIN_ROOT", "CLAUDECODE", "CLAUDE_CODE_DISABLE_AUTO_MEMORY", "RUST_STUDIO_MEMORY_DIR", "CLAUDE_PLUGIN_OPTION_MEMORY_DIR"];
   beforeEach(() => {
     for (const k of keys) {
       saved[k] = process.env[k];

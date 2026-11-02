@@ -48,9 +48,14 @@ hook is a no-op: no stack briefing, no rule pointers, no memory recall, no verdi
 guard. This is the single highest-impact row, and the symptom is silence.
 
 **Hooks reach this session.** Existence is not delivery — a host may require a one-time
-interactive approval before a plugin's hooks run at all. Two pieces of evidence:
+interactive approval before a plugin's hooks run at all. Record the host version and surface
+(CLI, desktop, or cloud), installed version and loaded version. Use
+`references/codex-compat.md` or `references/claude-5-compat.md` for host-specific contracts.
+Separate three pieces of evidence:
 - the plugin's hook config lists the handlers (read it, count them by event);
-- a handler produces output when fed a synthetic payload on stdin.
+- a handler produces valid output when fed a synthetic payload on stdin;
+- a real event from this session delivers the expected briefing or rule context. A synthetic
+  run alone leaves host delivery unverified; report `?` until it is observed.
 
 Pass that payload through a **data heredoc**, not an inline string:
 
@@ -131,11 +136,12 @@ means the `PostToolUse` hook is not reaching this host, and that is a ✗ row.
 runner, MSRV fallback, and which ambient toggles are off. A toggle someone disabled months ago
 explains more "why didn't it do X?" than any other row.
 
-Report the host's **delegation caps** on the same terms, because they change what the team
-skills can do and nothing else surfaces them: `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` and
-`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` where set (Claude Code 2.1.217+). Unset is the normal
-case and reports as a `·`, not a ✗ — the studio ships no value for either. A cap set low is the
-answer to "why did `/team-*` run its lenses one at a time?"
+Report configured **delegation caps and routing overrides**: Claude's
+`CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`,
+`CLAUDE_CODE_SUBAGENT_MODEL`, `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` and
+`CLAUDE_CODE_SUBAGENT_EFFORT`; Codex's agent defaults and generated routing fields.
+Unset reports as `·`. Check support against the installed host; compare the effective worker
+model/effort with `references/model-routing.md` before claiming a gate inherits the session.
 
 ## Phase 2 — Report
 One line per row, worst first, each carrying its evidence and its fix:
@@ -152,18 +158,15 @@ capabilities missing), or **INERT** (the ambient layer is not reaching this sess
 and then the single highest-impact fix, not a list of everything imperfect.
 
 ## Phase 3 — Fix (gate)
-Propose the repairs as concrete commands and get approval before any of them runs. Installing
-a toolchain component, adding a binary, or writing to the host's settings changes the user's
-machine, so each is presented and approved, never applied on the way past
-(`references/collaboration.md`). Where the fix is outside your reach — a host-level trust
-approval, a plugin re-enable — say exactly what the user has to do and stop there.
+Prepare concrete repair commands or diffs. Apply repairs already authorized by the task;
+ask only for changes outside that scope or requiring a host trust decision. Existing
+authorization does not expire at this phase (`references/collaboration.md`). For actions only
+the user can perform, such as host trust approval, describe the exact remaining step.
 
-**When the host does not deliver hooks at all, the repair is a different channel, not a
-retry.** Codex CLI 0.153 enumerates a plugin's hooks, reports them completed, and executes only
-the user's own `~/.codex/hooks.json`; neither trusting them, nor the documented
-`hooks/hooks.json` discovery path, nor `--dangerously-bypass-hook-trust` changes it. Skills
-still load there, so the session looks healthy while the briefing and the standards never
-arrive — the reason this row is worth probing rather than assuming. Where that is the case, say
-so plainly, and offer `references/templates/agents-md.md`: the static half of the briefing, in
-the one file that host does read. Writing into the user's repository is an outward step —
-show the diff and get approval, never paste it on the way past.
+**When delivery is missing**, distinguish missing runtime, disabled/untrusted hooks, unsupported
+orchestration and an older loaded plugin. Codex supports trusted local plugin hooks; the old
+0.153.4 root-manifest regression is not evidence that all Codex hooks are broken. Claude plugin
+updates require `/reload-plugins` for hooks and a restart for monitors. Report the remaining
+activation step without claiming the disk update activated this session. When the host cannot
+deliver command hooks, offer `references/templates/agents-md.md` for static guidance. Apply a
+repair already authorized by the task; otherwise show the concrete settings or file diff first.

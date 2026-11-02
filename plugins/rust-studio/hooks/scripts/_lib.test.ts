@@ -1,5 +1,6 @@
 // Regression tests for the shared helpers + cross-script contracts fixed in the
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { existsSync, mkdtempSync, writeFileSync, utimesSync } from "node:fs";
 // hooks audit. Each test pins a bug that shipped:
@@ -126,12 +127,14 @@ describe("Stop hook host contract", () => {
     process.env.PLUGIN_ROOT = "/plugin";
     expect(isCodexHook()).toBe(true);
     process.env.CLAUDE_PLUGIN_ROOT = "/claude-plugin";
+    expect(isCodexHook()).toBe(true);
+    delete process.env.PLUGIN_ROOT;
     expect(isCodexHook()).toBe(false);
   });
 });
 
 describe("context hook host contract", () => {
-  const helper = new URL("./_lib.ts", import.meta.url).pathname;
+  const helper = fileURLToPath(new URL("./_lib.ts", import.meta.url));
 
   function runSnippet(source: string, env: Record<string, string | undefined>): string {
     const childEnv: Record<string, string> = { ...process.env } as Record<string, string>;
@@ -148,12 +151,12 @@ describe("context hook host contract", () => {
     return new TextDecoder().decode(result.stdout);
   }
 
-  test("Codex additional context is top-level JSON, not Claude's wrapper", () => {
+  test("Codex additional context names the hook event", () => {
     const out = runSnippet(
       `import { emitAdditionalContext } from ${JSON.stringify(helper)}; emitAdditionalContext("SessionStart", "hello");`,
       { PLUGIN_ROOT: "/plugin", CLAUDE_PLUGIN_ROOT: undefined },
     );
-    expect(JSON.parse(out)).toEqual({ additionalContext: "hello" });
+    expect(JSON.parse(out)).toEqual({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: "hello" } });
   });
 
   test("Claude additional context keeps the hookSpecificOutput wrapper", () => {
@@ -174,7 +177,7 @@ describe("context hook host contract", () => {
     const source = `import { emitUserPromptContext } from ${JSON.stringify(helper)}; emitUserPromptContext("note");`;
     expect(runSnippet(source, { PLUGIN_ROOT: undefined, CLAUDE_PLUGIN_ROOT: "/plugin" })).toBe("note");
     expect(JSON.parse(runSnippet(source, { PLUGIN_ROOT: "/plugin", CLAUDE_PLUGIN_ROOT: undefined }))).toEqual({
-      additionalContext: "note",
+      hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "note" },
     });
   });
 });

@@ -15,9 +15,9 @@ The studio assumes these MCP servers are configured in your own Claude Code sett
 - **exa** — external evidence (real code examples, crates.io adoption, advisory/issue audits).
 
 The plugin **intentionally does not bundle** these (no `mcpServers` in `plugin.json`): MCP
-servers are loaded from the *user's* project/user settings, not from a plugin — and agent-team
-**teammates** in particular only see the MCP you have configured ambiently, never a plugin's
-bundled servers. So configure them once for yourself and every agent in the studio inherits them.
+current hosts can load plugin-provided MCP servers, but Studio supplies none. Discover the
+tools actually exposed to each worker; a parent having a tool does not guarantee inheritance.
+User/project configuration is one way to make these optional companions available.
 
 Install serena itself with `uv tool install -p 3.13 serena-agent`, then `serena init` (its README
 is the source of truth for client wiring; it configures a launch command per client rather than
@@ -106,7 +106,9 @@ macro-generated / `cfg`-gated sites a language server can't see.
   transforms, far safer than regex on Rust source.
 
 ## External evidence & prior art
-Decisions want data, not opinion (`working-preferences.md`). Use the **exa** MCP:
+Decisions want data, not opinion (`working-preferences.md`). Use available search/read tools
+(Firecrawl, Keenable, exa, or host web tools), honoring the user's provider choice. Discover
+the actual tool names and cite primary sources. For an exa installation:
 - `mcp__exa__web_fetch_exa` — read a known page (docs.rs, release notes, a repo file) as
   clean markdown; the follow-up to a search hit.
 - `mcp__exa__web_search_exa` — crates.io adoption, peer-project patterns, RUSTSEC advisories,
@@ -122,7 +124,7 @@ A green under different flags is a green about a different build: `project-gate.
 |-----|---------|
 | Run tests (fast, isolated) | `cargo nextest run` (fall back to `cargo test`); doc-tests via `cargo test --doc` |
 | Coverage | `cargo llvm-cov` |
-| Lints / format | the project's lint target if it has one; else `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt` |
+| Lints / format | the project's lint target if it has one; else `cargo clippy --all-targets -- -D warnings`, `cargo fmt` |
 | Security / advisories | `cargo audit`, `cargo deny check` |
 | Semver / public API | `cargo semver-checks`, `cargo public-api` |
 | Unused/misplaced deps | `cargo shear` (AST-based via rust-analyzer's parser; `--fix`; `--expand` on nightly for macro-heavy code) — `cargo machete` (regex, fast) / `cargo udeps` (nightly, compiler-based) as fallbacks |

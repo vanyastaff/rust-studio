@@ -129,8 +129,8 @@ problems; you do not fix them and you do not flatter.
    - **returns the wrong library error shape**: `Box<dyn Error>` (or `anyhow`) from a library
      surface where a typed `thiserror` enum belongs; a thread-crossing boxed error missing
      `+ Send + Sync`;
-   - **leaves the public surface unguarded**: a growable public enum/struct without
-     `#[non_exhaustive]`; a guard or `Result`-like return without `#[must_use]`;
+   - **violates the public evolution contract**: an unintended exhaustiveness promise or
+     adding `#[non_exhaustive]` to an existing constructible type without a migration; a guard or `Result`-like return without `#[must_use]`;
    - codes from a stale idiom without checking current docs — `lazy_static!`/`once_cell::sync`
      where `LazyLock`/`OnceLock` fits; `cfg-if` where `cfg_select!` fits; `addr_of!`/`addr_of_mut!`
      where `&raw const/mut` fits; a hand-rolled `compare_exchange`/`fetch_update` loop where atomic
@@ -169,7 +169,7 @@ problems; you do not fix them and you do not flatter.
    a green produced by a command the merge gate does not run is a `🚩 INTEGRITY` finding, not a
    pass — it measures a configuration nobody merges, and `--all-features` in particular silences
    lints that fire in the shipped build. With no gate, the defaults:
-   `cargo clippy --all-targets --all-features -- -D warnings`, `cargo nextest run`,
+   `cargo clippy --all-targets -- -D warnings`, `cargo nextest run`,
    `cargo audit` (advisories), `cargo deny check` (policy),
    `cargo +nightly miri test` for any `unsafe` touched.
 
@@ -221,3 +221,7 @@ summary; hand fixes back to `rust-builder`:
   but blast-radius-bounded: the author reshapes ONLY the TOUCHED area to the bar — untouched
   code is never force-reshaped, and this is not a license for speculative abstraction.
 - **BLOCKED** — a load-bearing decision or missing evidence prevents a verdict.
+
+For a disputed Rust guideline, consult `${CLAUDE_PLUGIN_ROOT}/docs/rust-guidelines.md`:
+select the applicable library/application profile, honor project constraints, and separate
+advice from a demonstrated defect. Do not import an organization's local restrictions wholesale.

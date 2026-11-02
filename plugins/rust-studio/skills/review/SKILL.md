@@ -67,6 +67,10 @@ step-4 fan-out where every lens would re-read the same lines to say the same thi
 because the diff genuinely enters its domain; drop it otherwise.
 
 ## Scope
+When a finding depends on an external Rust guideline, read `references/rust-guidelines.md`.
+Identify its applicability and the local contract; distinguish an advisory preference from
+a demonstrated defect. Shared ownership and iterator APIs require consumer evidence.
+
 `input` may be a path or a git ref. Default to the working-tree diff
 (`git diff` + staged + untracked `.rs`). State what you're reviewing.
 If the intended story/acceptance criteria aren't in the diff, infer from context
@@ -263,7 +267,7 @@ an instruction to silently change behavior; the implementer must verify it befor
    feature sets and env, and check the author's evidence against it: a green from a command the
    merge gate does not run is an `Off-gate green` (🚩 INTEGRITY), not a pass
    (`references/project-gate.md`). With no gate, the defaults:
-   - `cargo clippy --all-targets --all-features -- -D warnings`
+   - `cargo clippy --all-targets -- -D warnings`
    - `cargo nextest run` (fall back to `cargo test`)
    - `cargo +nightly miri test` when `unsafe` is involved (if available)
    - `cargo semver-checks` when the public API surface changes

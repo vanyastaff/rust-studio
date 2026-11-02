@@ -42,7 +42,7 @@ reason to fall back to "CI is green". No repo gate defined → the trio stands a
 1. **Run** (scope from `input` — package, feature set, or test filter):
    - the repo's own pre-PR gate, when one exists (see **Repo gate first**)
    - `cargo fmt --all --check`
-   - `cargo clippy --all-targets --all-features -- -D warnings`
+   - `cargo clippy --all-targets -- -D warnings`
    - `cargo nextest run` for unit/integration tests; `cargo test --doc` for doc-tests.
 
 2. **All green?** → stop and report success with the captured output. Done.

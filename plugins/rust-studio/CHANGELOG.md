@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.0] - 2026-11-01
+
+### Changed
+
+- Added a source-backed Rust guideline catalog covering Google, Microsoft, Rust API/Style
+  Guidelines, ANSSI, Rust Design Patterns, Rustonomicon and Cargo SemVer. Adoption, API design
+  and review select applicable guidance and record exceptions rather than importing vendor
+  restrictions into every project.
+- Core/API rules now choose borrowed, iterator or owned returns from consumer needs, weigh
+  generic parameter costs, distinguish shared ownership from deep copies, and prefer readable
+  loops where appropriate. Existing public types require compatibility checks before adding
+  `#[non_exhaustive]`; lint verification uses the repository's actual gate.
+- Refreshed Codex and Claude Code compatibility from official sources read November 1.
+  Corrected model inheritance/force semantics, documented the new subagent effort default,
+  separated installed and loaded plugin state, and distinguished direct hook tests from actual
+  host delivery. The supported Codex compatibility manifest remains in use.
+
+### Fixed
+
+- Codex context hooks now emit the current documented `hookSpecificOutput` event envelope.
+  Codex is recognized when both `PLUGIN_ROOT` and its `CLAUDE_PLUGIN_ROOT` compatibility alias
+  are present, preserving JSON Stop blocking and preventing skipped memory-index injection.
+  Regression tests cover both hosts; six current-host cases failed before the fix.
+- The eval runner now uses `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` alongside the requested
+  subject model, matching current Claude routing rather than passing a model name as a flag.
+- Removed stale claims that Codex cannot execute plugin hooks and that Claude's `ultrathink`
+  keyword has no effect. Studio's description budget is now identified as a project choice.
+- Reviewed the 33 agent briefs and 61 skill entry points. Aligned fallback lint commands,
+  API evolution choices, async mutex guidance, optional tool discovery and existing user
+  authorization with the shared contracts.
+- Studied `nick-vels/skills` Autopilot 2.2.1 at a pinned revision. Adapted strict plan
+  validation to the existing `plan-status` helper: reject invalid tables and dependency
+  graphs before scheduling; select non-conflicting ready batches without symmetric deadlock.
+  Ten new regression checks failed before the fix; all 13 plan-status tests now pass.
+
 ## [0.59.1] - 2026-09-19
 
 ### Fixed

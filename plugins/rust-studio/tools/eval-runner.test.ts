@@ -8,6 +8,16 @@ import { join } from "node:path";
 import { auditPrompt, bareName, caseTargets, casesForTargets, coverageReport, installedIdsFor, targetMatches, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, pluginName, splitFrontmatter, stagePlugin, FIXTURE_AGENTS } from "./eval-runner.ts";
 import { rmSync } from "node:fs";
 import { dirname } from "node:path";
+import { cleanEnv } from "./eval-runner.ts";
+
+test("explicit subject model uses Claude's boolean force switch without changing parent env", () => {
+  const previous = process.env.CLAUDE_CODE_SUBAGENT_MODEL_FORCE;
+  const env = cleanEnv("sonnet");
+  expect(env.CLAUDE_CODE_SUBAGENT_MODEL).toBe("sonnet");
+  expect(env.CLAUDE_CODE_SUBAGENT_MODEL_FORCE).toBe("1");
+  expect(process.env.CLAUDE_CODE_SUBAGENT_MODEL_FORCE).toBe(previous);
+  expect(env.CLAUDE_CODE_SESSION_ID).toBeUndefined();
+});
 
 const line = (o: unknown) => JSON.stringify(o) + "\n";
 

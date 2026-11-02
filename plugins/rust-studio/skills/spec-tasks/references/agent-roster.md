@@ -5,11 +5,11 @@ The org chart. Each agent's `model`, the domain it owns, what it explicitly does
 
 **Model policy** (rationale in `claude-5-compat.md`): the judgment-heavy agents (the two
 directors, `harsh-critic`, `rust-reviewer`, `unsafe-auditor`, `slop-auditor`) use `inherit`, so
-they run at the **session model** and never judge below the model that wrote the code. Specialists stay
-`sonnet` and the scout `haiku` for cost. `security-auditor` stays **pinned to `opus`** so that
-a cyber-classifier trip falls back inside the audit instead of switching the whole session.
-**No agent pins `effort`** — every one of them inherits the session's level, which is what
-makes effort the user's dial rather than the roster's.
+they request the **session model**. Specialists use `sonnet`, the scout `haiku`, and
+`security-auditor` uses `opus` as a role alias. Host force settings, provider restrictions and
+fallbacks can change the effective model; inspect it before claiming the gate's routing.
+**No agent pins `effort`** — host inheritance or a user-configured subagent default selects it
+(`model-routing.md`).
 
 These labels are routing classes. Claude Code resolves them through its model aliases; a gateway
 maps those aliases to its own available models. Codex uses the optional local routing file from

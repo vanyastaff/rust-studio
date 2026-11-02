@@ -56,8 +56,9 @@ the options and say when a recalled note changes the approach. If nothing surfac
      codebase patterns.
    - Error handling: `thiserror` enum is the default for public surfaces; note if
      deviating.
-   - Stability promise: `#[non_exhaustive]` on enums/structs by default for public
-     crates.io APIs.
+   - Stability promise: decide whether callers need exhaustive matching or construction.
+     Use `#[non_exhaustive]` for intended growth; changing an existing public type requires
+     downstream and SemVer checks. For guideline tradeoffs, read `references/rust-guidelines.md`.
    If any of these would change the shape materially and can't be resolved from
    context, include them in the batched ask above.
 

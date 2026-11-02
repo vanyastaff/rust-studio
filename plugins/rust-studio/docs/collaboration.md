@@ -21,7 +21,8 @@ every per-domain gate in `verdicts.md` §4 runs **on top of** it, and a genuinel
 one-line note rather than bypassing the bar. The standard is
 `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — read it first.
 
-We are solo active-dev with no released API, so restructuring is courage, not creep: existing
+Establish release status before applying active-development policy. Published APIs retain their
+compatibility contracts; unreleased projects may reshape them within authorized scope. Existing
 code is context, not authority — reshape weak/duplicated/non-idiomatic/wrong-crate shapes you
 must TOUCH, within the task's blast radius. A workaround/shim/adapter/alias/migrate-later TODO is
 a defect, not a deferral. Compiles + clippy-clean + tests-green + correct is the **FLOOR**, not

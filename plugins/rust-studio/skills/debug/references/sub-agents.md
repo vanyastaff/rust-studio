@@ -1,4 +1,4 @@
-# When sub-agents are unavailable
+# When sub-agents are unavailable or not authorized
 
 Many skills here name an agent: "task owned by `rust-scout`", "delegate all writes to
 `rust-builder`", "`rust-reviewer` performs the final diff audit". Those agents are separate
@@ -7,6 +7,8 @@ skill. If you were installed on your own, they do not exist here, and nothing yo
 will spawn them.
 
 **That is not a blocker. Play the roles yourself, sequentially, in this session.**
+The same fallback applies when host policy does not authorize delegation. Skill role names
+do not override that policy. Report a self-review as self-review, never as independent acceptance.
 
 A phase named for an agent is a phase, not a process. Scout the edit sites before you plan.
 Plan before you write. Read the finished diff back as an adversarial reviewer, hunting for

@@ -54,10 +54,10 @@ Never write the vault yourself.
    crates.io/docs.rs pages otherwise) — evidence
    over opinion.
 4. Define the concurrency model: channel types, bounded capacities, backpressure strategy,
-   timeout budget per I/O operation. Default: typed errors, no `Arc<Mutex<_>>` across `.await`
+   timeout budget per I/O operation. Default: typed errors, no blocking mutex guard across `.await`
    without explicit justification; prefer channels.
 5. Design shutdown: `CancellationToken` propagation, `JoinSet` / `JoinHandle` collection,
-   drain ordering, cleanup guarantees. Use native AFIT (`async fn` in traits, edition 2024)
+   drain ordering, cleanup guarantees. Use native AFIT (`async fn` in traits, when the project MSRV supports it)
    where the interface calls for it.
 6. Specify the plan; delegate writing to `rust-builder` via `async-runtime-specialist` or
    `web-framework-specialist`. Observability (tracing spans, metrics) is a DoD requirement —
@@ -79,7 +79,7 @@ Never write the vault yourself.
 Before this gate passes, verify:
 - [ ] No blocking calls on the async executor; `spawn_blocking` used for unavoidable blocking.
 - [ ] Every `.await` point is cancellation-safe (no half-applied state on drop).
-- [ ] Futures crossing `spawn` are `Send + 'static`; no `Mutex` held across `.await`.
+- [ ] Futures crossing `spawn` are `Send + 'static`; no blocking mutex held across `.await`; async lock scope and cancellation are justified.
 - [ ] Bounded concurrency and backpressure in place; timeouts on all I/O operations.
 - [ ] Errors map to correct responses without leaking internal details or panicking.
 - [ ] Tracing spans and key metrics present (observability as DoD).

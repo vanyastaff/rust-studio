@@ -361,13 +361,17 @@ export function gradeFileExists(g: Grader, cwd: string): GraderResult {
 // Running claude
 // ---------------------------------------------------------------------------------------------
 
-function cleanEnv(): Record<string, string> {
+export function cleanEnv(model?: string): Record<string, string> {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env)) {
     if (v == null) continue;
     // Never let a run attach to the session that launched the runner.
     if (k === "CLAUDE_CODE_SESSION_ID" || k === "CLAUDE_CODE_CHILD_SESSION" || k === "CLAUDE_CODE_MESSAGING_SOCKET") continue;
     env[k] = v;
+  }
+  if (model) {
+    env.CLAUDE_CODE_SUBAGENT_MODEL = model;
+    env.CLAUDE_CODE_SUBAGENT_MODEL_FORCE = "1";
   }
   return env;
 }
@@ -413,11 +417,7 @@ async function runSession(a: SessionRunArgs): Promise<RunTrace & { raw: string }
   if (a.allowedTools.length) args.push("--allowedTools", ...a.allowedTools);
   if (a.model) args.push("--model", a.model);
   // The subject-model override puts each spawned agent on the same model as the orchestrator.
-  const env = cleanEnv();
-  if (a.model) {
-    env.CLAUDE_CODE_SUBAGENT_MODEL = a.model;
-    env.CLAUDE_CODE_SUBAGENT_MODEL_FORCE = a.model;
-  }
+  const env = cleanEnv(a.model);
   const r = await runProcess(["claude", ...args], a.cwd, a.timeoutSec * 1000, env);
   const trace = parseStream(r.stdout);
   trace.stderrTail = r.stderr.slice(-2000);

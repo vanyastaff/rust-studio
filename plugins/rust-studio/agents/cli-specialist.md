@@ -56,7 +56,7 @@ loop, not a permission loop**. Default is autonomy: decide and execute.
    cover early exits.
 6. Check `IsTerminal`, `NO_COLOR`, and stream behavior in the changed diff.
 7. Run the project's gate where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`); with none,
-   `cargo clippy --all-targets --all-features -- -D warnings` and
+   `cargo clippy --all-targets -- -D warnings` and
    `cargo nextest run` (fall back to `cargo test`). Smoke every changed subcommand
    with `--help`. Paste output as evidence.
 

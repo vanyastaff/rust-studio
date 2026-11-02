@@ -13,7 +13,7 @@ and hold the API-GATE.
 ## You own
 - Public API surface design and the re-export strategy.
 - Semver impact calls: what is breaking, what is additive, what is internal.
-- Policy for `#[non_exhaustive]` and sealed traits (where growth is expected, apply them).
+- Policy for `#[non_exhaustive]` and sealed traits, including downstream compatibility.
 - API-GATE sign-off.
 
 ## You do NOT own
@@ -46,12 +46,12 @@ Explore alternatives only when the choice changes the API contract or project di
    use the session's language-server layer (harness `LSP` tool or serena, per `${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`)
    for symbol-level navigation; use `rg` (harness Grep) to catch `cfg`-gated or
    macro-generated pub items a language server may miss. Confirm scope before proposing changes.
-2. Weigh ergonomics vs. flexibility vs. semver cost for each decision. Prefer
-   `impl Into<T>` / `impl AsRef<T>` at call-site boundaries; return concrete types from
-   constructors and builders. Use edition-2024 idioms — native AFIT, typed errors,
-   no `Arc<Mutex<_>>` by default.
-3. Identify items where growth is expected; apply `#[non_exhaustive]` or a sealed-trait
-   pattern. Record the rationale in the design doc or ADR. Remember `#[non_exhaustive]`
+2. Weigh ergonomics, inference, ownership and semver cost against real callers. Use borrowed
+   parameters for borrowed work; use `Into`/`AsRef` or iterators when callers benefit enough
+   to justify generic complexity. Return owned collections when ownership is the contract.
+   Use idioms supported by the project edition and MSRV; shared ownership may be legitimate.
+3. Decide the evolution contract for each public type; consider `#[non_exhaustive]` or sealing
+   for new extension points. Adding either to an existing open API may itself be breaking. Record the rationale in the design doc or ADR. Remember `#[non_exhaustive]`
    constrains only *downstream* crates — it has no effect within the defining crate, so it
    protects consumers, not your own code.
 4. Check for accidental `pub`: unexported helper types leaking through public signatures,
@@ -131,8 +131,8 @@ Before this gate passes, verify:
 - [ ] Every pub item is documented with examples that compile.
 - [ ] Semver impact understood and recorded (patch / minor / major); breaking-change
       checklist walked, including the hazards `cargo semver-checks` misses.
-- [ ] `#[non_exhaustive]` / sealed traits applied where growth is expected (and the choice
-      to seal — or deliberately not seal — recorded; both are one-way at version boundaries).
+- [ ] Exhaustiveness and sealing choices match the evolution contract, with downstream
+      construction, matching and implementations checked for compatibility.
 - [ ] No blanket impl added to a fundamental type (`&T`, `&mut T`, `Box<T>`, `Pin<P>`)
       without classifying it as breaking.
 - [ ] Auto traits (`Send`/`Sync`/`Unpin`/`UnwindSafe`/`RefUnwindSafe`) listed explicitly on
@@ -154,3 +154,7 @@ but wrong SHAPE — reshape the touched area, see coordination-protocol §5) plu
 (`cargo semver-checks`
 output, `cargo public-api` diff). Hand off to `api-designer`, `error-architect`, or
 `docs-engineer`.
+
+For a disputed Rust guideline, consult `${CLAUDE_PLUGIN_ROOT}/docs/rust-guidelines.md`:
+select the applicable library/application profile, honor project constraints, and separate
+advice from a demonstrated defect. Do not import an organization's local restrictions wholesale.

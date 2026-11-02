@@ -143,7 +143,7 @@ Re-run Phase 0's commands and compare against its recorded numbers:
   a finding, not a rounding error (`references/integrity-and-evidence.md`, denominator gaming).
   This green means as much as Phase 0 step 4 earned it: for a class the baseline was shown blind
   to, it is not behavioral evidence and the `BEHAVIORAL:` lines say `unverified`, not `tests pass`.
-- `cargo clippy --all-targets --all-features -- -D warnings` — clean.
+- `cargo clippy --all-targets -- -D warnings` — clean.
 - `cargo +nightly miri test` where the diff touched `unsafe`.
 - `cargo semver-checks` where the public surface could have moved.
 - Benches / `cargo bloat` where Phase 0 recorded a number — an edition or runtime major can

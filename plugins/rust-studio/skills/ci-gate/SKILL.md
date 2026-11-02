@@ -83,9 +83,8 @@ modern (0.16+) schema — pre-0.14 keys hard-error.
 
 6. **Verify** (evidence, not assertion) — run the project's gate first where one exists, with
    its own feature sets and env, then:
-   - `cargo clippy --all-targets --all-features -- -D warnings` — must be clean on the real code
-     (if it now errors, that is a real footgun the gate just caught — fix the code, do **not** drop
-     the ban).
+   - `cargo clippy --all-targets -- -D warnings` must be clean on the real code.
+     If it now errors, fix the code; do **not** drop the ban.
    - `bash scripts/check-gate.sh` → `gate intact`.
    - `cargo nextest run --profile ci` passes; show the summary.
    - If `lefthook` is installed, `lefthook run pre-push` (or note it runs on next push).

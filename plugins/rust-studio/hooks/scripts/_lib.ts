@@ -43,24 +43,18 @@ export function emit(obj: unknown): never {
   process.exit(0);
 }
 
-/** Emit model-visible context using the active host's hook output contract.
- *
- * Claude Code still consumes the older `hookSpecificOutput` wrapper on the hooks this studio
- * targets. Codex 0.155 validates stdout as a hook-output JSON object and expects
- * `additionalContext` at the top level; a Claude-shaped wrapper is parseable JSON but invalid
- * for those events. Keep that host split in one place so hook scripts don't accidentally write
- * plain prompt text or the wrong wrapper to stdout. */
+/** Both current hosts accept event-scoped context. Keep Claude's session title extension
+ * out of Codex output. The dated source contract is recorded in docs/codex-compat.md. */
 export function emitAdditionalContext(
   event: string,
   additionalContext: string,
   opts: { sessionTitle?: string } = {},
 ): never {
-  if (isCodexHook()) emit({ additionalContext });
   emit({
     hookSpecificOutput: {
       hookEventName: event,
       additionalContext,
-      ...(opts.sessionTitle ? { sessionTitle: opts.sessionTitle } : {}),
+      ...(!isCodexHook() && opts.sessionTitle ? { sessionTitle: opts.sessionTitle } : {}),
     },
   });
 }
@@ -69,7 +63,7 @@ export function emitAdditionalContext(
  * while Codex validates stdout as JSON. Preserve Claude's long-standing behavior and adapt
  * only the Codex side. */
 export function emitUserPromptContext(additionalContext: string): never {
-  if (isCodexHook()) emit({ additionalContext });
+  if (isCodexHook()) emitAdditionalContext("UserPromptSubmit", additionalContext);
   try {
     process.stdout.write(additionalContext);
   } catch {
@@ -83,11 +77,10 @@ export function done(): never {
   process.exit(0);
 }
 
-/** The two hosts use different Stop-hook block contracts. Claude Code turns exit 2 plus stderr
- * into feedback. Codex requires a JSON decision on stdout for Stop, so returning Claude's shape
- * there becomes an "invalid stop hook JSON output" error instead of a continuation. */
+/** Codex sets PLUGIN_ROOT and also Claude-compatible aliases. The alias alone cannot
+ * identify Claude; use the Codex-specific variable before checking Claude variables. */
 export function isCodexHook(): boolean {
-  return Boolean(process.env.PLUGIN_ROOT) && !process.env.CLAUDE_PLUGIN_ROOT;
+  return Boolean(process.env.PLUGIN_ROOT);
 }
 
 /** Block a Stop hook and return its feedback using the active host's contract. */

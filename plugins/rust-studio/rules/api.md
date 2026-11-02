@@ -26,6 +26,8 @@ Applies to crate roots (`lib.rs`), public surface modules, and anything re-expor
   there you want the compiler to flag every unhandled variant.
 - Public structs that may grow fields: `#[non_exhaustive]` or constructor + getters
   (or a builder when there are many fields).
+  Adding `#[non_exhaustive]` to an existing constructible struct or exhaustive enum is a
+  breaking change. Inspect downstream literals and matches and run SemVer checks first.
 - Seal traits you don't want implemented downstream (private supertrait pattern).
 - Don't expose third-party types in your public signatures unless that dependency is
   intentionally part of your contract (it pins your semver to theirs).
@@ -101,7 +103,11 @@ without a path from the old shape to the new one.
   (`active-dev.md`).
 
 ## Ergonomics
-- Accept `impl Into<...>` / `impl AsRef<...>` at boundaries; return concrete types.
+- Use `Into`/`AsRef` at reusable boundaries when actual callers benefit; concrete parameters
+  are often simpler in application code. Account for inference and monomorphization costs.
+- Accept `IntoIterator` when a reusable API only traverses input. Return an iterator when it
+  avoids forced allocation; return a collection when callers need ownership or random access,
+  or when the implementation already constructs it. Document borrowed iterator lifetimes.
 - Borrow the target, not the wrapper, in parameters: `&str`/`&[T]`/`&T`, not
   `&String`/`&Vec<T>`/`&Box<T>` (the wrapper form rejects `&'static str` and split slices).
 - Provide `From`/`TryFrom` conversions (infallible vs fallible); implement standard

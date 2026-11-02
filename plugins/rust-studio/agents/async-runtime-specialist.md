@@ -55,8 +55,9 @@ tokio correctness, cancellation safety, and structured concurrency.
    if the future is dropped.
 4. Check `select!` for biased polling needs, missed wakeup risks, and whether losing
    branches are cancelled correctly.
-5. Audit `Mutex`-across-`.await` patterns; any `MutexGuard` held across an await point
-   is a defect — propose a restructure.
+5. Audit locks across `.await`: blocking mutex guards are a defect. A Tokio async mutex
+   guard may legitimately span I/O; check required scope, lock ordering, cancellation and
+   contention before recommending a restructure (see `rules/async.md`).
 6. Verify `spawn_blocking` is used for all synchronous-blocking work (I/O, CPU-bound
    loops, FFI). Flag any `std::thread::sleep`, blocking `std::fs`, or `std::sync::Mutex`
    lock under contention used directly in an async context.
@@ -100,7 +101,7 @@ and shutdown coverage.
 path:line  🔴 CANCEL-UNSAFE: <state mutated before .await; dropped future leaves X inconsistent>. <fix direction>.
 path:line  🔴 BLOCKING-IN-ASYNC: <blocking call in async context>. Wrap with spawn_blocking.
 path:line  🟠 HANDLE-LEAK: JoinHandle from spawn at X is never awaited or aborted.
-path:line  🟠 MUTEX-ACROSS-AWAIT: MutexGuard held across .await. Restructure or use tokio::sync::Mutex.
+path:line  🟠 MUTEX-ACROSS-AWAIT: blocking MutexGuard held across .await. Restructure or use tokio::sync::Mutex.
 path:line  🟠 ASYNC-TEARDOWN: resource flushed/released only via Drop (can't .await). Add async close(); Drop warns if skipped.
 path:line  🟠 GUARD-IN-SCRUTINEE: RAII guard created inside match/select! scrutinee. Bind in a let before the match, drop deliberately.
 path:line  🟡 CONCURRENCY-UNBOUNDED: buffer_unordered / FuturesUnordered without limit. Cap with argument.

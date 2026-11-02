@@ -49,6 +49,9 @@ adoption notes exist if this was run before; carry them in. If nothing surfaces,
 5. Infer the implicit standards already in use: error handling style (`thiserror`,
    `anyhow`, custom enums), logging/tracing setup, test patterns (unit vs. integration vs.
    property-based), edition and MSRV (from `Cargo.toml`).
+   When selecting an external guideline or resolving conflicting conventions, read
+   `references/rust-guidelines.md`. Record the profile, crate scope and justified exceptions;
+   distinguish application code from reusable libraries before proposing changes.
 
 ---
 

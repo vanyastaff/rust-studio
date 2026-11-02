@@ -37,8 +37,8 @@ Read it before adding or reshaping a skill. The mechanics below are what CI enfo
 - No host-specific APIs in portable skills (`CLAUDE_PLUGIN_ROOT`, `$ARGUMENTS`, task/team
   tool names, …). Describe capabilities instead. `validate-distribution.sh` enforces the
   exact list. `eval-agents` and `progress-bar` are the labeled Claude-only exceptions.
-- `SKILL.md` under 500 lines, and all skill descriptions share a 6,500-character budget (Codex
-  bounds the initial skill catalog).
+- `SKILL.md` under 500 lines, and all skill descriptions share Studio's conservative
+  6,500-character budget. Codex has a separate configurable token budget for discovery.
 - A side-effecting skill (publishes, commits, scaffolds, rewrites machine config) is
   user-invoked in **both** harnesses: `disable-model-invocation: true` in the frontmatter
   *and* `allow_implicit_invocation: false` in `skills/<name>/agents/openai.yaml`.

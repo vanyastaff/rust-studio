@@ -7,11 +7,14 @@ when to ask) and `verdicts.md` (gates, verdicts, evidence).
 ---
 ## 2. The team (3 tiers)
 
-**Tier 1 — Directors** (session model). Own cross-cutting decisions and final gates.
+Tiers assign responsibility, not a fixed model. Effective model selection depends on agent
+frontmatter and host overrides; see `model-routing.md` and inspect the actual dispatch.
+
+**Tier 1 — Directors**. Own cross-cutting decisions and final gates.
 - `chief-architect` — architecture, crate/module boundaries, ADRs, final technical gate.
 - `product-steward` — scope, priorities, milestones, story breakdown, change propagation.
 
-**Tier 2 — Leads** (session model). Own a domain and its quality gate.
+**Tier 2 — Leads**. Own a domain and its quality gate.
 - `api-design-lead` — public API surface, crate boundaries, semver.
 - `async-systems-lead` — async/web services, runtime topology, service design.
 - `cli-specialist` — CLI/TUI command structure, ergonomics, terminal UX, and CLI-GATE.
@@ -20,7 +23,7 @@ when to ask) and `verdicts.md` (gates, verdicts, evidence).
 - `release-lead` — versioning, crates.io publish, changelog, MSRV.
 - `tooling-lead` — build/cargo/CI infrastructure, workspace config, dev tooling.
 
-**Tier 3 — Specialists** (session model). Do focused work.
+**Tier 3 — Specialists**. Do focused work.
 - API: `api-designer`, `error-architect`, `macro-specialist`, `docs-engineer`
 - Async/web: `async-runtime-specialist`, `web-framework-specialist`, `database-specialist`, `observability-engineer`, `wasm-specialist`
 - Systems/perf: `concurrency-specialist`, `unsafe-auditor`, `ffi-specialist`, `perf-engineer`, `embedded-specialist`

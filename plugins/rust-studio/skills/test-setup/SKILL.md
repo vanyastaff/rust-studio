@@ -63,7 +63,7 @@ See `references/collaboration.md`.
      in `.cargo/config.toml` — whichever the user preferred in Phase 1.
    - Respect all conventions in `references/testing.md`.
    - Run `cargo check --tests --benches` and the project's gate (`references/project-gate.md`;
-     `cargo nextest run` and `cargo clippy --all-targets --all-features -- -D warnings` where
+     `cargo nextest run` and `cargo clippy --all-targets -- -D warnings` where
      it has none); fix any issues.
    - In a multi-crate workspace, scope a per-crate test command as
      `cargo nextest run --workspace -E 'package(<crate>)'`, never `-p <crate>`: a `-p` build

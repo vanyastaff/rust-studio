@@ -2,12 +2,16 @@
 
 How the studio runs on Codex, and the authoring rules that keep it working there. The Claude
 analogue is `claude-5-compat.md`; this file covers only what differs. Grounded in OpenAI's
-official guidance, re-checked 2026-09-07:
+official guidance, re-checked **2026-11-01**:
 
 - [Prompting](https://learn.chatgpt.com/docs/prompting)
 - [Best practices](https://learn.chatgpt.com/guides/best-practices)
 - [Configuration reference](https://developers.openai.com/codex/config-reference)
 - [Subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
+- [Changelog](https://developers.openai.com/codex/changelog)
+- [Hooks](https://learn.chatgpt.com/docs/hooks)
+- [Plugin packaging](https://developers.openai.com/plugins/build/plugins)
+- [Skill discovery](https://developers.openai.com/codex/build-skills)
 
 **Do not hardcode a Codex model name anywhere in this plugin.** The lineup and its naming have
 changed repeatedly, and a drifted constant in a prompt is worse than no constant — it reads as
@@ -18,17 +22,52 @@ live docs.
 
 | Studio asset | Codex path | Notes |
 |---|---|---|
-| 62 skills | native, via `.codex-plugin/plugin.json` → `skills/` | Also installable standalone with `npx skills add` |
-| 9 hooks | `hooks/codex-hooks.json` | Working since v0.50.0 — see below |
+| Skills | native, via `.codex-plugin/plugin.json` → `skills/` | Inventory comes from the manifest and distribution validator |
+| Hooks | `hooks/codex-hooks.json` | Delivery requires host support, configuration and trust |
 | 33 agents | generated TOMLs in `~/.codex/agents/` | `scripts/generate-codex-agents.mjs`, run by `install.sh` |
 | `rules/` standards | delivered by the `inject-rules` hook | Falls back to the `AGENTS.md` fragment when hooks are off |
 | `LSP` tool | **absent** | serena MCP or `rg` — `tooling.md` |
 
-**Hooks work.** They were dark for two releases, and the cause was ours: the root `plugin.json`
+**Local plugin hooks are supported.** They were dark for two releases, and the cause was ours: the root `plugin.json`
 declaring the Agent Plugins 1.0 `$schema` silenced every plugin hook while Codex still reported
 them completed. That manifest is withdrawn and the regression is guarded by `RS-MANIFEST-058`
 (ADR 0002). Anything that still says "Codex does not run plugin hooks" is stale — check with
 `/studio-doctor`, which probes rather than assumes.
+
+## November compatibility refresh
+
+The fetched changelog's newest CLI release is **0.166.0, October 29, 2026**. It includes
+resume/fork permission fixes and `codex doctor --network-only`. Check `--help` on the installed
+binary before recommending that diagnostic; the desktop app and CLI may use different builds.
+Model-catalog additions do not authorize changing the user's selected model.
+
+The current hook contract uses `hookSpecificOutput` with `hookEventName` and `additionalContext`
+for SessionStart, UserPromptSubmit, PreToolUse and SubagentStart. Codex sets `PLUGIN_ROOT` plus
+the `CLAUDE_PLUGIN_ROOT` compatibility alias. Detect Codex first from its own variable; the
+alias does not mean Claude auto-memory already loaded the index. Keep Stop blocking as a JSON
+decision. The previous top-level context format recorded in release 0.59.1 describes an older
+host; this adapter targets the current documented protocol.
+
+SubagentStart now documents `agent_type`; shell hooks can use canonical `Bash` and
+`tool_input.command`. Existing payload-based guards also accept older `exec_command`/`cmd`
+input. Keep unmatched registrations unless coverage is verified for every intended tool.
+
+Hooks require trust of the current definitions. A direct script probe proves script behavior;
+only a host-delivered event proves loading and trust. Local hooks are not a guarantee for
+cloud orchestration: the current hooks page excludes plugin command hooks from Work Cloud
+orchestration even when execution is local. Report that capability gap and use skill references
+or the repository instruction fragment for static guidance.
+
+OpenAI now documents root `plugin.json` with `extensions.com.openai`, and explicitly supports
+the existing `.codex-plugin/plugin.json` fallback. Keep the supported fallback for this release.
+ADR 0002 is evidence about 0.153.4, not proof that today's portable format is broken. A future
+manifest migration needs a host-delivery probe on the supported versions before removing that
+regression guard; metadata validation alone cannot establish delivery.
+
+Skill discovery is token-budgeted and configurable through `skills.max_context_tokens`
+(documented maximum 10,000). Studio's 6,500-character description cap is its own conservative
+packaging budget, not a Codex platform limit. Keep selective reference loading regardless of
+the available context window.
 
 **Generated agents inherit by default.** Without a routing file, the generator drops the Claude
 role label and emits neither `model` nor `model_reasoning_effort`; the parent session decides.

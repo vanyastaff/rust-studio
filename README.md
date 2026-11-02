@@ -11,15 +11,17 @@ A Rust engineering studio for coding agents: 61 skills that carry the standards 
 maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
-**New in 0.53.0:** independent acceptance from the original request, controlled instruction
-experiments with `/eval-agents improve`, and task records that retain repair history and
-integration evidence across interruptions. Review repairs have a shared three-attempt limit.
-See the [changelog](plugins/rust-studio/CHANGELOG.md#0530---2026-09-09) and
-[usage guide](plugins/rust-studio/docs/usage-guide.md).
+**New in 0.60.0:** [eight Rust guideline sources](plugins/rust-studio/docs/rust-guidelines.md)
+with explicit applicability, updated ownership/API review rules, and a November 2026 Codex
+and Claude Code compatibility refresh. Codex hooks recognize compatibility environment aliases
+and use the current event-context protocol. See the [changelog](plugins/rust-studio/CHANGELOG.md).
+The [agent/skill audit](plugins/rust-studio/docs/agent-skill-audit-2026-11.md) records scope
+and verification limits; the [nick-vels study](plugins/rust-studio/docs/upstream-nick-vels-2026-11.md)
+explains the stricter task-plan validation.
 
 **What changes when you install it.** Your agent stops writing plausible Rust and starts writing
-Rust that a maintainer would merge: it locates before it edits, plans before it builds, asks you
-to approve the plan, runs `clippy` and the tests as evidence instead of asserting success (plus
+Rust that a maintainer would merge: it locates before it edits, plans before it builds, follows
+the authorized scope, runs `clippy` and the tests as evidence instead of asserting success (plus
 `miri` where unsafe or concurrency is involved), and reviews its own diff against the standard
 for the files it touched — `unsafe.md` when a block appears, `api.md` on `lib.rs`, `ffi.md` at a
 C boundary.

@@ -57,7 +57,7 @@ cargo-make, lefthook, or the CI lint job, with its exact features and env
 (`references/project-gate.md`); only a project with none falls back to:
 
 ```
-cargo clippy --all-targets --all-features -- -D warnings
+cargo clippy --all-targets -- -D warnings
 ```
 
 Cite the command, its exit code, and any relevant warning lines.
@@ -99,7 +99,8 @@ After triaging, consult the relevant leads for their domain:
 - **`systems-perf-lead`** — weigh in on `#[allow(clippy::...)]` suppressions
   and panic paths in hot or `unsafe` code.
 - **`api-design-lead`** — flag any debt on the public API surface
-  (missing `#[non_exhaustive]`, undocumented `pub` items, etc.).
+  (unintended exhaustiveness promises, undocumented `pub` items, etc.; missing
+  `#[non_exhaustive]` alone is not a defect without an evolution requirement).
 
 Only spawn leads whose domain overlaps with the findings.
 

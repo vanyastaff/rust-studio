@@ -57,7 +57,7 @@ final dump.
      when no language server, and say so once.
    - the project's gate (`references/project-gate.md`), including `--doc` for doc-tests — map
      test names to criteria in the report. Only where the project has none: `cargo nextest run`
-     (fall back to `cargo test`) and `cargo clippy --all-targets --all-features -- -D warnings`.
+     (fall back to `cargo test`) and `cargo clippy --all-targets -- -D warnings`.
    - `cargo fmt --check`.
    - `cargo +nightly miri test` if `unsafe` was involved; criterion benches if perf was
      a criterion.

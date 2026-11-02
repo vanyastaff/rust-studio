@@ -74,12 +74,12 @@ A local `just ci` that mirrors it is the fast path to the same answer, not a sec
 Say so ("no `justfile`/`Makefile`/`xtask`/CI lint job found; ran the studio defaults"), then run:
 
 - `cargo nextest run` (fall back to `cargo test`); doc-tests via `cargo test --doc`
-- `cargo clippy --all-targets --all-features -- -D warnings`
+- `cargo clippy --all-targets -- -D warnings`
 - `cargo fmt`
 
-`--all-features` is the right default *only* here, where nothing narrower is known to be the
-shipped configuration. If the crate's `Cargo.toml` has non-additive or platform-gated features,
-check the default build too and say which you ran.
+Start with default features, then add the supported feature/target combinations relevant to
+the change. Use `--all-features` only when those features can coexist; it never substitutes
+for the default-feature pass. Record exactly which configurations were checked.
 
 ## Who enforces it
 

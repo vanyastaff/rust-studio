@@ -105,7 +105,7 @@ For each finding approved for fixing:
    - stay strictly in scope — no opportunistic refactors,
    - run the project's gate (`references/project-gate.md`) and `cargo audit` after each fix —
      `cargo nextest run` (fall back to `cargo test`) and
-     `cargo clippy --all-targets --all-features -- -D warnings` only where the project has none,
+     `cargo clippy --all-targets -- -D warnings` only where the project has none,
    - add or update `// SAFETY:` notes on any `unsafe` it touches,
    - for dependency upgrades: update `Cargo.toml`, run `cargo update`, then
      `cargo deny check`.

@@ -1,6 +1,6 @@
 # Rust Code Studio — `claude plugin eval` suite
 
-Thirty-eight cases that ask the studio to do its core job — reject code a strict maintainer would
+Cases that ask the studio to do its core job — reject code a strict maintainer would
 reject — scored against a **no-plugin baseline** so the headline number is the delta the plugin
 adds, not an absolute. Each case is a `prompt.md` (the fixture source inlined, so the sandbox
 needs no files) plus `graders/`: an `llm` rubric derived from the fixture's ground truth, a
@@ -9,6 +9,7 @@ indicator (`arm: with-only`) that shows whether the plugin's own path fired.
 
 | case | fixture | what a pass proves |
 |---|---|---|
+| `guideline-applicability` | — | vendor-local restrictions are scoped; owned/shared APIs and async mutexes are judged by their contracts; existing public construction and actual lint profiles are preserved |
 | `reviewer-unwrap-and-cast` | `benchmarks/fixtures/reviewer/unwrap-and-cast` | library panics and a truncating cast are found with fixes |
 | `integrity-gamed-green` | `…/integrity/gamed-green` | a green suite is not evidence: vacuous/tautological/stub tests and a silenced lint are rejected |
 | `unsafe-missing-safety` | `…/unsafe/missing-safety` | missing `SAFETY:`/`# Safety`, an OOB read, an unjustified `Send` — and Miri named |

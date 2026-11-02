@@ -7,6 +7,10 @@
 
 Status: ☐ todo · ◐ in-progress · ☑ done · ⊘ blocked
 
+Use unique IDs (letters, digits, `_`, `-`). Dependency and conflict cells contain IDs separated
+by commas/spaces, or `—` for none. Dependencies are prerequisites; conflicts prohibit concurrent
+work, not sequential work. Declare overlapping write sets even when no dependency exists.
+
 | # | Outcome | Owning role | Review role | Expected paths | Depends on | Conflicts with | Acceptance | Status |
 |---|---------|-------|----------|----------------|------------|----------------|------------|--------|
 | 1 | *reviewable outcome* | `rust-builder` | `rust-reviewer` | `crate/src/...` | — | — | *criterion or command* | ☐ |

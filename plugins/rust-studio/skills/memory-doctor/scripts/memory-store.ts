@@ -24,7 +24,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, basename, dirname, resolve, isAbsolute } from "node:path";
 import { homedir } from "node:os";
 import { execSync } from "node:child_process";
-import { option } from "./_lib.ts";
+import { isCodexHook, option } from "./_lib.ts";
 
 /** The host loads only the first 200 lines / 25 KB of MEMORY.md (code.claude.com/docs/en/memory);
  *  past that it errors and tells the model to rewrite the index. */
@@ -105,7 +105,7 @@ export function hostMemorySettings(root: string, cfg = configDir()): HostMemoryS
 /** Running under Claude Code? Hooks see CLAUDE_PLUGIN_ROOT; a Bash tool call inside a
  *  session (where /memory-doctor runs the CLI) sees CLAUDECODE instead. */
 export function isClaudeHost(): boolean {
-  return Boolean(process.env.CLAUDE_PLUGIN_ROOT || process.env.CLAUDECODE);
+  return !isCodexHook() && Boolean(process.env.CLAUDE_PLUGIN_ROOT || process.env.CLAUDECODE);
 }
 
 /** Is the host's auto-memory on (so the host itself injects the index)? Mirrors the

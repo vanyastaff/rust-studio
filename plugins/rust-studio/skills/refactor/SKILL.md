@@ -89,7 +89,7 @@ usually arrives with a suite that cannot say that, so establish the oracle first
    before-numbers the verdict reports: warnings beyond the gate, duplicate pairs, orphans, cycles,
    the largest file. A red baseline blocks, so fix the build first (`/fix-build`) or every later
    failure is ambiguous; a project with no gate falls back to the studio defaults
-   (`cargo nextest run`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo fmt`).
+   (`cargo nextest run`, `cargo clippy --all-targets -- -D warnings`, `cargo fmt`).
    Where no command can run at all (no shell, a denied tool), write `BASELINE: unverified — <why>`
    and keep the reading phases **in this order**: steps 6–8 still come first, their characterization
    tests written out and marked `UNRUN`, the step 8 break described rather than executed. A rewrite

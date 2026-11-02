@@ -10,7 +10,7 @@ Applies to async service code (handlers, routes, servers, services).
 
 ## Don't block the runtime
 - No blocking calls in `async fn`: no `std::fs`, blocking DB drivers, `std::thread::sleep`,
-  CPU-heavy loops, or `Mutex` held across `.await`. Use async equivalents or
+  CPU-heavy loops, or blocking mutex guards held across `.await`. Use async equivalents or
   `tokio::task::spawn_blocking` for unavoidable blocking work.
 - Use `tokio::sync::Mutex` only when you must hold a lock across `.await`; otherwise a
   `std::sync::Mutex` released before awaiting is faster and avoids cancellation hazards.
@@ -32,7 +32,9 @@ Applies to async service code (handlers, routes, servers, services).
 - **Inject the clock.** `SystemTime::now()` / `Instant::now()` in library logic is non-deterministic
   and untestable — take `now` (or a clock provider) as an argument; read the wall clock only at the edge.
 - **Deadlock discipline.** Acquire multiple locks in one documented global order; never hold a lock
-  across `.await`; prefer message-passing / a single owner over shared `Arc<Mutex<_>>`. Cover
+  across `.await` if it is a blocking lock. An async mutex may span an await when the I/O
+  invariant requires it; minimize scope and verify cancellation and lock ordering. Consider
+  message-passing / a single owner when it simplifies the ownership contract. Cover
   lock-free or ordering-sensitive code with `loom`.
 - Enforced **mechanically**, not on trust: clippy bans `SystemTime::now`/`Instant::now`/`thread::sleep`,
   and `nextest`'s `terminate-after` turns a deadlock/huge-sleep test into a fast failure instead of a

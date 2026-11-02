@@ -43,9 +43,15 @@ For a deterministic summary, run the bundled read-only helper:
 bun "scripts/plan-status.ts" .rust-studio/specs/<slug>/tasks.md
 ```
 
-It lists ready, blocked, active, and complete task ids from the table. Use `--json` when another
-tool consumes the result. If the plan changes materially, update the affected rows and explain the
-new dependency or conflict.
+It validates the table and dependency graph before reporting status; malformed rows, unknown
+statuses/references, duplicate ids and cycles exit with code 2 and no readiness result. IDs may
+contain letters, digits, underscores and hyphens; reference lists use commas or spaces. Use the
+template's status symbols or `todo`, `in-progress`, `done`, `blocked`.
+
+`ready` is a deterministic batch in table order: dependencies must be done, and no member may
+conflict with an active task or another batch member (either direction counts). This checks
+declared conflicts, not actual path overlap, requirement coverage or acceptance evidence;
+verify those before dispatch. Use `--json` for tools. When the plan changes, update its rows.
 
 ## Output
 

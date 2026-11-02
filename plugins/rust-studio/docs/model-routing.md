@@ -41,7 +41,16 @@ levels. Gateway discovery (`CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`) is us
 gateway restricts its model list; it is not a substitute for explicit aliases.
 
 `CLAUDE_CODE_SUBAGENT_MODEL` is a default. A role's frontmatter or an explicit launch override
-takes precedence, so it covers `inherit` workers without flattening the roster. Cap parallel
+takes precedence; explicit `model: inherit` therefore keeps the main conversation's model.
+`CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` forces the configured subagent model on ordinary agents,
+but conversation forks and forked skills with `model: inherit` retain the main model. Report
+this setting when auditing gate routing rather than assuming the roster won.
+
+The October 31, 2026 [changelog](https://code.claude.com/docs/en/changelog) adds
+`CLAUDE_CODE_SUBAGENT_EFFORT` as a default when no other source selects effort. Leave it unset
+unless the user chooses it; effort names and quality need evaluation on the actual model.
+The [subagent reference](https://code.claude.com/docs/en/sub-agents#choose-a-model) is the source
+for current precedence and force exceptions. Cap parallel
 tool and subagent work with `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY` when the account has a strict
 spending limit. Do not set it solely because more parallelism exists.
 

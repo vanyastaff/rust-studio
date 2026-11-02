@@ -146,8 +146,9 @@ linter that will never catch them. Finding one on a touched model is the trigger
   with `&'static T`.
 
 ## Controlled growth
-- Use `#[non_exhaustive]` on public enums/structs that may grow, so cross-crate code must use a
-  wildcard arm or `..` and cannot exhaustively destructure. Conversely, do **not** put it on an
+- Consider `#[non_exhaustive]` for new public types with an open growth contract; adding it to
+  an existing constructible struct or exhaustively matched enum is itself breaking. It restricts
+  downstream construction/matching. Do **not** put it on an
   internal enum the workspace must match exhaustively (a state machine a sibling crate
   transitions): the forced `_` arm hides new variants the consumer should be made to handle.
 - For within-crate discipline only, a private marker field (`_priv: ()`) blocks outside literal

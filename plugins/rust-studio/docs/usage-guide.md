@@ -77,13 +77,13 @@ portable policy and Claude/Codex setup are in `model-routing.md`.
 
 ## The agents (33)
 
-### Tier 1 — Directors (session model)
+### Tier 1 — Directors
 - **`chief-architect`** — crate/module boundaries, layering, ADRs, big refactors, cross-lead
   technical conflicts. Holds ARCH-GATE. Call for any change that ripples across many crates.
 - **`product-steward`** — scope, milestones, story breakdown, prioritization, cross-domain
   coordination. Call to turn a goal into ordered work or settle what's in/out of scope.
 
-### Tier 2 — Leads (session model; own a domain + a gate)
+### Tier 2 — Leads (own a domain + a gate)
 - **`api-design-lead`** — public API surface, crate boundaries, semver, `#[non_exhaustive]`/
   sealing. API-GATE.
 - **`async-systems-lead`** — async architecture, tokio topology, web stack choice, backpressure,
@@ -97,7 +97,7 @@ portable policy and Claude/Codex setup are in `model-routing.md`.
 - **`tooling-lead`** — *decides* build/CI/dev-tooling policy + matrix strategy. BUILD-GATE.
   (Delegates implementation to `build-engineer`.)
 
-### Tier 3 — Specialists (session model)
+### Tier 3 — Specialists
 API & types: **`api-designer`** (traits, type-state, builders, conversions), **`error-architect`**
 (thiserror/anyhow boundary, error taxonomy), **`macro-specialist`** (proc/derive/`macro_rules!`),
 **`docs-engineer`** (rustdoc, doc-tests, README).

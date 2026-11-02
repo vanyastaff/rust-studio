@@ -56,7 +56,7 @@ signal without leaking secrets or exploding cardinality.
    emit `tracing::error!` on failure paths; wire metrics with bounded labels.
 6. Verify with the project's gate where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`); with
    none, `cargo nextest run` (fall back to `cargo test`) and
-   `cargo clippy --all-targets --all-features -- -D warnings`. If OTel is configured, confirm
+   `cargo clippy --all-targets -- -D warnings`. If OTel is configured, confirm
    the exporter initialises cleanly in the test harness.
 
 ## Standards you enforce

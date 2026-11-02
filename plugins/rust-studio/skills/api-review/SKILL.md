@@ -104,7 +104,7 @@ Two things the class table does not catch, and every review must still call out:
 
    - (a) Accept the break → requires a major version bump.
    - (b) Deprecate in this release, remove in the next major.
-   - (c) Add `#[non_exhaustive]` to enum/struct to absorb future variants.
+   - (c) For a new API or an approved breaking release, add `#[non_exhaustive]` to allow future growth; adding it to an existing public type is itself breaking.
    - (d) Introduce a compatibility shim (only if it adds no ongoing debt).
 
    Batch all decisions into a single user prompt before drafting changes. Whichever option
@@ -138,7 +138,7 @@ src/internal.rs:12  `InternalHandle` is pub but undocumented and exposed only
 
 ### Mitigations approved
 - Deprecate `Foo::bar()` in this release; schedule removal for v2.0.
-- Add `#[non_exhaustive]` to `Event` enum before tagging.
+- Decide `Event` exhaustiveness before its first release; for an existing release, account for the breaking change.
 ```
 
 Show the draft to the user before any file changes are made.

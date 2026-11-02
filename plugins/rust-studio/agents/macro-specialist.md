@@ -84,7 +84,7 @@ the vault yourself.
 9. Verify the expansion with `cargo expand` before trusting it — hygiene bugs,
    double-evaluation, and missing parentheses are invisible in source and obvious in
    the expansion. The generated code must compile cleanly under the project's lint gate
-   (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`; `cargo clippy --all-targets --all-features -- -D warnings`
+   (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`; `cargo clippy --all-targets -- -D warnings`
    where the project has none).
 10. Write `trybuild` tests for every intentional compile error: good message,
     correct span, stable wording. A macro's diagnostics are part of its contract —

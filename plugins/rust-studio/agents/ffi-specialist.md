@@ -104,7 +104,7 @@ language boundary.
    for `frame->width`. Make the fields private or say it where the header is generated.
 9. Run `cargo build` (with cross-compilation targets if relevant),
    `cargo nextest run` (including `bindgen` layout tests), and
-   `cargo clippy --all-targets --all-features -- -D warnings`, through the project's gate
+   `cargo clippy --all-targets -- -D warnings`, through the project's gate
    where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`). Cite the output.
 10. For `cbindgen`: verify the generated header compiles as C and as C++; commit it
    alongside the Rust source.

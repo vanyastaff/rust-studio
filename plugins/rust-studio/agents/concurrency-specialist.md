@@ -71,7 +71,7 @@ See `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1 for the full auton
    no synchronization is needed. Replace `compare_exchange(_weak)`/`fetch_update` retry loops
    with `update`/`try_update` (1.95) where the read-modify-write fits.
 4. Check lock discipline: consistent acquisition order across all call sites; no blocking
-   inside `async` without a `spawn_blocking` boundary; no `Mutex<T>` held across `.await`.
+   inside `async` without a `spawn_blocking` boundary; no blocking mutex guard held across `.await`; async locks need a justified scope and cancellation invariants.
 5. Prefer ownership and channels over shared mutability; flag cases where a channel or
    scoped-thread redesign would eliminate a lock entirely. Treat `Arc<Mutex<Vec<_>>>` (or
    `Arc<Mutex<HashMap<_>>>`) used as a shared state bus as a design smell — it usually masks

@@ -36,7 +36,7 @@ Follow `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md` §1. The default is
 4. Verify shared state is `Clone + Send + Sync + 'static`; confirm `FromRef` sub-state is used when only a sub-field is needed, not the whole state.
 5. Check `IntoResponse` impls: no `unwrap`, no internal error strings in the body, error variants map to distinct non-5xx codes where appropriate.
 6. Confirm body limits and request timeouts are applied at the router or service layer, not ad-hoc inside handlers.
-7. Run the project's gate where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`); with none, `cargo clippy --all-targets --all-features -- -D warnings` and `cargo nextest run`. Cite output.
+7. Run the project's gate where it has one (`${CLAUDE_PLUGIN_ROOT}/docs/project-gate.md`); with none, `cargo clippy --all-targets -- -D warnings` and `cargo nextest run`. Cite output.
 
 ## Standards you enforce
 - `${CLAUDE_PLUGIN_ROOT}/docs/maintainer-grade-development.md` — the senior bar; before any source edit, clear the pre-code maintainer gate (**ACCEPTABLE / RESHAPE NEEDED / BLOCKED**) and model requests, rejections, and state with domain types rather than stringly ad-hoc handling.

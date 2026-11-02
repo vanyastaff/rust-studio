@@ -268,12 +268,11 @@ Claude-specific payload fields or from `<session>/subagents/<id>.jsonl`, a layou
 not use, so the hook would run, find nothing, and enforce nothing. A gap stated is worth more
 than coverage that looks real. The usage log runs there too, on `spawn_agent`, but a Codex
 skill is a file the model reads rather than a tool it calls, so a Codex week reports agents
-and typed `/name` invocations only. Note also that **Codex CLI 0.153 does not execute plugin hooks
-at all**: it enumerates them, reports them completed, and runs only the user's own
-`~/.codex/hooks.json`. Skills still load, so the session looks healthy while the briefing and
-the standards never arrive. `/studio-doctor` detects it and offers
-[`docs/templates/agents-md.md`](docs/templates/agents-md.md), which carries the static half of
-the briefing through the one file that host does read.
+and typed `/name` invocations only. Current Codex supports trusted local plugin hooks; the
+0.153.4 failure concerned the withdrawn root manifest. `/studio-doctor` distinguishes script
+output from actual host delivery, including cloud limitations and pending activation. See
+[`docs/codex-compat.md`](docs/codex-compat.md) and
+[`docs/claude-5-compat.md`](docs/claude-5-compat.md) for the November 2026 refresh.
 
 ## Configuration
 

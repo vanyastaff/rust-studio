@@ -102,7 +102,7 @@ re-modelling, not greenfield: skip to **Re-modelling mode** below before Phase 1
    - Write tests asserting compile-time guarantees (`compile_fail` doc-tests or
      trybuild where a state transition must be rejected) and runtime behaviour.
    - Run the project's gate (`references/project-gate.md`) and `cargo fmt`; `cargo nextest run`
-     (fall back to `cargo test`) and `cargo clippy --all-targets --all-features -- -D warnings`
+     (fall back to `cargo test`) and `cargo clippy --all-targets -- -D warnings`
      only where the project has none. Fix all issues.
    - Add `// SAFETY:` comments to any `unsafe`; flag it in the build report.
    - Stay strictly in scope — no opportunistic refactors.

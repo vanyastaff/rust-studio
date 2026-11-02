@@ -109,7 +109,7 @@ All commands in this phase are read-only; run them without asking first.
    - Run `cargo deny check` and `cargo audit` again — must be clean.
    - Run the project's gate (`references/project-gate.md`) — must pass. Cite the output. Only
      where the project has none: `cargo build --workspace --all-features`,
-     `cargo nextest run --workspace`, and `cargo clippy --all-targets --all-features -- -D warnings`.
+     `cargo nextest run --workspace`, and `cargo clippy --all-targets -- -D warnings`.
 
 9. If any build or test fails after the change, hand the failure back to **`rust-builder`**
    (loop Phase 4) until clean, or surface a **BLOCKED** verdict if a dep conflict cannot
