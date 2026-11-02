@@ -1,11 +1,31 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const script = resolve(import.meta.dir, "generate-codex-agents.mjs");
 const outDir = mkdtempSync(join(tmpdir(), "codex-agents-"));
 const proc = Bun.spawnSync(["node", script, outDir]);
+
+test("public generator produces identical agents from LF and Windows CRLF briefs", () => {
+  const fixture = mkdtempSync(join(tmpdir(), "codex-agents-crlf-"));
+  try {
+    mkdirSync(join(fixture, "scripts"));
+    mkdirSync(join(fixture, "agents"));
+    const generator = join(fixture, "scripts", "generate-codex-agents.mjs");
+    writeFileSync(generator, readFileSync(script));
+    const brief = join(fixture, "agents", "rust-builder.md");
+    const source = readFileSync(resolve(import.meta.dir, "../agents/rust-builder.md"), "utf8").replace(/\r\n/g, "\n");
+    writeFileSync(brief, source);
+    const lf = join(fixture, "lf");
+    expect(Bun.spawnSync(["node", generator, lf]).exitCode).toBe(0);
+    writeFileSync(brief, source.replace(/\n/g, "\r\n"));
+    const crlf = join(fixture, "crlf");
+    const result = Bun.spawnSync(["node", generator, crlf]);
+    expect(result.exitCode).toBe(0);
+    expect(readFileSync(join(crlf, "rust-builder.toml"), "utf8")).toBe(readFileSync(join(lf, "rust-builder.toml"), "utf8"));
+  } finally { rmSync(fixture, { recursive: true, force: true }); }
+});
 
 describe("generate-codex-agents", () => {
   test("writes one TOML per agent brief", () => {

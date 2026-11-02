@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.1] - 2026-11-01
+
+### Fixed
+
+- The Codex agent generator accepts Windows CRLF checkouts. Installation from the Git
+  marketplace previously rejected valid agent frontmatter; a public-command regression
+  now verifies identical generated TOML from LF and CRLF inputs.
+
 ## [0.60.0] - 2026-11-01
 
 ### Changed

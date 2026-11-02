@@ -86,7 +86,7 @@ const { outDir, routingFile } = parseArgs(process.argv.slice(2));
 const routing = loadRouting(routingFile);
 
 function parse(file) {
-  const text = fs.readFileSync(file, "utf8");
+  const text = fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n");
   const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!match) throw new Error(`${file}: missing YAML frontmatter`);
 

@@ -19,6 +19,8 @@ The [agent/skill audit](plugins/rust-studio/docs/agent-skill-audit-2026-11.md) r
 and verification limits; the [nick-vels study](plugins/rust-studio/docs/upstream-nick-vels-2026-11.md)
 explains the stricter task-plan validation.
 
+**0.60.1** fixes Codex agent installation from Windows CRLF checkouts.
+
 **What changes when you install it.** Your agent stops writing plausible Rust and starts writing
 Rust that a maintainer would merge: it locates before it edits, plans before it builds, follows
 the authorized scope, runs `clippy` and the tests as evidence instead of asserting success (plus
