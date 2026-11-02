@@ -1,0 +1,6 @@
+interface:
+  display_name: "Maintain Project"
+  short_description: "Perform an explicitly requested dependency addition"
+  default_prompt: "Use $maintain-project: Perform an explicitly requested dependency addition, improvement experiment, migration, crate scaffold, or worktree cleanup."
+policy:
+  allow_implicit_invocation: false

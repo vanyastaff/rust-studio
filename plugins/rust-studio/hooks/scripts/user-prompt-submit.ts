@@ -10,10 +10,10 @@
 //    is surfaced once per session as a pointer (title, kind/age, path). Cheap: one
 //    ≤25 KB file read; silent when nothing matches or the note was already surfaced.
 // 2) ROUTING NUDGE — once per session: prefer a studio skill over ad-hoc steps and
-//    /recall the area before implementing.
+//    /inspect-project --mode recall the area before implementing.
 //
 // A third thing rides it without printing anything: a prompt that opens with a studio skill
-// (`/review …`, `/rust-studio:dev-task …`) is a USER invocation, which never passes through
+// (`/review-work --mode diff …`, `/rust-studio:dev-task …`) is a USER invocation, which never passes through
 // the Skill tool and so never reaches the PostToolUse usage log. It is appended here
 // instead, so the usage report counts both hands (usage-log.ts).
 //
@@ -21,7 +21,7 @@
 // skill a prompt's SHAPE pointed at (0.44 to 0.55). Retired 2026-09-14 on an audit of 1,187
 // sessions: 114 of its 123 firings (93%) were on `<task-notification>` — sub-agent
 // completions that pass through this event as prompts — and the model obeyed 6 of 123
-// (0 of 17 for `/review`). It had taught the model the hint is ignorable. And no
+// (0 of 17 for the historical `/review`). It had taught the model the hint is ignorable. And no
 // prompt-shape router could work on the real traffic: 90% of the human prompts were
 // Russian, 73% under 120 characters, none carried an `error[E…]`, a panic, a diff or a
 // `-->` location. Routing lives in the skill descriptions and the routing evals; the
@@ -113,7 +113,7 @@ function knownSkills(): Set<string> | null {
   return skillNames;
 }
 
-/** The studio skills a prompt invokes (`/review`, `/rust-studio:review`), in order, without
+/** The studio skills a prompt invokes (`/review-work --mode diff`, `/rust-studio:review`), in order, without
  *  duplicates. A slash token that continues as a path (`/home/me`, `/src/lib.rs`) or names no
  *  shipped skill is not an invocation. Without a readable skills directory, a bare `/name` is
  *  taken on its shape alone. */
@@ -132,7 +132,7 @@ export function namesStudioSkill(text: string): boolean {
 }
 
 /** The skill a prompt INVOKES: a leading `/name`, the shape the host expands as a command. A
- *  name further in ("вместо полного /dev-task", a pasted plan) is a mention, and if the model
+ *  name further in ("вместо полного /implement-change --mode implement", a pasted plan) is a mention, and if the model
  *  acts on it the Skill tool logs that call as its own. In the audit's transcripts 55 of 61
  *  prompts naming a skill named it mid-sentence. */
 export function userInvokedSkill(text: string): string | null {
@@ -211,8 +211,8 @@ if (import.meta.main) {
       if (!nudged.has("shown")) {
         writeMarkerSet("rust-studio-nudge", sid, new Set(["shown"]));
         out.push(
-          "Rust Code Studio: for any non-trivial task, prefer a studio skill (`/help` " +
-            "for the catalog) over ad-hoc steps, and run `/recall <area>` before " +
+          "Rust Code Studio: for any non-trivial task, prefer a studio skill (`/inspect-project --mode catalog` " +
+            "for the catalog) over ad-hoc steps, and run `/inspect-project --mode recall <area>` before " +
             "implementing in a known area so prior decisions and gotchas carry forward.",
         );
       }

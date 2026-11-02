@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Change"
+  short_description: "Design Rust changes: explore approaches, clarify requirements"
+  default_prompt: "Use $design-change: Design Rust changes: explore approaches, clarify requirements, define architecture or APIs, model domains, plan tests, and run disposable experiments."

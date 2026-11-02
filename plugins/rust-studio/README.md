@@ -2,7 +2,7 @@
 
 **Turn an agent session into a maintainer-grade Rust engineering studio.**
 The portable skills install on Codex, Claude Code, and other Agent Skills hosts. Claude Code also
-gets the tiered agent team, path-scoped standards, quality gates, and cargo-aware hooks.
+gets the five execution roles, path-scoped standards, quality gates, and cargo-aware hooks.
 
 > Inspired by the studio model of
 > [Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios),
@@ -10,16 +10,20 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 
 ## In the box
 
-- **61 skills**: design, spec-driven build, TDD, review, test, release, git/PR shipping,
+Version 0.62.0 exposes eleven skills and five roles. The catalog's 59 former skill entries and
+33 former role definitions are migration records, not additional installed commands/personas.
+Ten skills are portable; maintain-studio is the plugin-only entry.
+
+- **11 skills**: design, spec-driven build, TDD, review, test, release, git/PR shipping,
   build-fixing, edition & major-dependency migration, CI gates, cross-session memory.
-- **33 agents**: 2 directors → 6 leads → 21 specialists (including an adversarial
-  `harsh-critic` and a read-only `slop-auditor`) + a scout / builder / resolver / reviewer execution group.
+- **5 roles**: researcher, designer, implementer, reviewer and verifier. All except implementer
+  are read-only; reusable domain profiles retain the specialized checks and named gates.
 - **22 path-scoped rule sets**: the right Rust standard surfaces the moment you open a matching
   file. The agent reads the full rule on demand, so the window stays lean.
 - **15 Claude hook handlers across 10 events**: stack detection and memory recall, rule pointers, a
   sub-agent brief, lint and lifecycle nudges, verdict checks, an acceptance-ledger guard, a usage
   log, and an opt-in stop-guard.
-- **Bundled rust-analyzer LSP**: diagnostics and go-to-definition as you edit, so `rust-scout`
+- **Bundled rust-analyzer LSP**: diagnostics and go-to-definition as you edit, so `researcher` with the `navigation` profile
   resolves symbols instead of scanning files. Just put `rust-analyzer` on PATH.
 - **An integrity layer that rejects a gamed green**: see
   [What makes it different](#what-makes-it-different).
@@ -27,10 +31,10 @@ gets the tiered agent team, path-scoped standards, quality gates, and cargo-awar
 ## Quick start
 
 ```text
-/start            # detect the stack and route you
-/dev-task <task>  # implement one unit of work: scout → plan → approve → build → review
-/review           # audit your current diff against the gates
-/dev-task <api>   # implement a public API; add API review when the contract changes
+/inspect-project --mode orient            # detect the stack and route you
+/implement-change --mode implement <task>  # context/design → fresh review/handoff → implementation/integration → acceptance
+/review-work --mode diff           # audit your current diff against the gates
+/implement-change --mode implement <api>   # implement a public API; add API review when the contract changes
 ```
 
 ## Before you start
@@ -56,23 +60,23 @@ itself is in [`../../INSTALL.md`](../../INSTALL.md).
 
 > Plugin commands are namespaced: `/rust-studio:<name>`.
 
-- **Onboarding**: `/start` · `/help` · `/env-setup` (provision the machine: rustup + binstall + tool suite) · `/detect-stack` · `/adopt` · `/studio-doctor` (is the studio actually live here?)
-- **Design**: `/brainstorm` · `/grill-me` (interview me to pull my input) · `/design-api` · `/architecture` · `/adr` · `/model-domain`
-- **Build**: `/dev-task` · `/new-crate` · `/add-dep` · `/refactor` · `/migrate` (edition / major-dependency upgrade, with the semantic review `cargo fix` can't do) · `/fix-build` · `/ci-gate` (anti-hang / anti-silencing CI gate)
-- **Planned work**: `/spec` · `/spec-tasks` · `/spec-verify` (optional intent in `intent/`, local execution records in `.rust-studio/specs/`)
-- **TDD & verify**: `/tdd` · `/verify-loop` · `/acceptance` (criteria as checker-decided gates)
-- **Quality**: `/review` (`--full` = parallel multi-lens) · `/lint` · `/audit-unsafe` · `/perf` · `/bloat` (binary size) · `/security-audit` · `/deps-check` · `/api-review` · `/tech-debt` · `/scope-check`
-- **Testing**: `/test-plan` · `/test-setup` · `/coverage` (what runs) · `/mutants` (what's checked) · `/fuzz` (inputs nobody imagined) · `/flaky-hunt`
-- **Memory**: `/remember` · `/recall` · `/memory-doctor` · `/session-wrap` (cross-session, in the host's auto-memory store, with no MCP and no vault)
-- **Ship**: `/commit` · `/pr`
-- **Release**: `/publish` · `/changelog` · `/msrv-check`
+- **Onboarding**: `/inspect-project --mode orient` · `/inspect-project --mode catalog` · `/configure-tooling --mode environment` (provision the machine: rustup + binstall + tool suite) · `/inspect-project --mode classify` · `/inspect-project --mode onboard` · `/inspect-project --mode diagnose-host` (is the studio actually live here?)
+- **Design**: `/design-change --mode explore` · `/design-change --mode clarify` (interview me to pull my input) · `/design-change --mode api` · `/design-change --mode architecture` · `/write-docs --mode decision` · `/design-change --mode domain`
+- **Build**: `/implement-change --mode implement` · `/maintain-project --mode scaffold` · `/maintain-project --mode dependency` · `/implement-change --mode refactor` · `/maintain-project --mode migrate` (edition / major-dependency upgrade, with the semantic review `cargo fix` can't do) · `/implement-change --mode compiler` · `/configure-tooling --mode ci` (anti-hang / anti-silencing CI gate)
+- **Planned work**: `/design-change --mode specification` · `/implement-change --mode plan` · `/verify-work --mode acceptance` (shared context/design and execution evidence in `docs/designs/<slug>/`; legacy `.rust-studio/specs/` stays readable in place)
+- **TDD & verify**: `/implement-change --mode test-first` · `/implement-change --mode repair-gate` · `/verify-work --mode ledger` (criteria as checker-decided gates)
+- **Quality**: `/review-work --mode diff` (`--full` = parallel multi-lens) · `/verify-work --mode lint` · `/review-work --mode soundness` · `/implement-change --mode performance` · `/implement-change --mode size` (binary size) · `/review-work --mode security` · `/review-work --mode dependencies` · `/review-work --mode api` · `/review-work --mode structure` · `/review-work --mode scope`
+- **Testing**: `/design-change --mode tests` · `/configure-tooling --mode tests` · `/verify-work --mode coverage` (what runs) · `/verify-work --mode mutation` (what's checked) · `/verify-work --mode fuzz` (inputs nobody imagined) · `/implement-change --mode intermittent`
+- **Memory**: `/write-docs --mode memory` · `/inspect-project --mode recall` · `/review-work --mode memory` · `/write-docs --mode handoff` (cross-session, in the host's auto-memory store, with no MCP and no vault)
+- **Ship**: `/publish-change --mode commit` · `/publish-change --mode pull-request`
+- **Release**: `/publish-change --mode release` · `/write-docs --mode changelog` · `/verify-work --mode minimum-rust`
 
 ## If your project is a workspace
 
 Most Rust projects become one, and two defaults stop fitting.
 
 **Context.** A single root context file either bloats with every crate's conventions or stays too
-generic. `/adopt` proposes per-crate files, showing which crates earned one and which it dropped,
+generic. `/inspect-project --mode onboard` proposes per-crate files, showing which crates earned one and which it dropped,
 so you strike individual crates rather than accept a block of thirty. Content goes in `AGENTS.md`
 with a two-line `CLAUDE.md` beside it holding only `@AGENTS.md`: Claude Code reads `CLAUDE.md` and
 not `AGENTS.md`, and only `CLAUDE.md` loads on demand as it walks subdirectories, while Codex,
@@ -92,44 +96,30 @@ lies, with reproductions, is in [`docs/large-workspace.md`](docs/large-workspace
 the focus-scoping setup for large workspaces (`claudeMdExcludes`, `target/` read-denies, sparse
 worktrees).
 
-## The idea
+## Roles, profiles and the lifecycle
 
-Solo AI coding drifts: no boundaries, no review, no "are we sure?". This plugin imposes a
-studio: specialists who own a domain, leads who hold quality gates, and one rule above all:
+Five roles separate actions: researcher gathers evidence, designer proposes contracts,
+implementer writes authorized changes, reviewer challenges artifacts, verifier checks outcomes.
+All except implementer are read-only for project sources. Load every applicable domain
+profile in each role; expertise does not grant permission or select a model. A separate fresh
+instance with controlled inputs establishes independence, not a different role/profile label.
 
-> **Question → Options → Decision → Draft → Approval** — run as a quality loop, autonomy-first:
-> decide tactical calls and proceed; escalate only on strategic, irreversible, or outward steps.
+The [Elephant workflow](docs/elephant-workflow.md) connects project context, a self-contained
+design, fresh Goldfish review, fresh implementer reconstruction, implementation/integration and
+original-request independent acceptance. Existing authorization continues across phases;
+explicit design-only, plan-only and diagnosis-only requests stop at their results. The
+coordinator writes design/task/report artifacts directly. Prototypes and requested tests use
+scoped implementers, with independent verification afterward.
 
-The full contract is [`docs/coordination-protocol.md`](docs/coordination-protocol.md), split
-into [`collaboration.md`](docs/collaboration.md) (autonomy, when to ask),
-[`delegation.md`](docs/delegation.md) (tiers, teams, file writes) and
-[`verdicts.md`](docs/verdicts.md) (gates, verdicts, evidence). Who owns what is in
-[`docs/agent-roster.md`](docs/agent-roster.md).
+The public catalog has eleven outcome skills, ten portable entries and one plugin-only entry,
+maintain-studio. Operation modes retain specialized procedures without extra installed names.
+Maintain-project, maintain-studio and publish-change are explicit-only groups. No ordinary
+workflow automatically commits, pushes or publishes. See the complete [mode catalog](docs/usage-guide.md)
+and [role/profile contract](docs/agent-roster.md).
 
-`docs/` and `rules/` are the single source of truth. Each skill carries a copy of what it
-cites under `skills/<name>/references/`, so it stays self-contained when installed via
-`npx skills add`. After editing canonical docs, helpers, or skill descriptions, run
-`./scripts/sync-references.sh`, `node scripts/generate-openai-metadata.mjs`, and
-`./scripts/validate-distribution.sh`; CI runs the validation plus the Bun test suite.
-
-## The team
-
-**Directors** (inherit the session model): `chief-architect` (ARCH-GATE), `product-steward` (scope & sequencing).
-
-**Leads** (sonnet): `api-design-lead`, `async-systems-lead`,
-`systems-perf-lead`, `qa-lead`, `release-lead`, `tooling-lead`. Each owns a quality gate.
-
-**Specialists** (sonnet/haiku; judgment-heavy auditors inherit): API (`api-designer`,
-`error-architect`, `macro-specialist`, `docs-engineer`), async/web (`async-runtime-specialist`,
-`web-framework-specialist`, `database-specialist`, `observability-engineer`,
-`wasm-specialist`), systems/perf (`concurrency-specialist`, `unsafe-auditor`,
-`ffi-specialist`, `perf-engineer`, `embedded-specialist`), CLI (`cli-specialist`),
-quality (`test-engineer`, `security-auditor`, `dependency-manager`, `build-engineer`), and a
-cross-cutting adversarial `harsh-critic` (attacks designs and specs, challenges the premise,
-gives no praise).
-
-**The hands**: `rust-scout` (locate, read-only) → `rust-builder` (implement) →
-`rust-build-resolver` (get the build green) → `rust-reviewer` (audit & gate).
+`docs/` and `rules/` are canonical. Skills bundle cited procedures, profiles, standards and
+helpers so portable installations remain self-contained. After canonical changes, regenerate
+references/metadata and run distribution validation; see [contributing](../../CONTRIBUTING.md).
 
 ## Quality gates
 
@@ -165,7 +155,7 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
   this work (title, kind/age, a one-line hook and a direct path), ranked against the git branch,
   changed crates and last commit, plus index health (budget vs the host's 200-line / 25 KB load
   limit, index ↔ files). On Claude Code the host loads the index itself, so only pointers are
-  added; on Codex the index rides along (`/recall` for the deliberate, verified pass).
+  added; on Codex the index rides along (`/inspect-project --mode recall` for the deliberate, verified pass).
 - **PreToolUse (Read/Write/Edit/WebFetch)**: injects a compact *pointer* to each path-scoped
   Rust standard (name + one-line summary + absolute path) *before* you read or edit a matching
   file, so the agent knows which standards bind and reads the full rule on demand instead of
@@ -187,14 +177,14 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
   about a 1.98 API on a crate pinned to 1.70, an agent writes code that does not compile. So the
   list is data (`rules/stdlib-timeline.json`): what to reach for, the shape it displaces, the
   clippy lint that mechanizes the swap. The list is filtered to the crate's real floor before it
-  is ever asserted. Idioms above the floor are **counted, never named**, with `/msrv-check`
+  is ever asserted. Idioms above the floor are **counted, never named**, with `/verify-work --mode minimum-rust`
   offered to price raising it. The floor comes from `rust-version`, `workspace = true`
   inheritance, the `default_msrv` option, or the edition's minimum compiler; with none of those
   the version-keyed set is withheld rather than guessed. Never emitted for a dependency's source,
   whose floor belongs to a different crate.
 - **UserPromptSubmit**: prompt-scoped recall. The prompt is matched against the memory index
   and a note that scores a strong hit is surfaced once per session (title, kind/age, path),
-  plus a once-per-session nudge to `/recall` before working in a known area and to prefer a
+  plus a once-per-session nudge to `/inspect-project --mode recall` before working in a known area and to prefer a
   studio skill when one fits. Text no human typed (a sub-agent's `<task-notification>`, a
   teammate message, the echo of a slash command or of bash mode) is ignored whole, so neither
   fires on it and the nudge waits for the first real prompt. A typed `/name` is also written to
@@ -205,13 +195,13 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
   [`docs/usage-telemetry.md`](docs/usage-telemetry.md) has the numbers.
 - **PostToolUse (Skill/Agent)**: the usage log. One JSON line per skill invocation and
   sub-agent spawn (name, session, working directory, timestamp, whose hand), appended to
-  `usage.jsonl` in the plugin's data directory and read by `/studio-doctor --usage`, which
+  `usage.jsonl` in the plugin's data directory and read by `/inspect-project --mode diagnose-host --usage`, which
   reports per-skill and per-agent counts by project and session and lists every skill and
   agent on disk that a week never touched. No prompt text is recorded and the file never
   leaves the machine. [`docs/usage-telemetry.md`](docs/usage-telemetry.md).
-- **Stop**: nudges `/lint` if changed `.rs` files aren't rustfmt-clean.
+- **Stop**: nudges `/verify-work --mode lint` if changed `.rs` files aren't rustfmt-clean.
 - **Auto-capture (Stop)**: after a turn that finished a real unit of work (a completion summary +
-  uncommitted changes) but saved nothing to memory, nudges you once to `/remember` any durable
+  uncommitted changes) but saved nothing to memory, nudges you once to `/write-docs --mode memory` any durable
   learning. Blocks the stop a single time and never re-blocks (`stop_hook_active` breaks the loop),
   so it's far gentler than Stop-guard. On by default (`auto_capture`) and fails open.
 - **SubagentStart**: a studio sub-agent starts with an empty window, so it gets the facts the
@@ -228,26 +218,29 @@ injected automatically, and the agent reads the full rule on demand ([`rules/`](
 - **PostModelSwitch**: when the session or a sub-agent changes model (a classifier fallback,
   `/model`), a two-sentence note says which model now judges the inherit-model gates and how to
   return; inside a sub-agent it asks for the model to be named next to the verdict's evidence.
-- **PreCompact / SessionEnd**: remind you to persist an in-flight plan to a durable file and to
-  run `/session-wrap` so learnings are captured to memory.
+- **PreCompact / SessionEnd**: preserve in-flight task and execution evidence in the design
+  artifacts. Memory-store capture follows user/host authorization.
 - **Acceptance guard (Stop)**: a turn that **reports completion** (its last verdict is COMPLETE,
   or it is a completion summary with no verdict) while a spec's acceptance ledger
-  (`.rust-studio/specs/<slug>/acceptance.md`, written by `/spec-tasks` or `/acceptance`) that
+  (`docs/designs/<slug>/acceptance.md` or legacy `.rust-studio/specs/<slug>/acceptance.md`,
+  written by `/implement-change --mode plan` or `/verify-work --mode ledger`) that
   **this session named** has gates that are unmet or stale (their `CHECK:`/`EXPECT:` changed since
   the evidence), or does not parse, is blocked with the qualified ids and the exact
   `--reverify` command. It blocks on the oracle too: a gate whose `CHECK` prints a fixed result, or
   whose `EXPECT` matches empty output, passes whether or not the work was done, so a met box there
   is not evidence. That audit is the checker's own `--lint`, read for its error class; its warnings
-  are advice and never block. A question to the user, the `/spec-tasks` approval checkpoint, and an
+  are advice and never block. A question to the user, an explicit plan-only handoff, and an
   honest NEEDS WORK / BLOCKED pass. The message is read only to tell a done-claim from a
   handoff; what it enforces is ledger *state*, and it never executes a `CHECK:`. The loop guard
   is keyed to resolved gate state and the oracle findings (turning a gate green, or repairing a
   `CHECK` so it can fail, rearms it; rewording a title does not)
   and releases after four stops without progress. Binding follows a mention of the spec directory
-  anywhere in the transcript, so citing a peer's `specs/<slug>/` file is enough to make their
+  anywhere in the transcript, so citing a peer's design file is enough to make their
   unfinished ledger block yours, and repairing it is theirs to do; with no transcript to bind
   against it stays silent. On by default
-  (`acceptance_guard`) and fails open. Format and checker:
+  (`acceptance_guard`) and fails open. Binding/progress use full artifact paths. Custom
+  locations require direct `--reverify --cwd <root>` checking and are outside automatic
+  discovery. Format and checker:
   [`docs/acceptance-ledger.md`](docs/acceptance-ledger.md).
 - **Stop-guard (opt-in)**: the mechanical teeth for the integrity doctrine. When `stop_guard` is
   on, it blocks the turn from ending and feeds a reason to the model if the final message
@@ -269,7 +262,7 @@ not use, so the hook would run, find nothing, and enforce nothing. A gap stated 
 than coverage that looks real. The usage log runs there too, on `spawn_agent`, but a Codex
 skill is a file the model reads rather than a tool it calls, so a Codex week reports agents
 and typed `/name` invocations only. Current Codex supports trusted local plugin hooks; the
-0.153.4 failure concerned the withdrawn root manifest. `/studio-doctor` distinguishes script
+0.153.4 failure concerned the withdrawn root manifest. `/inspect-project --mode diagnose-host` distinguishes script
 output from actual host delivery, including cloud limitations and pending activation. See
 [`docs/codex-compat.md`](docs/codex-compat.md) and
 [`docs/claude-5-compat.md`](docs/claude-5-compat.md) for the November 2026 refresh.
@@ -299,14 +292,14 @@ verdict check) is always on, and the whole plugin disables with
 
 | Option | Default | Effect when off |
 |--------|---------|-----------------|
-| **Memory recall** (`memory_recall`) | on | No ranked pointers + index health at session start and no per-prompt pointers; the host still loads its index, and `/remember`, `/recall`, `/memory-doctor`, `/session-wrap` still work. |
+| **Memory recall** (`memory_recall`) | on | No ranked pointers + index health at session start and no per-prompt pointers; the host still loads its index, and `/write-docs --mode memory`, `/inspect-project --mode recall`, `/review-work --mode memory`, `/write-docs --mode handoff` still work. |
 | **Project memory directory** (`memory_dir`) | — | Moves the studio's memory off the host's auto-memory directory (Claude Code then no longer loads that index itself; the session-start hook carries it). Leave empty to share the host's store. |
-| **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/recall` first" prompt. |
-| **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/lint` when changed `.rs` files aren't rustfmt-clean. |
-| **Acceptance guard** (`acceptance_guard`) | on | The acceptance ledger becomes advisory: a turn may report COMPLETE with gates unmet, stale, unparsed, or behind a `CHECK` that cannot fail. The checker, `/spec-verify` and `/dev-task` still refuse to call an unmet ledger COMPLETE. |
-| **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit. Capture stays manual (`/remember`, `/session-wrap`) and in-skill. |
+| **Routing nudge** (`routing_nudge`) | on | Silences the once-per-session "prefer a skill / `/inspect-project --mode recall` first" prompt. |
+| **Formatting nudge** (`fmt_nudge`) | on | Silences the Stop-hook nudge to `/verify-work --mode lint` when changed `.rs` files aren't rustfmt-clean. |
+| **Acceptance guard** (`acceptance_guard`) | on | The acceptance ledger becomes advisory: a turn may report COMPLETE with gates unmet, stale, unparsed, or behind a `CHECK` that cannot fail. The checker, `/verify-work --mode acceptance` and `/implement-change --mode implement` still refuse to call an unmet ledger COMPLETE. |
+| **Auto-capture learnings** (`auto_capture`) | on | No memory-capture nudge after a completed unit. Capture stays manual (`/write-docs --mode memory`, `/write-docs --mode handoff`) and in-skill. |
 | **Irreversible-action guard** (`git_guard`) | on | The agent may again run commands nothing can undo: `git reset --hard`, `clean -f`, `checkout .`, `branch -D`, `stash drop`, plain force-push, `reflog expire`, and a real `cargo publish`/`yank`. Plain `git push`, `--force-with-lease`, and `publish --dry-run` are never blocked either way. |
-| **Progress visibility** (`progress_tracking`) | on | Orchestrating skills (`/dev-task`, `team-*`, `/refactor`, `/spec-verify`) stop keeping a live task list + per-phase result lines, so phases run without the checklist narration. |
+| **Progress visibility** (`progress_tracking`) | on | Orchestrating skills (`/implement-change --mode implement`, `/implement-change --mode refactor`, `/verify-work --mode acceptance`) stop keeping a live task list + per-phase result lines, so phases run without the checklist narration. |
 
 > LSP and any bundled MCP servers can't be toggled with a flag (they're declared statically):
 > remove `rust-analyzer` from PATH or disable the whole plugin to turn off the LSP.
@@ -357,17 +350,17 @@ changes how reviews are *reported*.
   Env: `RUST_STUDIO_STATUSLINE_NERDFONT=1` (sleek FontAwesome icons, needs a Nerd Font) or `=0`
   (text labels) · `RUST_STUDIO_STATUSLINE_POWERLINE=0` (middot + rounded caps) ·
   `RUST_STUDIO_STATUSLINE_ASCII=1` · `NO_COLOR`.
-  Manage with **`/progress-bar`**: `nerd` (FontAwesome, needs a Nerd Font) · `emoji` (default) ·
+  Manage with **`/maintain-studio --mode status-line`**: `nerd` (FontAwesome, needs a Nerd Font) · `emoji` (default) ·
   `symbols` (plain Unicode ⌂ ◔ ↻ ⏱, no font needed) · `text` (no icons) · `off` (remove) · or no
   arg to refresh after a plugin update.
   Set the `statusline` config off to skip the auto-install entirely.
 
 ## What makes it different
 
-- **Anti-gaming integrity layer**: a doctrine ([`docs/integrity-and-evidence.md`](docs/integrity-and-evidence.md)) + always-injected rules + reviewer/QA gates that reject a *gamed green*: vacuous/tautological tests, stubs, weakened or `#[ignore]`-d tests, hidden denominators, lint-suppression escape hatches, and skipping the test-first/review discipline. Kept honest by the `integrity/*` fixtures, which `rust-reviewer` scores at full recall in the measured suite (`bun tools/eval-runner.ts --fixtures`)
+- **Integrity checks** cover vacuous tests, stubs, weakened assertions, hidden denominators and skipped gates. The `integrity/*` fixtures exercise these checks; historical scores do not establish a pass for the consolidated catalog.
 - **The project's gate is the oracle**: a prescribed `cargo` command set reports on a hand-rolled build, not the one that governs merging, and it fails in both directions: `--all-features` silences lints that fire under the shipped default features, and a plain `nextest run` invents failures in a crate the repo's gate runs headless. The studio discovers the repo's own gate first (`justfile`, `Makefile`, `xtask`, cargo-make, lefthook, the CI lint/test job), runs *every* invocation it makes with its exact flags and env, and treats the cargo defaults as the fallback for a project that has none ([`docs/project-gate.md`](docs/project-gate.md)). A green from a command the merge gate does not run is an `Off-gate green`, an `INTEGRITY` finding rather than a pass
-- **Untrusted-context standard**: a Rust session reads a lot of text nobody on the project wrote (crate READMEs and `//!` docs, `docs.rs`, a dependency's `build.rs` output, PR threads, CI logs), and it all lands in the window looking like the agent's own reasoning. A doctrine ([`docs/untrusted-context.md`](docs/untrusted-context.md)) + a provenance pointer from the PreToolUse hook + `🚩 UNTRUSTED` findings in `rust-reviewer` / `security-auditor` / `dependency-manager` make third-party text **material to report on, never to act on**: a crate whose docs tell tooling to add a dep, ignore an advisory, or silence a lint is a `/add-dep` **block**, and Trojan-Source bidi codepoints in dependency source are a finding. Kept honest by the `security/untrusted-context` fixture, which scores whether the studio reports the planted instructions *and* still finds the two real defects they distract from
-- **Measured, not asserted**: every eval case and every agent fixture runs over the headless CLI with the plugin loaded (`tools/eval-runner.ts`), so a prompt edit is scored before it ships. The 0.45.0 run: 31 cases three times each, 45 fixtures twice each, 21 agents, and three live tasks where `rust-builder`, `rust-build-resolver` and `/refactor` work a real crate and its own `check.sh` decides; the numbers and the misses are in the CHANGELOG, and a miss is filed against the agent's brief or, twice so far, against a rule that turned out to be wrong
+- **Untrusted-context standard**: a Rust session reads a lot of text nobody on the project wrote (crate READMEs and `//!` docs, `docs.rs`, a dependency's `build.rs` output, PR threads, CI logs), and it all lands in the window looking like the agent's own reasoning. A doctrine ([`docs/untrusted-context.md`](docs/untrusted-context.md)) + a provenance pointer from the PreToolUse hook + `🚩 UNTRUSTED` findings in `reviewer` with the `correctness` profile / `reviewer` with the `security` profile / `implementer` with the `dependencies` profile make third-party text **material to report on, never to act on**: a crate whose docs tell tooling to add a dep, ignore an advisory, or silence a lint is a `/maintain-project --mode dependency` **block**, and Trojan-Source bidi codepoints in dependency source are a finding. Kept honest by the `security/untrusted-context` fixture, which scores whether the studio reports the planted instructions *and* still finds the two real defects they distract from
+- **Evaluation evidence** must name the tested instructions and runtime. The 0.45.0 measurements in the changelog concern the former catalog; they are historical evidence, not fresh-worker or native-host proof for these eleven skills and five roles.
 - **Current-model ready, on both hosts**: agent briefs declare a task class, while provider IDs
   and effort stay in user-owned routing. Gates inherit the parent session and never judge below
   the model that wrote the code. Authoring rules track Anthropic and OpenAI guidance; the setup
@@ -404,11 +397,11 @@ that already holds can't quietly stop holding. **What this does not prove:** tha
 free of other bugs, that no other means of reaching the network or spawning a process exists,
 or that a skill's *prose* can't talk an agent into running something unsafe at your direction.
 That last risk is what the untrusted-context doctrine
-([`docs/untrusted-context.md`](docs/untrusted-context.md)) and `security-auditor` cover, not
+([`docs/untrusted-context.md`](docs/untrusted-context.md)) and `reviewer` with the `security` profile cover, not
 this gate. For the product-wide security posture and how to report a vulnerability, see
 [`../../SECURITY.md`](../../SECURITY.md).
 
-One shipped script runs commands **by design**: `skills/acceptance/scripts/acceptance-check.ts`
+One shipped script runs commands **by design**: `skills/verify-work/scripts/acceptance-check.ts`
 executes the `CHECK:` lines of an acceptance ledger (`docs/acceptance-ledger.md`). It is a CLI,
 never a hook (the Stop guard only parses), so a command runs because an agent or a person invoked
 it under the host's permission mode. Its default mode (`--status`) executes nothing, and a ledger
@@ -448,9 +441,9 @@ The core quality loop reaches for these constantly — install once:
 cargo install cargo-nextest cargo-deny cargo-audit
 ```
 
-- **`cargo-nextest`**: fast, isolated test runner (`/review`, `/test-*`, `/verify-loop`).
-- **`cargo-deny`**: license / advisory / source policy (`/deps-check`, RELEASE-GATE).
-- **`cargo-audit`**: RUSTSEC advisory scan (`/security-audit`).
+- **`cargo-nextest`**: fast, isolated test runner (`/review-work --mode diff`, `/test-*`, `/implement-change --mode repair-gate`).
+- **`cargo-deny`**: license / advisory / source policy (`/review-work --mode dependencies`, RELEASE-GATE).
+- **`cargo-audit`**: RUSTSEC advisory scan (`/review-work --mode security`).
 - **`rust-analyzer`** on PATH: powers the **bundled LSP**, which gives diagnostics (via
   `cargo clippy`) and go-to-definition after each edit. When it is absent the LSP reports an
   error in the `/plugin` Errors tab and the studio falls back to file scanning.
@@ -463,13 +456,13 @@ cargo install cargo-nextest cargo-deny cargo-audit
 
 | When you run… | Tools | Install |
 |---|---|---|
-| `/audit-unsafe`, any `unsafe` | `miri` (nightly), `cargo-careful` | `rustup +nightly component add miri` · `cargo install cargo-careful` |
-| `/perf`, benchmarks | `cargo-flamegraph`, `samply`, `hyperfine`, and `perf`/`valgrind` on Linux | `cargo install flamegraph samply hyperfine` |
-| `/api-review`, `/publish` | `cargo-public-api`, `cargo-semver-checks` | `cargo install cargo-public-api cargo-semver-checks` |
-| `/msrv-check` | `cargo-msrv` | `cargo install cargo-msrv` |
-| `/coverage` | `cargo-llvm-cov` (or `cargo-tarpaulin`) | `cargo install cargo-llvm-cov` |
-| `/deps-check` | `cargo-hack`, `cargo-shear`, `cargo-hakari` (20+ crates) | `cargo binstall cargo-hack cargo-shear cargo-hakari` |
-| `/tech-debt`, `/adopt`, `/refactor` (the `slop-auditor` lens) | `similarity-rs`, `cargo-modules`, `cargo-shear`, `cargo-public-api` | `cargo binstall similarity-rs cargo-modules cargo-shear cargo-public-api` |
+| `/review-work --mode soundness`, any `unsafe` | `miri` (nightly), `cargo-careful` | `rustup +nightly component add miri` · `cargo install cargo-careful` |
+| `/implement-change --mode performance`, benchmarks | `cargo-flamegraph`, `samply`, `hyperfine`, and `perf`/`valgrind` on Linux | `cargo install flamegraph samply hyperfine` |
+| `/review-work --mode api`, `/publish-change --mode release` | `cargo-public-api`, `cargo-semver-checks` | `cargo install cargo-public-api cargo-semver-checks` |
+| `/verify-work --mode minimum-rust` | `cargo-msrv` | `cargo install cargo-msrv` |
+| `/verify-work --mode coverage` | `cargo-llvm-cov` (or `cargo-tarpaulin`) | `cargo install cargo-llvm-cov` |
+| `/review-work --mode dependencies` | `cargo-hack`, `cargo-shear`, `cargo-hakari` (20+ crates) | `cargo binstall cargo-hack cargo-shear cargo-hakari` |
+| `/review-work --mode structure`, `/inspect-project --mode onboard`, `/implement-change --mode refactor` (the `reviewer` with the `structure` profile lens) | `similarity-rs`, `cargo-modules`, `cargo-shear`, `cargo-public-api` | `cargo binstall similarity-rs cargo-modules cargo-shear cargo-public-api` |
 | macro crates | `cargo-expand` | `cargo install cargo-expand` |
 | snapshot tests | `cargo-insta` | `cargo install cargo-insta` |
 | mutation testing | `cargo-mutants` | `cargo install cargo-mutants` |
@@ -480,7 +473,7 @@ cargo install cargo-nextest cargo-deny cargo-audit
 than your `$PATH`. They are `criterion` (benches), `loom` (lock-free model checking), `trybuild`
 (macro / compile-fail tests), `insta` (snapshots).
 
-**Platform notes:** `miri` needs a **nightly** toolchain; `perf` and `valgrind`/cachegrind are
+**Platform notes:** `miri` needs a **nightly** toolchain; `implement-change --mode performance` and `valgrind`/cachegrind are
 Linux-only (macOS/Windows fall back to `samply`). Nothing here is hard-required: a missing tool
 just makes the relevant skill report it's unavailable and point you at the install.
 
@@ -488,7 +481,7 @@ just makes the relevant skill report it's unavailable and point you at the insta
 
 - **rust-analyzer LSP ships with the plugin** ([`.lsp.json`](.lsp.json)). Install the
   [`rust-analyzer`](https://rust-analyzer.github.io/manual.html#installation) binary on PATH and
-  it activates automatically: `rust-scout` resolves symbols via the language server instead of
+  it activates automatically: `researcher` with the `navigation` profile resolves symbols via the language server instead of
   scanning files, and diagnostics (run through `cargo clippy`, matching the studio's zero-warning
   bar) surface after each edit. A missing binary means `Executable not found in $PATH` in the
   `/plugin` Errors tab and a graceful fall back to file scanning. For large multi-crate workspaces
@@ -498,8 +491,8 @@ just makes the relevant skill report it's unavailable and point you at the insta
 
 ### Optional integrations
 
-- **MCP servers**, used when present: a symbol-navigation server (serena) for `rust-scout` /
-  `rust-builder` and a web-search server (exa) for advisory / freshness lookups. See
+- **MCP servers**, used when present: a symbol-navigation server (serena) for `researcher` with the `navigation` profile /
+  `implementer` with the `implementation` profile and a web-search server (exa) for advisory / freshness lookups. See
   [`docs/tooling.md`](docs/tooling.md#prerequisites--serena--exa-companions-not-bundled)
   for the install/register snippet. Cross-session memory needs no server: it is the host's
   auto-memory directory ([`docs/memory-protocol.md`](docs/memory-protocol.md)).

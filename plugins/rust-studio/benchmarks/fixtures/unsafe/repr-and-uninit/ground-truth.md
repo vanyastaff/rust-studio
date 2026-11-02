@@ -1,4 +1,4 @@
-# Ground truth — unsafe/repr-and-uninit (agent: unsafe-auditor)
+# Ground truth — unsafe/repr-and-uninit (agent: reviewer (profile: systems))
 
 Planted defects in `input.rs`. The auditor should catch each.
 

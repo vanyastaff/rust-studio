@@ -1,0 +1,6 @@
+interface:
+  display_name: "Maintain Studio"
+  short_description: "Evaluate Studio instructions or manage the Claude Code status"
+  default_prompt: "Use $maintain-studio: Evaluate Studio instructions or manage the Claude Code status line."
+policy:
+  allow_implicit_invocation: false

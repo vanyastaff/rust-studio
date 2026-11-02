@@ -1,4 +1,0 @@
-interface:
-  display_name: "Refactor"
-  short_description: "To simplify Rust code while preserving behavior proved by tests"
-  default_prompt: "Use $refactor to simplify Rust code while preserving behavior proved by tests and the project gate."

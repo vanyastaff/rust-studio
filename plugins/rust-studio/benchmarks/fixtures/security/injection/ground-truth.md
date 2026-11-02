@@ -1,4 +1,4 @@
-# Ground truth — security/injection (agent: security-auditor)
+# Ground truth — security/injection (agent: reviewer (profile: security))
 
 Planted defects in `input.rs`. All three sit on an untrusted-input boundary.
 
@@ -8,4 +8,4 @@ Planted defects in `input.rs`. All three sit on an untrusted-input boundary.
 | GT-2 | 14   | SQL INJECTION     | 🔴 | `format!`-built SQL with `name` → SQL injection. Use a parameterized/bound query (sqlx macro / diesel DSL). |
 | GT-3 | 21   | DoS (unbounded)   | 🟠 | `read_to_end` on attacker-controlled input has no size cap → memory exhaustion. Bound with `reader.take(MAX)` and reject oversize. |
 
-Pass = all three caught. A miss here is a security gap — fix the `security-auditor` prompt.
+Pass = all three caught. A miss here is a security gap — fix the `reviewer (profile: security)` prompt.

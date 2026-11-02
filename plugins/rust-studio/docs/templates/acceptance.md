@@ -1,4 +1,4 @@
-<!-- Rust Code Studio template — acceptance ledger for a spec. Written by /spec-tasks (or /acceptance) into .rust-studio/specs/<slug>/acceptance.md, one gate per acceptance criterion. Checked by skills/acceptance/scripts/acceptance-check.ts; format in docs/acceptance-ledger.md. -->
+<!-- /implement-change --mode plan (or /verify-work --mode ledger) writes beside the resolved spec; new designs use docs/designs/<slug>/acceptance.md. Keep legacy ledgers in place. Format: docs/acceptance-ledger.md. -->
 
 # Acceptance: <feature name>
 
@@ -25,7 +25,7 @@ Spec: spec.md
 
 <!--
 Replace every placeholder before the first run; lint first:
-  bun "<skill dir>/scripts/acceptance-check.ts" --lint .rust-studio/specs/<slug>/acceptance.md
+  bun "<skill dir>/scripts/acceptance-check.ts" --lint docs/designs/<slug>/acceptance.md
 
 Rules the checker enforces:
 - one gate per acceptance criterion; the title names the observed OUTCOME, not the activity

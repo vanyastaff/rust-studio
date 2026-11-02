@@ -121,9 +121,10 @@ describe("lastBlockRaw", () => {
 });
 
 describe("buildCaptureFeedback", () => {
-  test("tells the agent to run /remember", () => {
+  test("names the memory operation and preserves host authorization", () => {
     const fb = buildCaptureFeedback();
-    expect(fb).toContain("/remember");
+    expect(fb).toContain("/write-docs --mode memory");
+    expect(fb).toContain("authorized by the user and host");
     expect(fb.toLowerCase()).toContain("durable");
     expect(fb).toContain("never a secret");
   });
@@ -189,4 +190,15 @@ describe("per-session nudge cap", () => {
     expect(nudgeBudgetExhausted(a)).toBe(true);
     expect(nudgeBudgetExhausted(b)).toBe(false);
   });
+});
+
+
+test("consolidated capture detection requires the actual memory operation", () => {
+  const call = (skill: string, args: string) => JSON.stringify({ message: { content: [{ type: "tool_use", name: "Skill", input: { skill, args } }] } });
+  expect(capturedSignal(call("rust-studio:write-docs", "--mode memory"))).toBe(true);
+  expect(capturedSignal(call("write-docs", "--mode handoff"))).toBe(true);
+  expect(capturedSignal(call("review-work", "--mode memory"))).toBe(true);
+  expect(capturedSignal(call("write-docs", "--mode changelog"))).toBe(false);
+  expect(capturedSignal(call("review-work", "--mode diff"))).toBe(false);
+  expect(capturedSignal("/write-docs --mode memory")).toBe(true);
 });

@@ -1,4 +1,4 @@
-# Ground truth — api/leaky-surface (agent: api-design-lead)
+# Ground truth — api/leaky-surface (agent: reviewer (profile: api))
 
 Planted defects in `input.rs` (a public crate root — every `pub` item is a contract).
 

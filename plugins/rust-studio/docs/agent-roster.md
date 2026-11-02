@@ -1,136 +1,74 @@
-# Rust Code Studio — Agent Roster
+# Rust Studio roles and profiles
 
-The org chart. Each agent's `model`, the domain it owns, what it explicitly does
-**not** own, and the gate it answers for. Mirrors `coordination-protocol.md`.
+Choose a role for the action and the independence boundary, then load every applicable
+profile from the catalog. Roles are not domain owners or a management hierarchy. A profile
+supplies expertise and checks; it grants no write permission and does not select a model.
 
-**Model policy** (rationale in `claude-5-compat.md`): the judgment-heavy agents (the two
-directors, `harsh-critic`, `rust-reviewer`, `unsafe-auditor`, `slop-auditor`) use `inherit`, so
-they request the **session model**. Specialists use `sonnet`, the scout `haiku`, and
-`security-auditor` uses `opus` as a role alias. Host force settings, provider restrictions and
-fallbacks can change the effective model; inspect it before claiming the gate's routing.
-**No agent pins `effort`** — host inheritance or a user-configured subagent default selects it
-(`model-routing.md`).
+| Role | Default action | Model class | Boundary |
+|---|---|---|---|
+| `researcher` | Locate facts and source evidence | haiku | Read-only; return a cited map or answer |
+| `designer` | Compare contracts and propose designs | inherit | Read-only; coordinator records the design |
+| `implementer` | Write authorized source, tests, configuration or artifacts | sonnet | Declared write paths and acceptance; cannot sign off its own work |
+| `reviewer` | Challenge design/code against applicable standards | inherit | Read-only, separate from the author |
+| `verifier` | Execute checks and compare outcomes with requirements | inherit | Read-only project sources; execution may create ordinary build output |
 
-These labels are routing classes. Claude Code resolves them through its model aliases; a gateway
-maps those aliases to its own available models. Codex uses the optional local routing file from
-`model-routing.md`. Provider IDs never belong in these shared agent briefs.
+The current session coordinates scope, artifact recording, integration and combined verdicts.
+It does not need a clerical worker to write a spec or verification report. A named role alone
+cannot establish independence: use a separate fresh worker without inherited author context
+where the review, handoff or acceptance protocol requires it. Missing isolation remains
+unverified under `references/elephant-workflow.md` and `references/sub-agents.md`.
 
-```
-                         ┌───────────────────────────────────┐
-              Tier 1     │  chief-architect (inherit)        │  product-steward (inherit)
-              Directors  │  ARCH-GATE                        │  scope / milestones / propagation
-                         └──────────────┬────────────────────┘
-                                        │ delegates to
-        ┌───────────────┬───────────────┼───────────────┬──────────────┐
- Tier 2 │ api-design    │ async-systems │ systems-perf  │ qa-lead       │ release-lead
- Leads  │ -lead         │ -lead         │ -lead          │ QA-GATE       │ RELEASE-GATE
-        │ API-GATE      │ ASYNC-GATE    │ PERF/SAFETY   │               │ + tooling-lead
-        └──────┬────────┴──────┬────────┴───────┬────────┴──────┬────────┴───────────────┘ BUILD-GATE
-               │ delegates to  │                │               │
- Tier 3   api-designer    async-runtime    cli-specialist (CLI-GATE)   concurrency-specialist
- Special  error-architect web-framework                     unsafe-auditor (inherit)
- -ists    macro-specialist database-spec                    ffi-specialist
-          docs-engineer   observability                     perf-engineer
-                          wasm-specialist                    embedded-specialist
+## Required profile selection
 
- Quality (report to qa-lead / release-lead):
-   test-engineer · security-auditor (opus) · dependency-manager · build-engineer
+Load the relevant canonical profiles before acting on their domain. Combine them when the
+work crosses domains. For example, async implementation uses an implementer with async,
+implementation and any affected API/web/data profiles; an independent async review uses a
+reviewer with async and correctness profiles. Missing required profile content blocks that
+lens rather than silently reducing it to a generic review.
 
- Cross-cutting (reports to directors/leads):
-   harsh-critic (inherit, adversarial design review, read-only)
-   slop-auditor (inherit, tree-level slop ledger, read-only)
+| Profile | Expertise |
+|---|---|
+| `references/profiles/navigation.md` | Symbol, caller, test and configuration mapping |
+| `references/profiles/architecture.md` | Boundaries, dependencies, scope, ownership and migration |
+| `references/profiles/api.md` | Types, traits, errors, public contracts and SemVer |
+| `references/profiles/async.md` | Cancellation, runtime topology, spawning and backpressure |
+| `references/profiles/systems.md` | Unsafe, concurrency, memory model and soundness |
+| `references/profiles/platforms.md` | FFI, embedded/no_std and WASM constraints |
+| `references/profiles/web.md` | Routing, middleware, extraction and HTTP behavior |
+| `references/profiles/data.md` | Persistence, migrations, transactions and pools |
+| `references/profiles/cli.md` | CLI/TUI behavior, signals, streams and exit codes |
+| `references/profiles/macros.md` | Macro expansion, hygiene, diagnostics and compile tests |
+| `references/profiles/observability.md` | Tracing, metrics, cardinality and data exposure |
+| `references/profiles/performance.md` | Profiling, allocations, benchmarks and binary size |
+| `references/profiles/implementation.md` | Scoped source changes, meaningful tests and project gates |
+| `references/profiles/testing.md` | Scenario coverage, properties, fixtures and test evidence |
+| `references/profiles/tooling.md` | Build scripts, features, targets and CI |
+| `references/profiles/dependencies.md` | Versions, licenses, sources, MSRV and supply-chain surface |
+| `references/profiles/security.md` | Trust boundaries, auth, input validation and vulnerability triage |
+| `references/profiles/documentation.md` | Rustdoc, examples, doctests and published docs |
+| `references/profiles/release.md` | Versioning, changelog, MSRV and publish readiness |
+| `references/profiles/correctness.md` | Defect, scope, regression and evidence review |
+| `references/profiles/adversarial.md` | Premise, alternatives, omissions and failure scenarios |
+| `references/profiles/structure.md` | Duplicates, dead surface, orphan files and boundary debt |
 
- Execution (4) (the hands):
-   rust-scout (haiku, read-only) → rust-builder (sonnet, writes)
-     → rust-build-resolver (sonnet, fixes builds) → rust-reviewer (inherit, gate)
-```
+Named ARCH/API/ASYNC/CLI/PERF/SAFETY/QA/RELEASE/BUILD/SCOPE gates remain in
+`references/verdicts.md`. A separate reviewer/verifier applies their relevant profiles; writing
+documentation does not let its author sign off API or release documentation checks.
 
----
+## Special effects and compatibility
 
-## Who can write
+A prototype request dispatches an implementer with explicit disposable paths and experiment
+criteria; the designer stays read-only and receives findings afterward. Requested test or
+fuzz-target authoring uses an implementer, followed by a fresh verifier. A coverage or
+verification request alone does not authorize production repairs.
 
-Tool access is not a detail of the brief — it is the roster's load-bearing split. **Directors and
-leads never write.** They decide, hold a gate, and delegate; all nine declare
-`disallowedTools: Write, Edit, NotebookEdit`, as do the six read-only auditors
-(`rust-reviewer`, `harsh-critic`, `rust-scout`, `unsafe-auditor`, `security-auditor`,
-`slop-auditor`) — 14 of 33.
+Legacy task roles resolve through `catalog.json` to a role and profile. This mapping preserves
+old records and repair counts; it does not rewrite historical provenance, establish exclusive
+profile ownership, or reinstall old-name agents. Keep source/destination identities and next
+actions in the existing task record.
 
-Implementation belongs to `rust-builder` and `rust-build-resolver`, plus the Tier-3 specialists
-whose briefs say they implement — `test-engineer`, `build-engineer`, `docs-engineer`,
-`cli-specialist`, `dependency-manager`, `perf-engineer` and `observability-engineer` (the last
-two edit the code they measure and instrument, by design).
-
-The rule this enforces: **an agent that can write is never a review lens.** A review that edits
-the tree it audits destroys the artifact under review — it races the verification run and, on
-uncommitted work, leaves no recovery point. `RS-AGENT-083` fails the build if `/review` ever
-names a write-capable agent again; the domain checklist a specialist would have carried is
-carried by `rules/<domain>.md`, read by the lens that owns the gate.
-
----
-
-## Tier 1 — Directors
-
-| Agent | Model | Owns | Does NOT own | Gate |
-|-------|-------|------|--------------|------|
-| `chief-architect` | inherit | Crate/module boundaries, layering, ADRs, tech-stack decisions, final technical sign-off | Scope/priority (product-steward), domain implementation details | ARCH-GATE |
-| `product-steward` | inherit | Scope, milestones, story breakdown, prioritization, cross-domain change propagation | Technical design (chief-architect), code quality (qa-lead) | SCOPE-GATE |
-
-## Tier 2 — Leads
-
-| Agent | Model | Owns | Gate |
-|-------|-------|------|------|
-| `api-design-lead` | sonnet | Public API surface, crate boundaries, semver discipline, re-exports | API-GATE |
-| `async-systems-lead` | sonnet | Async architecture, runtime topology, service design, web stack choices | ASYNC-GATE |
-| `systems-perf-lead` | sonnet | Performance budgets, `no_std`, `unsafe` policy, FFI, memory model | PERF-GATE, SAFETY-GATE |
-| `qa-lead` | sonnet | Test strategy, coverage targets, flakiness, CI gates | QA-GATE |
-| `release-lead` | sonnet | Versioning, crates.io publishing, changelog, MSRV policy | RELEASE-GATE |
-| `tooling-lead` | sonnet | Build scripts, workspace config, CI matrix, cross-compilation, dev tooling | BUILD-GATE |
-
-## Tier 3 — Specialists
-
-| Agent | Model | Focus |
-|-------|-------|-------|
-| `api-designer` | sonnet | Trait design, type-state, builders, sealed traits, newtypes, `From`/`TryFrom` |
-| `error-architect` | sonnet | Error taxonomy, `thiserror`/`anyhow`, `Result` discipline, error context |
-| `macro-specialist` | sonnet | proc-macros (`syn`/`quote`), `macro_rules!`, hygiene, derive macros |
-| `docs-engineer` | sonnet | rustdoc, doc-tests, intra-doc links, `mdBook`, examples, README |
-| `async-runtime-specialist` | sonnet | tokio, cancellation, `select!`, streams, `Send`/`'static` bounds, spawning |
-| `web-framework-specialist` | sonnet | axum/actix, extractors, middleware, tower, routing, state |
-| `database-specialist` | sonnet | sqlx/diesel/sea-orm, migrations, pools, transactions, query perf |
-| `observability-engineer` | sonnet | `tracing`, spans, metrics, structured logs, OpenTelemetry |
-| `wasm-specialist` | sonnet | `wasm-bindgen`, `wasm32` targets, JS interop, binary size |
-| `concurrency-specialist` | sonnet | `Send`/`Sync`, atomics, lock-free, `loom`, channels, data races |
-| `unsafe-auditor` | inherit | `unsafe` review, `// SAFETY:` invariants, miri, UB, aliasing, provenance |
-| `ffi-specialist` | sonnet | `bindgen`/`cbindgen`, C ABI, `no_std`, `extern "C"`, repr |
-| `perf-engineer` | sonnet | criterion, flamegraph, `perf`, cachegrind, SIMD, allocation profiling |
-| `embedded-specialist` | sonnet | `no_std`, `embedded-hal`, cortex-m, interrupts, `#[no_main]`, panics |
-| `cli-specialist` | sonnet | clap derive, ratatui, shell completions, exit codes, signal handling |
-| `test-engineer` | sonnet | proptest, criterion, nextest, fixtures, integration tests, golden tests |
-| `security-auditor` | opus | `cargo-audit`, RUSTSEC, secrets, input validation, supply chain, deserialization |
-| `dependency-manager` | sonnet | `cargo-deny`, feature unification, MSRV, version conflicts, bloat |
-| `build-engineer` | sonnet | `build.rs`, workspace layout, cross-compilation, CI matrix, feature combos |
-| `harsh-critic` | inherit | Adversarial critic. Attacks designs/specs/plans — challenges the premise, builds failure scenarios, proposes alternatives. No praise, no fixes (read-only). |
-| `slop-auditor` | inherit | Tree-level slop ledger: duplicated functions/types (`similarity-rs`), orphan files and module cycles (`cargo modules`), dead `pub`, unused deps, untyped model calls, naming/pattern/boundary tells. Fingerprinted findings with a reshape each; no fixes (read-only). |
-
-## Execution (4)
-
-| Agent | Model | Role |
-|-------|-------|------|
-| `rust-scout` | haiku | Read-only locator. Maps where symbols/impls/tests live. Returns `file:line`. Never writes, never proposes fixes. |
-| `rust-builder` | sonnet | Implements an **approved** plan. Writes code + tests, runs them, reports a diff summary. Stays in scope — no opportunistic refactors. |
-| `rust-build-resolver` | sonnet | Gets a failing build green. Fixes the root cargo/rustc error (borrowck, trait bounds, lifetimes, types, features) in a check→fix loop. No masking. |
-| `rust-reviewer` | inherit | Diff auditor and final gate. Correctness bugs, scope creep, missing tests. One line per finding, severity-tagged. No praise. |
-
----
-
-## Domain → who to call
-
-- **Designing a public crate API** → `/dev-task`, then `api-design-lead` when the public contract changes
-- **Building an async service** → `/dev-task`, then the async, web, database, or observability specialist the task needs
-- **Making it fast / safe** → `/perf` or `/dev-task`, then `systems-perf-lead` and the relevant safety specialist
-- **Shipping a release** → `/publish`, adding release, security, dependency, and docs review as needed
-- **A CLI** → `cli-specialist`
-- **Embedded / `no_std`** → `systems-perf-lead` + `embedded-specialist` + `ffi-specialist`
-- **Adversarial design review** → `harsh-critic` (skill: `/doc-review`)
-- **An inherited or AI-authored tree** → `slop-auditor` (skills: `/adopt`, `/tech-debt`, `/refactor`)
-- **Test strategy / implementation** → `qa-lead` + `test-engineer` (skills: `/test-plan`, `/tdd`)
+Model classes are host routing hints. Researcher uses haiku, implementer sonnet, and the other
+three roles inherit. Profiles never override them. Hosts and user overrides can change the
+effective model; report actual routing and retain the user's effort setting. Codex generation
+uses optional local model mappings and otherwise omits provider model names
+(`references/model-routing.md`).

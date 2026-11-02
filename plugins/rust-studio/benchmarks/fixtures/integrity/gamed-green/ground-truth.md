@@ -1,7 +1,7 @@
 # Ground truth — integrity/gamed-green (mode: defect-recall; expected verdict: NEEDS WORK)
 
 The suite is green, but the green is gamed: the tests cannot fail, a stub fakes a pass, a real
-failing test was silenced, and a production lint was suppressed. `rust-reviewer` must surface
+failing test was silenced, and a production lint was suppressed. `reviewer (profile: correctness)` must surface
 these as `🚩 INTEGRITY` findings — a "compiles + tests green" pass is the failure this fixture
 catches. Standard: `docs/integrity-and-evidence.md`.
 
@@ -14,7 +14,7 @@ catches. Standard: `docs/integrity-and-evidence.md`.
 | GT-5 | 50    | WEAKEN-ORACLE   | 🚩 | `#[ignore] // flaky, skip for now` silences a real, correct test (`normalize_trims_trailing_slash`) to keep the suite green instead of fixing the code (`normalize` is still `todo!()`). It is not flaky; it is failing. Fix the code, don't ignore the test; an ignore needs a real reason + tracking reference. |
 | GT-6 | 58    | LINT-DISABLE    | 🚩 | `#[allow(clippy::unwrap_used)]` suppresses the workspace `unwrap_used` deny on a production `unwrap` (line 60) with no justification comment — gate-disabling. Remove the unwrap (`?`/`ok_or`), or justify the allow in one line proving the invariant. |
 
-Pass = `rust-reviewer` flags the gamed green and returns **NEEDS WORK** with `🚩 INTEGRITY`
+Pass = `reviewer (profile: correctness)` flags the gamed green and returns **NEEDS WORK** with `🚩 INTEGRITY`
 findings covering the rows above (match on type + line vicinity). Waving it through because it
 "compiles and the tests are green" is the junior failure this fixture catches. Recall = caught / 6.
 

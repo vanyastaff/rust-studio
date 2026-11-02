@@ -1,6 +1,0 @@
-interface:
-  display_name: "PR"
-  short_description: "Pushing committed Rust work and opening a pull request"
-  default_prompt: "Use $pr when pushing committed Rust work and opening a pull request."
-policy:
-  allow_implicit_invocation: false

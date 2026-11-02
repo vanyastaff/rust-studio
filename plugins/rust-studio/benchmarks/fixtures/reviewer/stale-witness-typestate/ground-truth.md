@@ -1,4 +1,4 @@
-# Ground truth — reviewer/stale-witness-typestate (agent: rust-reviewer)
+# Ground truth — reviewer/stale-witness-typestate (agent: reviewer (profile: correctness))
 
 Mode: **defect-recall**. The typestate is half-right — the private field makes unvalidated
 dispatch unrepresentable — which is exactly why the remaining bug is easy to wave through:

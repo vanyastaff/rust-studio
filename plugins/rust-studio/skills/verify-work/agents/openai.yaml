@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Work"
+  short_description: "Verify Rust acceptance, test strength, fuzz campaigns"
+  default_prompt: "Use $verify-work: Verify Rust acceptance, test strength, fuzz campaigns, lint gates, and minimum compiler support with executable evidence."

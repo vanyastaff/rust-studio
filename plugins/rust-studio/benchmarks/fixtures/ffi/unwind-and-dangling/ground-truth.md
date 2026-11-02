@@ -1,4 +1,4 @@
-# Ground truth — ffi/unwind-and-dangling (agent: `ffi-specialist`, verdict: NEEDS WORK)
+# Ground truth — ffi/unwind-and-dangling (agent: `reviewer (profile: platforms)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Review the exported C API in `src/ffi.rs` before the Python and Go binding teams build on it. Edition 2024, default profile. List every finding with file:line and severity, then give a verdict."* It links and the smoke test passes; every defect is one `rules/ffi.md` / `rules/unsafe.md` names.
 

@@ -1,5 +1,5 @@
 <!-- Rust Code Studio template — one entry appended to .rust-studio/debt-log.md (or filed as
-     a GitHub issue body) by /tech-debt's "Durable capture" mechanism. Routed to by /tech-debt
+     a GitHub issue body) by /tech-debt's "Durable capture" mechanism. Routed to by /review-work --mode structure
      itself, /review's Accretion check, /model-domain's RE-CUT ESCALATED, and /scope-check's
      "split" disposition. Evidence over assertion: quote the shape observed, don't paraphrase it. -->
 
@@ -8,8 +8,8 @@
 - **Status:** open · **Fingerprint:** `<file>:<line> | <category> | <5-8 word gist>`
 - **Filed:** `gh issue #<n>` <url> — or `local` (no GitHub rung reached)
 - **Category:** Marker / Allow / Panic-path / Oversized / Test-gap / Accretion / Re-cut / Scope-split
-- **Trigger:** <the check/skill/PR that surfaced it — e.g. "/review Accretion check on PR #142",
-  "/model-domain RE-CUT ESCALATED", "/scope-check split", "/tech-debt scan">
+- **Trigger:** <the check/skill/PR that surfaced it — e.g. "/review-work --mode diff Accretion check on PR #142",
+  "/design-change --mode domain RE-CUT ESCALATED", "/review-work --mode scope split", "/review-work --mode structure scan">
 
 **Location:** `<file:line or file:line-range>`
 

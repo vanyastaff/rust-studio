@@ -3,9 +3,9 @@ max_turns: 24
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
-targets: [skill:review, agent:rust-reviewer]
+targets: [skill:review-work, agent:reviewer]
 ---
-Use `/rust-studio:review` to assess this proposed cleanup. Read the workflow and relevant
+Use `/rust-studio:review-work --mode diff` to assess this proposed cleanup. Read the workflow and relevant
 references; this is supplied code, not a runnable repository. Do not apply changes, run
 imaginary tests or invent missing standards. Give findings and the evidence needed to act.
 

@@ -16,7 +16,7 @@ Two states, and every skill sits in exactly one.
 
 - **Model-invoked** (the default) — the agent can fire it on its own, and another skill can
   reach it. The price is permanent: the description sits in the context window every turn,
-  competing for attention with the other 50-odd descriptions.
+  competing for attention with the other catalog descriptions.
 - **User-invoked** — only a human typing `/name` starts it. Claude drops the description
   from context entirely, so it costs nothing per turn. Nothing else can reach it.
 
@@ -25,14 +25,14 @@ in the frontmatter *and* `policy.allow_implicit_invocation: false` in
 `skills/<name>/agents/openai.yaml`. `validate-distribution.sh` fails the build when the two
 disagree, or when the roster below and the files disagree.
 
-The roster is **side-effecting work**: a skill that publishes, commits, opens a PR,
-scaffolds a crate, mass-rewrites source, or rewrites machine config waits for a human.
-Currently `add-dep`, `commit`, `eval-agents`, `evolve`, `migrate`, `new-crate`, `pr`,
-`progress-bar`, `publish`, `worktree-sweep`.
+The explicit-only groups are maintain-project, maintain-studio and publish-change. Their
+operation modes retain the individual effect and authorization boundaries in catalog.json.
+Ten skills are portable; maintain-studio is plugin-only. Discovery points to outcome skills;
+disclosed procedures hold operation detail and profiles hold reusable domain expertise.
 
 The rest stay model-invoked, because the studio's routing depends on the agent reaching
 them. Before moving a skill onto the roster, check nothing invokes it: naming it as a
-*next step* ("Next: `/commit`") is a suggestion to the human and stays fine, but a skill
+*next step* ("Next: `/publish-change --mode commit`") is a suggestion to the human and stays fine, but a skill
 that another skill actually runs must remain model-invoked or the chain breaks silently.
 
 ---
@@ -112,7 +112,7 @@ A prohibition names the thing it bans and makes it *more* available. "Never writ
 comments" puts verbose comments in context; the negation is a weak modifier over a strongly
 activated concept.
 
-State the target instead. `publish` says *prepare a dry-run and stop* rather than a bare
+State the target instead. `publish-change --mode release` says *prepare a dry-run and stop* rather than a bare
 "never publish". Keep a prohibition only as a hard guardrail you cannot phrase positively —
 and even then pair it with what to do instead.
 

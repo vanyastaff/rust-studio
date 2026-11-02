@@ -11,7 +11,7 @@
 # A SKILL.md cites a bundled file as `references/<name>.md`. The source is resolved
 # from docs/<name>.md or rules/<name>.md. Copies are rewritten so their own
 # `${CLAUDE_PLUGIN_ROOT}/{docs,rules}/x.md` links become `references/x.md`, which is how
-# the skill's own SKILL.md refers to them — so a link resolves the same from either file.
+# the skill's own SKILL.md refers to them â€” so a link resolves the same from either file.
 # Following those links transitively is what pulls in e.g. maintainer-grade-development.md
 # for any skill that cites collaboration.md.
 set -euo pipefail
@@ -19,6 +19,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 check=0
 [[ ${1:-} == --check ]] && check=1
+
+skill_dirs=()
+while IFS= read -r name; do skill_dirs+=("skills/$name/"); done < <(node -e 'const c=require("./catalog.json"); for(const name of Object.keys(c.skills)) console.log(name)')
 
 # ponytail: docs/ and rules/ share one flat namespace, so a basename resolves without a
 # dir prefix. Bail loudly rather than silently pick one if that ever stops being true.
@@ -36,10 +39,10 @@ resolve() { # relative name (may contain a subdir, e.g. templates/adr.md) -> sou
 cite() { grep -oE 'references/[a-z0-9/-]+\.md' "$1" | sed 's#^references/##' | sort -u || true; }
 
 # Emit the file with its plugin-root links rewritten to skill-relative references/ links.
-rewrite() { sed -E 's#\$\{CLAUDE_PLUGIN_ROOT\}/(docs|rules)/#references/#g' "$1"; }
+rewrite() { sed -E 's#\$\{CLAUDE_PLUGIN_ROOT\}/(docs|rules)/#references/#g; s#\$\{CLAUDE_PLUGIN_ROOT\}/(hooks/)?scripts/#scripts/#g' "$1"; }
 
 stale=0
-for skill in skills/*/; do
+for skill in "${skill_dirs[@]}"; do
   name=${skill%/}; name=${name##*/}
   src=$skill/SKILL.md
   [[ -f $src ]] || continue
@@ -51,7 +54,7 @@ for skill in skills/*/; do
     next=""
     for f in $queue; do
       [[ -n ${want[$f]:-} ]] && continue
-      path=$(resolve "$f") || { echo "$src cites references/$f — no docs/$f or rules/$f" >&2; exit 1; }
+      path=$(resolve "$f") || { echo "$src cites references/$f â€” no docs/$f or rules/$f" >&2; exit 1; }
       want[$f]=$path
       next+=" $(rewrite "$path" | cite /dev/stdin)"
     done
@@ -84,53 +87,90 @@ done
 
 # Keep deterministic helper code inside the portable skill package. The plugin-level copy is the
 # source so existing plugin automation and release paths remain stable.
-# <src>:<dest> pairs. memory-doctor's CLI imports memory-store.ts and _lib.ts relatively, so
-# all three travel together and the skill stays self-contained; acceptance-check.ts imports
-# acceptance-ledger.ts the same way (the Stop guard shares that parser from hooks/scripts/);
-# prose-gate.ts imports stripQuoted from _lib.ts, so /prose carries its own copy of that too;
-# usage-report.ts imports the row parser from usage-log.ts and pluginRoot from _lib.ts, so
-# /studio-doctor carries all three. slop-audit.sh is the mechanical layer of the slop ledger;
-# /tech-debt, /adopt and /refactor each carry it so a standalone skill install can run it.
+# <src>:<dest> pairs. Every CLI travels with its relative imports.
 assets=(
-  scripts/env-setup.sh:skills/env-setup/scripts/env-setup.sh
-  scripts/slop-audit.sh:skills/tech-debt/scripts/slop-audit.sh
-  scripts/slop-audit.sh:skills/adopt/scripts/slop-audit.sh
-  scripts/slop-audit.sh:skills/refactor/scripts/slop-audit.sh
-  scripts/slop-audit.sh:skills/evolve/scripts/slop-audit.sh
-  scripts/score-compare.sh:skills/evolve/scripts/score-compare.sh
-  scripts/plan-status.ts:skills/spec-tasks/scripts/plan-status.ts
-  hooks/scripts/memory-doctor.ts:skills/memory-doctor/scripts/memory-doctor.ts
-  hooks/scripts/memory-store.ts:skills/memory-doctor/scripts/memory-store.ts
-  hooks/scripts/_lib.ts:skills/memory-doctor/scripts/_lib.ts
-  hooks/scripts/acceptance-check.ts:skills/acceptance/scripts/acceptance-check.ts
-  hooks/scripts/acceptance-ledger.ts:skills/acceptance/scripts/acceptance-ledger.ts
-  hooks/scripts/prose-gate.ts:skills/prose/scripts/prose-gate.ts
-  hooks/scripts/_lib.ts:skills/prose/scripts/_lib.ts
-  hooks/scripts/usage-report.ts:skills/studio-doctor/scripts/usage-report.ts
-  hooks/scripts/usage-log.ts:skills/studio-doctor/scripts/usage-log.ts
-  hooks/scripts/_lib.ts:skills/studio-doctor/scripts/_lib.ts
+  scripts/env-setup.sh:skills/configure-tooling/scripts/env-setup.sh
+  scripts/slop-audit.sh:skills/review-work/scripts/slop-audit.sh
+  scripts/slop-audit.sh:skills/inspect-project/scripts/slop-audit.sh
+  scripts/slop-audit.sh:skills/implement-change/scripts/slop-audit.sh
+  scripts/slop-audit.sh:skills/maintain-project/scripts/slop-audit.sh
+  scripts/score-compare.sh:skills/maintain-project/scripts/score-compare.sh
+  scripts/review-packet.ts:skills/review-work/scripts/review-packet.ts
+  hooks/scripts/memory-doctor.ts:skills/review-work/scripts/memory-doctor.ts
+  hooks/scripts/memory-store.ts:skills/review-work/scripts/memory-store.ts
+  hooks/scripts/_lib.ts:skills/review-work/scripts/_lib.ts
+  hooks/scripts/acceptance-check.ts:skills/verify-work/scripts/acceptance-check.ts
+  hooks/scripts/acceptance-ledger.ts:skills/verify-work/scripts/acceptance-ledger.ts
+  hooks/scripts/design-paths.ts:skills/verify-work/scripts/design-paths.ts
+  hooks/scripts/prose-gate.ts:skills/review-work/scripts/prose-gate.ts
+  hooks/scripts/usage-report.ts:skills/inspect-project/scripts/usage-report.ts
+  hooks/scripts/usage-log.ts:skills/inspect-project/scripts/usage-log.ts
+  hooks/scripts/_lib.ts:skills/inspect-project/scripts/_lib.ts
+  hooks/scripts/catalog.ts:skills/inspect-project/scripts/catalog.ts
+  catalog.json:skills/inspect-project/scripts/catalog.json
 )
+# Memory procedures may be disclosed by either entry. Preserve the import closure
+# when cited, including in transitive procedure references.
+for skill in "${skill_dirs[@]}"; do
+  if grep -rqE 'scripts/(memory-store|memory-doctor)\.ts' "$skill/SKILL.md" "$skill/references" 2>/dev/null; then
+    for helper in memory-doctor memory-store _lib; do
+      assets+=("hooks/scripts/$helper.ts:${skill}scripts/$helper.ts")
+    done
+  fi
+done
+
+for skill in "${skill_dirs[@]}"; do
+  if grep -rqE 'scripts/slop-audit\.sh' "$skill/SKILL.md" "$skill/references" 2>/dev/null; then
+    assets+=("scripts/slop-audit.sh:${skill}scripts/slop-audit.sh")
+  fi
+  if grep -rqE '(scripts/prose-gate\.ts|references/procedures/review-documents\.md)' "$skill/SKILL.md" "$skill/references" 2>/dev/null; then
+    for helper in prose-gate _lib; do assets+=("hooks/scripts/$helper.ts:${skill}scripts/$helper.ts"); done
+    assets+=("scripts/review-packet.ts:${skill}scripts/review-packet.ts")
+  fi
+done
+
+# Every portable consumer of the lifecycle receives the same executable dependencies.
+for skill in "${skill_dirs[@]}"; do
+  [[ -f $skill/references/elephant-workflow.md ]] || continue
+  for helper in design-workflow plan-status review-packet; do
+    assets+=("scripts/$helper.ts:${skill}scripts/$helper.ts")
+  done
+  for helper in design-paths acceptance-check acceptance-ledger catalog; do
+    assets+=("hooks/scripts/$helper.ts:${skill}scripts/$helper.ts")
+  done
+  assets+=("docs/templates/handoff.json:${skill}templates/handoff.json")
+  assets+=("catalog.json:${skill}scripts/catalog.json")
+done
+
+asset_content() {
+  if [[ $1 == scripts/design-workflow.ts ]]; then
+    # Source layout separates hook modules; installed helpers are siblings.
+    sed 's#../hooks/scripts/design-paths.ts#./design-paths.ts#g' "$1"
+  else
+    cat "$1"
+  fi
+}
 for pair in "${assets[@]}"; do
   asset_src=${pair%%:*}
   asset_dest=${pair#*:}
   if (( check )); then
-    if ! cmp -s "$asset_src" "$asset_dest"; then
+    if ! cmp -s <(asset_content "$asset_src") "$asset_dest"; then
       echo "stale: $asset_dest"
       stale=1
     fi
   else
     mkdir -p "$(dirname "$asset_dest")"
-    cp "$asset_src" "$asset_dest"
+    asset_content "$asset_src" > "$asset_dest"
     [[ $asset_dest == *.sh ]] && chmod +x "$asset_dest"
     echo "$(basename "$(dirname "$(dirname "$asset_dest")")"): bundled $(basename "$asset_dest")"
   fi
 done
 
 # A skill that names a studio sub-agent must ship the fallback for hosts that have none,
-# or it deadlocks on "delegate all writes to rust-builder" where no rust-builder exists.
+# or it deadlocks on a required worker unavailable in the host.
 agent_re="\`($(ls agents/*.md | xargs -n1 basename | sed 's/\.md$//' | paste -sd'|'))\`"
 missing=0
-for skill in skills/*/; do
+for skill in "${skill_dirs[@]}"; do
   src=$skill/SKILL.md
   [[ -f $src ]] || continue
   grep -qE "$agent_re" "$src" || continue

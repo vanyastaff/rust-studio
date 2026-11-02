@@ -91,6 +91,21 @@ function escapeRe(s: string): string {
 
 export function capturedSignal(blockRaw: string, storeDir?: string): boolean {
   if (CAPTURE_SKILL.test(blockRaw) || MEMORY_WRITE.test(blockRaw)) return true;
+  // A broad write-docs/review-work invocation is not itself a capture. Require the
+  // memory/handoff operation so a changelog or a diff review cannot suppress this nudge.
+  const captureOperation = (skill: string, args: string) =>
+    (skill === "write-docs" && /--mode\s+(memory|handoff)\b/.test(args)) ||
+    (skill === "review-work" && /--mode\s+memory\b/.test(args));
+  for (const line of blockRaw.split("\n")) {
+    try {
+      const row = JSON.parse(line);
+      const content = row.message?.content ?? row.content ?? [];
+      if (Array.isArray(content) && content.some((b: any) => b?.type === "tool_use" && b.name === "Skill" &&
+        captureOperation(String(b.input?.skill ?? "").replace(/^rust-studio:/, ""), String(b.input?.args ?? "")))) return true;
+    } catch { /* Plain text and partially written transcript lines still get slash detection. */ }
+  }
+  if (/(?:^|[\s>])\/(?:rust-studio:)?write-docs\s+--mode\s+(memory|handoff)\b/.test(blockRaw) ||
+      /(?:^|[\s>])\/(?:rust-studio:)?review-work\s+--mode\s+memory\b/.test(blockRaw)) return true;
   if (storeDir) {
     const dir = escapeRe(storeDir.replace(/\\/g, "/").replace(/\/+$/, ""));
     // JSON-escaped path in the transcript: "/" may appear as "\/" — accept both.
@@ -172,8 +187,9 @@ export function buildCaptureFeedback(store?: StoreInfo): string {
     "persisted to project memory this turn.",
     "",
     "Before stopping: if anything NON-OBVIOUS and DURABLE was learned (decision+rationale,",
-    "gotcha, convention, non-trivial fix, or durable external reference), run /remember",
-    "now. Skip what code/git/Cargo.toml already makes obvious, anything session-local, and",
+    "gotcha, convention, non-trivial fix, or durable external reference), run /write-docs --mode memory",
+    "when memory writes are authorized by the user and host. Otherwise report the learning without saving it.",
+    "Skip what code/git/Cargo.toml already makes obvious, anything session-local, and",
     "never a secret. Full capture rule:",
     `${join(pluginRoot(), "docs", "memory-protocol.md").replace(/\\/g, "/")}`,
     ...(where ? [where] : []),

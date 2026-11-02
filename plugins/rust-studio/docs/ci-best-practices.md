@@ -1,6 +1,6 @@
 # Rust CI best practices (2025-2026) — the studio's reference digest
 
-Curated from current authoritative sources for the `/ci-gate` skill and the build/tooling agents.
+Curated from current authoritative sources for the `/configure-tooling --mode ci` skill and the build/tooling agents.
 Templates live in `${CLAUDE_PLUGIN_ROOT}/docs/templates/`. Tiers: **must** / **should** / **nice**.
 
 ## The one template to start from

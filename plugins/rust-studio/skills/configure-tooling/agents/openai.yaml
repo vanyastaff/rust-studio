@@ -1,0 +1,4 @@
+interface:
+  display_name: "Configure Tooling"
+  short_description: "Configure Rust tooling: inspect or provision a machine"
+  default_prompt: "Use $configure-tooling: Configure Rust tooling: inspect or provision a machine, audit or install CI gates, and set up project tests, benchmarks, and coverage."

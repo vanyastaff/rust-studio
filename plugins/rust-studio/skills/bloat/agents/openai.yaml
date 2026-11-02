@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Binary Size"
-  short_description: "To diagnose and reduce Rust binary size or monomorphization"
-  default_prompt: "Use $bloat to diagnose and reduce Rust binary size or monomorphization growth."

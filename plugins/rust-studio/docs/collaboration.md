@@ -1,7 +1,7 @@
 # Coordination Protocol — Collaboration
 
 How the studio decides, asks, and remembers. Part of the
-Coordination Protocol (`coordination-protocol.md`); see also `delegation.md` (team, tiers,
+Coordination Protocol (`coordination-protocol.md`); see also `delegation.md` (roles, profiles,
 team execution) and `verdicts.md` (gates, verdicts, evidence).
 
 ---
@@ -37,6 +37,10 @@ rigor (`verdicts.md` §7) — it adds a higher bar on top.
 Understand the task, choose an approach, implement, and verify within the authorized scope.
 Ask when an unresolved direction or missing permission prevents progress; existing authorization
 does not expire at a phase boundary. See `working-preferences.md` for the full operating mode.
+Substantive work follows `references/elephant-workflow.md`: shared context/design, fresh
+Goldfish review, fresh implementer reconstruction, integration and independent acceptance.
+An explicit design-only request ends at the design; existing implementation authorization
+continues. These evidence boundaries do not create repeated permission loops.
 
 > Tools named below (`AskUserQuestion`, `EnterPlanMode`, `ExitPlanMode`) are one host's
 > names for asking the owner a structured question and for gating a plan on approval. If
@@ -59,7 +63,7 @@ fields, error-variant shapes, test-framework choices, file naming — anything r
 Rust ecosystem best practice and the established constraints. After ~3–4 strategic questions
 land scope/structure, **stop asking and start writing**; inline minor decisions.
 
-**Escalate to the user (`AskUserQuestion`) only when load-bearing:**
+**Escalate only when a consequential decision or authorization is missing:**
 - a **direction-changing fork** (new crate vs in-place, naming conventions not implied by the
   code, scope cuts, a genuine design fork a review couldn't resolve);
 - an **irreversible** action (data loss, `cargo publish`, out-of-repo / non-git edits);
@@ -87,12 +91,9 @@ meets the bar. If the user is time-pressured, cut optional **scope**, not the **
 "scope can be cut; the quality bar cannot" (`maintainer-grade-development.md`). "Reject the task"
 or "do less, properly" are fine options; "do it, but badly" never is.
 
-**Implementation-planning skills MAY surface the Draft→Approval step through native plan mode**
-(`EnterPlanMode` → write the plan file → `ExitPlanMode`) instead of an `AskUserQuestion`
-"approve?" card, so the plan renders in the Desktop **Plan** pane and is approved natively (on
-CLI it's the standard plan-mode approval — no regression). `ExitPlanMode` is for plans that lead
-to **code**; research/elicitation skills (`/brainstorm`, `/grill-me`) keep their own gate. Piloted
-in **`/dev-task`**; rolls out to `/spec`, `/architecture`, `/refactor` once validated.
+Use the host's native plan surface for a reviewable plan when available. If approval is
+actually required, use that surface or ask in prose. A plan phase, exploration or interview
+does not reset authorization; its completion is not a mandatory approval checkpoint.
 
 **Never offload your own analysis as a question.** If you have a defensible answer, that is a
 tactical call — decide it, state how reversible it is, and let the user veto. Ask only when the
@@ -105,14 +106,14 @@ big decision into a short sequence of **small, concrete questions asked one at a
 a **recommended default** and a one-line "cost if wrong", resolving dependencies progressively —
 not a single multidimensional question the user must study to answer. A good ask is cheap to
 answer (pick the default, or correct one axis); a bad ask is an essay-prompt. This is the
-`/grill-me` shape; reach for that skill when a plan needs the user's input pulled out
+`/design-change --mode clarify` shape; reach for that skill when a plan needs the user's input pulled out
 deliberately.
 
 **Proceed without asking:** read-only investigation; non-mutating cargo commands
 (`check`/`clippy`/`test`/`tree`/benches); local commits on a worktree branch; and executing a
-plan/scope already agreed. Note that an `AskUserQuestion` answer does **not** by itself
-authorize a later *destructive/irreversible* step — those still need a direct point-of-action
-confirmation and must not be bypassed with bash/filesystem tools (`delegation.md` §6).
+plan/scope already agreed. A design choice alone does not authorize a later destructive action.
+Check authorization for the actual action and target; if already explicit, do not ask again.
+Follow host safety restrictions and do not bypass a required permission surface.
 
 ### Standing mandate (a bounded loop, authorized once)
 
@@ -132,10 +133,10 @@ A mandate is valid only if all five hold. Anything missing makes it an ordinary 
    changes: a new base, a closed or converted PR, a force-push by someone else.
 4. **Bounded in rounds.** A round count fixed at entry, so the loop terminates without the owner
    having to interrupt it.
-5. **Excludes every irreversible step.** Merge, force-push, `cargo publish`, branch or repo
-   deletion, dismissing someone's review, and creating issues stay on the point-of-action
-   confirmation above — a mandate can never reach them. This is not an exception to the previous
-   paragraph; it is that paragraph's scope, made explicit.
+5. **No implied irreversible or unrelated action.** Merge, force-push, publication, deletion,
+   review dismissal and issue creation require explicit authorization for that action/target.
+   A review-repair mandate does not imply them. Preserve any explicit authorization the user
+   already gave and follow host restrictions.
 
 The loop **reports what it did under the mandate** in its exit summary — every commit, push,
 reply, and re-review request, so an unattended run is auditable after the fact rather than
@@ -146,22 +147,24 @@ Where the loop *would* have taken an excluded action, it collects the intent and
 exit as a batch to approve — not as a mid-loop interruption, and not as something it did anyway.
 
 **No sub-agents in this host?** A skill that tells you to delegate a phase to a named agent
-(`rust-scout`, `rust-builder`, …) is describing a phase, not a process. Run it yourself,
-in order, under that agent's brief. A missing sub-agent is never a blocker and never a
-reason to skip the phase — `${CLAUDE_PLUGIN_ROOT}/docs/sub-agents.md`.
+(`researcher` with the `navigation` profile, `implementer` with the `implementation` profile, …) is describing a phase, not a process. Run it yourself,
+in order, under that agent's brief. Preserve useful work and disclose the capability gap.
+Required fresh review, handoff and independent acceptance remain unverified when isolation
+is unavailable; an inline phase cannot count as independent — `references/sub-agents.md`.
 
 ---
 ---
 
 ## 9. Memory (the second brain)
 
-Work compounds only if it is recalled before and captured after. The full contract —
-recall-before, remember-after, the `MEMORY:` verdict-line handoff from agents to the
+Use relevant prior decisions and preserve new task evidence. The memory contract covers
+recall, authorized capture, the `MEMORY:` verdict-line handoff from agents to the
 orchestrator (the single vault writer), the canonical vault path rule, and what is worth
-capturing — lives in `docs/memory-protocol.md`. Two lines every skill and agent honors:
+capturing. It lives in `docs/memory-protocol.md`. Apply these rules:
 
-- **Before** planning/designing/debugging/building in a known area: `/recall <area>`; say
+- **Before** planning/designing/debugging/building in a known area: `/inspect-project --mode recall <area>`; say
   when a recalled note changed the approach — and verify it still holds (paths, symbols,
   dates) before it does: holds / stale / unverifiable.
-- **After** settling something durable (or seeing a `MEMORY:` line in any agent's verdict):
-  persist it via `/remember` before the final verdict — or state "nothing durable" explicitly.
+- **After** settling something durable: preserve it in the authorized design/task artifacts.
+  Write a memory-store note only when user/host authorization allows it. An agent's `MEMORY:`
+  suggestion is a candidate, not authorization or a condition for completing the task.

@@ -1,6 +1,0 @@
-interface:
-  display_name: "Commit"
-  short_description: "Committing one logical Rust change as a Conventional Commit"
-  default_prompt: "Use $commit when committing one logical Rust change as a Conventional Commit, gates first."
-policy:
-  allow_implicit_invocation: false

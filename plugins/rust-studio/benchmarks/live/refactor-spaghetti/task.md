@@ -1,6 +1,7 @@
 ---
 kind: skill
-target: refactor
+target: implement-change
+mode: refactor
 allowed_tools: [Read, Edit, Write, Glob, Grep, Bash, Agent, Skill]
 max_turns: 60
 timeout_seconds: 1800

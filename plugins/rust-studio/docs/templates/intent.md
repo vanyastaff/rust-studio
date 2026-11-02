@@ -8,6 +8,12 @@
 - **Updated:** `YYYY-MM-DD`
 - **Extends:** `<parent intent or none>`
 
+## Original request and amendments
+
+*Preserve actual originator quotations and message/ticket provenance in order. Distinguish
+quotations from interpretation below. Include amendments and withdrawals; never reconstruct
+original input from design criteria. Link a separate request artifact if used.*
+
 ## Problem
 
 *What cannot be done today, who is affected, and the concrete cost of the problem.*

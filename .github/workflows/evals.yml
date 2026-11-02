@@ -61,7 +61,7 @@ jobs:
           echo "$out" | tail -20
           if echo "$out" | grep -qi 'early access'; then
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Agent evals skipped::\`claude plugin eval\` is not enabled for this account. Run /eval-agents in a session for the same fixtures."
+            echo "::notice title=Agent evals skipped::\`claude plugin eval\` is not enabled for this account. Run /maintain-studio --mode evaluate in a session for the same fixtures."
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi

@@ -6,7 +6,7 @@ needs three things this standard supplies — knowing *which* bots are on the PR
 *exact* command that makes each one look again, and knowing what each one's approval actually
 looks like, because most of them never say "approved" at all.
 
-Used by `/resolve-pr`. The authorization shape for an unattended run is the standing mandate in
+Used by `/implement-change --mode pr-feedback`. The authorization shape for an unattended run is the standing mandate in
 `${CLAUDE_PLUGIN_ROOT}/docs/collaboration.md`.
 
 ---

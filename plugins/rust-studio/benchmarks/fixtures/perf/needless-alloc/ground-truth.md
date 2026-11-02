@@ -1,4 +1,4 @@
-# Ground truth — perf/needless-alloc (agent: perf-engineer)
+# Ground truth — perf/needless-alloc (agent: reviewer (profile: performance))
 
 Planted defects in `input.rs`. A hot path (`sum_labels`, per-event) with avoidable allocation.
 

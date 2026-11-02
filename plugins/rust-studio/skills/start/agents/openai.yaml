@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Studio Start"
-  short_description: "To orient an unfamiliar Rust project and choose its next"
-  default_prompt: "Use $start to orient an unfamiliar Rust project and choose its next workflow."

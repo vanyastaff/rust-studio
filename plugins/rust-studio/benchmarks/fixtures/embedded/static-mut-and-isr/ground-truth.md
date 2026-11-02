@@ -1,4 +1,4 @@
-# Ground truth — embedded/static-mut-and-isr (agent: `embedded-specialist`, verdict: NEEDS WORK)
+# Ground truth — embedded/static-mut-and-isr (agent: `reviewer (profile: platforms)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"This firmware flashes and runs, and the board resets 'randomly' under load. Review the ISR and main loop. List every finding with file:line and severity, then give a verdict."* Every defect is one `rules/embedded.md` / `rules/unsafe.md` names.
 

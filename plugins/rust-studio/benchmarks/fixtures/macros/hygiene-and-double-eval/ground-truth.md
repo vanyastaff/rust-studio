@@ -1,4 +1,4 @@
-# Ground truth — macros/hygiene-and-double-eval (agent: `macro-specialist`, verdict: NEEDS WORK)
+# Ground truth — macros/hygiene-and-double-eval (agent: `reviewer (profile: macros)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Review these `#[macro_export]`ed helpers; three sibling crates use them. List every finding with file:line and severity, then give a verdict."* Both unit tests pass; every defect is one `rules/macros.md` names and is visible only in `cargo expand`.
 

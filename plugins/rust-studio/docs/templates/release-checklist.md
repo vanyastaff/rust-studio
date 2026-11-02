@@ -8,7 +8,7 @@
 
 ## Pre-publish checklist
 
-- [ ] **Semver bump correct (from /api-review)**
+- [ ] **Semver bump correct (from /review-work --mode api)**
   *Confirm the version in `Cargo.toml` matches the change severity determined during API review: patch for fixes, minor for additive public API, major for breaking changes.*
 
 - [ ] **CHANGELOG updated**

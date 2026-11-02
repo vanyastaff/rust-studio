@@ -1,4 +1,4 @@
-# Ground truth — async/cancel-and-block (agent: `async-runtime-specialist`, verdict: NEEDS WORK)
+# Ground truth — async/cancel-and-block (agent: `reviewer (profile: async)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Review `Fanout::query` and `Session` for async correctness before this lands on the gateway's hot path. List every finding with file:line and severity, then give a verdict."* Clippy is clean and the integration test passes on a quiet machine; every defect is one `rules/async.md` names.
 

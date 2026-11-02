@@ -1,6 +1,0 @@
-interface:
-  display_name: "Add Dep"
-  short_description: "Before adding a Rust dependency to assess security, license"
-  default_prompt: "Use $add-dep before adding a Rust dependency to assess security, license, MSRV, and features."
-policy:
-  allow_implicit_invocation: false

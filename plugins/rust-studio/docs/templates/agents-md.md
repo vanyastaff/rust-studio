@@ -5,8 +5,8 @@ Paste this into the repository's `AGENTS.md` when the studio's hooks do not reac
 **When you need it.** The studio normally delivers its briefing and its path-scoped standards
 through hooks, and they run on both Claude Code and Codex. Some hosts still do not execute a
 plugin's hooks, and the failure is silent: skills keep loading, so the session looks healthy
-while the standards never arrive. Run `/studio-doctor` — it probes rather than assumes — to
-find out which case you are in. Where hooks do deliver, this file is redundant; do not add it.
+while the standards never arrive. Run `/inspect-project --mode diagnose-host` to inspect actual
+delivery. Where hooks do deliver, this file is redundant; do not add it.
 
 *(Codex ran the studio's hooks dark for two releases. The cause was this plugin's own root
 `plugin.json`, now withdrawn — ADR 0002. If you are reading an older copy of this fragment that
@@ -15,7 +15,7 @@ says Codex never runs plugin hooks, it is stale.)*
 **What it does and does not replace.** This carries the half of the briefing that is the same
 in every session: the protocol, the evidence bar, and where the standards live. It cannot
 carry the half that is computed per project — the crate, edition, MSRV floor, detected domains,
-the discovered project gate. Run `/detect-stack` once and paste its findings into the project
+the discovered project gate. Run `/inspect-project --mode classify` once and paste its findings into the project
 section below, or accept that those stay unknown to the agent.
 
 **Where it goes.** Codex walks up from the working directory to the project root and merges
@@ -32,8 +32,8 @@ short, and add a rule only after you have watched an agent get it wrong twice.
 ## Rust Code Studio
 
 This repository is worked through Rust Code Studio. Its skills are available to you; prefer one
-over improvising — `/help` lists them. `/dev-task` implements one scoped unit of work,
-`/review` audits a diff, `/debug` takes a failure down to its cause.
+over improvising — `/inspect-project --mode catalog` lists them. `/implement-change --mode implement` implements one scoped unit of work,
+`/review-work --mode diff` audits a diff, `/implement-change --mode diagnose` takes a failure down to its cause.
 
 **Protocol.** A quality loop, autonomy-first: decide tactical calls yourself, state the choice
 with a one-line rationale, and proceed. Ask only at strategic, irreversible, or outward-facing
@@ -73,5 +73,5 @@ your own summary is what turns a gate result into an opinion.
 
 ### This project
 
-<!-- Run `/detect-stack` and record its findings here: crate or workspace, edition, MSRV,
+<!-- Run `/inspect-project --mode classify` and record its findings here: crate or workspace, edition, MSRV,
      domains, and the project gate command. Delete this block if the hooks deliver them. -->

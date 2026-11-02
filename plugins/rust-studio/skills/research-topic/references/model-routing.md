@@ -1,0 +1,88 @@
+# Model routing
+
+The studio assigns a role class, then the host selects an available model and effort. This keeps
+one agent roster usable on Claude, Codex, GLM, and DeepSeek-compatible gateways without treating
+their model names or effort scales as interchangeable.
+
+| Role class | Work | Starting effort |
+|------------|------|-----------------|
+| `haiku` | Researcher: read-only locating and evidence gathering | host/user default |
+| `sonnet` | Implementer: authorized source, tests and artifacts | host/user default |
+| `inherit` | Designer, reviewer and verifier | the parent session's effort |
+
+Profiles do not override models. Keep the user's chosen model/effort and host policy. Existing
+optional local alias mappings remain supported, including opus for user-selected routing;
+the catalog does not impose it on security work or introduce a provider model on Codex.
+
+An explicit per-agent launch override wins over the role definition; the definition wins over a
+host's default subagent model; otherwise the worker inherits the parent. A fork keeps the parent
+model. Keep these precedence rules in the adapter, not in task prompts.
+
+## Claude Code
+
+The built-in `haiku`, `sonnet`, and `opus` aliases select Claude families. For an
+Anthropic-compatible gateway, map every alias it will receive to a model the gateway exposes:
+
+```json
+{
+  "env": {
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "<gateway-fast-model-id>",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "<gateway-standard-model-id>",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "<gateway-strong-model-id>",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  }
+}
+```
+
+Put this in the user-owned Claude settings for the gateway profile. If the gateway exposes one
+usable model, point all three aliases at that ID and keep `CLAUDE_CODE_SUBAGENT_MODEL` aligned
+with it. Configure `CLAUDE_CODE_EFFORT_LEVEL` only when that model advertises compatible effort
+levels. Gateway discovery (`CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1`) is useful after the
+gateway restricts its model list; it is not a substitute for explicit aliases.
+
+`CLAUDE_CODE_SUBAGENT_MODEL` is a default. A role's frontmatter or an explicit launch override
+takes precedence; explicit `model: inherit` therefore keeps the main conversation's model.
+`CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` forces the configured subagent model on ordinary agents,
+but conversation forks and forked skills with `model: inherit` retain the main model. Report
+this setting when auditing gate routing rather than assuming the roster won.
+
+The October 31, 2026 [changelog](https://code.claude.com/docs/en/changelog) adds
+`CLAUDE_CODE_SUBAGENT_EFFORT` as a default when no other source selects effort. Leave it unset
+unless the user chooses it; effort names and quality need evaluation on the actual model.
+The [subagent reference](https://code.claude.com/docs/en/sub-agents#choose-a-model) is the source
+for current precedence and force exceptions. Cap parallel
+tool and subagent work with `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY` when the account has a strict
+spending limit. Do not set it solely because more parallelism exists.
+
+## Codex
+
+Codex custom agents accept `model` and `model_reasoning_effort`, but the generated agents omit
+them unless you give the generator a local JSON mapping. Keep it outside the plugin so model IDs
+and spending policy remain yours:
+
+```json
+{
+  "haiku": { "model": "<fast-model-id>", "model_reasoning_effort": "low" },
+  "sonnet": { "model": "<standard-model-id>", "model_reasoning_effort": "medium" },
+  "opus": { "model": "<strong-model-id>", "model_reasoning_effort": "high" }
+}
+```
+
+Generate with:
+
+```zsh
+node scripts/generate-codex-agents.mjs ~/.codex/agents --routing ~/.codex/rust-studio-routing.json
+```
+
+`inherit` stays with the parent model and effort unless the JSON includes an `inherit` entry.
+Set `[agents]` defaults in `~/.codex/config.toml` for unclassified workers and cap concurrent
+threads there. Explicit model or effort in a generated agent overrides those defaults.
+
+```toml
+[agents]
+enabled = true
+# Add max_concurrent_threads_per_session after measuring the gateway's useful parallelism.
+```
+
+Start with the host default, then set the concurrency cap from task traces and the spending
+budget. This cap controls parallelism, not which model a role receives.

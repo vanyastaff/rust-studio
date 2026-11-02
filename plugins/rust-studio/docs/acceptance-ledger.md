@@ -11,14 +11,19 @@ handoff. The cargo zero-tests lint and the spec-directory binding are the studio
 
 ## Where it lives and who writes it
 
-`.rust-studio/specs/<slug>/acceptance.md`, beside `spec.md`. `/spec-tasks` writes it from the
-spec's acceptance criteria before the first task runs; `/dev-task` runs it before its verdict when
-one exists for the spec; `/spec-verify` re-verifies it as the criteria evidence. `/acceptance` owns
+`docs/designs/<slug>/acceptance.md`, beside `spec.md`. When durable checker-decided criteria
+add value or the project requires a ledger, `/implement-change --mode plan` writes it from the spec's
+acceptance criteria before the first task runs; `/implement-change --mode implement` runs it before its verdict when
+one exists for the spec; `/verify-work --mode acceptance` re-verifies it as the criteria evidence. `/verify-work --mode ledger` owns
 the format, the lint, and the checker. A standalone task with no spec may still keep one — the
-directory is the slug of the task.
+directory is the slug of the task. Existing `.rust-studio/specs/<slug>/` ledgers remain
+readable in place. Resolve designs across both roots; ambiguous slugs fail and an explicit
+path selects the intended artifact. Keep one ledger, identified by its full path.
 
-The ledger is the **denominator** the verdict is measured against. Every acceptance criterion in
-the spec maps to one gate; a criterion with no gate is a criterion nothing will prove.
+When a ledger is used, it is the **denominator** the verdict is measured against: every
+acceptance criterion in the spec maps to a gate. For bounded work without a ledger, existing
+tests and the project gate can supply criterion-linked evidence; every criterion still needs
+observable proof. Omitting the ledger never permits omitting acceptance.
 
 ## Format
 
@@ -56,8 +61,8 @@ ABANDON: G3 product owner unavailable until Q4; tracked in #12
   against stdout + stderr. The wrapping slashes always win: `/etc/app/conf/` is a pattern, and the
   parser warns when an inner slash is unescaped.
 - `CWD:` is repository-relative (no absolute paths, no `..`), resolved beneath the checker's base
-  directory: the project root that owns `.rust-studio/`, else the ledger's own directory,
-  overridable with `--cwd`.
+  directory: the owning repository root for either default design root, else the ledger's
+  directory. Explicit custom locations require `--cwd <root>` for repository commands.
 - `ABANDON: ID reason` starts at column 1 and names a gate in the same file. The reason is
   required. An unknown id is a parse error, because a typo there would let an unmet gate pass unseen.
 - Fenced code and HTML comments are documentation; nothing inside them is a gate.
@@ -103,7 +108,7 @@ Cheat Catalog.
 
 ## The checker
 
-`skills/acceptance/scripts/acceptance-check.ts` (bun, zero dependencies). The default mode is
+`skills/verify-work/scripts/acceptance-check.ts` (bun, zero dependencies). The default mode is
 the one that cannot execute anything:
 
 | Mode | Executes | Writes | Use |
@@ -111,7 +116,7 @@ the one that cannot execute anything:
 | `--status` (default) | no | no | inspect any ledger, including one you did not write |
 | `--lint` | no | no | catch oracles that cannot fail before working the ledger; `--strict` fails on warnings |
 | `--run` | runnable gates that are not met | evidence lines | the normal pass while building |
-| `--reverify` | every runnable gate, met ones included | evidence lines; failures demote | parent verification: `/dev-task` before its verdict, `/spec-verify` |
+| `--reverify` | every runnable gate, met ones included | evidence lines; failures demote | parent verification: `/implement-change --mode implement` before its verdict, `/verify-work --mode acceptance` |
 
 Exit codes: `0` ALL MET (or lint clean) · `1` NOT MET / HANDOFF REQUIRED · `2` usage or parse
 error. Checks run sequentially — cargo takes a build-directory lock anyway. `--timeout S` bounds
@@ -162,16 +167,22 @@ not the work was done, so a met box is not evidence and the guard does not treat
 warnings `--lint` reports are advice and never block.
 "Reports completion" is read from the final message — its last verdict token is COMPLETE, or it is
 a completion summary (files changed / commands run / verification / result) with no verdict. The
-studio's workflows stop on purpose to hand the turn back: the `/spec-tasks` approval checkpoint
-right after the ledger is written, a design fork, a `/grill-me` question, an honest NEEDS WORK or
+studio's workflows stop on purpose to hand the turn back: explicit `/implement-change --mode plan` completion
+right after the ledger is written, a design fork, a `/design-change --mode clarify` question, an honest NEEDS WORK or
 BLOCKED. None of those claims the work is done, and none is blocked; the message is read only to
 tell the two apart. Bound means
-the session named the spec directory in its transcript: the `/spec-tasks` write, a checker run, a
-Read, or a bare mention of a path inside it. Citing a peer's `specs/<slug>/` file in a log is enough,
+the session named the spec directory in its transcript: the `/implement-change --mode plan` write, a checker run, a
+Read, or a bare mention of a path inside it. Citing a peer's design file in a log is enough,
 so a ledger another session left half-done **can** block this one. Repair belongs to its owner, not
 to whoever was blocked: re-running a peer's checker ticks gates for work the blocked session never
 did. A host that hands the hook no transcript gets no block at all (fails open). Abandoned gates do not block; they are a
 handoff the checker already refuses to call ALL MET.
+
+Discovery covers `docs/designs/` and legacy `.rust-studio/specs/` only. Binding and progress
+use the complete artifact path, so equal slugs across those roots remain distinct. An explicit
+custom location must be checked directly with `--reverify --cwd <root>`; the automatic Stop
+guard does not discover it. PREPARED/CURRENT handoff snapshots are not acceptance evidence
+(`references/elephant-workflow.md`).
 
 The loop guard is keyed to a hash of the resolved gate states **and the oracle findings**, not the
 file's bytes: turning a gate green, or repairing a `CHECK` so it can fail, rearms it; rewording a
@@ -181,7 +192,7 @@ its turn back. Like every studio hook it fails open on a stall.
 
 ## In the verdict
 
-`/spec-verify` and `/dev-task` paste the checker's summary line and its final marker:
+`/verify-work --mode acceptance` and `/implement-change --mode implement` paste the checker's summary line and its final marker:
 `ACCEPTANCE <path>: N met, M unmet, S stale, A abandoned (of T)`. `ALL MET` makes the ledger's criteria
 eligible for COMPLETE (the other gates still apply); `NOT MET` is NEEDS WORK with the unmet ids as
 the list; `HANDOFF REQUIRED` is BLOCKED with the abandonment named. A report that says "done"

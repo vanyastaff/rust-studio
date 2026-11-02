@@ -3,7 +3,7 @@
 //
 // The session is ending, so we cannot inject context for Claude — only surface a
 // `systemMessage` to the USER. If the working tree has uncommitted Rust work,
-// remind them to run /session-wrap so learnings get captured (via /remember) and
+// remind them to run /write-docs --mode handoff so learnings get captured (via /write-docs --mode memory) and
 // spec statuses get updated before the context evaporates. Independently, list
 // any leftover linked worktrees (agent-isolation leftovers accumulate fast —
 // dozens of copies of the tree, eating disk and breaking repo gates that scan
@@ -71,7 +71,7 @@ if (which("git")) {
       worktreeNote =
         ` ${extra.length} leftover git worktree(s) detected` +
         (agentMade.length ? ` (${agentMade.length} look agent-created)` : "") +
-        " — run /worktree-sweep to inspect and prune before they eat disk or " +
+        " — run /maintain-project --mode worktrees to inspect and prune before they eat disk or " +
         "break local gates.";
     }
   }
@@ -83,8 +83,8 @@ emit({
   systemMessage:
     "Rust Code Studio: session ending." +
     (dirty
-      ? " If you have uncommitted work, run /session-wrap " +
-        "to capture durable learnings (via /remember) and update spec statuses before " +
+      ? " If you have uncommitted work, run /write-docs --mode handoff " +
+        "to capture durable learnings (via /write-docs --mode memory, when host/user authorization permits saving) and update spec statuses before " +
         "the context is gone."
       : "") +
     worktreeNote,

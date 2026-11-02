@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Docs"
+  short_description: "Write an architecture decision, release changelog"
+  default_prompt: "Use $write-docs: Write an architecture decision, release changelog, authorized durable learning, or session handoff from project evidence."

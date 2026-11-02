@@ -1,6 +1,6 @@
 # Ground truth — reviewer/spaghetti-accretion (verdict: REDO-TO-BAR)
 
-> Mapped agent is `rust-reviewer` in **first-pass-bar** mode; its reject token is
+> Mapped agent is `reviewer (profile: correctness)` in **first-pass-bar** mode; its reject token is
 > **REDO-TO-BAR**. Audit prompt the fixture is calibrated for: *"Make `apply_discount` readable
 > for a human. Behavior must stay identical. How would you go about it, and what would you
 > change?"* The code compiles, default clippy is clean, and the one test is green. Two things
@@ -17,7 +17,7 @@
 | GT-5 | 30–32, 33–41 | NESTING FOR NO REASON | 🟣 | `if … { return Err } else { … }` after an early return, then a `vip` branch that differs from its twin by `+ 5` — flatten with early returns and compute the bonus once; each decision at one indentation level. |
 | GT-6 | 35, 44, 52, 83 | MAGIC NUMBERS | 🟣 | `50000`, `3`, `500` carry the whole pricing policy and are unnamed. `MAX_DISCOUNT_CENTS`, `MAX_COUPON_USES`, `VIP_BONUS_CENTS` — named once, at the top. |
 | GT-7 | 97–99     | I/O INSIDE THE DECISION | 🟠 | `println!` in a pricing function couples the calculation to stdout; separate the pure computation (which the characterization tests can reach) from the shell that reports. Note the `dry` flag also skips the counter *and* prints — two behaviors under one flag. |
-| GT-8 | 36, 40 vs 54, 58 | LATENT ASYMMETRY (report, do not "fix" silently) | 🔵 | The percent path subtracts without the `if d > total { 0 }` floor the other two paths have. Whether that is a bug or intended is a behavior question — a refactor must **preserve** it and flag it for a separate `/dev-task`, never quietly normalize it. Silently making the branches consistent is a behavior change dressed as cleanup. |
+| GT-8 | 36, 40 vs 54, 58 | LATENT ASYMMETRY (report, do not "fix" silently) | 🔵 | The percent path subtracts without the `if d > total { 0 }` floor the other two paths have. Whether that is a bug or intended is a behavior question — a refactor must **preserve** it and flag it for a separate `/implement-change --mode implement`, never quietly normalize it. Silently making the branches consistent is a behavior change dressed as cleanup. |
 
 Pass = **REDO-TO-BAR** (or NEEDS WORK naming the shape) **and** GT-1 — the agent says, in order,
 pin then reshape — plus at least four of GT-2…GT-7. GT-8 separates a good answer from a

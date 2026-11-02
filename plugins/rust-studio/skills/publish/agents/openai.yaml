@@ -1,6 +1,0 @@
-interface:
-  display_name: "Publish"
-  short_description: "To prepare a Rust crate release through checks and a crates.io"
-  default_prompt: "Use $publish to prepare a Rust crate release through checks and a crates.io dry run."
-policy:
-  allow_implicit_invocation: false

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Audit Unsafe"
-  short_description: "To audit Rust unsafe code or FFI for soundness and stated"
-  default_prompt: "Use $audit-unsafe to audit Rust unsafe code or FFI for soundness and stated invariants."

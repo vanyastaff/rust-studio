@@ -138,8 +138,8 @@ async function staticMeasure(): Promise<Row[]> {
     const tNo = join(tmp, "tno.txt");
     writeFileSync(tWith, "...\nVerdict: COMPLETE — all checks green.\n");
     writeFileSync(tNo, "...\nthe agent rambled but gave no verdict token at all.\n");
-    const rWith = await runHook("subagent-stop.ts", { agent_type: "rust-builder", transcript_path: tWith });
-    const rNo = await runHook("subagent-stop.ts", { agent_type: "rust-builder", transcript_path: tNo });
+    const rWith = await runHook("subagent-stop.ts", { agent_type: "implementer", transcript_path: tWith });
+    const rNo = await runHook("subagent-stop.ts", { agent_type: "implementer", transcript_path: tNo });
     rows.push({ hook: "subagent-stop", event: "SubagentStop", scenario: "verdict present (silent)", freq: "per sub-agent", chars: rWith.modelContext.length, toUser: false });
     rows.push({ hook: "subagent-stop", event: "SubagentStop", scenario: "NO verdict (escalation)", freq: "per sub-agent", chars: rNo.modelContext.length, toUser: false });
   }

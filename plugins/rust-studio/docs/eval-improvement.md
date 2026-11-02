@@ -1,8 +1,8 @@
 # A bounded instruction-improvement experiment
 
-Explicit `/eval-agents improve <skill-or-agent-path>` extends the existing evaluator. It
+Explicit `/maintain-studio --mode evaluate improve <skill-or-agent-path>` extends the existing evaluator. It
 changes one instruction hypothesis in the plugin's **source checkout**, never an installed
-cache. Default `/eval-agents` remains measurement-only. This workflow is Claude Code plugin
+cache. Default `/maintain-studio --mode evaluate` remains measurement-only. This workflow is Claude Code plugin
 only because it reuses `tools/eval-runner.ts`; no new runner, skill, or self-editing hook is
 installed. Results are evidence about the tested models and cases, not a universal speedup.
 
@@ -12,8 +12,8 @@ installed. Results are evidence about the tested models and cases, not a univers
    agent fixtures or live tasks that actually exercise it. A routing case is not proof of
    implementation quality. If no suitable oracle exists, create and independently review a
    regression case before tuning; do not manufacture easy examples to make a score rise.
-2. Assign a separate evaluator (read-only `qa-lead`) to select and hold the control set
-   **before** any prompt editing. The tuning worker (`rust-builder`) gets training inputs/results only, never
+2. Assign a separate evaluator (read-only `verifier` with the `testing` profile) to select and hold the control set
+   **before** any prompt editing. The tuning worker (`implementer` with the `implementation` profile) gets training inputs/results only, never
    holdout prompts, ground truth, grader rubrics, outputs or failures. Use fresh contexts and
    copies exposing only the needed inputs; a full repository containing the hidden files is
    not an isolated tuning workspace. If that boundary cannot be maintained, report an

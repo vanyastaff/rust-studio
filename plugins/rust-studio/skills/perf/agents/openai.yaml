@@ -1,4 +1,0 @@
-interface:
-  display_name: "Perf"
-  short_description: "To measure and improve a Rust performance bottleneck"
-  default_prompt: "Use $perf to measure and improve a Rust performance bottleneck with before/after evidence."

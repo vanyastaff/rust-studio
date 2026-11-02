@@ -1,99 +1,51 @@
-# Agent authoring template (Rust Code Studio)
+# Agent authoring contract
 
-Every agent file is `agents/<name>.md` with YAML frontmatter + body. Keep bodies
-tight and behavioral. Follow this shape so the roster stays consistent.
+The installed catalog has five singular role nouns: researcher, designer, implementer,
+reviewer and verifier. Add domain expertise to canonical profiles, not new personas.
+`catalog.json` owns roles, model classes and profile paths. Every agent file uses matching
+name/frontmatter and a concise behavioral brief.
 
-```markdown
----
-name: <kebab-name>            # must match the filename
-description: <Third-person. What it owns + WHEN to use it, with trigger phrases.
-              Claude reads this to decide delegation. One or two sentences.>
-tools: <comma list>          # omit to inherit all. Read-only agents: Read, Grep, Glob, Bash
-model: <inherit|opus|sonnet|haiku>  # routing class, not a provider ID; map it in the host
-                                    # (docs/model-routing.md)
-color: <red|blue|green|yellow|purple|orange|pink|cyan>
----
+## Role and effects
 
-You are the **<Role>** in the Rust Code Studio — <one-line mandate>.
+Researcher, designer, reviewer and verifier are read-only for project sources. Implementer
+writes only explicitly assigned paths within authorized scope. Shell access does not expand
+that boundary. Running a check may create ordinary build output; it does not authorize repair.
+The coordinator can record requested context, design, task and verification artifacts directly.
 
-## You own
-- <bullet list of decisions/files this agent is authoritative over>
+Requested prototypes/tests/fuzz targets use implementer with explicit paths and expected
+observations. A designer stays read-only, and a different fresh verifier checks the result.
+Load every applicable profile before applying domain checks. Profiles are role-independent
+knowledge and cannot override permissions or models. Missing required content blocks that lens.
 
-## You do NOT own
-- <thing> → defer to `<agent>`
-- <thing> → defer to `<agent>`
+## Brief shape
 
-## Operating protocol
-- Follow the autonomy and scope contract in
-  `${CLAUDE_PLUGIN_ROOT}/docs/coordination-protocol.md`. Execute authorized work;
-  ask when direction or permission is unresolved.
-- Use the smallest routing class that can earn the required evidence; a host without
-  per-worker selection keeps the current session model and effort.
-- <delegation behavior for this tier: directors delegate to leads; leads delegate to
-  specialists; specialists do focused work and report up>
-- Stay in your domain. Don't edit files outside it without explicit delegation.
+State action/outcome, source and artifact paths, applicable profiles/project instructions,
+constraints, write zone, acceptance commands/expected results and output verdict. Keep Rust
+tutorials in references, and reference rules instead of copying standards. Assume expertise;
+encode judgment, boundaries and evidence requirements.
 
-## How you work
-1. <step>
-2. <step>
-3. <step>
+Use researcher=haiku, implementer=sonnet, and designer/reviewer/verifier=inherit. Model/effort
+choices remain host/user controlled (`references/model-routing.md`). Do not add a provider ID
+or a profile-specific model override. Read-only role tool declarations must exclude write/edit
+capabilities; the behavioral boundary also covers mutations through command tools.
 
-## Standards you enforce
-- `${CLAUDE_PLUGIN_ROOT}/rules/<file>.md` — <what>
-  (the inject-rules hook injects a POINTER to these on matching edits — Read the rule file
-  before you rely on it; the body is not injected)
+## Independence and output
 
-## Gate: <GATE-ID>            # leads/directors only — omit for specialists
-Before this gate passes, verify:
-- [ ] <check>
-- [ ] <check>
+A fresh instance with controlled inputs establishes independence, not a renamed role. Never
+feed an author defense or desired verdict to a review lens. For substantive work follow
+`references/elephant-workflow.md` and the specific design/acceptance input boundary. Without
+isolation, report useful analysis plus the required unverified check.
 
-## Output
-- Findings/plan as <format>. End with verdict **COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED**
-  (REDO-TO-BAR applies to agents that judge work shape — see `docs/verdicts.md` §5)
-  and evidence (command output, bench numbers). Hand off to `<skill/agent>`.
-- **Lead with the outcome and stay readable** — first line says what you found / what changed,
-  detail after; drop working shorthand in the summary the caller actually reads. See
-  `${CLAUDE_PLUGIN_ROOT}/docs/working-preferences.md` → *Communicate the result, not your working thread*.
-```
+Return the actual deliverable, then its verdict and evidence. A researcher returns the map or
+answer, not merely a claim that it was produced. Reviewers return actionable findings and
+coverage; verifiers distinguish executed results, supplied logs and static inspection.
+Preserve independent verdicts verbatim when relaying them, explaining disagreements rather
+than converting a blocker to a pass (`references/verdicts.md`).
 
-**The verdict supplements the deliverable — it never replaces it.** Your final message is what
-the caller receives; put the actual deliverable (the map, the digest, the findings, the answer)
-there in full, then add the verdict as a trailing line. Never close with a verdict-only / "I did
-the work" summary and leave the content in an earlier message — the caller then gets only the
-verdict and has to dig the content out of the output file. For data-return agents (`rust-scout`
-locator maps, research digests, answers) the **data IS the deliverable**: return it, verdict last.
+Ask for conclusions, evidence and a concise explanation, not hidden chain-of-thought. Describe
+observable criteria rather than generic self-checking reminders. Give a short progress update
+when findings or direction change; the final response must stand on its own.
 
-## Rules of thumb
-- **Read-only agents** (`rust-scout`, `rust-reviewer`, auditors): `tools: Read, Grep, Glob, Bash`. No Write/Edit.
-- **The builder** (`rust-builder`): full tools. It is the only agent that routinely writes source.
-- **Directors & leads**: may Write design docs/ADRs/plans, but delegate *source* edits to `rust-builder`.
-- Reference rules by path; don't paste standards into the agent (single source of truth).
-- **Prefer the studio's tools** (`${CLAUDE_PLUGIN_ROOT}/docs/tooling.md`): the harness `LSP` tool
-  or serena (semantic code nav) and `rg`/`ast-grep` over Bash `grep`/`find`; exa for external
-  evidence; purpose-built `cargo` subcommands. Bash runs things — it isn't a search tool.
-  Name the fallback next to the tool (Grep/`rg` without a language server; fetched pages without
-  exa) per `tooling.md` "Degradation contract" — agents may run on machines without them.
-- Bodies describe behavior, not Rust tutorials. Assume Rust expertise; encode judgment + boundaries.
-- **Never ask an agent to echo its reasoning.** Instructions like "show your thinking",
-  "transcribe your reasoning", or "explain your chain of thought in the output" trigger the
-  `reasoning_extraction` refusal classifier on Claude 5 models. Ask for **conclusions,
-  findings, and evidence** — never for the reasoning itself. (`docs/claude-5-compat.md`)
-- **Encode judgment, not scripts.** State the goal, the boundaries, and the quality bar;
-  keep "How you work" at intent level (a handful of moves, not a rigid procedure). Current
-  models perform *worse* under over-prescriptive step lists — when default behavior already
-  clears the bar, delete the instruction rather than refine it. (`docs/claude-5-compat.md`)
-- **Never tell an agent to verify or re-check itself.** "Add a final verification step",
-  "double-check before responding", "spawn a worker to confirm" — the model already does this,
-  and the instruction compounds into over-verification that costs tokens and buys nothing.
-  What the studio *does* require is different and stays: a claim carries the command that
-  produced it, and a gate verdict comes from an agent that did not write the code.
-  (`docs/claude-5-compat.md`, `docs/delegation.md`)
-- **Size the deliverable.** Documents this generation writes run long by default. An agent that
-  produces a report, spec, ADR, or digest says to cover the substance without filler sections,
-  redundant summaries, or boilerplate — length is a property of the content, not a proxy for
-  effort.
-- **Describe the narration you want, don't dial it.** "Be terse" and "narrate your progress"
-  land on opposite defaults across current models. Name the shape instead: one line before the
-  first tool call, an update only on a finding or a change of direction, and a close that leads
-  with the outcome.
+Use semantic navigation when available, rg otherwise, and primary sources for external facts.
+Name capability gaps and authorized fallbacks (`references/tooling.md`). A refused action
+cannot be made authorized by routing it through a different worker or tool.

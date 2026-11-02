@@ -1,4 +1,4 @@
-# Ground truth — api/dep-major-crosses-surface (agent: `api-design-lead`)
+# Ground truth — api/dep-major-crosses-surface (agent: `reviewer (profile: api)`)
 
 A release whose every mechanical check is green, including the one built to answer exactly this
 question. The crate's own source did not change; only its `http` dependency went `0.2 → 1`, and

@@ -1,7 +1,7 @@
 # Ground truth — architecture/runtime-type-in-definition-crate (verdict: RESHAPE NEEDED)
 
-> Mapped agent is `chief-architect` (a pre-code lead), whose reject token is
-> **RESHAPE NEEDED**. `REDO-TO-BAR` is the `rust-reviewer` equivalent — accept either as
+> Mapped agent is `reviewer (profile: architecture)` (a pre-code lead), whose reject token is
+> **RESHAPE NEEDED**. `REDO-TO-BAR` is the `reviewer (profile: correctness)` equivalent — accept either as
 > "rejected the shape".
 
 A workflow *definition* crate that, against its own stated contract ("not the execution state

@@ -1,374 +1,128 @@
-# Rust Code Studio — usage guide
+# Rust Studio usage guide
 
-How the plugin works and how to drive it. For the bare catalog run `/help`; for who-owns-what
-see `agent-roster.md`; for the gates and the autonomy-first protocol see
-`coordination-protocol.md`.
+The installed catalog has 11 outcome skills and five execution roles. Ten skills are portable;
+maintain-studio needs the full plugin and its supported host/source environment. The catalog
+in `catalog.json` owns operation names, effect boundaries, profiles and migration mappings.
 
----
+## Choose the outcome and operation
 
-## The mental model
+Use `/skill --mode operation <request>`, or describe the outcome so the skill can select its
+mode. A mode identifies work; it never grants authorization. The three explicit-only groups
+must be invoked by the user and are not called through a discoverable workflow.
 
-Five moving parts:
+| Skill | Operations | Invocation and packaging |
+|---|---|---|
+| `inspect-project` | onboard, classify, catalog, recall, orient, diagnose-host | Discoverable; Portable |
+| `research-topic` | investigate | Discoverable; Portable |
+| `design-change` | architecture, api, clarify, domain, prototype, specification, tests, explore | Discoverable; Portable |
+| `implement-change` | size, diagnose, implement, compiler, intermittent, conflicts, performance, refactor, pr-feedback, test-first, repair-gate, plan | Discoverable; Portable |
+| `review-work` | api, soundness, dependencies, design, memory, prose, diff, scope, security, structure | Discoverable; Portable |
+| `verify-work` | ledger, coverage, fuzz, lint, minimum-rust, mutation, acceptance | Discoverable; Portable |
+| `write-docs` | decision, changelog, memory, handoff | Discoverable; Portable |
+| `configure-tooling` | ci, environment, tests | Discoverable; Portable |
+| `maintain-project` | dependency, improve, migrate, scaffold, worktrees | Explicit invocation; Portable |
+| `maintain-studio` | evaluate, status-line | Explicit invocation; Full plugin only |
+| `publish-change` | commit, pull-request, release | Explicit invocation; Portable |
 
-- **Agents** (33) — a tiered team of specialists. They are the *workforce*: you (or a skill)
-  delegate focused work to them; each runs in its own context so reads stay out of the main
-  conversation. Directors decide, leads own a domain + a quality gate, specialists do the work,
-  and an execution trio does the hands-on locate → build → review.
-- **Skills** (61) — slash commands. They are focused workflows that select only needed work
-  for a task ("design an API", "fix the build", "ship a release"). Invoke with
-  `/rust-studio:<name>` (bare `/<name>` works when unambiguous).
-- **Rules** (21) — path-scoped Rust standards. When you edit a matching file, a *pointer* to the
-  relevant standard is auto-injected (a hook does this) and the agent reads the full rule on
-  demand, so it has the right bar in front of it without bloating the window (`core.md` on every
-  `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `ffi.md` on C-ABI boundaries,
-  `macros.md` in proc/declarative macros, …).
-- **Hooks** (10 events) — deterministic automation: stack briefing **+ memory recall** at session
-  start, path-scoped rule pointers after edits, a lint nudge **and a memory-capture nudge** when
-  you stop, a sub-agent verdict check that blocks a verdict-less finish once, a note when the
-  model switches (a classifier fallback or `/model`) so you know which model now judges, a usage
-  log of every skill invocation and agent spawn (`/studio-doctor --usage` reads it), and
-  session-lifecycle aids (memory pointers for each prompt, compaction / session-end reminders).
-- **Gates** — named checkpoints a lead clears before work proceeds: `ARCH / API / ASYNC / CLI /
-  PERF / SAFETY / QA / RELEASE / BUILD`. Run at **lean** (one crate), **full** (public API,
-  unsafe, releases), or **solo** (prototype) intensity.
+`/inspect-project --mode catalog` shows the available catalog on the current host. If bare
+names collide with another installation, use the host's qualified Rust Studio name or exact
+skill path. Disclosed procedures preserve each operation's substantive behavior; installing
+one portable skill bundles the standards, procedures, profiles and helpers it requires.
 
-The contract above all is the **protocol** (`coordination-protocol.md`): a *quality* loop, not a
-permission loop. Agents **decide tactical calls and proceed**; they escalate to you only on a
-strategic fork, an irreversible action, or an outward one (push / PR / publish). Standards:
-no quick wins, finish the cross-crate ripple, modern idioms, observability-as-DoD, evidence over
-opinion (`working-preferences.md`).
+## Effects and authorization
 
----
+Inspection, diagnosis, review and verification default to read-only work. Research can produce
+a requested research artifact; design and writing modes produce requested artifacts. An
+implementation request authorizes changes only within its scope. Existing authorization
+continues across phases; an explicit design-only, plan-only or diagnosis-only request stops
+at its requested result. Ask only for consequential user decisions or missing authorization.
+No workflow automatically commits, pushes, opens a PR or publishes at completion.
 
-## How to use it — three ways in
+Verification does not silently repair production code. Explicit ledger authoring is an artifact
+operation; explicit tests or fuzz targets are written by an implementer, then checked by a
+separate fresh verifier. A prototype likewise uses an implementer with disposable paths and
+experiment criteria. The designer remains read-only, and findings return to the same design.
+Memory-store writes require user/host authorization, including at session wrap.
 
-1. **Run a skill.** `/dev-task add a retry policy to the http client` — the skill drives the
-   whole flow. This is the usual entry point.
-2. **Name an agent.** "Use `unsafe-auditor` to review this module" — delegate one focused job.
-   Claude also picks agents automatically based on their descriptions.
-3. **Just describe the task.** Claude routes to the right skill/agent. `/start` orients you and
-   recommends the next move.
+## Roles and domain profiles
 
-### The typical end-to-end flow
-```
-/start                 # detect stack, brief the team, route
-/recall <area>         # pull prior learnings before you touch the area
-/spec <feature>        # (long/cross-session) record intent, decision, and acceptance criteria
-  /spec-tasks <slug>   #   local task plan: paths, dependencies, conflicts, and status
-/dev-task <task>       # (one unit) choose the smallest fitting path → build → review as risk requires
-/tdd <behavior>        # (alt) build a behavior test-first: RED → GREEN → REFACTOR
-/verify-loop           # drive checks to green with bounded auto-fix
-/review --full         # parallel multi-lens audit before merge
-/commit  →  /pr        # Conventional Commit, then open the PR
-/session-wrap          # recap + capture learnings to memory for next time
-```
-Small change? Skip the spec — `/dev-task` or even a direct `/lint` + `/review` is enough.
-Plan only when the approach is uncertain or the change spans files. The agent starts on
-authorized work and asks only for an unresolved direction, permission, or outward action.
+Researcher locates evidence, designer proposes contracts, implementer writes scoped changes,
+reviewer challenges artifacts, and verifier checks delivered behavior. All except implementer
+are read-only for project sources. The coordinator records plans/reports directly. Select role
+by action, then load every applicable domain profile; profiles do not grant permissions or
+select models. See [roles and profiles](agent-roster.md) and [delegation](delegation.md).
 
-### Model and effort
+For example, an async public API may need async, API and testing expertise across design,
+implementation and review. Those are reusable profiles, not three installed personas. A fresh
+reviewer with those profiles can challenge the design, while a different implementer uses them
+to build it. Named gates retain their domain checks in [verdicts](verdicts.md).
 
-Agent briefs choose a routing class: `haiku` for low-cost locating, `sonnet` for normal work,
-`opus` for the security audit, and `inherit` for gates. Select the smallest available class that
-can earn the task's evidence. Map the class to the provider's model and effort in the host; the
-portable policy and Claude/Codex setup are in `model-routing.md`.
+Fresh instances and controlled inputs establish independence. Changing a role label does not.
+If the host cannot isolate context, retain useful analysis and report required independence
+as unverified. See [host fallback](sub-agents.md). Role model classes are researcher=haiku,
+implementer=sonnet, others=inherit; profiles do not override them. Host settings determine
+actual models/effort ([model routing](model-routing.md)).
 
----
+## A substantive change
 
-## The agents (33)
+1. `/inspect-project --mode orient` loads instructions and a concise project context index.
+2. `/design-change --mode specification` records current behavior, contracts, ownership,
+   failure/recovery, real consumers, migration/removal and observable acceptance. Use explore,
+   architecture, api, domain or tests modes for the actual design question on the same spec.
+3. `/review-work --mode design --fresh` runs fresh Goldfish comprehension and challenge.
+4. `/implement-change --mode plan` writes or reconciles tasks and stops when explicitly asked
+   for planning only. Authorized implementation continues in implement mode.
+5. A fresh implementer reconstructs artifact inputs before writing, rechecks current bytes,
+   then performs test-first implementation and destination integration.
+6. `/verify-work --mode acceptance` combines current project gates with fresh original-request
+   acceptance and writes the verification report.
 
-### Tier 1 — Directors
-- **`chief-architect`** — crate/module boundaries, layering, ADRs, big refactors, cross-lead
-  technical conflicts. Holds ARCH-GATE. Call for any change that ripples across many crates.
-- **`product-steward`** — scope, milestones, story breakdown, prioritization, cross-domain
-  coordination. Call to turn a goal into ordered work or settle what's in/out of scope.
+The [Elephant protocol](elephant-workflow.md) owns this lifecycle. PREPARED/CURRENT describe
+inventoried input bytes, not correctness or permission. Reserve tasks before capture, freeze
+inputs during the challenge and check immediately before the first source write. Resume active
+tasks with current evidence and retained repair counters. Intended implementation edits make
+the input packet stale; acceptance concerns the delivered destination tree.
 
-### Tier 2 — Leads (own a domain + a gate)
-- **`api-design-lead`** — public API surface, crate boundaries, semver, `#[non_exhaustive]`/
-  sealing. API-GATE.
-- **`async-systems-lead`** — async architecture, tokio topology, web stack choice, backpressure,
-  shutdown. ASYNC-GATE.
-- **`cli-specialist`** — CLI/TUI command structure, terminal UX, stdout/stderr discipline,
-  exit codes, and CLI-GATE.
-- **`systems-perf-lead`** — performance budgets, `unsafe` policy, FFI, `no_std`, memory model.
-  PERF-GATE + SAFETY-GATE.
-- **`qa-lead`** — test strategy, coverage targets, flakiness, the quality bar. QA-GATE.
-- **`release-lead`** — semver decisions, crates.io publishing, changelog, MSRV. RELEASE-GATE.
-- **`tooling-lead`** — *decides* build/CI/dev-tooling policy + matrix strategy. BUILD-GATE.
-  (Delegates implementation to `build-engineer`.)
+Small obvious changes retain the implementation fast path. It avoids durable-design ceremony
+while keeping checks appropriate to behavior and risk. Escalate if a design fork, public API,
+unsafe code, cross-crate ripple or new dependency appears. Preserve completed work.
 
-### Tier 3 — Specialists
-API & types: **`api-designer`** (traits, type-state, builders, conversions), **`error-architect`**
-(thiserror/anyhow boundary, error taxonomy), **`macro-specialist`** (proc/derive/`macro_rules!`),
-**`docs-engineer`** (rustdoc, doc-tests, README).
-Async & web: **`async-runtime-specialist`** (tokio, cancellation, spawn), **`web-framework-specialist`**
-(axum/actix, extractors, middleware), **`database-specialist`** (sqlx/diesel, migrations, pools),
-**`observability-engineer`** (tracing, metrics, OTel), **`wasm-specialist`** (wasm32, wasm-bindgen, size).
-Systems & perf: **`concurrency-specialist`** (atomics, lock-free, loom), **`unsafe-auditor`**
-(reviews every `unsafe` for soundness, miri — read-only), **`ffi-specialist`** (bindgen/cbindgen,
-C ABI), **`perf-engineer`** (criterion, flamegraph, allocations, SIMD), **`embedded-specialist`**
-(`no_std`, embedded-hal, cortex-m).
-CLI: **`cli-specialist`** (clap derive, ratatui, completions, signals).
-Quality: **`test-engineer`** (proptest, criterion, nextest, fixtures), **`security-auditor`**
-(RUSTSEC, input/secret/auth/DoS), **`dependency-manager`** (cargo-deny, features, MSRV),
-**`build-engineer`** (*implements* build.rs, CI, cross, xtask).
-Cross-cutting: **`harsh-critic`** (attacks designs/specs adversarially, no praise, read-only),
-**`slop-auditor`** (the tree-level slop ledger: duplicates, orphans, cycles, dead `pub`, untyped
-model calls, naming/pattern/boundary tells; read-only).
+## Artifacts and acceptance
 
-### Execution (4) — the hands
-- **`rust-scout`** (read-only) — locates symbols/impls/tests via the language-server
-  layer (serena when the user has it, `LSP`/`rg` otherwise), returns a
-  `file:line` map. Never writes or proposes fixes.
-- **`rust-builder`** — the only agent that routinely writes source; implements an
-  approved plan, runs cargo check/clippy/test/fmt, reports a diff.
-- **`rust-build-resolver`** — gets a failing build green; fixes the root cargo/rustc
-  error (borrowck, trait bounds, lifetimes) in a check→fix loop.
-- **`rust-reviewer`** (read-only) — final gate before merge; severity-tagged findings,
-  no praise, flags only correctness/requirement gaps.
+New designs use `docs/designs/<slug>/`: spec.md, tasks.md, optional acceptance.md and
+verify-report.md. Legacy `.rust-studio/specs/<slug>/` stays readable in place. Slug collisions
+fail; an explicit path selects the intended artifact. Keep one task record and ledger.
 
----
+`/verify-work --mode ledger` authors or checks a requested acceptance ledger. CHECK plus EXPECT
+must establish an observable outcome; zero matched tests are not evidence. Reverify against
+the actual destination, preserving unmet, stale and abandoned criteria in the denominator.
+Both default roots use the owning repository cwd. Custom locations require direct checker
+execution with --cwd <root>; automatic Stop-guard discovery covers only the two default roots.
+[Acceptance format and limits](acceptance-ledger.md) define the exact contract.
 
-## The skills (61)
+## Practical routing
 
-### Onboarding & navigation
-- **`/start`** — orient: detect stack, brief the team, route to the next skill.
-- **`/help`** — the catalog (filter by topic, e.g. `/help async`).
-- **`/env-setup`** — provision the machine: OS build prerequisites, latest stable Rust via
-  rustup (+ components), `cargo-binstall`, and the studio's cargo tool suite as prebuilt
-  binaries (`check` mode = report only).
-- **`/detect-stack`** — classify a project's domain(s) + the relevant leads/specialists/rules.
-- **`/adopt`** — reverse-engineer an existing crate/workspace into studio docs, a project
-  `CLAUDE.md` / `.claude/rules/`, and a debt catalog.
-- **`/studio-doctor`** — is the studio actually live here? Probes the hook runtime, whether
-  hooks reach this session, sub-agents, LSP, the memory store, cargo tooling, and which
-  toggles are in effect — every ambient part fails open, so a broken install looks like a
-  working one until something checks.
+- Unknown runtime failure: `/implement-change --mode diagnose`; diagnosis alone does not repair.
+- Compiler error with requested fix: `/implement-change --mode compiler`.
+- Performance or binary-size work: performance or size mode, with before/after measurements.
+- Existing diff: `/review-work --mode diff`; use api, soundness, dependencies, security or
+  structure for the relevant audit, not a write-capable role as reviewer.
+- CI/test configuration: `/configure-tooling --mode ci` or tests within requested scope.
+- Publication: user invokes `/publish-change --mode commit`, pull-request or release, each
+  with its own target and authorization. Release dry-run evidence is not a published release.
+- Plugin evaluation/status line: user invokes `/maintain-studio --mode evaluate` or status-line
+  in the supported full-plugin environment. Historical benchmark runs do not prove this catalog.
 
-### Design & architecture
-- **`/brainstorm`** — explore an idea before any design (2–4 approaches, no code).
-- **`/design-api`** — design one public API surface; use `/dev-task` to ship it.
-- **`/architecture`** — design/revise module/crate layout; records ADRs.
-- **`/adr`** — write and file one architecture decision record.
-- **`/model-domain`** — encode a domain in the type system (newtype, type-state, make illegal
-  states unrepresentable).
-- **`/grill-me`** — interview you one focused question at a time when requirements or a
-  consequential decision need your input.
-- **`/prototype`** — throwaway code that settles one design question (an API shape, a lifetime
-  doubt); captured, then deleted.
-- **`/research`** — settle a Rust question against primary sources (crate source, docs.rs, the
-  Reference, an RFC), cited.
+## Host and project evidence
 
-### Build
-- **`/dev-task`** — implement one unit end-to-end: scout → plan → approve → build → review.
-  Review repairs share a persisted three-dispatch limit; focused verification includes
-  affected earlier acceptance checks, and advisory findings alone do not restart repairs.
-- **`/new-crate`** — scaffold a crate/workspace member with studio conventions.
-- **`/add-dep`** — vet a crate (RUSTSEC, license, MSRV, features) before adding it.
-- **`/refactor`** — behaviour-preserving cleanup driven by clippy + standards.
-- **`/migrate`** — move an edition (`cargo fix --edition` + the semantic review it cannot do)
-  or a major dependency version; baseline first, then prove behaviour survived.
-- **`/fix-build`** — get a failing `cargo build`/`check` green (drives `rust-build-resolver`).
-- **`/ci-gate`** — audit or install the anti-hang / anti-silencing CI gate (clippy, nextest
-  timeouts, lefthook).
+Hooks can supply context and reminders, but a direct helper probe is not proof of native host
+loading/trust. Use diagnose-host mode for capabilities and [Codex notes](codex-compat.md) for
+adapter details. The [installation guide](../../../INSTALL.md) distinguishes portable skills,
+plugin hooks and generated custom agents. Generator upgrades preserve customized or unknown
+agent files and report them instead of deleting them.
 
-### Planned work (optional intent, local execution records)
-- **`/spec`** — record a durable design: when product direction could be guessed, a compact,
-  source-controlled `intent/<slug>.md` captures users, outcome, constraints, and open questions;
-  `spec.md` records the approach, risks, and observable criteria. Use it when this context must
-  survive the current session.
-- **`/spec-tasks`** — make the local task plan: expected paths, dependencies, conflicts,
-  acceptance slices, and status. Run `bun "scripts/plan-status.ts" <tasks.md>` for a read-only
-  ready/blocked summary. On resume, reconcile destination state and evidence before unblocking a
-  dependent task; local completion and external PR merge are separate states.
-- **`/spec-verify`** — prove the implementation meets the spec's acceptance criteria. For
-  multi-task, cross-crate or observable behavior changes, a fresh read-only checker also
-  verifies the original user request without the spec/tasks/history; `--blind` requests
-  that pass on a smaller change. Missing requirements or required unverified checks block
-  archiving. User amendments remain part of acceptance.
-
-### TDD & verification
-- **`/tdd`** — build a behaviour test-first: RED → GREEN → REFACTOR.
-- **`/verify-loop`** — run fmt/clippy/nextest and auto-fix in a bounded loop (≤3) until green.
-- **`/acceptance`** — the spec's criteria as gates a checker decides: write or lint
-  `.rust-studio/specs/<slug>/acceptance.md` (`CHECK:` + `EXPECT:`, met only on exit 0 **and**
-  the marker), `--run` / `--reverify` it, and report the measured met / unmet / abandoned counts.
-  Evidence is bound to the exact oracle it proved, so an edited `CHECK:` goes stale on its own;
-  `ABANDON:` is a visible handoff (BLOCKED), never a pass. `/spec-tasks` writes it, `/dev-task`
-  and `/spec-verify` re-verify it; the `acceptance_guard` Stop hook blocks a turn that reports
-  COMPLETE while a ledger this session named has unmet gates, or a gate whose `CHECK` cannot fail
-  (fixed output, an `EXPECT` matching empty output) — the checker's own `--lint` error class.
-
-### Quality & review
-
-Review reads applicable root and scoped standards from the actual tree. Suggested guard
-or branch simplifications require boundary-state and producer-contract evidence; one
-happy-path test does not establish preserved behavior.
-- **`/review`** — audit a diff for correctness/scope/tests (`--full` = parallel multi-lens).
-- **`/lint`** — rustfmt + clippy zero-warning gate (`--fix` applies).
-- **`/audit-unsafe`** — review all `unsafe` (invariants, miri).
-- **`/perf`** — profile → benchmark → optimize → prove the win with before/after numbers.
-- **`/bloat`** — measure binary size (cargo-bloat/llvm-lines), cut it, prove the delta in bytes.
-- **`/security-audit`** — CODE security: untrusted input, injection, secrets, auth + advisories.
-- **`/deps-check`** — DEPENDENCY hygiene: cargo-deny, versions, duplicates, features, MSRV.
-- **`/api-review`** — semver hazards + required version bump on a public-API change.
-- **`/tech-debt`** — scan + prioritize debt (TODO/FIXME, `#[allow]`, `unwrap` in libs, …);
-  scan 6 spawns `slop-auditor` for the tree-level ledger (duplicates, orphans, cycles, dead
-  `pub`, untyped model calls). `scripts/slop-audit.sh -p <crate>` is the same layer as one report.
-- **`/evolve`** — user-invoked improvement loop: one bounded change per round, a three-part gate
-  (execution, `score-compare.sh` no-regression, an overfit-aware diff review), checkpoint commit
-  or `git stash push`, a scoreboard in the log. Targets a crate (`slop-audit.sh --scores`) or the
-  plugin's own instruction layer (`tools/harness-score.ts`); research on request, cited.
-- **`/scope-check`** — compare a diff/plan against acceptance criteria; flag creep.
-- **`/doc-review`** — review a requirements, spec, plan, ADR, or design document for coherence,
-  feasibility, scope, and security.
-- **`/prose`** — lint a README, changelog, PR body, ADR, rustdoc, or a draft on stdin for AI
-  tells: every hit prints with its fix and a metric line. Standard: [`docs/prose-gate.md`](prose-gate.md).
-- Two standards bind every review lens. [`docs/integrity-and-evidence.md`](integrity-and-evidence.md)
-  governs the honesty of what the studio *emits* (`🚩 INTEGRITY`);
-  [`docs/untrusted-context.md`](untrusted-context.md) governs the trust level of what it
-  *reads* (`🚩 UNTRUSTED`) — a crate README, `docs.rs` page, PR comment, or CI log that tells
-  tooling to add a dependency, ignore an advisory, or silence a lint is a finding to report,
-  never an instruction to follow. The PreToolUse hook announces the standard the first time a
-  session reads under `~/.cargo/registry`, `~/.cargo/git`, `vendor/`, or fetches a URL.
-
-### Testing
-- **`/test-plan`** — a test plan for a feature (types, cases, edge cases, property laws).
-- **`/test-setup`** — wire proptest/criterion/nextest/coverage into the project.
-- **`/coverage`** — measure coverage, surface meaningful gaps, close them.
-- **`/mutants`** — mutation-test the suite (cargo-mutants): find code tests run but don't check.
-- **`/fuzz`** — coverage-guided fuzzing (cargo-fuzz) on untrusted-input surfaces; every crash
-  becomes a minimized regression test.
-- **`/flaky-hunt`** — reproduce, diagnose, and fix/quarantine a flaky test.
-
-### Memory (cross-session, in the host's auto-memory store)
-- **`/remember`** — capture a durable learning (decision/gotcha/convention/fix) as a typed note
-  with evidence, under the host's index budget.
-- **`/recall`** — surface prior learnings for a topic before you work, each with a freshness
-  verdict (holds / stale / unverifiable) checked against the repo.
-- **`/memory-doctor`** — deterministic audit + judged cleanup: index budget and integrity,
-  stale or resolved notes, secrets, conventions to promote into `CLAUDE.md`/rules, and a
-  one-time import of a legacy Obsidian vault.
-- **`/session-wrap`** — recap the session, capture learnings, suggest the next step.
-  Preserve task execution evidence for resume; propose at most three small environment
-  improvements tied to observed friction and a concrete validation.
-- Capture is also **automatic**: the work skills (`/dev-task`, `/debug`, `/verify-loop`,
-  `/refactor`, `/spec-verify`) run `/remember` for durable learnings, and the `auto_capture`
-  Stop hook nudges you once after a completed unit if nothing was saved. Recall is automatic:
-  the host loads the index at session start, the session-start hook ranks it against the
-  branch and reports index health, and every prompt gets pointers to notes that match it
-  (`memory_recall`). All toggle via `/plugin` → Rust Code Studio.
-- **Repeats get promoted, not restated.** The second time a review, a gate, or a PR thread
-  flags the same thing, the correction has failed to stick: `/review`, `/resolve-pr` and
-  `/session-wrap` name the rung it belongs on — a lint or CI check if it can be decided
-  mechanically, a repo rule if it binds everyone, a `convention` note otherwise — and propose
-  the exact line. A defect that got past review entirely goes one further and becomes a
-  fixture under `benchmarks/fixtures/`.
-- The full contract (recall-before, remember-after, verify-before-it-steers, `MEMORY:` verdict
-  lines, the path rule, rules ≠ memory, the promotion ladder) lives in
-  [`docs/memory-protocol.md`](memory-protocol.md).
-
-### Ship & release
-- **`/commit`** — Conventional Commit for the current changes (fmt/clippy first; no hook bypass).
-- **`/pr`** — open a PR with a value-first description via `gh`.
-- **`/resolve-pr`** — work through review threads and CI failures, or watch a PR until it is
-  merge-ready. `--loop` closes the cycle against review bots (Copilot, Codex, CodeRabbit): fix,
-  reply, push, re-trigger, repeat to a round cap, then stop at merge-ready without merging.
-  Findings too big for the PR become issues you approve at exit.
-- **`/merge-conflicts`** — resolve a stopped merge or rebase hunk by hunk, then prove the tree
-  still builds.
-- **`/worktree-sweep`** — inspect and prune leftover git worktrees (agent-isolation leftovers
-  included); removal only on explicit approval.
-- **`/changelog`** — generate/update CHANGELOG.md (Keep a Changelog).
-- **`/msrv-check`** — verify the real MSRV vs the declared `rust-version`.
-- **`/publish`** — RELEASE-GATE checklist → dry-run → hands you the exact publish command
-  (never publishes itself).
-
-### Following progress (visibility)
-- Per-sub-agent rows in the agent panel are customized automatically (the plugin's
-  `subagentStatusLine`): `● <type>: <description> · <elapsed> · <tokens>`.
-- **`/progress-bar`** — opt-in: wire the main status bar to show the live orchestration phase
-  (`🦀 rust-studio · ▸ build 2/4 · <model> · ctx %`); `/progress-bar off` removes it.
-
-### Studio self-check
-- **`/studio-doctor`** — the runtime half of the self-check: what is actually live in this
-  install (hooks, agents, LSP, memory, tooling) versus what silently degraded.
-- **`/eval-agents`** — run the review agents against planted-defect fixtures and score recall
-  (quality-assures the plugin itself). The same fixtures ship as a `claude plugin eval` suite
-  (`evals/`) with a no-plugin baseline arm for out-of-session scoring. Paid eval CI is manual;
-  run relevant cases when the studio's configuration changes — a prompt edit regresses recall the
-  way a code edit regresses a test. A defect that escapes the studio becomes a permanent
-  fixture before the fix is called done.
-- **`/eval-agents improve <skill-or-agent-path>`** — explicitly test one instruction change
-  against a frozen baseline, repeated training runs and a separately held control set.
-  Regression, incomplete evidence or exposed holdout rejects adoption; the report preserves
-  the before/after results and measured cost. Uses the existing Claude Code runner and
-  source checkout; normal `/eval-agents` remains measurement-only.
-
----
-
-## Worked examples
-
-**Add a feature to one crate**
-```
-/recall caching          # anything we already decided here?
-/dev-task add an LRU eviction policy to Cache, configurable via CacheConfig
-/review                  # audit the diff
-/commit  →  /pr
-```
-
-**A large, cross-crate change**
-```
-/spec migrate the credential store to the new sealed-trait API
-/spec-tasks credential-store-migration      # ordered tasks
-# … each task runs through /dev-task (which builds + reviews) …
-/spec-verify credential-store-migration     # prove it against the spec, archive
-/review --full           # multi-lens, since it's breaking + cross-crate
-```
-
-**Fix a bug, test-first**
-```
-/tdd login fails after token refresh — write a failing test that reproduces it, then fix
-/verify-loop             # drive everything green
-/commit
-```
-
-**Make it fast**
-```
-/perf the request decoder is slow on large payloads
-# profile → bench baseline → optimize → before/after numbers (reverts if no win)
-```
-
-**Onboard an unfamiliar codebase**
-```
-/adopt path/to/workspace # structure, domains, public API, debt catalog
-/detect-stack            # which leads/specialists/rules apply
-```
-
-**Cut a release**
-```
-/deps-check              # dependency and supply-chain review
-/msrv-check              # verify supported Rust version
-/changelog               # draft the release entry
-/publish my-crate        # gate + dry-run, then run the printed command yourself
-```
-
----
-
-## Tooling, memory, and large workspaces
-- Agents prefer **serena** (semantic code nav) and `rg`/`ast-grep` over Bash search, **exa** for
-  external evidence, and purpose-built `cargo` subcommands — see `tooling.md`. All three are
-  prefer-if-available: workflows degrade cleanly without them (`tooling.md` "Degradation
-  contract").
-- Memory has two layers, both host-managed directories — no MCP, no vault:
-  - the **project store** — Claude Code's auto-memory directory for the repository
-    (`~/.claude/projects/<project-key>/memory/`, or `autoMemoryDirectory`; a Codex session
-    shares the same path). `/remember`, `/recall`, `/memory-doctor`, and the hooks read and
-    write it with the harness's own file tools; the host loads its `MEMORY.md` at session start.
-  - **per-agent memory** — `chief-architect`, `unsafe-auditor`, and `security-auditor` carry
-    `memory: project`, so the host keeps each agent's own rulings in
-    `.claude/agent-memory/rust-studio-<agent>/` (commit it or `.gitignore` it — your call).
-    The read-only auditors surface durable findings on a `MEMORY:` line so the orchestrator can
-    `/remember` them into the project store.
-- For big multi-crate workspaces, see `large-workspace.md` (per-crate CLAUDE.md, `target/`
-  read-denies, sparse worktrees, the bundled rust-analyzer LSP).
+Use the project's actual feature/target/environment gate ([project-gate](project-gate.md)).
+Serialize expensive shared builds; retain source/destination identities, current command
+results and next actions across interruption ([task continuity](task-continuity.md)). Review
+repairs share a bounded durable counter ([repair protocol](review-repair.md)). Local completion
+is separate from remote issue, PR and merge state.

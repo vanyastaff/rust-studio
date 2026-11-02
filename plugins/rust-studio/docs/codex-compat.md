@@ -24,7 +24,7 @@ live docs.
 |---|---|---|
 | Skills | native, via `.codex-plugin/plugin.json` → `skills/` | Inventory comes from the manifest and distribution validator |
 | Hooks | `hooks/codex-hooks.json` | Delivery requires host support, configuration and trust |
-| 33 agents | generated TOMLs in `~/.codex/agents/` | `scripts/generate-codex-agents.mjs`, run by `install.sh` |
+| 5 roles | generated TOMLs in `~/.codex/agents/` | `scripts/generate-codex-agents.mjs`, run by `install.sh` |
 | `rules/` standards | delivered by the `inject-rules` hook | Falls back to the `AGENTS.md` fragment when hooks are off |
 | `LSP` tool | **absent** | serena MCP or `rg` — `tooling.md` |
 
@@ -32,7 +32,7 @@ live docs.
 declaring the Agent Plugins 1.0 `$schema` silenced every plugin hook while Codex still reported
 them completed. That manifest is withdrawn and the regression is guarded by `RS-MANIFEST-058`
 (ADR 0002). Anything that still says "Codex does not run plugin hooks" is stale — check with
-`/studio-doctor`, which probes rather than assumes.
+`/inspect-project --mode diagnose-host`, which probes rather than assumes.
 
 ## November compatibility refresh
 
@@ -80,7 +80,7 @@ the shared plugin. See `model-routing.md`.
 OpenAI's guidance asks a user prompt to carry four things: **goal, context, constraints, and
 how to verify**. Three of the four are what this plugin *is* — the skills carry the method, the
 `rules/` files carry the constraints, and the verdict vocabulary carries "done when". A user
-invoking `/dev-task` or `/review` should only need to supply the goal and point at the code.
+invoking `/implement-change --mode implement` or `/review-work --mode diff` should only need to supply the goal and point at the code.
 
 That is the test to hold a skill to: if a Codex user still has to hand-write constraints and a
 definition of done to get a usable result, the skill is under-specified, not the prompt.
@@ -108,18 +108,20 @@ file loaded into every session should cost; anything that can be a skill should 
 
 ## Command overlap — prefer the studio's, and say why
 
-Codex ships `/plan` and `/review` of its own. They are good and they are generic; the studio's
+Codex ships `/plan` and `/review-work --mode diff` of its own. They are good and they are generic; the studio's
 are Rust-specific and end in a gate verdict with evidence attached. The overlap is worth naming
 in the skill descriptions rather than pretending it isn't there:
 
-- Codex `/plan` gathers context and asks clarifying questions → studio `/brainstorm` compares
-  2–4 approaches with a `harsh-critic` pass, `/spec` writes the frozen contract, `/spec-tasks`
-  orders the work.
-- Codex `/review` diffs against a base branch → studio `/review` runs the maintainer-bar
+- Codex `/plan` gathers context and asks clarifying questions → studio `/design-change --mode explore` compares
+  approaches, `/design-change --mode specification` writes the shared contract and runs fresh Goldfish review, and
+  `/implement-change --mode plan` orders the work. Authorized implementation continues through fresh
+  artifact reconstruction and integration under `references/elephant-workflow.md`; an
+  explicit design-only request stops at its artifact. Missing host isolation is unverified.
+- Codex `/review-work --mode diff` diffs against a base branch → studio `/review-work --mode diff` runs the maintainer-bar
   checklist, the oracle-weakening checks, and the gate lenses, and returns
   COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED.
 - OpenAI suggests pointing `AGENTS.md` at a `code_review.md` so review behavior is consistent
-  across repos. On this plugin that file is `/review` plus `verdicts.md`; a repo that wants
+  across repos. On this plugin that file is `/review-work --mode diff` plus `verdicts.md`; a repo that wants
   Codex's built-in reviewer to match the studio's bar can point its `code_review.md` at them.
 
 ## Anti-patterns from the Codex guidance that bear on authoring
@@ -132,7 +134,7 @@ in the skill descriptions rather than pretending it isn't there:
 - **Do not hide build and test output from the agent.** A hook or wrapper that swallows a
   `cargo` failure and reports a summary breaks verification. The studio's rule is stronger:
   a claim carries the command that produced it (`integrity-and-evidence.md`).
-- **Use worktrees for parallel work.** `/worktree-sweep` exists for this; running concurrent
+- **Use worktrees for parallel work.** `/maintain-project --mode worktrees` exists for this; running concurrent
   agents over one working tree is how two changes overwrite each other.
 - **Prove a workflow by hand before scheduling it.** Applies to any of the studio's skills
   wired into a scheduled task.
@@ -141,6 +143,6 @@ in the skill descriptions rather than pretending it isn't there:
 
 - No Codex model name, reasoning-effort level, sandbox mode, or approval policy is set by this
   plugin. Those are session-level user choices.
-- The tiered roster, the gates, and the verdict vocabulary are identical on both hosts. Only
+- The role/profile roster, the gates, and the verdict vocabulary are identical on both hosts. Only
   the delivery surface differs — `sub-agents.md` covers the inline fallback where a host has no
   sub-agents at all.

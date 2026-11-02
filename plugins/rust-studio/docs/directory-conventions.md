@@ -51,15 +51,15 @@ into the window on every file.
 
 ## Domain detection
 
-The `session-start` hook and `/detect-stack` skill classify a project by reading
+The `session-start` hook and `/inspect-project --mode classify` skill classify a project by reading
 `Cargo.toml`:
 
-- **library/crate** → `[lib]` present, or no `[[bin]]`, often `publish`-able
+- **library/crate** → `[lib]` present, or no `[[bin]]`, often publishable
 - **async/web** → depends on `tokio`, `axum`, `actix-web`, `hyper`, `tower`, `sqlx`
 - **cli** → depends on `clap`, has `[[bin]]`, `ratatui`
 - **systems/embedded** → `#![no_std]`, depends on `embedded-hal`, `cortex-m`, has `unsafe`, FFI (`bindgen`, `cc`)
 
-A project can be several at once; the studio loads the relevant leads/specialists
+A project can be several at once; the studio loads the applicable profiles
 for each.
 
 ## Large multi-crate workspaces
@@ -68,4 +68,4 @@ than loading everything: per-crate `CLAUDE.md` (owner-maintained, layered on the
 `permissions.deny` on `target/`/generated, the bundled rust-analyzer LSP for symbol lookup, and sparse
 worktrees. Per-crate `CLAUDE.md` and the studio's central path-scoped `rules/` complement each
 other (both can apply to one file). Full setup: [`large-workspace.md`](large-workspace.md);
-run `/adopt` to apply it to an existing workspace.
+run `/inspect-project --mode onboard` to apply it to an existing workspace.

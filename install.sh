@@ -31,18 +31,20 @@ found=0
 
 if command -v claude >/dev/null 2>&1; then
   found=1
-  echo "Claude Code — full studio (61 skills, 33 sub-agents, hooks, status line)"
+  echo "Claude Code — full studio (11 skills, 5 roles, hooks, status line)"
   run claude plugin marketplace add "$src"
   run claude plugin install rust-studio@rust-studio
 fi
 
 if command -v codex >/dev/null 2>&1; then
   found=1
-  echo "Codex — native plugin (59 portable skills + lifecycle hooks)"
+  echo "Codex — native plugin (10 portable skills + lifecycle hooks)"
   run codex plugin marketplace add "$src"
   run codex plugin add rust-studio@rust-studio
-  # Codex plugins can't bundle agent definitions, so generate the 33 studio
+  # Codex plugins can't bundle agent definitions, so generate the 5 studio
   # agents into the personal scope. Needs a clone (script + sources) and node.
+  # The generator preserves/reports unknown or customized old definitions; it retires
+  # only unchanged files whose generated ownership it can establish.
   if [[ -d $src/plugins/rust-studio/agents ]] && command -v node >/dev/null 2>&1; then
     run node "$src/plugins/rust-studio/scripts/generate-codex-agents.mjs" "$HOME/.codex/agents"
   else

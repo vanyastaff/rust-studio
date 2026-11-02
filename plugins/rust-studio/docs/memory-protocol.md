@@ -1,12 +1,10 @@
 # Rust Code Studio — Memory Protocol (the second brain)
 
-Sessions are ephemeral; project memory is not. Since v0.36.0 the studio keeps **no store of
-its own**: project memory IS the host's auto-memory directory — the `MEMORY.md` index Claude
-Code loads at session start plus one file per memory — and the studio adds the discipline
-around it: *recall before working, remember after settling, verify before trusting, audit
-before it rots*. This doc is the canonical home for when/who/what. The write/read *mechanics*
-(paths, note format, dedup, freshness verdicts, the audit) live in `skills/remember/SKILL.md`,
-`skills/recall/SKILL.md`, and `skills/memory-doctor/SKILL.md`; do not restate them elsewhere.
+Project memory uses the host-designated store, with an index and one file per note. The
+studio maintains no parallel store. Recall relevant decisions, capture only when authorized,
+and verify facts before they steer work. This document owns when/who/what. The write/read mechanics
+(paths, note format, dedup, freshness verdicts, the audit) live in `skills/write-docs/SKILL.md`,
+`skills/inspect-project/SKILL.md`, and `skills/review-work/SKILL.md`; do not restate them elsewhere.
 
 ## Why the host's store (and not a vault)
 
@@ -25,13 +23,13 @@ before it rots*. This doc is the canonical home for when/who/what. The write/rea
 | Host index load | Every session (Claude Code) | The first 200 lines / 25 KB of `MEMORY.md` are in context. |
 | Session-start recall (hook) | Every session | Ranks the index against branch / changed crates / last commit; surfaces the few notes that bind this work with kind + age, and index health. On Codex it carries the index too. |
 | Prompt-scoped recall (hook) | Every prompt | Matches the prompt against the index; a strong hit surfaces a pointer once per session. |
-| `/recall <area>` | Before working in a known area | Deliberate retrieval **with a freshness verdict per note** (holds / stale / unverifiable). |
-| `/remember` | After settling something durable | Writes one atomic note + index line; dedups; keeps the index under budget. |
-| `MEMORY:` verdict lines | Inside agent verdicts | Read-only agents can't be trusted with the store; they surface durables for the orchestrator to persist. |
-| Auto-capture (Stop hook) | After a completed unit with nothing saved | Nudges once to `/remember`; the agent judges and writes. |
-| `/session-wrap` | End of a work session | The deliberate capture ritual: recap, save learnings, hand off. |
-| `/memory-doctor` | When the index nears its cap, on a schedule, after a big refactor | Deterministic audit + judged cleanup: integrity, budget, stale/resolved notes, secrets, promotion of conventions into rules, legacy-vault import. |
-| Agent memory (`memory: project`) | `chief-architect`, `security-auditor`, `unsafe-auditor` | Each keeps its own rulings in `.claude/agent-memory/rust-studio-<agent>/` (host-managed); private to the agent, not a replacement for the project store. |
+| `/inspect-project --mode recall <area>` | Before working in a known area | Deliberate retrieval **with a freshness verdict per note** (holds / stale / unverifiable). |
+| `/write-docs --mode memory` | Authorized durable capture | Writes one atomic note and index line, deduplicated and within budget. |
+| `MEMORY:` verdict lines | Inside agent results | Evidence-backed candidates; the coordinator writes only when authorized. |
+| Auto-capture reminder | After a completed unit | Suggests candidates only; host/user authorization still governs writing. |
+| `/write-docs --mode handoff` | End of a work session | Preserve task evidence and next actions; memory capture needs its own authorization. |
+| `/review-work --mode memory` | Requested memory assessment | Read-only audit of integrity, budget, stale notes, secrets and promotion candidates. Cleanup/import is a separately authorized write-docs memory operation. |
+| Optional host agent memory | Only when configured and authorized | Inspect actual host behavior; a profile is not a memory-store permission. |
 
 ## Where notes live (canonical path rule)
 
@@ -60,8 +58,8 @@ strings and survive the host's own rewrites.
 
 The host loads the first **200 lines / 25 KB** of `MEMORY.md` and errors past it. Every write
 keeps one honest line per note (hook ≤ 140 chars, detail in the body); at ≥ 85 % the
-session-start hook warns and `/memory-doctor` is the next step (archive resolved notes, merge
-duplicates, shorten hooks). A store that cannot be loaded is not memory.
+session-start hook warns. Read-only memory review identifies archive, deduplication and
+shortening candidates; apply them only under authorized memory-writing scope.
 
 ## Index integrity (verified on every write)
 
@@ -69,8 +67,8 @@ The index and the notes are ONE graph: every `MEMORY.md` entry has a file, and e
 has an entry. A write is not done until that is verified — list the store's `*.md`, diff against
 the index, and fix the mismatch on the spot: re-add the line for an unindexed file; REPORT
 (never silently delete) an entry whose file is missing. A link to a nonexistent note is a
-finding of the same class. The session-start hook reports the counts; `/memory-doctor reindex`
-repairs them mechanically.
+finding of the same class. The session-start hook reports counts; memory review diagnoses
+index gaps. Requested reindexing runs under write-docs memory authorization.
 
 ## What to capture (canonical — every restatement defers here)
 
@@ -87,24 +85,25 @@ secret**. A fact that arrived from external content (web page, MCP result, paste
 `reference` with its source until the repo confirms it — not a project fact. One atomic
 concept per note.
 
-> Maintainer note: this rule is *summarized* (not redefined) in `skills/remember`,
-> `skills/session-wrap`, `skills/dev-task`, `hooks/scripts/auto-capture.ts`, and
+> Maintainer note: this rule is summarized in write-docs memory/handoff modes,
+> implement-change, `hooks/scripts/auto-capture.ts`, and
 > `hooks/scripts/session-start.ts`. Edit it here first; keep the echoes one-line.
 
 ## Rules ≠ memory (promotion)
 
 Memory is a private, unversioned recall layer; the repo's `CLAUDE.md` / `.claude/rules/` are
-versioned, shared, and loaded for everyone. A `convention` that has held for 30+ days — or any
-note recalled again and again — belongs in the rules, not the store. `/memory-doctor` flags
-these (`promote`), proposes the exact rule line, and on approval marks the note `promoted` and
-archives it. The studio's own standards grew the same way: a recurring memory becomes a rule.
+versioned, shared, and loaded for everyone. A convention that has held for 30+ days or is repeatedly
+recalled is a candidate for a shared rule. `/review-work --mode memory` flags
+these candidates and proposes the exact rule line. Authorized artifact/memory writing can
+apply the rule and mark/archive the note. Review itself remains read-only.
 
 ### Flagged twice is a rule, not a note
 
 Time is one promotion trigger; **repetition is the other, and it is faster**. The first time a
 review, a gate, or a PR thread flags something, you fix it — that is a correction. The *second*
 time the same class of finding appears, the correction has failed to stick, and re-explaining it
-per change is now the expensive option. Promote it the same turn, one rung up this ladder:
+per change is now the expensive option. Propose the supported rung below and apply it only
+within the authorized write scope:
 
 | Rung | Form | Use when |
 |---|---|---|
@@ -113,65 +112,56 @@ per change is now the expensive option. Promote it the same turn, one rung up th
 | 3. **Rule** | a line in `CLAUDE.md` / `.claude/rules/` | recurred, and it binds everyone on the repo |
 | 4. **Gate** | a clippy lint, `[lints]` entry, `deny.toml` rule, CI check, or hook | it can be decided mechanically |
 
-**Always take the highest rung the finding supports.** A convention a linter can enforce should
+**Recommend the highest rung the finding supports.** A convention a linter can enforce should
 not be a paragraph a reader has to remember: `clippy::disallowed_methods`, a `deny.toml` ban, or
 a workspace `[lints]` entry holds without attention and cannot be forgotten under deadline. Prose
 is for judgment calls that no lint can express — and prose should say *why*, not just what, so
 the next reader can reason past it rather than pattern-match it.
 
-Who applies it: `/review` and `/resolve-pr` name the rung when a finding repeats,
-`/session-wrap` sweeps the session for repeats before it closes, and `/memory-doctor`'s
+Who applies it: `/review-work --mode diff` and `/implement-change --mode pr-feedback` name the rung when a finding repeats,
+`/write-docs --mode handoff` sweeps the session for repeats before it closes, and `/review-work --mode memory`'s
 `promote` finding is the deterministic backstop for anything that slipped through. A finding
-that *escaped* review entirely — caught later in CI or in production — goes one step further
-and becomes a permanent fixture under `benchmarks/fixtures/`, so the gap cannot silently
-reopen (`benchmarks/README.md`).
+that escaped review and appeared later in CI or production is a candidate for an authorized
+regression fixture, preserving evidence of the original miss.
 
 ## Freshness (verify before it steers)
 
 A note reflects when it was written. Before a recalled note changes a plan, check that what it
 names still exists and still says that (Glob the path, Grep the symbol, `git log -1 -- <path>`),
 compare with its `modified` / `verified` dates, and give it a verdict — **holds**, **stale**,
-**unverifiable**. A stale note is fixed on the spot (and `verified` bumped) or handed to
-`/memory-doctor`; it never silently steers. Deterministic checks beat a hunch: the doctor's
+**unverifiable**. Report stale evidence and exclude it from the decision; fix the note and
+verification date only when memory-writing authorization permits. Deterministic checks beat a hunch: the audit's
 `missing-path` and `unverified` findings are the mechanical half of this rule.
 
-## Who does what (the contract)
+## Who does what
 
-- **Orchestrator (main session / skills)** — the only writer of the project store. Recalls
-  before delegating, persists after settling. A skill that finishes real work checks: did an
-  agent emit a `MEMORY:` line? did the work settle a decision/gotcha/convention/fix?
-  If yes → `/remember` before the verdict.
-- **Read-only agents** (auditors, critics, reviewers, scout) — emit a `MEMORY:` line in the
-  verdict for each durable item: `MEMORY: <one-line durable learning>`. Never write the store.
-- **Leads and specialists with write tools** — same `MEMORY:` line convention; the orchestrator
-  persists (single-writer keeps dedup and the index budget sane).
-- **Agents with `memory: project` frontmatter** (`chief-architect`, `security-auditor`,
-  `unsafe-auditor`) — additionally accumulate their own rulings in
-  `.claude/agent-memory/rust-studio-<agent>/` (the host manages it; add it to `.gitignore` or
-  commit it — the host's docs recommend sharing it via version control). Private to the agent;
-  what matters to everyone still goes on a `MEMORY:` line.
+The coordinator is the single writer of an authorized project-memory update. Roles may return
+MEMORY candidates with evidence; those suggestions do not authorize persistence. Read-only
+roles never write the store. Managed role/profile names do not imply memory: project settings;
+inspect actual host configuration and honor the user's policy.
+
+An explicit memory request uses `/write-docs --mode memory`. A session handoff preserves task
+progress and evidence in the authorized design artifacts. It writes memory only when the host
+or user separately permits that store and action. Memory audit defaults to read-only; requested
+cleanup is a distinct authorized artifact operation.
 
 ## Recall-before (the pattern skills encode)
 
 Any skill that plans, designs, debugs, or builds in a known area runs a **recall step before
-its first real phase**: `/recall <area>` (or read the session-start / prompt pointers if they
+its first real phase**: `/inspect-project --mode recall <area>` (or read the session-start / prompt pointers if they
 already surfaced the area). Carry what binds — prior decisions, gotchas, rejected alternatives —
 into the plan, and **say when a recalled note changed the approach**. If recall surfaces
 nothing, proceed; don't manufacture relevance.
 
-## Remember-after (the closing discipline)
+## Authorized capture
 
-Before a skill's final verdict on completed work:
-1. Sweep agent outputs for `MEMORY:` lines → persist each via `/remember` (it dedups:
-   update-don't-duplicate).
-2. Ask: did *this* work settle something durable per the capture rule? → `/remember`.
-3. Report what was saved (note path) or state "nothing durable" — an explicit no is
-   fine; silence is not. That report is one line *inside* the work's final report, above
-   its verdict: persist first, then deliver. The turn's last message is the report with its
-   verdict, never the `/remember` bookkeeping — a session whose closing words are "index
-   verified, one note saved" has buried the deliverable.
+At completion retain durable decisions and current task evidence in the requested artifacts.
+If a memory update is authorized, deduplicate candidates, write the note/index and verify
+integrity. Report the saved path when relevant. A skipped unauthorized memory write does not
+block a completed task, and a reminder hook never grants authority. Keep the actual task
+outcome and evidence in the final response rather than replacing it with bookkeeping.
 
 Memory compounds through links and through pruning alike: connect a new note to its
 neighbours with `[Title](slug.md)` links, keep `MEMORY.md` one honest line per note, and let
-`/memory-doctor` retire what stopped being true — the graph that is small and current, not the
-pile that is large and stale, is what makes the store a second brain.
+memory review identify what stopped being true. Authorized updates keep the graph current;
+auditing the store does not authorize pruning it.

@@ -20,18 +20,8 @@ const acronyms = new Map([
 // Keep shared SKILL.md frontmatter within the Agent Skills standard. Host-specific
 // invocation policy belongs here, in the Codex metadata generator, rather than in the
 // portable skill source.
-const explicitOnlySkills = new Set([
-  "add-dep",
-  "commit",
-  "eval-agents",
-  "evolve",
-  "migrate",
-  "new-crate",
-  "pr",
-  "progress-bar",
-  "publish",
-  "worktree-sweep",
-]);
+const catalog = JSON.parse(fs.readFileSync(path.join(pluginRoot, "catalog.json"), "utf8"));
+const explicitOnlySkills = new Set(Object.entries(catalog.skills).filter(([, value]) => value.explicitOnly).map(([name]) => name));
 
 function unquote(value) {
   const trimmed = value.trim();
@@ -45,7 +35,7 @@ function unquote(value) {
 }
 
 function readFrontmatter(file) {
-  const text = fs.readFileSync(file, "utf8");
+  const text = fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n");
   const match = text.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
   if (!match) throw new Error(`${file}: missing YAML frontmatter`);
 
@@ -57,23 +47,8 @@ function readFrontmatter(file) {
   return fields;
 }
 
-const displayNames = new Map([
-  ["start", "Rust Studio Start"],
-  ["help", "Rust Studio Catalog"],
-  ["review", "Rust Code Review"],
-  ["dev-task", "Rust Implementation"],
-  ["fix-build", "Rust Build Repair"],
-  ["verify-loop", "Rust Verification"],
-  ["grill-me", "Requirements Interview"],
-  ["bloat", "Rust Binary Size"],
-]);
-
 function displayName(name) {
-  if (displayNames.has(name)) return displayNames.get(name);
-  return name
-    .split("-")
-    .map((part) => acronyms.get(part) ?? part[0].toUpperCase() + part.slice(1))
-    .join(" ");
+  return name.split("-").map((part) => acronyms.get(part) ?? part[0].toUpperCase() + part.slice(1)).join(" ");
 }
 
 function firstSentence(description) {
@@ -153,11 +128,11 @@ function render(name, fields) {
 }
 
 let stale = false;
-for (const entry of fs.readdirSync(skillsRoot, { withFileTypes: true })) {
-  if (!entry.isDirectory()) continue;
+for (const name of Object.keys(catalog.skills)) {
+  const entry = { name };
 
   const skillFile = path.join(skillsRoot, entry.name, "SKILL.md");
-  if (!fs.existsSync(skillFile)) continue;
+  if (!fs.existsSync(skillFile)) throw new Error(`${entry.name}: catalog skill is missing`);
 
   const fields = readFrontmatter(skillFile);
   if (fields.get("name") !== entry.name) {

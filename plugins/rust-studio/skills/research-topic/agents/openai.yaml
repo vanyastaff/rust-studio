@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Topic"
+  short_description: "Research a Rust ecosystem question against versioned crate"
+  default_prompt: "Use $research-topic: Research a Rust ecosystem question against versioned crate source, official documentation, language references, and release history."

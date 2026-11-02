@@ -8,7 +8,7 @@
 # subject it is about, what was measured, and the repair. The reader is usually an agent
 # that must fix this without a second round trip, and "validation failed: manifest versions
 # differ" tells it neither which manifests nor what to write. Codes are stable across
-# releases — cite them in commit messages and issues.
+# releases â€” cite them in commit messages and issues.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -46,7 +46,7 @@ _json_escape() { # minimal JSON string escaping for the fields below
 #
 # fail <code> <subject> <problem> [fix]
 #   code     stable RS-<AREA>-<NNN> identifier
-#   subject  the exact thing at fault — a path, ideally with the key inside it
+#   subject  the exact thing at fault â€” a path, ideally with the key inside it
 #   problem  what was measured, not a category
 #   fix      the repair, when there is one specific enough to name
 fail() {
@@ -68,7 +68,7 @@ fail() {
 }
 
 # --json promises ONE parseable object on stdout. A diagnostic block that prints its
-# offenders to stdout breaks that promise silently — the caller gets a JSON parse error
+# offenders to stdout breaks that promise silently â€” the caller gets a JSON parse error
 # instead of the finding, which is worse than the finding.
 stdout_blocks=$(grep -cE "^python3 - <<'" scripts/validate-distribution.sh || true)
 (( stdout_blocks == 0 )) || fail RS-DIST-003 "scripts/validate-distribution.sh" \
@@ -80,7 +80,7 @@ stdout_blocks=$(grep -cE "^python3 - <<'" scripts/validate-distribution.sh || tr
 dup_codes=$(grep -oE 'fail RS-[A-Z]+-[0-9]+' scripts/validate-distribution.sh | awk '{print $2}' | sort | uniq -d)
 [[ -z $dup_codes ]] || fail RS-DIST-002 "scripts/validate-distribution.sh" \
   "duplicate finding code(s): $(echo "$dup_codes" | tr '\n' ' ')" \
-  "codes are never reused — take the next free number from the registry at the top of this file"
+  "codes are never reused â€” take the next free number from the registry at the top of this file"
 
 for file in \
   .claude-plugin/plugin.json \
@@ -89,10 +89,17 @@ for file in \
   ../../PRIVACY.md \
   ../../TERMS.md \
   agents/openai.yaml \
+  catalog.json \
   hooks/claude-hooks.json \
   hooks/codex-hooks.json; do
   [[ -f $file ]] || fail RS-DIST-001 "$file" "required distribution file is missing" "restore the file, or drop it from the required list in this script"
 done
+
+# The catalog owns installed names, effect policy and migration destinations.
+if ! catalog_out=$(bun scripts/catalog-check.ts 2>&1); then
+  fail RS-DIST-004 "catalog.json" "${catalog_out//$'\n'/; }" "restore catalog inventory, profiles and complete procedure bundles; run sync-references.sh"
+fi
+say "$catalog_out"
 
 # The Codex hook file must stay host-clean: PLUGIN_ROOT only, and every script it
 # runs must exist (a typo here fails silently at session start otherwise).
@@ -110,16 +117,16 @@ jq -e '.hooks == "./hooks/codex-hooks.json"' .codex-plugin/plugin.json >/dev/nul
 # `hooks` are accepted.
 bad_keys=$(jq -r 'keys[] | select(. != "description" and . != "hooks")' hooks/codex-hooks.json)
 [[ -z $bad_keys ]] ||
-  fail RS-CODEX-014 "hooks/codex-hooks.json (top level)" "unknown key(s): $(echo "$bad_keys" | tr '\n' ' ') — Codex rejects the WHOLE file, silencing every hook with one startup warning" "keep only description and hooks"
+  fail RS-CODEX-014 "hooks/codex-hooks.json (top level)" "unknown key(s): $(echo "$bad_keys" | tr '\n' ' ') â€” Codex rejects the WHOLE file, silencing every hook with one startup warning" "keep only description and hooks"
 
 # Codex clamps a SessionEnd hook to 3s whatever the file declares. Declaring more
-# is not a bigger budget — it is a script written for time it will never get, and
+# is not a bigger budget â€” it is a script written for time it will never get, and
 # the mismatch only surfaces as a startup warning nobody reads.
 session_end_timeout=$(jq -r '.hooks.SessionEnd[0].hooks[0].timeout // 0' hooks/codex-hooks.json)
 (( session_end_timeout <= 3 )) ||
   fail RS-CODEX-015 "hooks/codex-hooks.json#SessionEnd.timeout" "declares ${session_end_timeout}s; Codex clamps SessionEnd to 3s" "set the timeout to 3 or less, and write the script for 3s"
 
-# Event names Codex recognizes. A typo here is silent too — the hook simply never
+# Event names Codex recognizes. A typo here is silent too â€” the hook simply never
 # fires. Verified against the Codex binary's hook dispatcher.
 codex_events="PreToolUse PostToolUse PermissionRequest PreCompact PostCompact SessionStart SessionEnd SubagentStart SubagentStop Stop UserPromptSubmit Notification"
 while IFS= read -r event; do
@@ -134,51 +141,51 @@ codex_scripts=$(grep -oE '/[a-z-]+\.ts' hooks/codex-hooks.json | sort -u)
 # hook needs the sub-agent's FINAL MESSAGE, which it gets from Claude-specific payload
 # fields or by resolving `<session_dir>/subagents/<agent-id>.jsonl`. Codex stores
 # transcripts as sessions/YYYY/MM/DD/rollout-*.jsonl with no subagents/ directory, so the
-# hook would run, find nothing, and enforce nothing — coverage that looks real and is not.
+# hook would run, find nothing, and enforce nothing â€” coverage that looks real and is not.
 expected_claude_only=$'/auto-capture.ts\n/model-switch.ts\n/statusline-install.ts\n/subagent-stop.ts'
 actual_claude_only=$(comm -23 <(echo "$claude_scripts") <(echo "$codex_scripts"))
 [[ $actual_claude_only == "$expected_claude_only" ]] ||
   fail RS-HOOK-020 "hooks/claude-hooks.json vs hooks/codex-hooks.json" "the Claude-only hook set is now: $(echo "$actual_claude_only" | tr '\n' ' ')" "port the new hook to Codex, or add it to expected_claude_only in this script once that is a deliberate gap"
 
-[[ -x skills/env-setup/scripts/env-setup.sh ]] || fail RS-SCRIPT-030 "skills/env-setup/scripts/env-setup.sh" "missing, or present without the executable bit" "run ./scripts/sync-references.sh, then chmod +x the bundled copy"
+[[ -x skills/configure-tooling/scripts/env-setup.sh ]] || fail RS-SCRIPT-030 "skills/configure-tooling/scripts/env-setup.sh" "missing, or present without the executable bit" "run ./scripts/sync-references.sh, then chmod +x the bundled copy"
 for f in memory-doctor.ts memory-store.ts _lib.ts; do
-  [[ -f skills/memory-doctor/scripts/$f ]] || fail RS-SCRIPT-031 "skills/memory-doctor/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so it breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
+  [[ -f skills/review-work/scripts/$f ]] || fail RS-SCRIPT-031 "skills/review-work/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so it breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
 done
-grep -q 'bun "scripts/memory-doctor.ts"' skills/memory-doctor/SKILL.md ||
-  fail RS-SCRIPT-032 "skills/memory-doctor/SKILL.md" "does not invoke bun \"scripts/memory-doctor.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
+grep -rqE 'scripts/memory-doctor\.ts' skills/review-work/SKILL.md skills/review-work/references ||
+  fail RS-SCRIPT-032 "skills/review-work/SKILL.md" "does not invoke bun \"scripts/memory-doctor.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
 # The acceptance checker is the one shipped script that executes commands by design (the
 # CHECK: lines of a ledger). It reaches a user machine only through the skill bundle, so the
 # bundle must be whole and the skill must call it by its bundled path; the Stop guard shares
 # the parser from hooks/scripts/ and never executes.
-for f in acceptance-check.ts acceptance-ledger.ts; do
-  [[ -f skills/acceptance/scripts/$f ]] || fail RS-SCRIPT-037 "skills/acceptance/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so it breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
+for f in acceptance-check.ts acceptance-ledger.ts design-paths.ts; do
+  [[ -f skills/verify-work/scripts/$f ]] || fail RS-SCRIPT-037 "skills/verify-work/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so it breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
 done
-grep -q 'bun "scripts/acceptance-check.ts"' skills/acceptance/SKILL.md ||
-  fail RS-SCRIPT-038 "skills/acceptance/SKILL.md" "does not invoke bun \"scripts/acceptance-check.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
-# The usage report reads the log the hooks write and the catalog on disk; /studio-doctor runs
+grep -rqE 'scripts/acceptance-check\.ts' skills/verify-work/SKILL.md skills/verify-work/references ||
+  fail RS-SCRIPT-038 "skills/verify-work/SKILL.md" "does not invoke bun \"scripts/acceptance-check.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
+# The usage report reads the log the hooks write and the catalog on disk; /inspect-project runs
 # it under --usage, so the bundle must be whole (the report imports the row parser and the
 # plugin-root helper relatively) and the skill must call it by its bundled path.
-for f in usage-report.ts usage-log.ts _lib.ts; do
-  [[ -f skills/studio-doctor/scripts/$f ]] || fail RS-SCRIPT-040 "skills/studio-doctor/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so --usage breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
+for f in usage-report.ts usage-log.ts _lib.ts catalog.ts catalog.json; do
+  [[ -f skills/inspect-project/scripts/$f ]] || fail RS-SCRIPT-040 "skills/inspect-project/scripts/$f" "the skill ships a CLI whose bundle is incomplete, so --usage breaks once installed standalone" "run ./scripts/sync-references.sh to rebuild the bundle"
 done
-grep -q 'bun "scripts/usage-report.ts"' skills/studio-doctor/SKILL.md ||
-  fail RS-SCRIPT-041 "skills/studio-doctor/SKILL.md" "does not invoke bun \"scripts/usage-report.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
+grep -rqE 'scripts/usage-report\.ts' skills/inspect-project/SKILL.md skills/inspect-project/references ||
+  fail RS-SCRIPT-041 "skills/inspect-project/SKILL.md" "does not invoke bun \"scripts/usage-report.ts\"; a plugin-root path does not resolve for a standalone install" "cite the bundled path, not a host-specific plugin root"
 # The template is the first ledger every user sees; it must parse under the strict parser and
-# pass its own lint, or the first thing /spec-tasks writes is a ledger the checker refuses.
+# pass its own lint, or the first thing /implement-change --mode plan writes is a ledger the checker refuses.
 if command -v bun >/dev/null 2>&1; then
   lint_out=$(bun hooks/scripts/acceptance-check.ts --lint --strict docs/templates/acceptance.md 2>&1) || lint_rc=$?
   [[ ${lint_rc:-0} -eq 0 ]] || fail RS-SCRIPT-039 "docs/templates/acceptance.md" "the shipped ledger template fails its own strict lint: $(echo "$lint_out" | grep -E 'ERROR|warning|PARSE' | head -3 | tr '\n' ' ')" "fix the template so acceptance-check.ts --lint --strict passes on it"
 fi
 ! grep -rqE 'OBSIDIAN_VAULT_PATH|vault_path|note_create|search_semantic|obsidian MCP|`obsidian`' \
     skills/*/SKILL.md docs/*.md README.md $(ls hooks/scripts/*.ts | grep -v '\.test\.ts$') ||
-  fail RS-MEM-040 "skills/*/SKILL.md, docs/*.md, README.md, hooks/scripts/*.ts" "Obsidian-era memory contract remnants (vault path / MCP note tools) survive" "memory has been the host auto-memory store since 0.36.0 — remove the reference or rewrite it against docs/memory-protocol.md"
+  fail RS-MEM-040 "skills/*/SKILL.md, docs/*.md, README.md, hooks/scripts/*.ts" "Obsidian-era memory contract remnants (vault path / MCP note tools) survive" "memory has been the host auto-memory store since 0.36.0 â€” remove the reference or rewrite it against docs/memory-protocol.md"
 
 # --- shipped-script contract ------------------------------------------------------
 # A skill that ships scripts/ ships a CLI, and it is run by two callers with different
 # needs: an agent following SKILL.md, and a person deciding whether to let the agent run
 # it at all. The second one has no way in except `--help`, so a shipped entry point that
 # cannot introduce itself is not finished. And a bundled script with no test is code that
-# reaches a user machine having never been executed by CI — env-setup.sh, which provisions
+# reaches a user machine having never been executed by CI â€” env-setup.sh, which provisions
 # the machine, was in exactly that state.
 #
 # An entry point is an executable .sh or a .ts with `import.meta.main`; the library modules
@@ -200,14 +207,14 @@ for scripts_dir in skills/*/scripts; do
   done
   (( found )) || fail RS-SCRIPT-036 "$scripts_dir" \
     "ships a scripts/ directory with no runnable entry point (no executable .sh, no .ts with import.meta.main)" \
-    "make the CLI executable, or drop the directory — a bundle nothing can run is dead weight in every install of /$skill"
+    "make the CLI executable, or drop the directory â€” a bundle nothing can run is dead weight in every install of /$skill"
 done
 
 for f in "${entry_points[@]}"; do
   base=${f##*/}; stem=${base%.*}
 
   # --help. Skipped for a .ts entry point when bun is absent (a bare image can still run the
-  # rest of this validator) — but only this check, never the test-coverage one below.
+  # rest of this validator) â€” but only this check, never the test-coverage one below.
   help_rc=0; help_out=""; checked_help=1
   case $f in
     *.sh) help_out=$(bash "$f" --help </dev/null 2>/dev/null) || help_rc=$? ;;
@@ -221,14 +228,14 @@ for f in "${entry_points[@]}"; do
   if (( checked_help )); then
     (( help_rc == 0 )) && [[ -n ${help_out//[[:space:]]/} ]] || fail RS-SCRIPT-034 "$f --help" \
       "exits $help_rc, and prints $( [[ -n ${help_out//[[:space:]]/} ]] && echo "output" || echo "nothing" )" \
-      "make --help print usage and exit 0 — it is the only way a person can review what an agent is about to run"
+      "make --help print usage and exit 0 â€” it is the only way a person can review what an agent is about to run"
   fi
 
   # The bundled copy is generated; the test covers the source it is generated from, so the
   # test is looked up by basename anywhere in the tree rather than beside the bundle.
   [[ -n $(find . -name "$stem.test.ts" -not -path './skills/*' -print -quit) ]] || fail RS-SCRIPT-035 "$f" \
     "a shipped CLI with no $stem.test.ts anywhere outside skills/" \
-    "add tests for the source this bundle is generated from — it reaches user machines otherwise untested"
+    "add tests for the source this bundle is generated from â€” it reaches user machines otherwise untested"
 done
 
 # hooks/hooks.json is auto-discovered by both hosts. Keep the Claude-only lifecycle file
@@ -249,8 +256,8 @@ codex_version=$(jq -r '.version' .codex-plugin/plugin.json)
 # The root Agent Plugins 1.0 manifest is deliberately ABSENT, and this guard is why.
 # Measured on Codex CLI 0.153.4: when a root plugin.json carrying
 # `$schema: agent-plugins.org/.../plugin.schema.json` is present, Codex loads the plugin
-# through its Agent Plugins path — which parses skills, MCP servers and apps but NOT hooks
-# (openai/codex#16430) — and reports "No plugin hooks" in its own plugin panel with no
+# through its Agent Plugins path â€” which parses skills, MCP servers and apps but NOT hooks
+# (openai/codex#16430) â€” and reports "No plugin hooks" in its own plugin panel with no
 # warning. Every studio hook goes silent: no briefing, no path-scoped standards, no
 # sub-agent brief. Removing the file restores all seven Codex hooks; so does removing just
 # the `$schema` key, but that key is REQUIRED by the standard (`required: ["$schema","name"]`)
@@ -259,7 +266,7 @@ codex_version=$(jq -r '.version' .codex-plugin/plugin.json)
 # `com.openai.codex`; Codex does not read hooks from it.
 #
 # Restore this manifest only together with evidence that Codex executes plugin hooks while it
-# is present — the marker-file probe in docs/adr/0002 answers that in one run.
+# is present â€” the marker-file probe in docs/adr/0002 answers that in one run.
 [[ ! -f plugin.json ]] || fail RS-MANIFEST-058 "plugin.json" \
   "the root Agent Plugins 1.0 manifest is back; on Codex its \$schema switches loading to a path that silently drops every plugin hook" \
   "delete it, or prove with the marker probe that Codex now runs plugin hooks alongside it (openai/codex#16430)"
@@ -316,7 +323,7 @@ fi
 # Regression guard: the version-keyed list moved OUT of core.md. Prose cannot be gated on a
 # crate's MSRV, which is how a 1.70 crate ended up being told to use a 1.98 API.
 ! grep -qE '\*\*1\.[0-9]+\*\*' rules/core.md \
-  || fail RS-DATA-075 "rules/core.md" "enumerates Rust versions in prose again" "prose cannot be gated on a crate MSRV, which is how a 1.70 crate got told to use a 1.98 API — move the entry into $timeline"
+  || fail RS-DATA-075 "rules/core.md" "enumerates Rust versions in prose again" "prose cannot be gated on a crate MSRV, which is how a 1.70 crate got told to use a 1.98 API â€” move the entry into $timeline"
 
 jq -e '
   .name == "rust-studio" and
@@ -338,10 +345,10 @@ for skill_dir in skills/*/; do
   skill_count=$((skill_count + 1))
 
   declared=$(awk -F': ' '/^name:/ { print $2; exit }' "$skill_dir/SKILL.md")
-  [[ $declared == "$skill" ]] || fail RS-SKILL-061 "skills/$skill/SKILL.md#name" "declares '$declared'; the directory is '$skill'" "make the frontmatter name equal the directory name — hosts address the skill by directory"
+  [[ $declared == "$skill" ]] || fail RS-SKILL-061 "skills/$skill/SKILL.md#name" "declares '$declared'; the directory is '$skill'" "make the frontmatter name equal the directory name â€” hosts address the skill by directory"
 
   description=$(awk '/^description:/ { sub(/^description:[[:space:]]*/, ""); gsub(/^"|"$/, ""); print; exit }' "$skill_dir/SKILL.md")
-  [[ -n $description ]] || fail RS-SKILL-062 "skills/$skill/SKILL.md#description" "empty or absent" "add a one-line description starting with \"Use when …\" — it is the only text the router sees"
+  [[ -n $description ]] || fail RS-SKILL-062 "skills/$skill/SKILL.md#description" "empty or absent" "add a one-line description starting with \"Use when â€¦\" â€” it is the only text the router sees"
   description_chars=$((description_chars + ${#description}))
 
   lines=$(wc -l < "$skill_dir/SKILL.md")
@@ -360,18 +367,15 @@ for skill_dir in skills/*/; do
   grep -q '^  allow_implicit_invocation:[[:space:]]*false' "$skill_dir/agents/openai.yaml" &&
     codex_user_invoked=1
 
-  case $skill in
-    add-dep|commit|eval-agents|evolve|migrate|new-crate|pr|progress-bar|publish|worktree-sweep) expected=1 ;;
-    *) expected=0 ;;
-  esac
+  expected=$(jq -r --arg skill "$skill" '.skills[$skill].explicitOnly | if . then 1 else 0 end' catalog.json)
 
   (( claude_user_invoked == expected )) ||
-    fail RS-SKILL-066 "skills/$skill/SKILL.md#disable-model-invocation" "expected $expected for this skill's side-effecting classification" "set the key to $expected, or move the skill on the side-effecting roster in this script"
+    fail RS-SKILL-066 "skills/$skill/SKILL.md#disable-model-invocation" "expected $expected for this skill's side-effecting classification" "set the key to $expected, or update its explicitOnly policy in catalog.json"
   (( codex_user_invoked == expected )) ||
-    fail RS-SKILL-067 "skills/$skill/agents/openai.yaml#allow_implicit_invocation" "expected allow_implicit_invocation false to be $expected for this skill's side-effecting classification" "regenerate the metadata, or move the skill on the side-effecting roster in this script"
+    fail RS-SKILL-067 "skills/$skill/agents/openai.yaml#allow_implicit_invocation" "expected allow_implicit_invocation false to be $expected for this skill's side-effecting classification" "regenerate the metadata, or update its explicitOnly policy in catalog.json"
 done
 
-(( skill_count > 0 )) || fail RS-SKILL-068 "skills/" "no skill directory contains a SKILL.md" "the distribution ships no skills at all — check that you are running from the plugin root"
+(( skill_count > 0 )) || fail RS-SKILL-068 "skills/" "no skill directory contains a SKILL.md" "the distribution ships no skills at all â€” check that you are running from the plugin root"
 openai_metadata_count=$(find skills -path '*/agents/openai.yaml' -type f | wc -l)
 (( openai_metadata_count == skill_count )) || fail RS-SKILL-069 "skills/*/agents/openai.yaml" "$openai_metadata_count metadata files for $skill_count skills" "run node scripts/generate-openai-metadata.mjs"
 
@@ -391,20 +395,20 @@ unknown_keys=$(awk '
     }
   }
 ' skills/*/SKILL.md)
-[[ -z $unknown_keys ]] || fail RS-SKILL-071 "skills/*/SKILL.md frontmatter" "unknown key(s): $(echo "$unknown_keys" | tr '\n' ' ')" "hosts ignore unknown keys silently — remove them, or add the key to the allowed set in this script once a host documents it"
+[[ -z $unknown_keys ]] || fail RS-SKILL-071 "skills/*/SKILL.md frontmatter" "unknown key(s): $(echo "$unknown_keys" | tr '\n' ' ')" "hosts ignore unknown keys silently â€” remove them, or add the key to the allowed set in this script once a host documents it"
 
 # `claude plugin validate --strict` does not inspect agent frontmatter at all. Confirmed by
 # planting `totallyMadeUpKey: banana`, `permissionMode: not_a_real_mode`, and
 # `isolation: teleport` into agents/rust-scout.md and re-running the validator: all three
 # passed (re-confirmed against Claude Code 2.1.260). Skills get the check above (`unknown
 # skill frontmatter keys`); agents did not, so a typo in `disallowedTools`, a bad `model:`
-# value, or an invented key in any of the 33 agent briefs would ship silently.
+# value, or an invented key in any agent brief would ship silently.
 #
 # What the plugin *validator* misses, the Claude Code *binary* does not: it ships the real Zod
 # schema that gates agent frontmatter (`WVr` in the 2.1.260 bundle, wired as
 # `agent: m(()=>WVr().strict())` with a `.safeParse()` that flags `unrecognized_keys`). That
-# schema — not what today's 33 briefs happen to use, and not a list this repo cannot verify the
-# host honours — is ALLOWED_KEYS's source of truth. Re-derive it after a Claude Code update:
+# schema â€” not what the current briefs happen to use, and not a list this repo cannot verify the
+# host honours â€” is ALLOWED_KEYS's source of truth. Re-derive it after a Claude Code update:
 #
 #   BIN=$(readlink -f "$(command -v claude)")   # resolves the launcher symlink to the real binary
 #   grep -aoP '(?<=describe\("Agent identifier)[\s\S]*?(?=\.describe\("Experimental per-agent options)' "$BIN" \
@@ -417,11 +421,11 @@ unknown_keys=$(awk '
 # Extracted 2026-09-04 from Claude Code 2.1.260 (binary at
 # ~/.local/share/claude/versions/2.1.260): 20 keys, matched below. `agents/openai.yaml` is
 # Codex metadata, not an agent brief, and is skipped by the `*.md` glob below.
-python3 - >&2 <<'AGENTFRONTMATTER' || fail RS-AGENT-080 "agents/*.md frontmatter" "an agent brief violates the frontmatter gate — the failing class is printed above" "fix the brief named above; the gate detail is in the python block in this script"
+python3 - >&2 <<'AGENTFRONTMATTER' || fail RS-AGENT-080 "agents/*.md frontmatter" "an agent brief violates the frontmatter gate â€” the failing class is printed above" "fix the brief named above; the gate detail is in the python block in this script"
 import re, pathlib, sys
 
 # Every key Claude Code 2.1.260's own agent-frontmatter schema recognizes (see the extraction
-# command above this heredoc) — not what the 33 briefs happen to use today. A key the briefs
+# command above this heredoc) â€” not what the current briefs happen to use today. A key the briefs
 # don't use yet still passes: adopting it is a later product decision, not a build failure now.
 # Only a key in neither this set nor current brief usage is an error.
 ALLOWED_KEYS = {
@@ -431,12 +435,12 @@ ALLOWED_KEYS = {
     "observeSubagents", "experimental",
 }
 # `permissionMode`, `hooks`, and `mcpServers` are real, host-recognized keys, but for a
-# *plugin*-loaded agent specifically — which is what every agents/*.md here is once this repo
-# ships — the plugin agent loader reads and then explicitly ignores all three with a runtime
+# *plugin*-loaded agent specifically â€” which is what every agents/*.md here is once this repo
+# ships â€” the plugin agent loader reads and then explicitly ignores all three with a runtime
 # warning ("...is ignored for plugin agents. Use .claude/agents/ for this level of control.",
 # found in the same 2.1.260 bundle's plugin-agent-frontmatter parser). They still belong in
 # ALLOWED_KEYS: this gate's job is "is this key real", not "does it do anything in every
-# install context" — but adopting one here is a no-op until installed as a personal agent.
+# install context" â€” but adopting one here is a no-op until installed as a personal agent.
 #
 # `isolation` is deliberately NOT enum-checked against "none"/"worktree" even though that exact
 # two-value enum exists in the 2.1.260 binary: it belongs to an unrelated session-dispatch
@@ -447,7 +451,7 @@ ALLOWED_KEYS = {
 # because it "sounds right" rather than sourced from the schema that governs this file.
 #
 # The four model values below remain a repo policy, not a host constraint: `WVr`'s `model`
-# field is also an unconstrained optional string — the host defers model-name validation to
+# field is also an unconstrained optional string â€” the host defers model-name validation to
 # wherever the value is resolved, not to frontmatter parsing. Keep this list in sync with what
 # the plugin actually ships (grep-verified across every brief).
 ALLOWED_MODELS = {"inherit", "sonnet", "opus", "haiku"}
@@ -484,22 +488,21 @@ sys.exit(1 if bad else 0)
 AGENTFRONTMATTER
 
 # Portable skills must describe host capabilities, not require one vendor's tool names or
-# interpolation variables. The two explicitly labeled Claude-only utilities are excluded.
+# interpolation variables. Catalog entries marked plugin-only are excluded.
 portability_fail=0
 for skill in skills/*/SKILL.md; do
-  case $skill in
-    skills/eval-agents/*|skills/progress-bar/*) continue ;;
-  esac
-  # Tool NAMES, not capabilities. `Task(Create|…)` alone let `TaskStop` and `Monitor` through
+  skill_name=${skill#skills/}; skill_name=${skill_name%/SKILL.md}
+  [[ $(jq -r --arg name "$skill_name" '.skills[$name].pluginOnly' catalog.json) == true ]] && continue
+  # Tool NAMES, not capabilities. `Task(Create|â€¦)` alone let `TaskStop` and `Monitor` through
   # into /resolve-pr, whose Mode B then told a Codex or standalone install to "arm a `Monitor`"
-  # — a tool that does not exist there. Match the backticked token so prose using the word
+  # â€” a tool that does not exist there. Match the backticked token so prose using the word
   # ("while the monitor runs") still passes.
   if grep -nE 'EnterPlanMode|ExitPlanMode|AskUserQuestion|Task(Create|Update|List|Get|Stop|Output)|SendMessage|Team(Create|Delete)|`(Monitor|BashOutput|KillShell|SlashCommand|TodoWrite|ScheduleWakeup|SendUserFile|CronCreate|CronList|CronDelete|EnterWorktree|ExitWorktree|PushNotification|RemoteTrigger)`|`/(loop|schedule|code-review|simplify|init|run|design|dataviz)`|CLAUDE_CODE_(EXPERIMENTAL_AGENT_TEAMS|ENABLE_TASKS)|\$\{user_config\.|\$\{CLAUDE_PLUGIN_ROOT\}|\$ARGUMENTS' "$skill"; then
     echo "non-portable host API in $skill" >&2
     portability_fail=1
   fi
 done
-(( portability_fail == 0 )) || fail RS-SKILL-072 "skills/*/SKILL.md" "$portability_fail host-specific API reference(s), listed above" "cite references/<name>.md instead of a host plugin-root variable — a bundled skill must resolve on any host"
+(( portability_fail == 0 )) || fail RS-SKILL-072 "skills/*/SKILL.md" "$portability_fail host-specific API reference(s), listed above" "cite references/<name>.md instead of a host plugin-root variable â€” a bundled skill must resolve on any host"
 
 if grep -R -n -F '[TODO:' \
   .claude-plugin .codex-plugin agents assets hooks scripts skills \
@@ -511,7 +514,7 @@ fi
 # Advertised skill counts drift every time a skill lands: the Codex manifest and
 # both READMEs claimed 55 at 58 skills. `portable` is the total minus the skills
 # whose SKILL.md declares itself Claude-only.
-claude_only=$(grep -lF 'Claude Code plugin only' skills/*/SKILL.md | wc -l)
+claude_only=$(jq '[.skills[] | select(.pluginOnly)] | length' catalog.json)
 portable=$(( skill_count - claude_only ))
 # Each entry is `count<TAB>file<TAB>phrase`, where N stands in for the number.
 # Phrases are matched literally, so "58 skills" (total) and "56 skills" (portable)
@@ -523,7 +526,7 @@ while IFS=$'\t' read -r want file phrase; do
     # Quote the phrase's literal half before turning N into a number class, so
     # the failure names what IS there instead of an empty string.
     escaped=$(printf '%s' "$phrase" | sed 's/[][\.*^$(){}?+|\\/]/\\&/g')
-    found=$(grep -oE "${escaped//N/[0-9]+}" "$file" | sort -u | tr '\n' ' ')
+    found=$(grep -oE "${escaped//N/[0-9]+}" "$file" | sort -u | tr '\n' ' ' || true)
     fail RS-DOC-090 "$file" "advertises \"${found:-nothing matching}\" where the tree measures \"$literal\"" "update the sentence to \"$literal\""
   fi
 done <<EOF
@@ -531,16 +534,11 @@ $skill_count	.codex-plugin/plugin.json	N focused skills
 $skill_count	README.md	**N skills**
 $skill_count	../../README.md	skills-N-111111
 $skill_count	../../README.md	coding agents: N skills
-$skill_count	../../README.md	| N skills |
-$portable	../../README.md	The other N skills
-$portable	../../README.md	The N host-neutral workflows
-$portable	../../INSTALL.md	The N host-neutral workflows
-$skill_count	../../INSTALL.md	The N skills are
-$skill_count	../../INSTALL.md	gets the N skills
+$skill_count	../../README.md	**Skills (N)**
+$portable	../../README.md	| N portable skills +
 $skill_count	../../install.sh	(N skills, 
 $portable	../../install.sh	(N portable skills
-$skill_count	docs/usage-guide.md	**Skills** (N)
-$skill_count	docs/usage-guide.md	## The skills (N)
+$skill_count	docs/usage-guide.md	catalog has N outcome skills
 EOF
 
 # --- prose gate -------------------------------------------------------------------
@@ -590,7 +588,7 @@ command -v bun >/dev/null 2>&1 || prose_unevaluated "hooks/scripts/prose-gate.ts
 # said when it could not evaluate, and neither may leak onto this script's stdout. stderr is
 # kept to its first three distinct lines: outside a git checkout it repeats one line per
 # file, 11 KB of the same complaint, and a finding is read, not grepped.
-prose_run() { # prose_run <args…>  →  prose_out, prose_err, prose_rc
+prose_run() { # prose_run <argsâ€¦>  â†’  prose_out, prose_err, prose_rc
   local err_file lines; err_file=$(mktemp)
   prose_rc=0
   prose_out=$(bun hooks/scripts/prose-gate.ts --json "$@" 2>"$err_file") || prose_rc=$?
@@ -665,24 +663,24 @@ say "prose gate: ${#prose_landing[@]} landing file(s) whole, ${#prose_rest[@]} f
 # Codex agents install OUTSIDE the plugin (~/.codex/agents/), so the ${CLAUDE_PLUGIN_ROOT}
 # form Claude Code expands has nothing to resolve against there. Generate into a
 # throwaway dir and assert nothing unresolved ships: a placeholder in a prompt fails
-# silently — the agent treats it as a path, cannot open it, and proceeds regardless.
+# silently â€” the agent treats it as a path, cannot open it, and proceeds regardless.
 codex_agent_probe=$(mktemp -d)
 node scripts/generate-codex-agents.mjs "$codex_agent_probe" >/dev/null ||
   fail RS-AGENT-081 "scripts/generate-codex-agents.mjs" "exited non-zero, so a malformed brief would vanish from a user Codex install rather than fail loudly" "run the script directly to see which brief it choked on"
 if grep -rlE '\$\{CLAUDE_[A-Z_]*\}' "$codex_agent_probe" >/dev/null 2>&1; then
-  fail RS-AGENT-082 "generated Codex agents" "an unresolved \${CLAUDE_…} placeholder survives generation, so the path is dead on Codex" "resolve the variable in the source brief under agents/"
+  fail RS-AGENT-082 "generated Codex agents" "an unresolved \${CLAUDE_â€¦} placeholder survives generation, so the path is dead on Codex" "resolve the variable in the source brief under agents/"
 fi
 rm -rf "$codex_agent_probe"
 
 # A review lens must not be able to edit the thing it is reviewing. In 0.51.0 /review's step-4
 # fan-out named agents that ship with Edit/Write; one of them applied its own findings to the
-# working tree — ~38 files across ~57 minutes, on uncommitted work, while a whole-workspace
+# working tree â€” ~38 files across ~57 minutes, on uncommitted work, while a whole-workspace
 # nextest run reported 7211/7211 green against a tree changing beneath it. The skill already
 # called its lenses "read-only"; nothing checked that the claim was true. This is that check.
-python3 - >&2 <<'REVIEWLENS' || fail RS-AGENT-083 "skills/review/SKILL.md" "names a write-capable agent as a review lens — the failing agent is printed above" "either declare 'disallowedTools: Write, Edit, NotebookEdit' in that agent's brief, or drop it from the lens list and let the owning gate lens walk references/<domain>.md instead"
+python3 - >&2 <<'REVIEWLENS' || fail RS-AGENT-083 "skills/review-work/SKILL.md" "names a write-capable agent as a review lens â€” the failing agent is printed above" "either declare 'disallowedTools: Write, Edit, NotebookEdit' in that agent's brief, or drop it from the lens list and let the owning gate lens walk references/<domain>.md instead"
 import pathlib, re, sys
 
-skill = pathlib.Path("skills/review/SKILL.md")
+skill = pathlib.Path("skills/review-work/SKILL.md")
 agents = {p.stem for p in pathlib.Path("agents").glob("*.md")}
 
 def read_only(name):
@@ -692,7 +690,7 @@ def read_only(name):
     return {"Write", "Edit"} <= denied
 
 # Prose wraps, so a per-line test splits a sentence from the word that exempts it. Group the
-# file into logical blocks — a bullet, a numbered step, or a paragraph — and judge each whole.
+# file into logical blocks â€” a bullet, a numbered step, or a paragraph â€” and judge each whole.
 blocks, cur, start = [], [], 1
 for lineno, line in enumerate(skill.read_text(encoding="utf-8").splitlines(), 1):
     if not line.strip() or re.match(r"\s*([-*]|\d+\.)\s", line) or line.startswith("#"):
@@ -705,7 +703,7 @@ if cur:
     blocks.append((start, " ".join(cur)))
 
 # A block that forbids an agent, or hands work off after the verdict, names it legitimately.
-EXEMPT = ("never", "/dev-task", "reviews nothing")
+EXEMPT = ("never", "/implement-change", "reviews nothing")
 
 bad = []
 for lineno, block in blocks:
@@ -713,7 +711,7 @@ for lineno, block in blocks:
         continue
     for name in re.findall(r"`([a-z][a-z0-9-]+)`", block):
         if name in agents and not read_only(name):
-            bad.append(f"  skills/review/SKILL.md:{lineno} spawns `{name}`, which ships with Edit/Write")
+            bad.append(f"  skills/review-work/SKILL.md:{lineno} spawns `{name}`, which ships with Edit/Write")
 
 if bad:
     print("review lenses that can write to the tree they audit:", file=sys.stderr)
@@ -725,8 +723,8 @@ REVIEWLENS
 # Three skills had gone missing from the guide and one from /help before this gate existed.
 for skill_dir in skills/*/; do
   skill=${skill_dir%/}; skill=${skill##*/}
-  grep -qF "\`/$skill\`" docs/usage-guide.md || fail RS-DOC-091 "docs/usage-guide.md" "does not list /$skill" "add a \`/$skill\` entry — an unlisted skill is one a user never finds"
-  grep -qF "\`/$skill\`" skills/help/SKILL.md || fail RS-DOC-092 "skills/help/SKILL.md" "does not list /$skill" "add a \`/$skill\` entry to the catalog"
+  grep -qE "\`/?$skill(\`|[[:space:]])" docs/usage-guide.md || fail RS-DOC-091 "docs/usage-guide.md" "does not list /$skill" "add a \`/$skill\` entry â€” an unlisted skill is one a user never finds"
+  grep -qwF "$skill" skills/inspect-project/references/procedures/context-catalog.md || fail RS-DOC-092 "skills/inspect-project/references/procedures/context-catalog.md" "does not list /$skill" "add a \`/$skill\` entry to the catalog"
 done
 
 # The README's hook inventory is derived from the hook config, so it cannot drift.
@@ -736,7 +734,7 @@ grep -qF "**$handlers Claude hook handlers across $events events**" README.md ||
   fail RS-DOC-093 "README.md (hook inventory)" "hooks/claude-hooks.json measures $handlers handlers across $events events" "update the README sentence to those two numbers"
 
 # `claude plugin eval` cases: prompt.md with the execution frontmatter and a real prompt,
-# at least one grader with a known type, and nothing that assumes this machine — cases
+# at least one grader with a known type, and nothing that assumes this machine â€” cases
 # run in a sandbox cwd, so an absolute path or ~/ silently scores 0.
 grader_types="regex tool_order tool_used file_exists llm baseline"
 eval_cases=0
@@ -775,21 +773,21 @@ for case_dir in evals/*/; do
     [[ -n $target_path && -f $target_path ]] || fail RS-EVAL-107 "evals/$case/prompt.md#targets" "target '$t' does not resolve to a skill, agent or rule file" "use skill:<dir under skills/>, agent:<file under agents/> or rule:<file under rules/>"
   done
 done
-(( eval_cases >= 1 )) || fail RS-EVAL-105 "evals/" "no eval cases found" "the suite the manifest advertises does not exist — add a case or drop experimental.evals"
+(( eval_cases >= 1 )) || fail RS-EVAL-105 "evals/" "no eval cases found" "the suite the manifest advertises does not exist â€” add a case or drop experimental.evals"
 jq -e '.experimental.evals == "./evals"' .claude-plugin/plugin.json >/dev/null ||
   fail RS-MANIFEST-057 ".claude-plugin/plugin.json#experimental.evals" "does not declare ./evals, so the shipped suite is never discovered" "set experimental.evals to ./evals"
 
-# A `references/x.md` §"Heading" pointer that names no heading sends the agent to look for a
+# A `references/x.md` Â§"Heading" pointer that names no heading sends the agent to look for a
 # section that isn't there. /review carried one for as long as the citation existed: it pointed
 # at "don't over-report", which is a bullet inside "Adversarial review, not echo chamber".
-python3 - >&2 <<'ANCHORS' || fail RS-SKILL-074 "skills/*/SKILL.md reference anchors" "a skill cites a section heading that does not exist in its bundled reference — the offender is printed above" "fix the citation, or add the section; a dangling anchor sends the agent looking for text that is not there"
+python3 - >&2 <<'ANCHORS' || fail RS-SKILL-074 "skills/*/SKILL.md reference anchors" "a skill cites a section heading that does not exist in its bundled reference â€” the offender is printed above" "fix the citation, or add the section; a dangling anchor sends the agent looking for text that is not there"
 import re, pathlib, sys
 bad = 0
 for sk in sorted(pathlib.Path("skills").iterdir()):
     f = sk / "SKILL.md"
     if not f.exists():
         continue
-    for m in re.finditer(r'references/([a-z0-9/-]+\.md)`?\s*§\s*(?:"([^"]+)"|([A-Za-z][\w \-/]*))',
+    for m in re.finditer(r'references/([a-z0-9/-]+\.md)`?\s*Â§\s*(?:"([^"]+)"|([A-Za-z][\w \-/]*))',
                          f.read_text(encoding="utf-8")):
         ref = m.group(1)
         sec = " ".join((m.group(2) or m.group(3) or "").split()).rstrip('.,;)')
@@ -804,29 +802,29 @@ sys.exit(1 if bad else 0)
 ANCHORS
 
 # Why this gate exists (first-party warrant, not a benchmark claim about catalog-size
-# degradation — no cited paper actually measures that for this setup): Anthropic,
+# degradation â€” no cited paper actually measures that for this setup): Anthropic,
 # "Effective context engineering for AI agents" (2025-09-29): "If a human engineer can't
 # definitively say which tool should be used in a given situation, an AI agent can't be
 # expected to do better." A description pair scoring high on lexical overlap with no
-# stated boundary is that failure mode made measurable: nothing tells the agent — or a
-# human skimming the catalog — which of the two to reach for.
+# stated boundary is that failure mode made measurable: nothing tells the agent â€” or a
+# human skimming the catalog â€” which of the two to reach for.
 #
 # Two free parameters below, each justified independently of which pairs it happens to
 # flag (an earlier version of this gate picked both post hoc, after seeing that they
-# landed on exactly the four pairs someone was willing to fix — that version is what this
+# landed on exactly the four pairs someone was willing to fix â€” that version is what this
 # comment and the code under it replace):
 #
 # - Stopwords: generic English, plus any content word whose document frequency across the
 #   catalog exceeds DF_THRESHOLD (computed from the catalog itself below, not a hand-picked
 #   word list). Only "rust" clears that bar (50/62 descriptions, 80.6%); the next-highest
-#   content word is "code" at 9/62 (14.5%) — a wide gap, so any cutoff between roughly 15%
+#   content word is "code" at 9/62 (14.5%) â€” a wide gap, so any cutoff between roughly 15%
 #   and 80% picks the same single word. "rust" is the catalog's own name and carries zero
 #   discriminative value, the same reasoning that already excludes "a"/"the". Words that
 #   were previously hand-excluded to dodge specific pairs ("claude", "running", "fmt",
 #   "gate", "gates") do not clear this bar (each <= 6.5% document frequency) and are back
 #   in the comparison.
 # - Threshold: Jaccard >= 0.20 over content words, unchanged from the original
-#   calibration — kept as an ordinary "more than incidental overlap" bar for short
+#   calibration â€” kept as an ordinary "more than incidental overlap" bar for short
 #   bag-of-words comparisons, not re-picked to fit this pair set. Restoring the
 #   hand-picked stopwords above nearly doubled the pairs scoring over threshold (4 -> 7);
 #   the threshold was not raised to compensate.
@@ -836,11 +834,11 @@ ANCHORS
 # today's actual overlap words are still a subset of the specific boilerplate words the
 # entry names. That second condition matters: an exception is keyed to *why* the score is
 # high, not just to the pair. If either description later picks up a shared word outside
-# that boilerplate set — real subject-matter overlap, not incidental phrasing — the
+# that boilerplate set â€” real subject-matter overlap, not incidental phrasing â€” the
 # exception stops covering the pair and this gate goes back to requiring a boundary
 # section, exactly as if the exception did not exist. The defect this gate catches is a
 # confusable pair with nowhere to resolve the confusion.
-python3 - >&2 <<'BOUNDARIES' || fail RS-SKILL-075 "skills/*/SKILL.md#description" "two descriptions are confusable with no boundary stated between them — the pair is printed above" "state the boundary in one of the two descriptions; the router picks by description alone"
+python3 - >&2 <<'BOUNDARIES' || fail RS-SKILL-075 "skills/*/SKILL.md#description" "two descriptions are confusable with no boundary stated between them â€” the pair is printed above" "state the boundary in one of the two descriptions; the router picks by description alone"
 import re, pathlib, sys
 from itertools import combinations
 from collections import Counter
@@ -855,27 +853,16 @@ GENERIC_STOPWORDS = {
 }
 
 DF_THRESHOLD = 0.5  # a content word in more than half the catalog carries no discriminative signal
-THRESHOLD = 0.20    # unchanged from the original calibration — see comment above
+THRESHOLD = 0.20    # unchanged from the original calibration â€” see comment above
 
 # Documented exceptions: pair scores over THRESHOLD but the overlap is shown to be
 # lexical (shared boilerplate/catalog-name words), not shared subject matter. Each entry
-# names the exact words that make up today's overlap ("boilerplate_words") — the
+# names the exact words that make up today's overlap ("boilerplate_words") â€” the
 # exception applies only while the pair's actual overlap is still a subset of that set
 # (checked below), so it cannot silently swallow a future real collision between the same
 # two skills.
-EXCEPTIONS = {
-    frozenset({"eval-agents", "progress-bar"}): {
-        "reason": (
-            "both are Claude-Code-only utility skills that open with the same host "
-            "qualifier — 'Use when running Claude Code...' — plus 'studio' from 'Rust "
-            "Code Studio'. eval-agents benchmarks reviewer/auditor agents against "
-            "planted defects; progress-bar configures a terminal status line. Strip the "
-            "boilerplate and the intersection is empty: no shared subject matter, and no "
-            "user request could plausibly land on the wrong one of the two."
-        ),
-        "boilerplate_words": frozenset({"claude", "code", "running", "studio"}),
-    },
-}
+EXCEPTIONS = {}
+
 
 def raw_content_words(desc):
     toks = re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)*", desc.lower())
@@ -908,7 +895,7 @@ DF_STOPWORDS = {w for w, c in df.items() if c / N > DF_THRESHOLD}
 skills = {name: {"words": d["words"] - DF_STOPWORDS, "boundary": d["boundary"]} for name, d in raw.items()}
 
 def names(boundary, other):
-    return boundary is not None and re.search(r"`/" + re.escape(other) + r"`", boundary)
+    return boundary is not None and re.search(r"`/?" + re.escape(other) + r"`", boundary)
 
 bad = 0
 for a, b in combinations(sorted(skills), 2):
@@ -931,7 +918,7 @@ BOUNDARIES
 
 # Script-safety gate: a January-2026 scan of 31,132 marketplace skills found 26.1% carried at
 # least one vulnerability, and skills shipping executable scripts were 2.12x more likely to
-# have one — and no publisher-trust mechanism exists for skills. This plugin ships 16 hook
+# have one â€” and no publisher-trust mechanism exists for skills. This plugin ships 16 hook
 # scripts, 5 build scripts, and 4 bundled into skills; to an installer it looks like every
 # other plugin in that scan. Measured on this tree: shipped hooks carry zero eval(, zero
 # `new Function`, zero fetch(, zero network URLs. This gate locks in that already-true
@@ -940,9 +927,9 @@ BOUNDARIES
 #   2. dynamic code execution (eval(/new Function) anywhere in a shipped script
 #   3. curl-pipe-to-shell outside the one declared installer, scripts/env-setup.sh
 #   4. process spawning outside hooks/scripts/_lib.ts's timeout-guarded run() helper
-# It checks exactly these four literal patterns and nothing else — see README.md's "Script
+# It checks exactly these four literal patterns and nothing else â€” see README.md's "Script
 # safety gate" section for what that does and does not prove.
-python3 - >&2 <<'SCRIPTSAFETY' || fail RS-SCRIPT-033 "shipped scripts" "a script violates the script-safety gate — the failing class is printed above" "fix the script named above; the gate detail is in the python block in this script"
+python3 - >&2 <<'SCRIPTSAFETY' || fail RS-SCRIPT-033 "shipped scripts" "a script violates the script-safety gate â€” the failing class is printed above" "fix the script named above; the gate detail is in the python block in this script"
 import re, sys
 from pathlib import Path
 
@@ -964,7 +951,7 @@ for f in hook_files:
 
 # --- 2. dynamic execution -----------------------------------------------------------------
 # eval/new Function run an arbitrary string as code, the one primitive no static review can
-# bound. This validator's own source is excluded — it names these patterns to check for them.
+# bound. This validator's own source is excluded â€” it names these patterns to check for them.
 def shipped_scripts():
     paths = list(Path("hooks/scripts").glob("*.ts"))
     paths += list(Path("scripts").glob("*.ts"))
@@ -984,7 +971,7 @@ for f in all_scripts:
 # Piping a network download straight into an interpreter runs whatever the remote end serves
 # today, no matter what was audited yesterday. scripts/env-setup.sh is the single declared
 # exception: a user-invoked installer that bootstraps rustup this way on purpose. Its
-# skills/env-setup/ mirror is kept byte-identical by sync-references.sh --check (below), so
+# skills/configure-tooling/ mirror is kept byte-identical by sync-references.sh --check (below), so
 # the exception is matched by filename rather than one hardcoded path.
 pipe_re = re.compile(r'curl\b[^\n|]*\|\s*(sh|bash)\b')
 for f in all_scripts:
@@ -1000,9 +987,9 @@ for f in all_scripts:
 # 8s) so a stuck child can't hang the session. Two real exceptions exist today, both inside
 # memory-store.ts, both with their own 2s timeout: gitMainRoot() (~line 43) runs a fully
 # literal `git rev-parse --git-common-dir`, and gitSignal()'s git() closure (~line 421-434)
-# runs an *interpolated* `git ${args}` — every call site passes a hardcoded string literal,
+# runs an *interpolated* `git ${args}` â€” every call site passes a hardcoded string literal,
 # never external/session-derived input. A literal raw call just needs its own timeout to
-# pass; an interpolated one must additionally be registered below — that registration is the
+# pass; an interpolated one must additionally be registered below â€” that registration is the
 # "where does this argument come from" comment, kept here since memory-store.ts is out of
 # scope for this change. Anything else must move to the run() helper.
 spawn_re = re.compile(r'Bun\.spawnSync\(|Bun\.spawn\(|execSync\(|execFileSync\(|\bspawnSync\(|\bexecFile\(')
@@ -1045,9 +1032,9 @@ SCRIPTSAFETY
 # A skill that names a studio agent will receive a verdict from it, and the one edit that
 # turns a gate result into an opinion is folding that verdict into the orchestrator's own
 # summary. The rule lives in docs/verdicts.md; this check is that the rule is REACHABLE from
-# every skill it binds — a skill installed on its own carries only its own references/.
+# every skill it binds â€” a skill installed on its own carries only its own references/.
 python3 - >&2 <<'VERDICTREACH' || fail RS-SKILL-077 "skills/*/references/verdicts.md" \
-  "a skill names a studio agent but cannot reach the relayed-verdict contract — the offender is printed above" \
+  "a skill names a studio agent but cannot reach the relayed-verdict contract â€” the offender is printed above" \
   "cite references/verdicts.md from the skill, or from a doc it already bundles (docs/sub-agents.md reaches 54 of them), then run ./scripts/sync-references.sh"
 import pathlib, sys
 agents = {p.stem for p in pathlib.Path("agents").glob("*.md")}

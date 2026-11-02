@@ -1,6 +1,0 @@
-interface:
-  display_name: "Worktree Sweep"
-  short_description: "Inspecting or pruning leftover git worktrees"
-  default_prompt: "Use $worktree-sweep when inspecting or pruning leftover git worktrees: removal only on approval."
-policy:
-  allow_implicit_invocation: false

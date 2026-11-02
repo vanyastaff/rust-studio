@@ -70,7 +70,7 @@ are incidental to what the fixture measures, so they stay out of recall:
 - `codec/base64.rs:37` — `decodes_small_input` asserts only `.is_ok()`, so it passes against a
   decoder returning categorically wrong bytes.
 
-## Result of the calibration run (rust-reviewer, plugin 0.30.0)
+## Result of the calibration run (reviewer (profile: correctness), plugin 0.30.0)
 
 **3/3**, each finding backed by an executable probe rather than an assertion — the reviewer
 synthesized a `Cargo.toml`, built a scratch crate, confirmed `clippy -D warnings` is clean, and

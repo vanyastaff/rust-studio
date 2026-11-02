@@ -252,9 +252,10 @@ describe("owesStudioVerdict — gate the nag to studio agents", () => {
     const roster = studioRoster(dir);
     expect(roster).not.toBeNull();
     // Known studio agents owe a verdict through the real roster.
-    expect(owesStudioVerdict("rust-reviewer", roster)).toBe(true);
-    expect(owesStudioVerdict("chief-architect", roster)).toBe(true);
-    expect(owesStudioVerdict("rust-studio:rust-builder", roster)).toBe(true);
+    expect(owesStudioVerdict("reviewer", roster)).toBe(true);
+    expect(owesStudioVerdict("designer", roster)).toBe(true);
+    expect(owesStudioVerdict("rust-studio:implementer", roster)).toBe(true);
+    expect(owesStudioVerdict("rust-builder", roster)).toBe(false);
     // Built-ins stay silent even against the real roster.
     expect(owesStudioVerdict("general-purpose", roster)).toBe(false);
     expect(owesStudioVerdict("claude-code-guide", roster)).toBe(false);

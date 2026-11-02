@@ -1,6 +1,7 @@
 // Tests for the UserPromptSubmit hook: prompt-scoped recall (which notes a prompt surfaces,
 // and that a surfaced note is not repeated), the machine-prompt guard, and the user-typed
 // skill detection that feeds the usage log.
+import { fileURLToPath } from "node:url";
 import { test, expect, describe } from "bun:test";
 import { mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -19,7 +20,7 @@ import {
 } from "./user-prompt-submit.ts";
 import { parseIndex } from "./memory-store.ts";
 
-const HOOK = new URL("./user-prompt-submit.ts", import.meta.url).pathname;
+const HOOK = fileURLToPath(new URL("./user-prompt-submit.ts", import.meta.url));
 
 const entries = parseIndex(
   [
@@ -67,9 +68,9 @@ describe("surfaced marker", () => {
 // route hint this hook used to carry fired 114 of 123 times on the first shape alone.
 const MACHINE_SAMPLES: string[] = [
   '<task-notification>\n<task-id>a0d5f4e3159d3d333</task-id>\n<tool-use-id>toolu_01DvjfUH5XktiJXepDNf4QSz</tool-use-id>\n<status>completed</status>\n<summary>Agent "Rust capability baseline" finished</summary>\n<note>A task-notification fires each time this agent stops</note>\n</task-notification>',
-  "<task-notification>\n<summary>Goal check-in: background work still running</summary>\n</task-notification>\n<system-reminder>\nGoal check-in: «возьми какой то новый issue в решение через /dev-task» is still active",
+  "<task-notification>\n<summary>Goal check-in: background work still running</summary>\n</task-notification>\n<system-reminder>\nGoal check-in: «возьми какой то новый issue в решение через /implement-change» is still active",
   '<teammate-message teammate_id="team-lead">\nRepo: /home/vanyastaff/orca/workspaces/flui/walleye (git worktree). Read-only — do not edit.\n\nAudit the **re-entrancy and interior-mutability** surface of `crates/flui-widgets/src/navigator/`',
-  '<agent-message agent_id="rust-reviewer-1">Semver review of the public surface finished — NEEDS WORK, 2 blockers.</agent-message>',
+  '<agent-message agent_id="rust-reviewer-1">Semver review-work of the public surface finished — NEEDS WORK, 2 blockers.</agent-message>',
   "<local-command-stdout>✔ Updated Rust Code Studio. Run /reload-plugins to apply.</local-command-stdout>",
   "[Request interrupted by user]",
   "<command-name>/clear</command-name>\n            <command-message>clear</command-message>\n            <command-args></command-args>",
@@ -88,7 +89,7 @@ const HUMAN_SAMPLES: string[] = [
   "мержи 259 когда пройдёт",
   "запусти агентов снова",
   "проверь роутинг и ссылки и оркестр работу и harmess и тд",
-  "/review the diff before we merge it",
+  "/review-work the diff before we merge it",
   "The release binary of our small Rust CLI is 48 MB. Why, and how do we shrink it?",
   "[Image #1] верны ли данные на скрине?",
   "Here is what the notification said, is it right?\n\n<task-notification>\n<status>completed</status>\n</task-notification>",
@@ -119,22 +120,22 @@ describe("isMachinePrompt", () => {
 
 describe("studioSkillsNamed — a typed /skill is a user invocation", () => {
   test("a slash token is a skill invocation only when it names a shipped skill, not a path", () => {
-    expect(namesStudioSkill("/review the last commit")).toBe(true);
+    expect(namesStudioSkill("/review-work the last commit")).toBe(true);
     expect(namesStudioSkill("run /rust-studio:audit-unsafe on src/raw.rs")).toBe(true);
     expect(namesStudioSkill("Review /home/me/proj/src/ffi.rs before we merge")).toBe(false);
     expect(namesStudioSkill("logs at /tmp/ci.log, and the crate is under /workspace/crates/core")).toBe(false);
     expect(namesStudioSkill("what is in /etc here")).toBe(false);
   });
   test("names are returned bare, in order, without the namespace or duplicates", () => {
-    expect(studioSkillsNamed("/rust-studio:dev-task https://github.com/x/y/issues/536")).toEqual(["dev-task"]);
-    expect(studioSkillsNamed("/spec then /spec-tasks, then /spec again")).toEqual(["spec", "spec-tasks"]);
+    expect(studioSkillsNamed("/rust-studio:implement-change https://github.com/x/y/issues/536")).toEqual(["implement-change"]);
+    expect(studioSkillsNamed("/design-change then /implement-change, then /design-change again")).toEqual(["design-change", "implement-change"]);
     expect(studioSkillsNamed("мержи 259 когда пройдёт")).toEqual([]);
   });
   test("an invocation is a leading /name — what the host expands as a command; a mention is not", () => {
-    expect(userInvokedSkill("/rust-studio:dev-task https://github.com/x/y/issues/536")).toBe("dev-task");
-    expect(userInvokedSkill("  /review src/lib.rs")).toBe("review");
-    expect(userInvokedSkill("/review")).toBe("review");
-    expect(userInvokedSkill("вместо полного /dev-task ты сделал коммит")).toBeNull();
+    expect(userInvokedSkill("/rust-studio:implement-change https://github.com/x/y/issues/536")).toBe("implement-change");
+    expect(userInvokedSkill("  /review-work src/lib.rs")).toBe("review-work");
+    expect(userInvokedSkill("/review-work")).toBe("review-work");
+    expect(userInvokedSkill("вместо полного /implement-change ты сделал коммит")).toBeNull();
     expect(userInvokedSkill("/compact")).toBeNull();
     expect(userInvokedSkill("/run/media/me/STORAGE/memory тут еще есть")).toBeNull();
     expect(userInvokedSkill("/code-review high pr 1020")).toBeNull();
@@ -170,13 +171,13 @@ describe("the hook end to end", () => {
 
   test("a typed /skill is logged as a user invocation; a mention mid-prompt is not", () => {
     const dir = mkdtempSync(join(tmpdir(), "ups-"));
-    const r = runHook({ session_id: "s-log", prompt: "/rust-studio:review the diff, then /spec if it grows; /home/me is a path", cwd: "/home/me/proj" }, dir);
+    const r = runHook({ session_id: "s-log", prompt: "/rust-studio:review-work the diff, then /design-change if it grows; /home/me is a path", cwd: "/home/me/proj" }, dir);
     expect(r.code).toBe(0);
     const rows = r.usage.trim().split("\n").map((l) => JSON.parse(l));
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ session_id: "s-log", cwd: "/home/me/proj", kind: "skill", name: "review", invoker: "user" });
+    expect(rows[0]).toMatchObject({ session_id: "s-log", cwd: "/home/me/proj", kind: "skill", name: "review-work", invoker: "user" });
     expect(Number.isNaN(Date.parse(rows[0].ts))).toBe(false);
-    const mention = runHook({ session_id: "s-log", prompt: "почему вместо /dev-task ты сделал коммит?", cwd: "/home/me/proj" }, dir);
+    const mention = runHook({ session_id: "s-log", prompt: "почему вместо /implement-change ты сделал коммит?", cwd: "/home/me/proj" }, dir);
     expect(mention.usage.trim().split("\n")).toHaveLength(1);
   });
 

@@ -1,4 +1,4 @@
-# Ground truth — testing/flaky-and-vacuous (agent: `qa-lead`, verdict: NEEDS WORK)
+# Ground truth — testing/flaky-and-vacuous (agent: `verifier (profile: testing)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"CI is green about nine runs in ten with no code changes. Review this test file — which tests are flaky, which cannot fail, and what does each need to become a real test? Then give a QA-GATE verdict."* The code under test is fine; every defect is in the tests and is one `rules/testing.md` names.
 

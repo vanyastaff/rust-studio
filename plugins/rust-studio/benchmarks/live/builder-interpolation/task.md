@@ -1,6 +1,7 @@
 ---
 kind: agent
-target: rust-builder
+target: implementer
+profile: implementation
 allowed_tools: [Read, Edit, Write, Glob, Grep, Bash, Agent]
 max_turns: 45
 timeout_seconds: 1500

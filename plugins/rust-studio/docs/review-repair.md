@@ -1,8 +1,8 @@
 # Close a review with bounded, focused repairs
 
-Applies to `/dev-task` after its first spec-compliance or code-quality review, including
-tasks driven by `/spec-tasks`. Initial review still covers the whole authorized change.
-Standalone `/review` remains read-only; a finding is not authorization to start repairs.
+Applies to `/implement-change --mode implement` after its first spec-compliance or code-quality review, including
+tasks driven by `/implement-change --mode plan`. Initial review still covers the whole authorized change.
+Standalone `/review-work --mode diff` remains read-only; a finding is not authorization to start repairs.
 
 ## Record the decision before dispatch
 
@@ -32,6 +32,8 @@ cannot erase an attempted round.
   tree identity when the context remains usable. Start fresh when it is unavailable,
   stale/contaminated, or scope needs a different brief; carry the record and count across.
   The implementer never signs off its repair. A fresh **task** still gets a fresh context.
+  For a fresh continuation of an active substantive task, use the resume handoff and pre-write
+  reconstruction in `references/elephant-workflow.md`; preserve task status and repair count.
 - Send only blocking fixes to the implementer. Before replacing a branch/guard, name the
   boundary input or state the original protected. Use the producer/caller contract,
   invariant, characterization test or trace to show required behavior is preserved. A

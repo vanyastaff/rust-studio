@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Build Repair"
-  short_description: "For a failing cargo build or check"
-  default_prompt: "Use $fix-build for a failing cargo build or check: diagnose and fix the reported compiler error."

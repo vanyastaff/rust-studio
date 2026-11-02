@@ -1,0 +1,498 @@
+{
+  "version": 1,
+  "skills": {
+    "inspect-project": {
+      "legacy": [
+        "adopt",
+        "detect-stack",
+        "help",
+        "recall",
+        "start",
+        "studio-doctor"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "adopt": {
+          "mode": "onboard",
+          "procedure": "docs/procedures/context-map.md"
+        },
+        "detect-stack": {
+          "mode": "classify",
+          "procedure": "docs/procedures/context-map.md"
+        },
+        "help": {
+          "mode": "catalog",
+          "procedure": "docs/procedures/context-catalog.md"
+        },
+        "recall": {
+          "mode": "recall",
+          "procedure": "docs/procedures/context-recall.md"
+        },
+        "start": {
+          "mode": "orient",
+          "procedure": "docs/procedures/context-map.md"
+        },
+        "studio-doctor": {
+          "mode": "diagnose-host",
+          "procedure": "docs/procedures/context-host.md"
+        }
+      },
+      "defaultEffect": "read"
+    },
+    "research-topic": {
+      "legacy": [
+        "research"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "research": {
+          "mode": "investigate",
+          "procedure": "docs/procedures/research-investigate.md"
+        }
+      },
+      "defaultEffect": "research-artifact"
+    },
+    "design-change": {
+      "legacy": [
+        "architecture",
+        "design-api",
+        "grill-me",
+        "model-domain",
+        "prototype",
+        "spec",
+        "test-plan"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "architecture": {
+          "mode": "architecture",
+          "procedure": "docs/procedures/design-architecture.md"
+        },
+        "design-api": {
+          "mode": "api",
+          "procedure": "docs/procedures/design-api.md"
+        },
+        "grill-me": {
+          "mode": "clarify",
+          "procedure": "docs/procedures/design-clarify.md"
+        },
+        "model-domain": {
+          "mode": "domain",
+          "procedure": "docs/procedures/design-domain.md"
+        },
+        "prototype": {
+          "mode": "prototype",
+          "procedure": "docs/procedures/design-prototype.md"
+        },
+        "spec": {
+          "mode": "specification",
+          "procedure": "docs/procedures/design-specification.md"
+        },
+        "test-plan": {
+          "mode": "tests",
+          "procedure": "docs/procedures/design-tests.md"
+        }
+      },
+      "defaultEffect": "design-artifacts"
+    },
+    "implement-change": {
+      "legacy": [
+        "bloat",
+        "debug",
+        "dev-task",
+        "fix-build",
+        "flaky-hunt",
+        "merge-conflicts",
+        "perf",
+        "refactor",
+        "resolve-pr",
+        "tdd",
+        "verify-loop"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "bloat": {
+          "mode": "size",
+          "procedure": "docs/procedures/change-optimization.md"
+        },
+        "debug": {
+          "mode": "diagnose",
+          "procedure": "docs/procedures/change-diagnosis.md#runtime-diagnosis"
+        },
+        "dev-task": {
+          "mode": "implement",
+          "procedure": "docs/procedures/change-delivery.md"
+        },
+        "fix-build": {
+          "mode": "compiler",
+          "procedure": "docs/procedures/change-diagnosis.md#compiler-failures"
+        },
+        "flaky-hunt": {
+          "mode": "intermittent",
+          "procedure": "docs/procedures/change-diagnosis.md#intermittent-tests"
+        },
+        "merge-conflicts": {
+          "mode": "conflicts",
+          "procedure": "docs/procedures/change-integration.md#conflicts"
+        },
+        "perf": {
+          "mode": "performance",
+          "procedure": "docs/procedures/change-optimization.md"
+        },
+        "refactor": {
+          "mode": "refactor",
+          "procedure": "docs/procedures/change-refactor.md"
+        },
+        "resolve-pr": {
+          "mode": "pr-feedback",
+          "procedure": "docs/procedures/change-integration.md#pr-feedback-collect-and-classify"
+        },
+        "tdd": {
+          "mode": "test-first",
+          "procedure": "docs/procedures/change-delivery.md#test-first-inner-loop"
+        },
+        "verify-loop": {
+          "mode": "repair-gate",
+          "procedure": "docs/procedures/change-delivery.md#repair-gate-loop"
+        }
+      },
+      "defaultEffect": "requested-scope"
+    },
+    "review-work": {
+      "legacy": [
+        "api-review",
+        "audit-unsafe",
+        "deps-check",
+        "doc-review",
+        "memory-doctor",
+        "prose",
+        "review",
+        "scope-check",
+        "security-audit",
+        "tech-debt"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "api-review": {
+          "mode": "api",
+          "procedure": "docs/procedures/review-code.md#api"
+        },
+        "audit-unsafe": {
+          "mode": "soundness",
+          "procedure": "docs/procedures/review-risk.md#soundness"
+        },
+        "deps-check": {
+          "mode": "dependencies",
+          "procedure": "docs/procedures/review-risk.md#dependencies"
+        },
+        "doc-review": {
+          "mode": "design",
+          "procedure": "docs/procedures/review-documents.md#design-decisions-and-drift"
+        },
+        "memory-doctor": {
+          "mode": "memory",
+          "procedure": "docs/procedures/review-structure.md#memory"
+        },
+        "prose": {
+          "mode": "prose",
+          "procedure": "docs/procedures/review-documents.md#prose"
+        },
+        "review": {
+          "mode": "diff",
+          "procedure": "docs/procedures/review-code.md#diff"
+        },
+        "scope-check": {
+          "mode": "scope",
+          "procedure": "docs/procedures/review-code.md#scope"
+        },
+        "security-audit": {
+          "mode": "security",
+          "procedure": "docs/procedures/review-risk.md#security"
+        },
+        "tech-debt": {
+          "mode": "structure",
+          "procedure": "docs/procedures/review-structure.md#structure"
+        }
+      },
+      "defaultEffect": "read"
+    },
+    "verify-work": {
+      "legacy": [
+        "acceptance",
+        "coverage",
+        "fuzz",
+        "lint",
+        "msrv-check",
+        "mutants",
+        "spec-verify"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "acceptance": {
+          "mode": "ledger",
+          "procedure": "docs/procedures/verification-acceptance.md#ledger"
+        },
+        "coverage": {
+          "mode": "coverage",
+          "procedure": "docs/procedures/verification-tests.md#coverage"
+        },
+        "fuzz": {
+          "mode": "fuzz",
+          "procedure": "docs/procedures/verification-tests.md#fuzz"
+        },
+        "lint": {
+          "mode": "lint",
+          "procedure": "docs/procedures/verification-toolchain.md#lint"
+        },
+        "msrv-check": {
+          "mode": "minimum-rust",
+          "procedure": "docs/procedures/verification-toolchain.md#minimum-rust"
+        },
+        "mutants": {
+          "mode": "mutation",
+          "procedure": "docs/procedures/verification-tests.md#mutation"
+        },
+        "spec-verify": {
+          "mode": "acceptance",
+          "procedure": "docs/procedures/verification-acceptance.md#acceptance"
+        }
+      },
+      "defaultEffect": "checks"
+    },
+    "write-docs": {
+      "legacy": [
+        "adr",
+        "changelog",
+        "remember",
+        "session-wrap"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "adr": {
+          "mode": "decision",
+          "procedure": "docs/procedures/writing-decision.md"
+        },
+        "changelog": {
+          "mode": "changelog",
+          "procedure": "docs/procedures/writing-changelog.md"
+        },
+        "remember": {
+          "mode": "memory",
+          "procedure": "docs/procedures/writing-memory.md"
+        },
+        "session-wrap": {
+          "mode": "handoff",
+          "procedure": "docs/procedures/writing-handoff.md"
+        }
+      },
+      "defaultEffect": "requested-artifacts"
+    },
+    "configure-tooling": {
+      "legacy": [
+        "ci-gate",
+        "env-setup",
+        "test-setup"
+      ],
+      "explicitOnly": false,
+      "pluginOnly": false,
+      "operations": {
+        "ci-gate": {
+          "mode": "ci",
+          "procedure": "docs/procedures/setup-ci.md"
+        },
+        "env-setup": {
+          "mode": "environment",
+          "procedure": "docs/procedures/setup-environment.md"
+        },
+        "test-setup": {
+          "mode": "tests",
+          "procedure": "docs/procedures/setup-tests.md"
+        }
+      },
+      "defaultEffect": "requested-configuration"
+    },
+    "maintain-project": {
+      "legacy": [
+        "add-dep",
+        "evolve",
+        "migrate",
+        "new-crate",
+        "worktree-sweep"
+      ],
+      "explicitOnly": true,
+      "pluginOnly": false,
+      "operations": {
+        "add-dep": {
+          "mode": "dependency",
+          "procedure": "docs/procedures/maintenance-dependency.md"
+        },
+        "evolve": {
+          "mode": "improve",
+          "procedure": "docs/procedures/maintenance-experiment.md"
+        },
+        "migrate": {
+          "mode": "migrate",
+          "procedure": "docs/procedures/maintenance-migration.md"
+        },
+        "new-crate": {
+          "mode": "scaffold",
+          "procedure": "docs/procedures/maintenance-scaffold.md"
+        },
+        "worktree-sweep": {
+          "mode": "worktrees",
+          "procedure": "docs/procedures/maintenance-worktrees.md"
+        }
+      },
+      "defaultEffect": "explicit-operation"
+    },
+    "maintain-studio": {
+      "legacy": [
+        "eval-agents",
+        "progress-bar"
+      ],
+      "explicitOnly": true,
+      "pluginOnly": true,
+      "operations": {
+        "eval-agents": {
+          "mode": "evaluate",
+          "procedure": "docs/procedures/studio-evaluate.md"
+        },
+        "progress-bar": {
+          "mode": "status-line",
+          "procedure": "docs/procedures/studio-status-line.md"
+        }
+      },
+      "defaultEffect": "explicit-operation"
+    },
+    "publish-change": {
+      "legacy": [
+        "commit",
+        "pr",
+        "publish"
+      ],
+      "explicitOnly": true,
+      "pluginOnly": false,
+      "operations": {
+        "commit": {
+          "mode": "commit",
+          "procedure": "docs/procedures/publishing-change.md#commit-mode"
+        },
+        "pr": {
+          "mode": "pull-request",
+          "procedure": "docs/procedures/publishing-change.md#pull-request-mode"
+        },
+        "publish": {
+          "mode": "release",
+          "procedure": "docs/procedures/publishing-change.md#release-mode"
+        }
+      },
+      "defaultEffect": "explicit-operation"
+    }
+  },
+  "agents": {
+    "researcher": {
+      "legacy": {
+        "rust-scout": "navigation"
+      },
+      "model": "haiku"
+    },
+    "designer": {
+      "legacy": {
+        "chief-architect": "architecture",
+        "product-steward": "architecture",
+        "api-design-lead": "api",
+        "api-designer": "api",
+        "error-architect": "api",
+        "async-systems-lead": "async",
+        "systems-perf-lead": "systems",
+        "tooling-lead": "tooling",
+        "release-lead": "release"
+      },
+      "model": "inherit"
+    },
+    "implementer": {
+      "legacy": {
+        "rust-builder": "implementation",
+        "rust-build-resolver": "implementation",
+        "build-engineer": "tooling",
+        "test-engineer": "testing",
+        "docs-engineer": "documentation",
+        "dependency-manager": "dependencies",
+        "async-runtime-specialist": "async",
+        "concurrency-specialist": "systems",
+        "database-specialist": "data",
+        "web-framework-specialist": "web",
+        "ffi-specialist": "platforms",
+        "embedded-specialist": "platforms",
+        "wasm-specialist": "platforms",
+        "macro-specialist": "macros",
+        "observability-engineer": "observability",
+        "perf-engineer": "performance"
+      },
+      "model": "sonnet"
+    },
+    "reviewer": {
+      "legacy": {
+        "rust-reviewer": "correctness",
+        "harsh-critic": "adversarial",
+        "security-auditor": "security",
+        "unsafe-auditor": "systems",
+        "slop-auditor": "structure",
+        "cli-specialist": "cli"
+      },
+      "model": "inherit"
+    },
+    "verifier": {
+      "legacy": {
+        "qa-lead": "testing"
+      },
+      "model": "inherit"
+    }
+  },
+  "priorAliases": {
+    "brainstorm": {
+      "skill": "design-change",
+      "mode": "explore"
+    },
+    "spec-tasks": {
+      "skill": "implement-change",
+      "mode": "plan"
+    }
+  },
+  "operationRules": {
+    "verify-work": "Checking does not authorize source repair. Explicit ledger or test/fuzz-target authoring is a distinct authorized artifact/test operation. A separate implementer writes tests; a fresh verifier judges resulting evidence. Production repair goes through implement-change.",
+    "design-change": "Prototype requests give an implementer explicit disposable paths and experiments; designer stays read-only. Record findings, return to design, and preserve unrelated work.",
+    "profiles": "Profiles are domain knowledge, not role permissions or exclusive owners. Choose role by action and independence, then load every applicable profile. A writer cannot supply independent sign-off on its own work."
+  },
+  "profiles": {
+    "adversarial": "docs/profiles/adversarial.md",
+    "api": "docs/profiles/api.md",
+    "architecture": "docs/profiles/architecture.md",
+    "async": "docs/profiles/async.md",
+    "cli": "docs/profiles/cli.md",
+    "correctness": "docs/profiles/correctness.md",
+    "data": "docs/profiles/data.md",
+    "dependencies": "docs/profiles/dependencies.md",
+    "documentation": "docs/profiles/documentation.md",
+    "implementation": "docs/profiles/implementation.md",
+    "macros": "docs/profiles/macros.md",
+    "navigation": "docs/profiles/navigation.md",
+    "observability": "docs/profiles/observability.md",
+    "performance": "docs/profiles/performance.md",
+    "platforms": "docs/profiles/platforms.md",
+    "release": "docs/profiles/release.md",
+    "security": "docs/profiles/security.md",
+    "structure": "docs/profiles/structure.md",
+    "systems": "docs/profiles/systems.md",
+    "testing": "docs/profiles/testing.md",
+    "tooling": "docs/profiles/tooling.md",
+    "web": "docs/profiles/web.md"
+  }
+}

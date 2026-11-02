@@ -5,7 +5,54 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.62.0] - 2026-11-02
+
+### Changed
+
+- Consolidated 59 public skills into 11 verb-object workflows and 33 installed agent personas
+  into five execution roles. Domain knowledge now lives in reusable profiles; independent
+  review still requires a different fresh worker, regardless of role name.
+- Preserved every legacy capability through an explicit operation/procedure map in
+  `catalog.json`. Retired command directories are removed rather than retained as aliases.
+  See the catalog consolidation design and migration guide for replacements.
+- Preserved explicit-only maintenance and publication, design-only and diagnosis-only stops,
+  bounded test/prototype authoring, authorization continuity and independent verification.
+- Migrated runtime routing, fixtures, metadata, standalone helper bundles and usage reports.
+  Legacy labels resolve without rewriting historical events or active task evidence.
+- Codex generation tracks ownership hashes: unchanged owned definitions can be retired;
+  customized or unknown definitions are preserved and reported.
+
+## [0.61.0] - 2026-11-02
+
+### Changed
+
+- `/dev-task` now coordinates context, design, fresh review, task reservation, a fresh
+  implementation handoff, integration and independent acceptance. `/spec --explore` owns
+  alternatives; `/dev-task --plan` owns task planning. Retired `/brainstorm` and `/spec-tasks`
+  and migrated their consumers; the catalog now has 59 skills and retains 33 distinct agents.
+- New designs use source-controlled `docs/designs/<slug>/`; existing `.rust-studio/specs`
+  artifacts work in place. Ambiguous slugs fail; explicit paths select a design. Acceptance
+  and compaction hooks recognize both roots, without merging their evidence counters.
+- Handoff preparation captures the reserved task and required context, intent, design and
+  source inputs. A new implementer reconstructs them read-only and checks CURRENT before
+  writing. Resume preserves active work and repair history. Packet checks do not authorize
+  work or prove semantic readiness, actual path independence, or fresh-context isolation.
+- Added an opt-in live two-conversation benchmark with artifact-only staging, a user amendment,
+  library/CLI acceptance probes and separate session/cost records.
+
+### Added
+
+- Fresh design review in `/doc-review --fresh`, also used by `/spec` for public API, security,
+  unsafe and cross-crate decisions. Reviewers receive artifacts without conversation history,
+  retain comprehension summaries, report missing lenses and preserve finding provenance across
+  at most three rounds. Unavailable independence remains unverified.
+- `/doc-review --drift` compares documented claims with source, callers, tests and configuration;
+  distinguishes aligned behavior, confirmed drift, planned behavior and unverified claims.
+- Portable `review-packet.ts` captures explicit UTF-8 inputs with SHA-256 digests and checks
+  whether the reviewed bytes are current. Changed or unavailable inputs invalidate the snapshot;
+  a current snapshot does not certify isolation, completeness or semantic correctness.
+- A pinned study of Google's Elephant-Goldfish Model records adopted ideas and differences
+  from Studio's existing blind acceptance and repair workflows.
 
 ## [0.60.1] - 2026-11-01
 

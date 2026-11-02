@@ -6,13 +6,13 @@ their model names or effort scales as interchangeable.
 
 | Role class | Work | Starting effort |
 |------------|------|-----------------|
-| `haiku` | Read-only locating, formatting, mechanical edits | low or medium |
-| `sonnet` | Normal implementation, tests, ordinary reviews | medium |
-| `opus` | Security audit, high-risk or unresolved design | high |
-| `inherit` | Gate, director, or adversarial lens | the parent session's effort |
+| `haiku` | Researcher: read-only locating and evidence gathering | host/user default |
+| `sonnet` | Implementer: authorized source, tests and artifacts | host/user default |
+| `inherit` | Designer, reviewer and verifier | the parent session's effort |
 
-Start at the listed class. Escalate after a failed check, material uncertainty, or a larger blast
-radius. Do not run the same task through a sequence of stronger models without new evidence.
+Profiles do not override models. Keep the user's chosen model/effort and host policy. Existing
+optional local alias mappings remain supported, including opus for user-selected routing;
+the catalog does not impose it on security work or introduce a provider model on Codex.
 
 An explicit per-agent launch override wins over the role definition; the definition wins over a
 host's default subagent model; otherwise the worker inherits the parent. A fork keeps the parent

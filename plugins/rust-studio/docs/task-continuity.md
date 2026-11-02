@@ -1,8 +1,10 @@
 # Task evidence that survives an interruption
 
-The spec's `tasks.md` remains the local source of task status. Per-task execution entries
-hold evidence behind those rows; the host task surface is only a mirror. No new ledger,
-background process or issue-tracker integration is required.
+The spec's source-controlled `tasks.md` is the task status record. New designs use
+`docs/designs/<slug>/`; legacy `.rust-studio/specs/<slug>/` and explicit project locations
+remain readable in place. Per-task execution entries hold evidence behind the rows; the
+host task surface is only a mirror. Do not add a parallel ledger or global active pointer.
+Artifact identity is its full path, not just its slug (`references/elephant-workflow.md`).
 
 ## Before dispatch: check the actual contracts
 
@@ -19,6 +21,8 @@ discard a requirement. Independent tasks need no speculative compatibility matri
 Maintain one execution entry per task, linked to its status row:
 
 - Source worker/worktree/branch and agreed integration destination.
+- Fresh-worker boundary, brief/packet, reconstruction and coordinator acceptance paths;
+  immediate pre-first-write freshness result. Missing isolation remains unverified.
 - Commit plus relevant uncommitted-diff identity (include untracked source/config), or a
   recorded diff/artifact when commits are unavailable. A branch name is not a revision.
 - Acceptance slice, commands/results, reviewed tree, active repair round and unresolved
@@ -32,7 +36,8 @@ Maintain one execution entry per task, linked to its status row:
 Use pointers and short facts, not copied logs or secrets. Persist discoveries when they
 affect the next task, not just at session end. The coordinator owns the shared record so
 parallel workers do not overwrite each other. Project-wide durable decisions also use the
-existing memory/ADR workflow; execution notes do not replace it.
+authorized ADR workflow; memory-store writes require user/host authorization. Execution notes
+do not authorize automatic memory capture.
 
 ## Resume by reconciling evidence, not replaying the plan
 
@@ -42,6 +47,13 @@ still cover the current tree. Preserve unrelated user work. Do not repeat implem
 because the host task list is empty, or trust a done row because a worker said COMPLETE.
 Missing identity/round history stays unknown until recovered from durable artifacts; never
 initialize a lost counter to zero.
+
+A fresh worker continuing an active task uses a current `mode: resume` brief with progress,
+tree identities, repair history and next action. Preserve in-progress status. Before each
+new handoff, verify actual write overlap, prerequisite evidence and shared contracts; reserve
+before capture, then freeze inventoried tasks.md during reconstruction. Keep the challenge
+outside the packet and recheck freshness immediately before the first write. Intended edits
+afterward make the input snapshot stale; acceptance uses current destination evidence.
 
 A worker-tree pass is not destination-tree evidence. Integrate authorized work, resolve
 conflicts by intent, then refresh affected checks in the destination. Conflict resolution,

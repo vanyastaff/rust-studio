@@ -3,9 +3,9 @@ max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
-targets: [skill:dev-task]
+targets: [skill:implement-change]
 ---
-Use `/rust-studio:dev-task` to adjudicate the next action from this supplied task record.
+Use `/rust-studio:implement-change --mode implement` to adjudicate the next action from this supplied task record.
 This is a workflow simulation, not a checkout: read the skill and relevant references, but
 do not implement changes, spawn workers, run project checks, or claim to have run them.
 

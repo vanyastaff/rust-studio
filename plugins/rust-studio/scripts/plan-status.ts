@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Read-only status summary for a /spec-tasks Markdown table.
+// Read-only status summary for a /implement-change --plan Markdown table.
 
 import { readFileSync } from "node:fs";
 
@@ -9,7 +9,7 @@ export type Summary = { tasks: Task[]; ready: string[]; counts: Record<TaskState
 
 const usage = `usage: plan-status.ts [--json] <tasks.md>
 
-Read a /spec-tasks plan and report todo, active, blocked, done, and ready task ids.
+Read a /implement-change --plan plan and report todo, active, blocked, done, and ready task ids.
 This command only reads the Markdown file.`;
 
 function cells(line: string): string[] {

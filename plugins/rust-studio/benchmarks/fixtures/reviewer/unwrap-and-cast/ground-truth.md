@@ -1,4 +1,4 @@
-# Ground truth — reviewer/unwrap-and-cast (agent: rust-reviewer)
+# Ground truth — reviewer/unwrap-and-cast (agent: reviewer (profile: correctness))
 
 Planted defects in `input.rs`. The agent should catch each.
 
@@ -9,4 +9,4 @@ Planted defects in `input.rs`. The agent should catch each.
 | GT-3 | 19   | BUG + PERF  | 🟠 | `…collect::<Vec<_>>()[n]` panics when `n` is out of range **and** allocates a throwaway `Vec`. Use `line.split(',').nth(n)` returning `Option<&str>`. |
 
 Pass = all three caught (match on type + line vicinity). A miss is a gap in the
-`rust-reviewer` prompt, not a reason to relax the fixture.
+`reviewer (profile: correctness)` prompt, not a reason to relax the fixture.

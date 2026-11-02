@@ -17,19 +17,20 @@ path. It is safe to re-run, and `--dry-run` prints the commands without running 
 
 ## Just the skills, on any agent
 
-The 61 skills are [Agent Skills](https://agentskills.io) and install into Claude Code,
+Ten portable skills use [Agent Skills](https://agentskills.io) and install into Claude Code,
 Codex, Cursor, OpenCode, Zed and ~70 other hosts, with no npm publish and no clone:
 
 ```text
 npx skills add .                                      # from a local clone
-npx skills add <owner>/rust-studio --skill dev-task --agent codex
+npx skills add <owner>/rust-studio --skill implement-change --agent codex
 ```
 
-The 59 host-neutral workflows bundle the standards and deterministic helpers they need. What you
-*don't* get this way: the 33 sub-agents, the hooks (session briefing, path-scoped rule injection,
-stop-guard), the status line, and working versions of the two clearly labeled Claude-only
-utilities (`/progress-bar`, `/eval-agents`). Skills that name a sub-agent fall back to running
-that phase inline (see
+The portable workflows bundle their procedures, profiles, standards and deterministic helpers.
+The eleventh entry, maintain-studio, requires the full plugin and supported host/source tooling. What you
+*don't* get this way: the 5 roles, the hooks (session briefing, path-scoped rule injection,
+stop-guard), the status line, and plugin maintenance operations
+(`/maintain-studio --mode status-line`, `/maintain-studio --mode evaluate`). Inline phases remain
+useful, but required fresh review/handoff/acceptance stays unverified without isolation (see
 [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md)).
 
 ## Agent Plugins (Cursor, GitHub Copilot CLI, Kiro)
@@ -47,8 +48,8 @@ manifest requires a host-delivery regression probe, not just a schema check. See
 [`Codex compatibility`](plugins/rust-studio/docs/codex-compat.md).
 
 Clients that implement Agent Plugins install through `npx skills add` (below) instead, and a
-client that does gets the 61 skills all the same — that path reads the flat `skills/` directory
-and needs no manifest at all.
+client reads the flat `skills/` directory and needs no manifest. The ten portable entries
+remain self-contained; installing maintain-studio alone cannot supply its plugin runtime.
 
 ## Codex plugin
 
@@ -62,13 +63,18 @@ Accept the trust prompt in your first interactive session and the session briefi
 from then on (trust is persisted per hook in `~/.codex/config.toml`).
 
 Codex plugins cannot bundle agent definitions, so `./install.sh` (from a clone, with node)
-also generates the 33 studio agents into `~/.codex/agents/` as Codex custom agents. Manual
+also generates the 5 studio agents into `~/.codex/agents/` as Codex custom agents. Manual
 equivalent:
 
 ```text
 node plugins/rust-studio/scripts/generate-codex-agents.mjs            # ~/.codex/agents
 node plugins/rust-studio/scripts/generate-codex-agents.mjs .codex/agents   # per-project
 ```
+
+Generation tracks ownership. Upgrades retire only unchanged previously generated definitions;
+unknown or customized files are preserved and reported for review. Do not delete matching old
+filenames by name alone. The three explicit-only groups are maintain-project, maintain-studio
+and publish-change; a model-discoverable workflow cannot invoke them on the user's behalf.
 
 ```text
 codex plugin marketplace add <owner>/rust-studio
@@ -149,7 +155,7 @@ Edit your `~/.claude/settings.json` (on Windows, `%USERPROFILE%\.claude\settings
 ### 3. Verify
 
 ```text
-/help                 # should show the Rust Code Studio catalog
+/inspect-project --mode catalog                 # should show the Rust Code Studio catalog
 /plugin               # rust-studio listed and enabled
 ```
 
@@ -161,7 +167,7 @@ Open a Rust project (one with a `Cargo.toml`) and start a session — the **Sess
 hook prints a stack briefing (crate, edition, MSRV, detected domain). Try:
 
 ```text
-/rust-studio:start
+/rust-studio:inspect-project --mode orient
 /rust-studio:detect-stack
 ```
 

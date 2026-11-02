@@ -1,7 +1,8 @@
 # Usage telemetry — which skills and agents are actually reached for
 
-The catalog cannot answer this about itself. Sixty-four skills and thirty-three agents ship
-with the plugin, and until 0.56.0 the only way to learn which ones anyone used was to mine
+The current catalog exposes eleven skills and five roles. Historical usage remains recorded
+under its original names and may be aggregated through catalog.json; migration never rewrites
+those events. Before 0.56.0 the only way to learn which entries anyone used was to mine
 the host's session transcripts: 1.7 GB, 1,187 sessions, once. That audit found 22 skills ever
 invoked and 42 never, and it could not tell need from noise, because the hook that was meant
 to route prompts to skills had spent 93% of its firings on sub-agent notifications. The log
@@ -19,8 +20,8 @@ neither is set):
 ```
 
 - `kind` — `skill` or `agent`.
-- `name` — the skill or agent, with the plugin's own namespace dropped (`rust-studio:review`
-  is `review`). A built-in agent or another plugin's skill keeps its name as given, so the
+- `name` — the invoked skill or role, with the plugin namespace dropped (`rust-studio:review-work`
+  is `review-work`). The historical example above retains its original name. A built-in agent or another plugin's skill keeps its name as given, so the
   report can show where the model went instead of the studio.
 - `invoker` — `model` when the Skill or Agent tool made the call, `user` when a person opened
   a prompt with `/name`. A typed skill never passes through the Skill tool, so the two hands
@@ -42,7 +43,7 @@ bun "scripts/usage-report.ts" --days 30    # wider; --days 0 for the whole log
 bun "scripts/usage-report.ts" --json       # one object
 ```
 
-The script is bundled with `/studio-doctor`, which runs it under `--usage`; in the plugin
+The script is bundled with `/inspect-project --mode diagnose-host`, which runs it under `--usage`; in the plugin
 checkout it is `hooks/scripts/usage-report.ts`. It prints, per skill and per agent:
 invocations split by hand, distinct sessions, and the projects they came from (the working
 directory's basename, with `rust-studio` flagged as plugin development and an eval-harness
@@ -89,7 +90,7 @@ floor for skills, not a count.
 The route hint that ran in the prompt hook from 0.44 to 0.55 named a skill whenever a prompt
 had the shape of work that skill owned. On synthetic English prompts it measured well. On the
 real traffic it fired 123 times, 114 of them on `<task-notification>` text no human typed,
-and the model obeyed 6 — and 0 of the 17 times it named `/review`. Ninety percent of the
+and the model obeyed 6 — and 0 of the 17 times it named `/review-work --mode diff`. Ninety percent of the
 human prompts were Russian; 73% were under 120 characters; none carried a compiler error, a
 panic, a diff or a `-->` location. No prompt-shape router could work on that traffic, and a
 hint that fires on noise teaches the model that the hint is noise. Routing now lives in the

@@ -1,19 +1,20 @@
 # When sub-agents are unavailable or not authorized
 
-Many skills here name an agent: "task owned by `rust-scout`", "delegate all writes to
-`rust-builder`", "`rust-reviewer` performs the final diff audit". Those agents are separate
+Many skills here name an agent: "task owned by `researcher` with the `navigation` profile", "delegate all writes to
+`implementer` with the `implementation` profile", "`reviewer` with the `correctness` profile performs the final diff audit". Those agents are separate
 processes with their own context, and they ship with the full studio — not with an individual
 skill. If you were installed on your own, they do not exist here, and nothing you can call
 will spawn them.
 
-**That is not a blocker. Play the roles yourself, sequentially, in this session.**
+**Continue useful work inline, but preserve required independence gaps.**
 The same fallback applies when host policy does not authorize delegation. Skill role names
 do not override that policy. Report a self-review as self-review, never as independent acceptance.
 
 A phase named for an agent is a phase, not a process. Scout the edit sites before you plan.
 Plan before you write. Read the finished diff back as an adversarial reviewer, hunting for
-what you would reject in someone else's work, before you call it done. The tiers, the quality
-gates and the verdicts are unchanged — only the number of processes is.
+what you would reject in someone else's work. Domain profiles and quality checks remain
+applicable, but inline work cannot satisfy required fresh design review, implementer
+reconstruction or independent acceptance. Report those checks as unverified.
 
 **Where the agent does exist, what it returns is a verdict, not raw material.** The reason a
 gate lens runs in its own process is that the session which read the code cannot also be the
@@ -23,7 +24,7 @@ message the user reads, attributed to the lens it came from, next to your own; i
 differs, say so and say why, rather than quietly merging a blocking verdict into a passing
 one. The full contract, including what each token means, is in `references/verdicts.md`.
 
-Where a skill names `rust-builder` and no worker exists: **you write** within the authorized
+Where a skill names `implementer` with the `implementation` profile and no worker exists: **you write** within the authorized
 scope. Establish edit sites and constraints when the task needs them; use a fresh review
 perspective when the risk calls for it. A scout, plan, or separate review earns its cost through
 filtering or independence, not because a fixed sequence requires it.

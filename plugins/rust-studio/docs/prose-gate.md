@@ -1,7 +1,7 @@
 # Prose Gate
 
 The accent a language model leaves in technical prose, checked deterministically by
-`hooks/scripts/prose-gate.ts` behind `/prose` and `validate-distribution.sh`.
+`hooks/scripts/prose-gate.ts` behind `/review-work --mode prose` and `validate-distribution.sh`.
 
 ## Why
 
@@ -31,7 +31,7 @@ Vocabulary is advisory. A root-matched list measured zero true positives and at 
 false ones on this corpus (`leverage` as a noun, `Robustness`, `unlocks`), and in Rust prose
 `unlock` is a mutex, `elevated` a privilege level, `realm` Basic auth, `robust` a crate name.
 The shipped whole-word list fired twice on the corpus on 2026-09-14, both honest (`highest leverage` in
-`skills/adopt/SKILL.md`, `Understand the landscape` in `agents/api-designer.md`).
+`skills/inspect-project/SKILL.md`, `Understand the landscape` in `docs/profiles/api.md`).
 
 ## The register
 
@@ -57,7 +57,7 @@ are 63 to 76 per cent of `wc -w` here).
 This repository's validator runs `--full --density 100` on the landing files and
 `--since <base>` on every other prose file: a touched sentence is always judged, an untouched
 one never, and a run that reads nothing fails. In a user's project it is advisory:
-`/pr`, `/changelog`, `/adr` and `docs-engineer` print the hits under the draft.
+`/publish-change --mode pull-request`, `/write-docs --mode changelog`, `/write-docs --mode decision` and `implementer` with the `documentation` profile print the hits under the draft.
 
 ## Source
 

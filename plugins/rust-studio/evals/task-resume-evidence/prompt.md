@@ -3,9 +3,9 @@ max_turns: 24
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
-targets: [skill:spec-tasks]
+targets: [skill:implement-change]
 ---
-Use `/rust-studio:spec-tasks` to decide how to resume this interrupted approved plan.
+Use `/rust-studio:implement-change --mode implement` to decide how to resume this interrupted approved plan.
 This is a supplied-record exercise; no real repository or tracker is available. Read the
 workflow and relevant references, then give the corrected local state and next actions;
 do not create branches, run checks, contact a tracker, or invent execution results.

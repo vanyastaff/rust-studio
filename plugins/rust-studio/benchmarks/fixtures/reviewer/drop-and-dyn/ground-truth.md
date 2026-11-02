@@ -1,4 +1,4 @@
-# Ground truth — reviewer/drop-and-dyn (agent: rust-reviewer)
+# Ground truth — reviewer/drop-and-dyn (agent: reviewer (profile: correctness))
 
 Planted defects in `input.rs`. The agent should catch each.
 
@@ -9,5 +9,5 @@ Planted defects in `input.rs`. The agent should catch each.
 | GT-3 | 59   | API/ERROR        | 🟠 | `pub fn parse(s: &str) -> Result<Config, Box<dyn std::error::Error>>` in a **library** returns an untyped boxed error: callers can't match on failure modes. Define a typed error (`thiserror` enum with `#[source]` chains). The box also lacks `+ Send + Sync`, so the error can't cross threads — required for most library boundaries. Use a concrete error type, or at minimum `Box<dyn std::error::Error + Send + Sync>`. |
 | GT-4 | 90   | DYN-COMPAT       | 🔴 | `Repo` is used as `dyn Repo` (lines 95, 99), but `fn query<Q: Into<String>>(&self, q: Q)` adds a **generic** method with no `where Self: Sized` — a generic method is not dispatchable, so this breaks `dyn`-compatibility and `Box<dyn Repo>` no longer compiles. Mark it `where Self: Sized`, take `q: &str` (or `String`) instead of a generic, or factor the dyn subset into a supertrait. |
 
-Pass = all four caught. A miss is a gap in the `rust-reviewer` prompt, not a
+Pass = all four caught. A miss is a gap in the `reviewer (profile: correctness)` prompt, not a
 reason to relax the fixture.

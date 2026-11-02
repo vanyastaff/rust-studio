@@ -26,7 +26,7 @@ deny-by-default (so the file cannot pass `-D warnings`). Those are real; they ar
 scoring because they are shape/tooling findings rather than the name-vs-body defect this fixture
 measures.
 
-Pass = `rust-reviewer` returns **NEEDS WORK** having read the bodies: GT-1, GT-2, GT-6, and GT-7
+Pass = `reviewer (profile: correctness)` returns **NEEDS WORK** having read the bodies: GT-1, GT-2, GT-6, and GT-7
 are the must-catch rows (a missed GT-2 is an authorization bypass waved through; a missed GT-7
 means the "fix" leaves it standing). Reporting "doc comments and naming are clear" is the exact
 failure this fixture catches. Recall = caught / 9.

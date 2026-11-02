@@ -1,4 +1,4 @@
-# Ground truth — database/n-plus-one-and-txn (agent: `database-specialist`, verdict: NEEDS WORK)
+# Ground truth — database/n-plus-one-and-txn (agent: `reviewer (profile: data)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Review this sqlx repository module before it goes to production load. List every finding with file:line and severity, then give a verdict."* Every query returns the right rows in the test database; every defect is one `rules/database.md` names.
 

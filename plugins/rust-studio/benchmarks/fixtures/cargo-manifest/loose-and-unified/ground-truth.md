@@ -1,4 +1,4 @@
-# Ground truth — cargo-manifest/loose-and-unified (agent: `dependency-manager`, verdict: NEEDS WORK)
+# Ground truth — cargo-manifest/loose-and-unified (agent: `reviewer (profile: dependencies)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Review this crate's `Cargo.toml` and the top of `lib.rs` before we publish 0.4.2. List every finding with the line number and severity, then give a verdict."* `cargo build` and `cargo publish --dry-run` succeed; every defect is one `rules/cargo-manifest.md` names. Line numbers refer to the file as shown (the manifest is the `//!` block).
 

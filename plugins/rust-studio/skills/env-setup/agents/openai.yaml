@@ -1,4 +1,0 @@
-interface:
-  display_name: "Env Setup"
-  short_description: "Provisioning a Rust machine: OS prerequisites, rustup"
-  default_prompt: "Use $env-setup when provisioning a Rust machine: OS prerequisites, rustup, components, cargo-binstall, studio tools."

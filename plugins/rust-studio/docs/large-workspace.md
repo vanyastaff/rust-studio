@@ -132,7 +132,7 @@ recompiles. Concurrency does bite: two cargo invocations against one `target/` s
 
 ## 4. Reduce what Claude reads
 - **Code intelligence**: this plugin **bundles a rust-analyzer LSP** (`../.lsp.json`), so
-  `rust-scout` (and you) jump to definitions / references and get diagnostics after each edit
+  `researcher` with the `navigation` profile (and you) jump to definitions / references and get diagnostics after each edit
   instead of scanning the tree — no extra plugin to install. It activates automatically once
   `rust-analyzer` is on PATH ([install it](https://rust-analyzer.github.io/manual.html#installation));
   if the binary is missing you'll see `Executable not found in $PATH` in the `/plugin` Errors
@@ -164,7 +164,7 @@ sparse-checkout only the crates a task needs, and symlink `target/` instead of d
 `sparsePaths` are repo-root-relative; root files (`Cargo.toml`, `Cargo.lock`,
 `rust-toolchain.toml`) are always checked out. Include `.claude` so the studio's rules/settings
 are present in the worktree. This also speeds up **subagent worktree isolation** (the studio's
-parallel `team-*` agents) — list every crate any subagent needs.
+parallel implementer workers) — list every crate any subagent needs.
 
 > Note: deny rules and hooks must also be in the **repo-root** `.claude/settings.json`, because
 > inside a worktree the working dir is the worktree root, not the crate you launched from.
@@ -183,7 +183,7 @@ possibly on a live branch with uncommitted WIP:
   worktree explicitly from `main`.
 - Commit early and BEFORE the final report — committed work survives an interrupted agent;
   an unwritten report does not.
-- Prune finished worktrees (`/worktree-sweep`): each is a full checkout, they accumulate
+- Prune finished worktrees (`/maintain-project --mode worktrees`): each is a full checkout, they accumulate
   fast, and they break repo gates that scan the filesystem.
 
 ## 6. Cross-crate access from a subdirectory
@@ -199,12 +199,14 @@ it does **not** load that crate's CLAUDE.md/rules/skills.)
   decisions stay consistent instead of being re-derived per crate. (Matches the studio's
   no-quick-wins / finish-the-ripple bar.)
 - **Save the plan to a file before editing.** A long cross-crate session compacts its context;
-  a written plan survives where chat history doesn't. The studio already does this — `/spec`
-  persists `spec.md` and `/spec-tasks` persists `tasks.md` under `.rust-studio/specs/<slug>/`. Use
-  them for any change spanning more than one crate.
+  a written plan survives where chat history doesn't. The studio already does this — `/design-change --mode specification`
+  persists `spec.md` and `/implement-change --mode plan` persists `tasks.md` under `docs/designs/<slug>/`.
+  Existing legacy `.rust-studio/specs/<slug>/` designs remain readable in place. Use the
+  context, fresh review and implementer reconstruction in `references/elephant-workflow.md`
+  for cross-crate changes; actual write overlap and prerequisite evidence govern dispatch.
 
 ## 8. Studio entry points
-- `/adopt` sets up this configuration for an existing workspace.
-- `/detect-stack` reports workspace size and what to apply.
+- `/inspect-project --mode onboard` sets up this configuration for an existing workspace.
+- `/inspect-project --mode classify` reports workspace size and what to apply.
 - See `${CLAUDE_PLUGIN_ROOT}/docs/templates/large-workspace-settings.json` for a ready-to-commit
   `.claude/settings.json`.

@@ -1,4 +1,4 @@
-# Ground truth — build-scripts/network-and-src-write (agent: `build-engineer`, verdict: NEEDS WORK)
+# Ground truth — build-scripts/network-and-src-write (agent: `reviewer (profile: tooling)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Review this `build.rs`. It works on the maintainer's laptop and fails on CI 'sometimes'. List every finding with file:line and severity, then give a verdict."* Every defect is one `rules/build-scripts.md` names.
 

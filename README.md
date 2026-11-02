@@ -1,32 +1,40 @@
 # Rust Code Studio
 
 <p>
-  <img src="https://img.shields.io/badge/skills-61-111111?style=flat-square" alt="61 skills">
-  <img src="https://img.shields.io/badge/agents-33-111111?style=flat-square" alt="33 agents">
+  <img src="https://img.shields.io/badge/skills-11-111111?style=flat-square" alt="11 skills">
+  <img src="https://img.shields.io/badge/agents-5-111111?style=flat-square" alt="5 roles">
   <img src="https://img.shields.io/badge/works%20with-70%2B%20hosts-111111?style=flat-square" alt="Works with 70+ hosts">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
-A Rust engineering studio for coding agents: 61 skills that carry the standards a strict crate
-maintainer would apply, 33 agents arranged architect → leads → specialists, path-scoped rules,
+A Rust engineering studio for coding agents: 11 skills that carry the standards a strict crate
+maintainer would apply, five execution roles with reusable domain profiles, path-scoped rules,
 and quality gates for libraries, async services, CLIs, and systems/embedded code.
 
-**New in 0.60.0:** [eight Rust guideline sources](plugins/rust-studio/docs/rust-guidelines.md)
-with explicit applicability, updated ownership/API review rules, and a November 2026 Codex
-and Claude Code compatibility refresh. Codex hooks recognize compatibility environment aliases
-and use the current event-context protocol. See the [changelog](plugins/rust-studio/CHANGELOG.md).
-The [agent/skill audit](plugins/rust-studio/docs/agent-skill-audit-2026-11.md) records scope
-and verification limits; the [nick-vels study](plugins/rust-studio/docs/upstream-nick-vels-2026-11.md)
-explains the stricter task-plan validation.
+**0.62.0 consolidates the catalog:** 59 former skill capabilities now have named modes under
+11 public skills, and 33 former agent definitions map to five roles plus applicable profiles.
+These mappings preserve legacy task/history interpretation. The old names are not exposed
+as installed wrappers. Ten skills are portable. Maintain-studio requires the full plugin.
 
-**0.60.1** fixes Codex agent installation from Windows CRLF checkouts.
+`/implement-change --mode implement` connects project context, design, fresh review, a new
+implementation worker and destination acceptance. `/design-change --mode explore` and `/implement-change --mode plan`
+provide exploration and planning without extra entry points. New designs live in `docs/designs`.
+legacy designs remain readable in place. See the [workflow](plugins/rust-studio/docs/elephant-workflow.md),
+[catalog](plugins/rust-studio/catalog.json) and
+[changelog](plugins/rust-studio/CHANGELOG.md).
+
+`/review-work --mode design --fresh` retains the fresh reviewer's understanding of the proposal.
+`/review-work --mode design --drift` compares documentation with current code. Explicit byte snapshots
+detect changed inputs without claiming semantic correctness or worker isolation. The
+[EGM study](plugins/rust-studio/docs/upstream-elephant-goldfish-2026-11.md) records the upstream
+evidence and adaptation boundaries.
 
 **What changes when you install it.** Your agent stops writing plausible Rust and starts writing
 Rust that a maintainer would merge: it locates before it edits, plans before it builds, follows
 the authorized scope, runs `clippy` and the tests as evidence instead of asserting success (plus
 `miri` where unsafe or concurrency is involved), and reviews its own diff against the standard
-for the files it touched — `unsafe.md` when a block appears, `api.md` on `lib.rs`, `ffi.md` at a
-C boundary.
+for the files it touched. The applicable standards include `unsafe.md` when a block appears,
+`api.md` on `lib.rs`, and `ffi.md` at a C boundary.
 
 ---
 
@@ -42,8 +50,8 @@ your row if you'd rather do it by hand:
 
 | You use | Run this | You get |
 |---|---|---|
-| **Claude Code** | `/plugin marketplace add <owner>/rust-studio` then `/plugin install rust-studio@rust-studio` | Everything: skills, 33 agents, hooks, LSP, status line |
-| **Codex** | `codex plugin marketplace add <owner>/rust-studio` then `codex plugin add rust-studio@rust-studio` | Skills, host-neutral hooks, 33 agents after one generator step (below) |
+| **Claude Code** | `/plugin marketplace add <owner>/rust-studio` then `/plugin install rust-studio@rust-studio` | Everything: skills, 5 roles, hooks, LSP, status line |
+| **Codex** | `codex plugin marketplace add <owner>/rust-studio` then `codex plugin add rust-studio@rust-studio` | Skills, host-neutral hooks, 5 roles after one generator step (below) |
 | **Cursor · Zed · Copilot · OpenCode · ~70 more** | `npx skills add .` | The skills, each self-contained |
 
 Safe to re-run. No npm publish is needed: the [skills CLI](https://github.com/vercel-labs/skills)
@@ -58,19 +66,21 @@ Prerequisites (Bun, rust-analyzer), local-clone installs and the `settings.json`
 <br>
 
 **Codex sub-agents take one extra command.** The plugin ships agent briefs as Markdown but Codex
-wants TOML, so generate them once — this writes all 33 into `~/.codex/agents/` (pass a path for a
+wants TOML, so generate the five roles into `~/.codex/agents/` (pass a path for a
 project-local `.codex/agents/`). Re-run after upgrading.
 
 ```bash
 node plugins/rust-studio/scripts/generate-codex-agents.mjs
 ```
 
-Without it the skills still work and run each phase inline instead of delegating.
+Upgrades retire only unchanged files recorded as generated. Unknown/customized old definitions
+are preserved and reported. Without managed agents, inline work remains useful but cannot
+claim required fresh review, handoff or independent acceptance.
 
 **One skill, one agent, no prompts:**
 
 ```bash
-npx skills add . --skill dev-task --agent codex -y
+npx skills add . --skill implement-change --agent codex -y
 npx skills add . --skill '*' --agent '*' -y
 ```
 
@@ -96,66 +106,73 @@ plugins → Add from repository.
 ### Your first session
 
 ```text
-/start                        # detects your stack, briefs the team, tells you what to run next
-/dev-task add a retry policy to the http client
+/inspect-project --mode orient                        # detects your stack, briefs the team, tells you what to run next
+/implement-change --mode implement add a retry policy to the http client
 ```
 
-`/start` is the orientation command. Run it once in a new repo. After that, `/dev-task` is the
+`/inspect-project --mode orient` is the orientation command. Run it once in a new repo. After that, `/implement-change --mode implement` is the
 one you'll use most.
 
 ### Three ways in
 
-1. **Run a skill**: `/dev-task <what you want>`. The skill drives the whole flow. This is the
+1. **Run a skill**: `/implement-change --mode implement <what you want>`. The skill drives the whole flow. This is the
    usual entry point. Type `/rust-studio:<name>` if a bare `/<name>` is ambiguous on your host.
-2. **Name an agent**: "use `unsafe-auditor` on this module" delegates one focused job. Your
+2. **Name an agent**: "use `reviewer` with the `systems` profile on this module" delegates one focused job. Your
    agent also picks the right specialist on its own from their descriptions.
 3. **Just describe the task**: no slash command is needed, and the routing picks a skill for you.
 
-### What actually happens when you run `/dev-task`
+### What actually happens when you run `/implement-change --mode implement`
 
-It is a quality loop, not a permission loop. You get asked once, at the point where your answer
-changes the work:
+Substantive work follows the Elephant lifecycle. Existing authorization continues. Questions
+are reserved for unresolved user decisions or missing authorization:
 
 ```
-0  triage      right-size the ceremony — a typo fix does not get the full pipeline
-1  locate      rust-scout maps the types, impls and call sites involved (read-only)
-2  plan        the smallest correct change that fits the existing architecture
-2.5 critique   an adversarial pass attacks the plan before you ever see it
-3  APPROVE     ← you decide here
-4  build       rust-builder writes code and tests, runs check/clippy/test/fmt
-5  review      rust-reviewer audits the diff — severity-tagged findings, no praise
-6  verdict     COMPLETE / NEEDS WORK / BLOCKED, with the command output as evidence
+0  triage       small obvious tasks keep the fast path
+1  context      original request, project constraints and current source evidence
+2  design       behavior, ownership, failures, migration and acceptance in one spec
+3  Goldfish     fresh review reconstructs and challenges that design
+4  handoff      fresh implementer reconstructs artifacts before its first write
+5  deliver      test-first implementation, review and destination integration
+6  acceptance   independent original-request check plus current project gates
+7  verdict      COMPLETE / NEEDS WORK / BLOCKED with evidence
 ```
 
-Between those gates, agents decide tactical calls and proceed. They come back to you for a
-strategic fork, an irreversible action, or an outward one — push, PR, `cargo publish`.
+Freshness checks bind the handoff to inventoried bytes. They do not certify semantics or
+permission. Explicit design-only requests stop at the design. Missing required isolation is
+reported as unverified. See the [workflow contract](plugins/rust-studio/docs/elephant-workflow.md).
 
 ### A whole feature, end to end
 
 ```text
-/recall <area>          # what was learned about this area last time
-/spec <feature>         # big or cross-crate: intent → explore → approaches → approved spec
-  /spec-tasks <slug>    #   split into ordered tasks, each run through /dev-task
-/dev-task <task>        # one unit of work
-/tdd <behavior>         # or build it test-first: RED → GREEN → REFACTOR
-/verify-loop            # drive checks to green with bounded auto-fix
-/review --full          # parallel multi-lens audit before merge
-/commit → /pr           # Conventional Commit, then open the PR
-/session-wrap           # capture what was learned for next session
+/inspect-project --mode recall <area>          # what was learned about this area last time
+/design-change --mode explore <idea>  # compare approaches when the direction is still open
+/design-change --mode specification <feature>         # self-contained design and fresh review
+/implement-change --mode plan <slug> # write/reconcile tasks, then stop before implementation
+/implement-change --mode implement <task>        # one unit of work
+/implement-change --mode test-first <behavior>         # or build it test-first: RED → GREEN → REFACTOR
+/implement-change --mode repair-gate            # drive checks to green with bounded auto-fix
+/review-work --mode diff --full          # parallel multi-lens audit before merge
+/publish-change --mode commit → /publish-change --mode pull-request           # Conventional Commit, then open the PR
+/write-docs --mode handoff           # preserve execution evidence; memory follows authorization
 ```
 
-**Small change?** Skip the spec. `/dev-task`, or even just `/lint` + `/review`, is enough. Plan
+**Small change?** Skip the spec. `/implement-change --mode implement`, or even just `/verify-work --mode lint` + `/review-work --mode diff`, is enough. Plan
 only when the approach is uncertain or the change spans files.
+
+New artifacts live in `docs/designs/<slug>/`: spec, tasks, optional acceptance ledger and
+verification report. Existing `.rust-studio/specs/<slug>/` designs remain readable in place.
+An ambiguous slug requires an explicit path. Custom locations use direct acceptance checks
+with `--cwd <root>`. Automatic Stop-guard discovery covers only the two default roots.
 
 ### The five you'll actually reach for
 
 | Command | When |
 |---|---|
-| `/dev-task <task>` | Implement one unit of work, properly |
-| `/review` | Audit your current diff before you push |
-| `/fix-build` | The build or type-check is broken |
-| `/add-dep <crate>` | Vet a crate: RUSTSEC, license, MSRV, features, redundancy |
-| `/help` | The live list, on the host you're on |
+| `/implement-change --mode implement <task>` | Implement one unit of work, properly |
+| `/review-work --mode diff` | Audit your current diff before you push |
+| `/implement-change --mode compiler` | The build or type-check is broken |
+| `/maintain-project --mode dependency <crate>` | Vet a crate: RUSTSEC, license, MSRV, features, redundancy |
+| `/inspect-project --mode catalog` | The live list, on the host you're on |
 
 ### If your project is a workspace
 
@@ -163,14 +180,14 @@ Most Rust projects become one, and the defaults stop fitting: a single root cont
 bloats with every crate's conventions or says nothing useful, and a scoped test command can lie
 to you.
 
-`/adopt` proposes **per-crate context files**. It shows you which crates earned one, which it
+`/inspect-project --mode onboard` proposes **per-crate context files**. It shows you which crates earned one, which it
 dropped and why, so you can strike individual crates instead of accepting a block of thirty, and
-it writes only what you approve. The content goes in `AGENTS.md`, plus a two-line `CLAUDE.md`
+it writes within the authorized adoption scope. The content goes in `AGENTS.md`, plus a two-line `CLAUDE.md`
 beside it holding only `@AGENTS.md`. That split is not a preference: Claude Code reads
 `CLAUDE.md` and not `AGENTS.md`, and only `CLAUDE.md` loads on demand as it moves through
 subdirectories, while Codex, Cursor and Copilot read `AGENTS.md`. A pointer file holds no facts,
-so the two cannot drift. Each file is capped and pruned by one rule — **a line true of two
-crates is not a crate line**, it gets promoted to the root and deleted from both.
+so the two cannot drift. Each file is capped and pruned by one rule: **a line true of two
+crates belongs in the root context**. Promote it there and remove both copies.
 
 The other half is knowing which commands survive being scoped to one crate:
 
@@ -181,7 +198,7 @@ cargo nextest run --workspace -E 'package(my-crate)'  # what to trust
 
 Features unify across the graph cargo actually builds, so a crate whose sibling enables a
 feature on a shared dependency passes on its own and fails under `--workspace`. `--all-features`
-does not save you — it applies only to the selected package. The full set of what scopes safely
+does not save you because it applies only to the selected package. The full set of what scopes safely
 and what lies, with reproductions, is in
 [`docs/large-workspace.md`](plugins/rust-studio/docs/large-workspace.md).
 
@@ -189,10 +206,10 @@ and what lies, with reproductions, is in
 
 ## What's under the hood
 
-- **Agents (33)** are the workforce, in three tiers: directors decide, leads own a domain and its
-  quality gate, specialists do the work. Each runs in its own context, so their reading never
-  crowds your conversation.
-- **Skills (61)** are focused workflows. They add process only when the task needs it.
+- **Five roles** separate research, design, implementation, review and verification. All except
+  implementer are read-only. Load every applicable domain profile. Independence comes from
+  separate fresh instances and controlled inputs, not role names.
+- **Skills (11)** are focused workflows. They add process only when the task needs it.
 - **Rules (22)** are path-scoped standards. Edit a matching file and a *pointer* to the relevant
   rule is injected automatically. The agent pulls the full text on demand. `core.md` on every
   `.rs`, `api.md` on `lib.rs`, `unsafe.md` when `unsafe` appears, `macros.md` inside macros.
@@ -211,50 +228,52 @@ Full detail: **[usage guide](plugins/rust-studio/docs/usage-guide.md)**.
 
 ## The skills
 
-`/start` for a tour, `/help` for the live list under the plugin.
+`/inspect-project --mode orient` for a tour, `/inspect-project --mode catalog` for the live list under the plugin.
 
-| Group | Skills |
-|---|---|
-| Build one thing | `dev-task` `tdd` `fix-build` `verify-loop` `debug` `refactor` |
-| Specify & design | `spec` `spec-tasks` `spec-verify` `architecture` `design-api` `model-domain` `adr` `brainstorm` `grill-me` |
-| Review & audit | `review` `api-review` `doc-review` `security-audit` `audit-unsafe` `scope-check` `tech-debt` `bloat` |
-| Test | `test-plan` `test-setup` `coverage` `mutants` `fuzz` `flaky-hunt` |
-| Ship | `commit` `pr` `resolve-pr` `changelog` `publish` `msrv-check` `ci-gate` |
-| Dependencies & perf | `add-dep` `deps-check` `perf` |
-| Team pipelines | `team-api` `team-async` `team-perf` `team-release` |
-| Memory | `recall` `remember` `memory-doctor` `session-wrap` |
-| Setup | `start` `adopt` `new-crate` `detect-stack` `lint` `env-setup` `help` `progress-bar` `eval-agents` |
+| Skill | Operations | Invocation and packaging |
+|---|---|---|
+| `inspect-project` | onboard, classify, catalog, recall, orient, diagnose-host | Discoverable; Portable |
+| `research-topic` | investigate | Discoverable; Portable |
+| `design-change` | architecture, api, clarify, domain, prototype, specification, tests, explore | Discoverable; Portable |
+| `implement-change` | size, diagnose, implement, compiler, intermittent, conflicts, performance, refactor, pr-feedback, test-first, repair-gate, plan | Discoverable; Portable |
+| `review-work` | api, soundness, dependencies, design, memory, prose, diff, scope, security, structure | Discoverable; Portable |
+| `verify-work` | ledger, coverage, fuzz, lint, minimum-rust, mutation, acceptance | Discoverable; Portable |
+| `write-docs` | decision, changelog, memory, handoff | Discoverable; Portable |
+| `configure-tooling` | ci, environment, tests | Discoverable; Portable |
+| `maintain-project` | dependency, improve, migrate, scaffold, worktrees | Explicit invocation; Portable |
+| `maintain-studio` | evaluate, status-line | Explicit invocation; Full plugin only |
+| `publish-change` | commit, pull-request, release | Explicit invocation; Portable |
 
 ## What you get, where
 
 | | skills via `npx` | Codex plugin | Claude Code plugin |
 |---|---|---|---|
-| 61 skills | yes | yes | yes |
+| 10 portable skills + 1 plugin-only maintenance entry | portable procedures; maintenance requires full plugin | yes, with maintenance host limits | yes |
 | Standards the skills cite | bundled per skill | bundled per skill | shared + hook injection |
-| 33 named studio agents | no (phases run inline) | yes, after one generator step | yes, spawned per phase |
+| 5 managed roles | no; required isolation still needs host workers | yes, after one generator step | yes |
 | Session briefing + path-scoped rule injection | no | yes | yes |
 | Irreversible-action guard | no | yes | yes |
-| Acceptance ledger (`/acceptance` checker) + Stop guard | checker only (the skill bundles it) | yes (the guard binds through the transcript path Codex hands its hooks) | yes |
+| Acceptance ledger (`/verify-work --mode ledger` checker) + Stop guard | checker only (the skill bundles it) | yes (the guard binds through the transcript path Codex hands its hooks) | yes |
 | Stop-guard, auto-capture, sub-agent verdict check | no | no (these read the Claude transcript) | yes |
 | LSP, status line, background monitors | no | no | yes |
-| Eval suite: 38 `claude plugin eval` cases + 45 agent fixtures + 3 live tasks on real crates (`tools/eval-runner.ts` runs them without early access, `--runs N` for repeatability) | no | no | yes |
+| Evaluation tooling (`tools/eval-runner.ts`) | no | supported source/runtime modes only | supported source/runtime modes |
 
 > [!NOTE]
-> `/progress-bar` and `/eval-agents` are Claude Code-only utilities, and explicit-invocation-only
-> in Codex. The other 59 skills, including `/env-setup` and `/help`, are standalone.
+> `/maintain-studio --mode status-line` and `/maintain-studio --mode evaluate` are Claude Code-only utilities, and explicit-invocation-only
+> in Codex. The other ten skills, including configure-tooling and inspect-project, are portable.
 
 > [!TIP]
-> A skill that says "delegate the build to `rust-builder`" runs that phase itself on a host with
+> A skill that says "delegate the build to `implementer` with the `implementation` profile" runs that phase itself on a host with
 > no sub-agents, rather than stalling. The rule is
 > [`docs/sub-agents.md`](plugins/rust-studio/docs/sub-agents.md); every skill that names an agent
 > ships a copy, and CI enforces it.
 
-The 59 host-neutral workflows bundle their standards and deterministic helpers, so they work
-installed alone. Two clearly labeled Claude utilities remain in the catalog for full-plugin use.
+Ten portable workflows bundle procedures, profiles, standards and deterministic helpers.
+The maintain-studio entry requires the full plugin and its supported host/source environment.
 
 The skills are [Agent Skills](https://agentskills.io) and run on any skill-capable host. Claude
 Code gets the full ambient studio. Codex gets the portable skills, host-neutral hooks (session
-briefing, routing and rustfmt nudges) and the 33 agents as generated Codex custom agents — never
+briefing, routing and rustfmt nudges) and the 5 roles as generated Codex custom agents — never
 Claude-specific lifecycle code.
 
 ---
@@ -263,8 +282,8 @@ Claude-specific lifecycle code.
 
 `docs/` and `rules/` are the single source of truth. Each skill carries a copy of what it cites
 under `skills/<name>/references/`, so it stays self-contained when installed standalone.
-Regenerate after editing either — never hand-edit a file under `references/`, the next
-regeneration discards it:
+Regenerate after editing either source. Changes made directly under `references/` are discarded
+by the next regeneration:
 
 ```bash
 cd plugins/rust-studio
@@ -277,7 +296,7 @@ bun test
 Validation catches manifest/marketplace drift (all three manifests), non-standard skill or agent
 frontmatter, description-budget regressions, skill descriptions that overlap without declaring a
 boundary, unsafe patterns in shipped scripts, stale metadata or references, section citations
-that resolve to nothing, missing inline fallbacks, vendor-only APIs leaking into the 60 portable
+that resolve to nothing, missing inline fallbacks, vendor-only APIs leaking into the 10 portable
 skills, catalog drift, and malformed eval cases. CI also runs `claude plugin validate --strict`
 and the [agnix](https://github.com/agent-sh/agnix) agent-config linter. The prompts themselves
 are measured, not just parsed: `plugins/rust-studio/tools/eval-runner.ts` runs every eval case and
@@ -313,9 +332,9 @@ rust-studio/                         (repo + neutral "rust-studio" marketplace)
 │       ├── .claude-plugin/plugin.json
 │       ├── .codex-plugin/plugin.json
 │       ├── .lsp.json                # bundled rust-analyzer LSP
-│       ├── agents/                  # 33 Claude agents + OpenAI UI metadata
+│       ├── agents/                  # 5 roles + OpenAI UI metadata
 │       ├── assets/                  # Codex install-surface artwork
-│       ├── skills/                  # 61 skills + references + OpenAI metadata
+│       ├── skills/                  # 11 skills + references + OpenAI metadata
 │       ├── evals/                   # claude plugin eval suite (plugin only)
 │       ├── hooks/                   # Claude hook config + Bun/TypeScript
 │       ├── rules/                   # 21 path-scoped Rust standards

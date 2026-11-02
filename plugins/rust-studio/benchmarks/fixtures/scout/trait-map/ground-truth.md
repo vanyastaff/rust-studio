@@ -1,4 +1,4 @@
-# Ground truth — scout/trait-map (agent: `rust-scout`, mode: map-recall, verdict: COMPLETE)
+# Ground truth — scout/trait-map (agent: `researcher (profile: navigation)`, mode: map-recall, verdict: COMPLETE)
 
 > Audit prompt the fixture is calibrated for: *"Map the `Codec` trait in this crate: its definition, every implementor (including cfg-gated, macro-generated and test-only ones), every call site of `encode`/`decode` through the trait, and the tests that exercise it. Return the file:line table and note gaps."*
 

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Security Audit"
-  short_description: "To audit Rust code or dependencies for security defects"
-  default_prompt: "Use $security-audit to audit Rust code or dependencies for security defects and RUSTSEC risk."

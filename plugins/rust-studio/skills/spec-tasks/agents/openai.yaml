@@ -1,4 +1,0 @@
-interface:
-  display_name: "Spec Tasks"
-  short_description: "A Rust spec needs a local task plan with dependencies"
-  default_prompt: "Use $spec-tasks when a Rust spec needs a local task plan with dependencies, file ownership, and status."

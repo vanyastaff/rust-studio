@@ -2,11 +2,11 @@
 
 The spec and its tests can agree while both omit what the user asked for. This pass checks
 delivered behavior against the user's words before comparing its findings with the spec.
-It supplements the normal `/spec-verify` gates; it cannot replace them.
+It supplements the normal `/verify-work --mode acceptance` gates; it cannot replace them.
 
 ## When it is required
 
-In `/spec-verify`, run this pass for a spec with multiple implementation tasks, changes across
+In `/verify-work --mode acceptance`, run this pass for a spec with multiple implementation tasks, changes across
 crates, or new/changed externally observable behavior. An explicit `--blind` request also
 requires it. A single local change with none of those triggers may skip it with the reason
 recorded. A missing original request or an unavailable fresh worker is an **unverified**
@@ -21,7 +21,7 @@ original input. If the intent is absent or incomplete, use the available user me
 reconstruct requirements from the spec. Record unresolved ambiguity as unverified while other
 checks proceed.
 
-Spawn a fresh **`qa-lead`** with only those quotations, the repository location, and neutral
+Spawn a fresh **`verifier` with the `testing` profile** with only those quotations, the repository location, and neutral
 environment/run prerequisites. No inherited conversation, forked design context, previous
 verdict, expected pass count, spec, tasks, or verification report. Do not reuse the QA worker
 that audited the spec. If the host cannot create that input boundary, an inline pass remains
@@ -55,7 +55,7 @@ The orchestrator owns the combined verdict:
 
 | Finding | Effect on verification |
 |---------|------------------------|
-| Retained requirement is partial or missing | NEEDS WORK; hand the concrete gap to `/dev-task`. A green spec/test suite does not cancel it. |
+| Retained requirement is partial or missing | NEEDS WORK; hand the concrete gap to `/implement-change --mode implement`. A green spec/test suite does not cancel it. |
 | Required scenario could not run, original input is incomplete, or independence was unavailable/contaminated | BLOCKED if a missing capability/input prevents verification; otherwise NEEDS WORK for a fresh valid pass. Never COMPLETE while this required check is unverified. |
 | Requirement was explicitly removed by a later user message | Record the amendment; absence is expected, not a defect. |
 | User scenarios pass but a normal gate fails | NEEDS WORK; both checks are required. |

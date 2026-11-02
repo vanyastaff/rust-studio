@@ -8,7 +8,7 @@
 //    cheap git signal (branch / changed crates / last commit) and surfaces the few notes
 //    that bind this work, plus index health (budget, index ↔ files). On Claude Code the
 //    host loads the index itself, so only pointers are added; on Codex the index rides
-//    along. Deeper retrieval is `/recall`. Never fails the session: on any error it
+//    along. Deeper retrieval is `/inspect-project --mode recall`. Never fails the session: on any error it
 //    injects what it can and exits 0.
 
 import { readFileSync, statSync } from "node:fs";
@@ -39,22 +39,22 @@ watchdog(15_000);
 
 /** Map the detected domain(s) to the right ENTRY skill, so the always-on briefing
  *  routes to the fitting command instead of the same generic list every session.
- *  Universal fallbacks (/dev-task, /review, /help) are surfaced separately. */
+ *  Universal fallbacks (/implement-change --mode implement, /review-work --mode diff, /inspect-project --mode catalog) are surfaced separately. */
 export function routeByDomain(domains: string[]): string {
   const picks: string[] = [];
-  // `/dev-task` leads every domain. It used to appear only for `cli`, so an async or library
-  // project was offered `/team-*` and `/design-api` and nothing else — and the moment the work
+  // `/implement-change --mode implement` leads every domain. It used to appear only for `cli`, so an async or library
+  // project was offered `/team-*` and `/design-change --mode api` and nothing else — and the moment the work
   // was one scoped change rather than a cross-cutting feature, none of the offers fit and the
   // session fell back to spawning `rust-builder` raw, skipping the scout/plan/gate phases.
   if (domains.includes("async/web"))
-    picks.push("`/dev-task` for implementation, `async-systems-lead` when boundaries need design, `/design-api` for the surface");
+    picks.push("`/implement-change --mode implement` for implementation, `designer` with the async profile when boundaries need design, `/design-change --mode api` for the surface");
   if (domains.includes("systems/embedded"))
-    picks.push("`/dev-task` for implementation, `/perf` for measurements, `/audit-unsafe` to review unsafe");
-  if (domains.includes("cli")) picks.push("`/dev-task` for a subcommand or one scoped change");
+    picks.push("`/implement-change --mode implement` for implementation, `/implement-change --mode performance` for measurements, `/review-work --mode soundness` to review unsafe");
+  if (domains.includes("cli")) picks.push("`/implement-change --mode implement` for a subcommand or one scoped change");
   if (domains.includes("library/crate"))
-    picks.push("`/dev-task` for implementation and `/design-api` for the public surface");
+    picks.push("`/implement-change --mode implement` for implementation and `/design-change --mode api` for the public surface");
   if (!picks.length)
-    return "run `/detect-stack` to classify the stack, then `/start` for guided onboarding.";
+    return "run `/inspect-project --mode classify` to classify the stack, then `/inspect-project --mode orient` for guided onboarding.";
   return picks.join("; ") + ".";
 }
 
@@ -65,13 +65,13 @@ export function routeByDomain(domains: string[]): string {
 export function healthLines(h: IndexHealth): string[] {
   const out: string[] = [];
   if (h.overCap)
-    out.push(`⚠ memory ${budgetLine(h)} — OVER the host cap: Claude Code stops loading past it. Run \`/memory-doctor\` now.`);
-  else if (h.nearCap) out.push(`⚠ memory ${budgetLine(h)} (${Math.round(h.fill * 100)}%) — run \`/memory-doctor\` before it hits the cap.`);
+    out.push(`⚠ memory ${budgetLine(h)} — OVER the host cap: Claude Code stops loading past it. Run \`/review-work --mode memory\` now.`);
+  else if (h.nearCap) out.push(`⚠ memory ${budgetLine(h)} (${Math.round(h.fill * 100)}%) — run \`/review-work --mode memory\` before it hits the cap.`);
   const bad: string[] = [];
   if (h.dangling.length) bad.push(`${h.dangling.length} index line(s) point at missing files`);
   if (h.unindexed.length) bad.push(`${h.unindexed.length} note(s) have no index line`);
   if (h.duplicates.length) bad.push(`${h.duplicates.length} duplicate index line(s)`);
-  if (bad.length) out.push(`⚠ memory index ↔ files disagree: ${bad.join("; ")} — \`/memory-doctor\` (reindex / archive).`);
+  if (bad.length) out.push(`⚠ memory index ↔ files disagree: ${bad.join("; ")} — \`/review-work --mode memory\` audits; any reindex/archive write needs separate authorization.`);
   return out;
 }
 
@@ -104,13 +104,13 @@ export function renderRecall(v: RecallView): string {
       lines.push(`## Project memory — pointers for this work${sig}`, "", ...ranked.map(bullet), "");
       lines.push(
         `_${entries.length} notes indexed (${budgetLine(health)}); Claude Code loads the index itself. ` +
-          "`/recall <topic>` to pull more, `/remember` to save what settles, `/memory-doctor` to audit. " +
+          "`/inspect-project --mode recall <topic>` to pull more, `/write-docs --mode memory` to save when host/user authorization permits, `/review-work --mode memory` to audit. " +
           `Contract: \`${contract}\`._`,
       );
     } else {
       lines.push(
         `_Project memory: ${entries.length} notes in \`${dir}\` (index loaded by Claude Code) — consult before ` +
-          "re-deriving a decision; `/recall <topic>` · `/remember` · `/memory-doctor`._",
+          "re-deriving a decision; `/inspect-project --mode recall <topic>` · `/write-docs --mode memory` · `/review-work --mode memory`._",
       );
     }
   } else {
@@ -118,7 +118,7 @@ export function renderRecall(v: RecallView): string {
     lines.push(
       `Durable decisions, gotchas, conventions, and fixes from earlier sessions live in \`${dir}\` ` +
         "(shared with Claude Code's auto-memory for this repo). Consult before re-deriving; capture what settles " +
-        `with \`/remember\`; contract: \`${contract}\`.`,
+        `with \`/write-docs --mode memory\` when host/user authorization permits saving; contract: \`${contract}\`.`,
       "",
     );
     const seen = new Set(ranked.map((r) => r.file));
@@ -127,7 +127,7 @@ export function renderRecall(v: RecallView): string {
     if (ranked.length) lines.push("**Most relevant to this work:**", ...ranked.map(bullet), "");
     if (rest.length) lines.push(ranked.length ? "**Everything else:**" : "", ...rest.slice(0, cap).map(bullet));
     if (rest.length > cap) lines.push(`- … ${rest.length - cap} more in \`${pathOf(INDEX_FILE)}\``);
-    lines.push("", "_`/recall <topic>` to pull more, `/remember` to save, `/memory-doctor` to audit._");
+    lines.push("", "_`/inspect-project --mode recall <topic>` to pull more, `/write-docs --mode memory` to save, `/review-work --mode memory` to audit._");
   }
   if (warn.length) lines.push("", ...warn);
   return lines.filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n");
@@ -185,12 +185,12 @@ if (!manifestExists) {
   briefing =
     "## Rust Code Studio active\n\n" +
     "Rust Code Studio plugin is active, but no Cargo.toml was found at the session root. " +
-    "If this is a Rust project, run /detect-stack from its root. " +
+    "If this is a Rust project, run /inspect-project --mode classify from its root. " +
     "Studio protocol: proceed within the authorized scope; ask for unresolved direction or permission.\n\n" +
     "**Rust work without a checkout still routes through the studio:** code pasted for review → " +
-    "`/review` (add `/audit-unsafe`, `/security-audit`, `/api-review` for their lenses); a design or " +
-    "plan to attack → `/brainstorm` (spawns `harsh-critic`); crate/module boundaries → `/architecture`; " +
-    "a reshape that must not change behavior → `/refactor`; scope questions → `/scope-check`. Each ends " +
+    "`/review-work --mode diff` (add `/review-work --mode soundness`, `/review-work --mode security`, `/review-work --mode api` for their lenses); a design or " +
+    "plan to attack → `/design-change --mode explore` (spawns `reviewer` with the adversarial profile); crate/module boundaries → `/design-change --mode architecture`; " +
+    "a reshape that must not change behavior → `/implement-change --mode refactor`; scope questions → `/review-work --mode scope`. Each ends " +
     "in a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict with the evidence behind it.";
 } else {
   // One manifest reader for both briefs (`cargo-manifest.ts`); the sub-agent brief shows the
@@ -221,7 +221,7 @@ if (!manifestExists) {
       "(state the choice + one-line rationale, then proceed); ask only on " +
       "strategic/irreversible/outward steps. No quick wins, no shims, finish the cross-crate " +
       "ripple; observability ships in the same pass. See docs/working-preferences.md.",
-    "**Team:** directors (chief-architect, product-steward) → leads → specialists. " +
+    "**Team:** researcher → designer → implementer → reviewer → verifier; select profiles by domain and use fresh workers for independent judgment. " +
       "Path-scoped Rust standards are injected automatically when you edit matching files.",
     `**Studio config:** gates **${gates}** · tests **${testRunner}** · progress **${progress}**` +
       (msrvDefault ? ` · MSRV-default **${msrvDefault}**` : "") +
@@ -233,9 +233,9 @@ if (!manifestExists) {
       '"unverified" as a valid state. See docs/verdicts.md §"Review modes".',
     `**Start here${domains.some((d) => d.startsWith("(undetermined")) ? "" : ` (${domains.join(", ")})`}:** ` +
       routeByDomain(domains),
-    "**Always available:** `/dev-task` to implement one unit of work, `/review` to audit a diff, " +
-      "`/help` for the full catalog, `/start` for guided onboarding.",
-    "**Skills first:** for any non-trivial task, check `/help` for a studio skill that fits " +
+    "**Always available:** `/implement-change --mode implement` to implement one unit of work, `/review-work --mode diff` to audit a diff, " +
+      "`/inspect-project --mode catalog` for the full catalog, `/inspect-project --mode orient` for guided onboarding.",
+    "**Skills first:** for any non-trivial task, check `/inspect-project --mode catalog` for a studio skill that fits " +
       "before improvising — prefer the skill's discipline (gates, agents, evidence) over ad-hoc steps.",
   ];
 
@@ -244,7 +244,7 @@ if (!manifestExists) {
       "",
       `**Large workspace (${members} member globs):** scope context to the crate you ` +
         "touch — per-crate CLAUDE.md, `permissions.deny` on target/generated, and the " +
-        "bundled rust-analyzer LSP for symbol lookup. Run `/adopt` or see docs/large-workspace.md.",
+        "bundled rust-analyzer LSP for symbol lookup. Run `/inspect-project --mode onboard` or see docs/large-workspace.md.",
     );
   }
 

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Spec Verify"
-  short_description: "To verify a Rust implementation meets an existing spec before"
-  default_prompt: "Use $spec-verify to verify a Rust implementation meets an existing spec before closing it."

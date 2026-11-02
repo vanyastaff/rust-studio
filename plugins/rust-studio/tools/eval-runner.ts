@@ -3,14 +3,14 @@
 //
 // `claude plugin eval` is the host's runner for evals/, and it is early access: on an account
 // without it the command prints a notice and scores nothing. This runner executes the same
-// cases — and the benchmarks/ fixtures behind /eval-agents, and the live build tasks under
+// cases — and the benchmarks/ fixtures behind /maintain-studio --mode evaluate, and the live build tasks under
 // benchmarks/live/ — with `claude -p --plugin-dir`, so the studio's prompts can be measured on
 // any account that can run Claude Code at all. It is a measurement tool for the plugin's own
 // source (skills, agents, rules), not for user code.
 //
 //   bun tools/eval-runner.ts                         # every evals/*/ case, one run each
 //   bun tools/eval-runner.ts --case simplify-spaghetti --case routing-start
-//   bun tools/eval-runner.ts --target dev-task            # every case whose `targets:` names it
+//   bun tools/eval-runner.ts --target implement-change    # every case whose `targets:` names it
 //   bun tools/eval-runner.ts --coverage                   # which skills/agents/rules have a case
 //   bun tools/eval-runner.ts --runs 3                # three runs per case: min / mean / max
 //   bun tools/eval-runner.ts --fixtures              # every benchmarks/fixtures/*/*/ via its agent
@@ -39,14 +39,18 @@
 // fixture dir in `LIVE_DIR` — its exit code is the score, its output the evidence. That is how
 // the writing agents (`rust-builder`, `rust-build-resolver`) and the orchestrating skills are
 // measured; a read-only fixture cannot.
+// `handoff_prompt: continuation.md` plus an exact `handoff_files: [...]` list opts into a
+// design-author to fresh implementation run. Only the baseline and declared artifacts cross;
+// both native session traces are saved and share --budget. See benchmarks/live/cold-handoff/.
 //
 // Graders run without the plugin, in an empty cwd, so no CLAUDE.md or hook can shape a score.
 // Results land under evals/results/<stamp>/ (gitignored): one JSON per run, plus summary.md and
 // summary.json. Spend is capped per run with --budget (USD) and reported per run and in total.
 
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, statSync, cpSync, rmSync } from "node:fs";
+import { profilePath, readMigrationCatalog } from "../hooks/scripts/catalog.ts";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, statSync, lstatSync, cpSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VERDICT } from "../hooks/scripts/subagent-stop.ts";
 
@@ -199,10 +203,10 @@ function parseArgs(argv: string[]): Options {
 // ---------------------------------------------------------------------------------------------
 
 export function splitFrontmatter(text: string): { fm: Record<string, string>; body: string } {
-  const m = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);
+  const m = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n)?([\s\S]*)$/.exec(text);
   if (!m) return { fm: {}, body: text };
   const fm: Record<string, string> = {};
-  for (const line of m[1].split("\n")) {
+  for (const line of m[1].split(/\r?\n/)) {
     const kv = /^([A-Za-z_][\w-]*):\s*(.*)$/.exec(line);
     if (kv) fm[kv[1]] = kv[2].trim();
   }
@@ -217,7 +221,7 @@ export function parseList(v: string | undefined): string[] {
 
 /** `follow-ups.md`: user replies separated by lines containing only `---`. */
 export function parseFollowUps(text: string): string[] {
-  return text.split(/\n---\n/).map((s) => s.trim()).filter(Boolean);
+  return text.split(/\r?\n---\r?\n/).map((s) => s.trim()).filter(Boolean);
 }
 
 export interface Grader {
@@ -240,12 +244,17 @@ export function loadGraders(dir: string): Grader[] {
 }
 
 export interface RunTrace {
+  /** CLI identity assigned to this conversation (never inherited across a cold handoff). */
+  sessionId?: string;
   lastMessage: string;
   /** Multi-turn cases only: every assistant turn with the scripted user replies between them. */
   transcript?: string;
   toolsUsed: string[]; // tool names in order
   skills: string[]; // Skill tool `skill` inputs
   agents: string[]; // Agent tool `subagent_type` inputs
+  /** Original invocation scope; absent in historical results, never fabricated from role names. */
+  skillCalls?: Array<{ name: string; args: string }>;
+  agentCalls?: Array<{ name: string; prompt: string }>;
   costUsd: number;
   turns: number;
   durationMs: number;
@@ -257,7 +266,7 @@ export interface RunTrace {
 /** Parse a stream-json transcript into the facts graders need. Tolerant: an unknown line is
  *  skipped, a missing result leaves lastMessage on the last assistant text seen. */
 export function parseStream(raw: string): RunTrace {
-  const t: RunTrace = { lastMessage: "", toolsUsed: [], skills: [], agents: [], costUsd: 0, turns: 0, durationMs: 0, isError: false, subtype: "", stderrTail: "" };
+  const t: RunTrace = { lastMessage: "", toolsUsed: [], skills: [], agents: [], skillCalls: [], agentCalls: [], costUsd: 0, turns: 0, durationMs: 0, isError: false, subtype: "", stderrTail: "" };
   let lastAssistantText = "";
   for (const line of raw.split("\n")) {
     const s = line.trim();
@@ -274,8 +283,14 @@ export function parseStream(raw: string): RunTrace {
       for (const b of blocks) {
         if (b?.type === "tool_use") {
           t.toolsUsed.push(String(b.name));
-          if (b.name === "Skill" && b.input?.skill) t.skills.push(String(b.input.skill));
-          if (b.name === "Agent" && b.input?.subagent_type) t.agents.push(String(b.input.subagent_type));
+          if (b.name === "Skill" && b.input?.skill) {
+            t.skills.push(String(b.input.skill));
+            t.skillCalls!.push({ name: String(b.input.skill), args: String(b.input.args ?? "") });
+          }
+          if (b.name === "Agent" && b.input?.subagent_type) {
+            t.agents.push(String(b.input.subagent_type));
+            t.agentCalls!.push({ name: String(b.input.subagent_type), prompt: String(b.input.prompt ?? "") });
+          }
         } else if (b?.type === "text" && typeof b.text === "string") texts.push(b.text);
       }
       if (texts.length) lastAssistantText = texts.join("\n");
@@ -301,6 +316,8 @@ export function mergeTraces(a: RunTrace, b: RunTrace): RunTrace {
     toolsUsed: [...a.toolsUsed, ...b.toolsUsed],
     skills: [...a.skills, ...b.skills],
     agents: [...a.agents, ...b.agents],
+    skillCalls: [...(a.skillCalls ?? []), ...(b.skillCalls ?? [])],
+    agentCalls: [...(a.agentCalls ?? []), ...(b.agentCalls ?? [])],
     costUsd: a.costUsd + b.costUsd,
     turns: a.turns + b.turns,
     durationMs: a.durationMs + b.durationMs,
@@ -341,6 +358,26 @@ export function gradeToolUsed(g: Grader, trace: RunTrace): GraderResult {
   // asserts its route instead of "some studio skill ran". Without it the grader is the old
   // presence check.
   const want = (g.fm.name ?? "").replace(/^["']|["']$/g, "").replace(/^\//, "");
+  const nameMatches = (id: string) => !want || id === want || id.endsWith(`:${want}`);
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // A consolidated entry name alone no longer proves the prior operation or specialist
+  // lens fired. Scope evidence must belong to that same invocation, never another call.
+  if (g.fm.mode || g.fm.profile) {
+    let hit = false;
+    if (tool === "Skill" && g.fm.mode && !g.fm.profile) {
+      const mode = escape(g.fm.mode);
+      const declared = new RegExp(`(?:^|\\s)(?:--mode(?:=|\\s+)|mode\\s*[:=]\\s*)["']?${mode}(?:["']?(?:\\s|$|[,;]))`, "i");
+      hit = (trace.skillCalls ?? []).some(call => nameMatches(call.name) && declared.test(call.args));
+    } else if (tool === "Agent" && g.fm.profile && !g.fm.mode) {
+      const profile = escape(g.fm.profile);
+      const declared = new RegExp(`(?:profiles[/\\\\]${profile}\\.md\\b|\\bprofile\\s*:\\s*${profile}\\b|\\b${profile}\\s+profile\\b)`, "i");
+      // profileInstruction quotes paths with JSON.stringify; on Windows that leaves
+      // doubled backslashes in the Agent prompt even after stream JSON is parsed.
+      hit = (trace.agentCalls ?? []).some(call => nameMatches(call.name) && declared.test(call.prompt.replace(/\\+/g, "/")));
+    }
+    return { file: g.file, type: g.type, weight: g.weight, score: hit ? 1 : 0,
+      detail: `${tool} ${want} ${g.fm.mode ? `mode=${g.fm.mode}` : `profile=${g.fm.profile}`} ${hit ? "fired with declared scope" : "has no matching scope evidence"}${extra}` };
+  }
   if (want) {
     const ids = tool === "Skill" ? trace.skills : tool === "Agent" ? trace.agents : [];
     const hit = ids.some((id) => id === want || id.endsWith(`:${want}`));
@@ -419,17 +456,25 @@ async function runSession(a: SessionRunArgs): Promise<RunTrace & { raw: string }
   // The subject-model override puts each spawned agent on the same model as the orchestrator.
   const env = cleanEnv(a.model);
   const r = await runProcess(["claude", ...args], a.cwd, a.timeoutSec * 1000, env);
+  return { ...sessionTrace(r), raw: r.stdout };
+}
+
+/** Process failure cannot be hidden by an earlier successful-looking JSON result. */
+export function sessionTrace(r: { stdout: string; stderr: string; code: number | null; timedOut: boolean }): RunTrace {
   const trace = parseStream(r.stdout);
   trace.stderrTail = r.stderr.slice(-2000);
   if (r.timedOut) {
     trace.isError = true;
-    trace.subtype = trace.subtype || "timeout";
+    trace.subtype = "timeout";
+  } else if (r.code !== 0) {
+    trace.isError = true;
+    trace.subtype = `process-exit-${r.code ?? "unknown"}`;
   }
-  return { ...trace, raw: r.stdout };
+  return trace;
 }
 
 /** A conversation: the opening prompt, then each follow-up on the same session. */
-async function runConversation(a: Omit<SessionRunArgs, "sessionId" | "resume">, followUps: string[]): Promise<RunTrace & { raw: string }> {
+async function runConversation(a: Omit<SessionRunArgs, "sessionId" | "resume">, followUps: string[], sharedBudget = false): Promise<RunTrace & { raw: string }> {
   const sessionId = crypto.randomUUID();
   let acc = await runSession({ ...a, sessionId });
   let raw = acc.raw;
@@ -438,12 +483,14 @@ async function runConversation(a: Omit<SessionRunArgs, "sessionId" | "resume">, 
   const transcript: string[] = [`[assistant, turn 1]\n${acc.lastMessage}`];
   for (const [i, reply] of followUps.entries()) {
     if (acc.isError) break;
-    const next = await runSession({ ...a, prompt: reply, sessionId, resume: true });
+    const budgetUsd = sharedBudget ? a.budgetUsd - acc.costUsd : a.budgetUsd;
+    if (!(budgetUsd > 0)) { acc.isError = true; acc.subtype = "conversation-budget-exhausted"; break; }
+    const next = await runSession({ ...a, budgetUsd, prompt: reply, sessionId, resume: true });
     raw += "\n" + next.raw;
     transcript.push(`[user, scripted reply ${i + 1}]\n${reply}`, `[assistant, turn ${i + 2}]\n${next.lastMessage}`);
     acc = { ...mergeTraces(acc, next), raw };
   }
-  return { ...acc, raw, transcript: followUps.length ? transcript.join("\n\n") : undefined };
+  return { ...acc, sessionId, raw, transcript: followUps.length ? transcript.join("\n\n") : undefined };
 }
 
 const GRADER_SYSTEM =
@@ -541,40 +588,30 @@ async function runCase(name: string, run: number, o: Options): Promise<CaseResul
 }
 
 // ---------------------------------------------------------------------------------------------
-// Fixtures (the /eval-agents protocol, automated)
+// Fixtures (the maintain-studio evaluation protocol, automated)
 // ---------------------------------------------------------------------------------------------
 
-/** Folder → agent under test. Mirrors skills/eval-agents/SKILL.md; keep the two in step. */
-export const FIXTURE_AGENTS: Record<string, string> = {
-  reviewer: "rust-reviewer",
-  integrity: "rust-reviewer",
-  naming: "rust-reviewer",
-  lifetimes: "rust-reviewer",
-  "modern-rust": "rust-reviewer",
-  unsafe: "unsafe-auditor",
-  security: "security-auditor",
-  perf: "perf-engineer",
-  api: "api-design-lead",
-  architecture: "chief-architect",
-  workspace: "chief-architect",
-  "active-dev": "chief-architect",
-  "prior-art": "chief-architect",
-  async: "async-runtime-specialist",
-  "error-model": "error-architect",
-  testing: "qa-lead",
-  cli: "cli-specialist",
-  ffi: "ffi-specialist",
-  macros: "macro-specialist",
-  observability: "observability-engineer",
-  "cargo-manifest": "dependency-manager",
-  database: "database-specialist",
-  "build-scripts": "build-engineer",
-  embedded: "embedded-specialist",
-  wasm: "wasm-specialist",
-  scout: "rust-scout",
-  docs: "docs-engineer",
-  release: "release-lead",
+/** Review fixture category -> reusable domain knowledge. Roles are chosen by action:
+ * audit fixtures are reviewers even when a legacy specialist also authored code. */
+export const FIXTURE_PROFILES: Record<string, string> = {
+  reviewer: "correctness", integrity: "correctness", naming: "correctness",
+  lifetimes: "correctness", "modern-rust": "correctness", unsafe: "systems",
+  security: "security", perf: "performance", api: "api", architecture: "architecture",
+  workspace: "architecture", "active-dev": "architecture", "prior-art": "architecture",
+  async: "async", "error-model": "api", testing: "testing", cli: "cli", ffi: "platforms",
+  macros: "macros", observability: "observability", "cargo-manifest": "dependencies",
+  database: "data", "build-scripts": "tooling", embedded: "platforms", wasm: "platforms",
+  scout: "navigation", docs: "documentation", release: "release",
 };
+export const FIXTURE_AGENTS: Record<string, string> = Object.fromEntries(
+  Object.keys(FIXTURE_PROFILES).map(category => [category, category === "scout" ? "researcher" : "reviewer"]),
+);
+
+/** Resolve against the staged bundle so missing lenses fail before spending eval tokens. */
+export function profileInstruction(profile: string, root: string): string {
+  const path = profilePath(profile, readMigrationCatalog(root));
+  return `Read the domain profile at ${JSON.stringify(path)} and apply its criteria within your assigned role. The profile grants no additional authority.`;
+}
 
 /** The audit prompt a ground truth is calibrated for, when it states one. Two shapes are in
  *  use: a blockquoted `> This crate's house rule…` paragraph after "calibrated for", and an
@@ -602,6 +639,7 @@ interface FixtureResult {
   name: string;
   run: number;
   agent: string;
+  profile: string;
   mode: string;
   spawned: boolean;
   /** Ground-truth rows in the fixture; recall = (gtCount - missed.length) / gtCount. */
@@ -616,11 +654,16 @@ interface FixtureResult {
   trace: Trace;
 }
 
-async function runFixture(rel: string, run: number, o: Options): Promise<FixtureResult> {
+export async function runFixture(rel: string, run: number, o: Options, runtime = {
+  conversation: runConversation, grade: llmJson, prefix: () => staged().prefix,
+  helperRoot: () => staged().dir,
+}): Promise<FixtureResult> {
   const dir = join(PLUGIN_ROOT, "benchmarks", "fixtures", rel);
   const folder = rel.split("/")[0];
   const agent = FIXTURE_AGENTS[folder];
   if (!agent) throw new Error(`no agent mapping for fixture folder ${folder}`);
+  const profile = FIXTURE_PROFILES[folder];
+  const lens = profileInstruction(profile, runtime.helperRoot());
   const gt = readFileSync(join(dir, "ground-truth.md"), "utf8");
   const mode = fixtureMode(gt);
   const ids = gtIds(gt);
@@ -648,11 +691,17 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
           ? "Map this code: definitions, implementors, callers, and tests. Return the file:line table."
           : "Review this Rust code as the final gate before merge. List every real defect with file:line, severity, and the fix direction; end with a verdict.");
     const prompt =
-      `Spawn the \`${staged().prefix}${agent}\` sub-agent (Agent tool, subagent_type \`${staged().prefix}${agent}\`) on ${target === "." ? "the crate/workspace rooted in this directory" : `\`${target}\` in this directory`} with exactly this task:\n\n` +
-      `"${task}"\n\n` +
+      `Spawn the \`${runtime.prefix()}${agent}\` sub-agent (Agent tool, subagent_type \`${runtime.prefix()}${agent}\`) on ${target === "." ? "the crate/workspace rooted in this directory" : `\`${target}\` in this directory`} with exactly this task:\n\n` +
+      `${lens}\n\n"${task}"\n\n` +
       `Tell it to read the code itself and to answer in its own native output format. When it returns, reply with the sub-agent's complete findings and verdict verbatim — add nothing, summarize nothing, and do not review the code yourself.`;
-    const trace = await runConversation({ prompt, cwd, allowedTools: ["Read", "Glob", "Grep", "Agent"], maxTurns: 12, timeoutSec: 900 * o.timeoutScale, budgetUsd: o.budget, model: o.model, withPlugin: true }, []);
-    const spawned = trace.agents.some((a) => a.endsWith(agent));
+    const trace = await runtime.conversation({ prompt, cwd, allowedTools: ["Read", "Glob", "Grep", "Agent"], maxTurns: 12, timeoutSec: 900 * o.timeoutScale, budgetUsd: o.budget, model: o.model, withPlugin: true }, []);
+    const spawned = gradeToolUsed({ file: "fixture-dispatch", type: "tool_used", weight: 1,
+      fm: { tool: "Agent", name: agent, profile }, body: "" }, trace).score === 1;
+    const { raw, ...rest } = trace;
+    writeFileSync(join(o.out, `fixture__${rel.replace(/\//g, "__")}.run${run}.stream.jsonl`), raw);
+    if (!spawned) return { kind: "fixture", name: rel, run, agent, profile, mode, spawned,
+      gtCount: ids.length, recall: null, caught: [], missed: ids, verdictOk: false,
+      falsePositives: null, notes: `No observed ${agent} invocation carrying the ${profile} profile; findings cannot be attributed to this lens.`, trace: rest };
     const passRule =
       mode === "first-pass"
         ? " (it must reject the shape: RESHAPE NEEDED / REDO-TO-BAR / NEEDS WORK naming the shape; ACCEPTABLE or a wave-through fails)"
@@ -666,10 +715,8 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
       `Then decide whether the response's verdict satisfies the ground truth's Pass condition${passRule}, ` +
       `and whether any "Automatic fail" condition in the ground truth is triggered. Count findings with no ground-truth row as false positives only when they are wrong or noise, not when they are real additional defects. ` +
       `Return {"caught": ["GT-1", …], "missed": ["GT-…"], "verdict_ok": true|false, "auto_fail": true|false, "false_positives": <n>, "notes": "<one or two sentences: what was missed and why the verdict passed or failed>"}.`;
-    const j = await llmJson(gradePrompt, o.graderModel);
-    const { raw, ...rest } = trace;
-    writeFileSync(join(o.out, `fixture__${rel.replace(/\//g, "__")}.run${run}.stream.jsonl`), raw);
-    if (j?.error) return { kind: "fixture", name: rel, run, agent, mode, spawned, gtCount: ids.length, recall: null, caught: [], missed: ids, verdictOk: null, falsePositives: null, notes: j.error, trace: rest };
+    const j = await runtime.grade(gradePrompt, o.graderModel);
+    if (j?.error) return { kind: "fixture", name: rel, run, agent, profile, mode, spawned, gtCount: ids.length, recall: null, caught: [], missed: ids, verdictOk: null, falsePositives: null, notes: j.error, trace: rest };
     const caught: string[] = Array.isArray(j.caught) ? [...new Set(j.caught.filter((x: unknown): x is string => typeof x === "string" && ids.includes(x)))] : [];
     const missed = ids.filter((id) => !caught.includes(id));
     const autoFail = Boolean(j.auto_fail);
@@ -678,6 +725,7 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
       name: rel,
       run,
       agent,
+      profile,
       mode,
       spawned,
       gtCount: ids.length,
@@ -698,7 +746,7 @@ async function runFixture(rel: string, run: number, o: Options): Promise<Fixture
 // Live tasks (the writing agents and orchestrating skills, on a real crate)
 // ---------------------------------------------------------------------------------------------
 
-interface LiveResult {
+export interface LiveResult {
   kind: "live";
   name: string;
   run: number;
@@ -709,27 +757,197 @@ interface LiveResult {
   checkOutput: string;
   verdictPresent: boolean;
   trace: Trace;
+  handoff?: {
+    isolation: "native-fresh-conversation" | "not-established";
+    files: string[];
+    authorTrace: Trace;
+    implementationTrace?: Trace;
+    behaviorPassed?: boolean | null;
+    lifecycle?: { verified: boolean; reason: string };
+    error?: string;
+  };
 }
 
-async function runLive(name: string, run: number, o: Options): Promise<LiveResult> {
+function artifactPath(path: string): boolean {
+  return path.startsWith("docs/designs/") || path.startsWith("intent/")
+    || path.startsWith(".rust-studio/reviews/");
+}
+
+/** Conservative observation gate, not a security sandbox or a semantic design grader.
+ * Opaque child tools and unknown shell commands cannot establish ordering from this stream. */
+export function checkHandoffBoundary(raw: string, config: {
+  root: string; helperRoot: string; reconstruction: string; packet: string;
+}): { verified: boolean; reason: string } {
+  const fail = (reason: string) => ({ verified: false, reason });
+  const at = (path: string) => relative(resolve(config.root), resolve(config.root, path)).split(/[\\/]/).join("/");
+  let reconstruction = false, accepted = false, current = false;
+  let reconstructionCall = "", checkCall = "", productCall = "";
+  const pendingWrites = new Set<string>();
+  function packetCheck(command: string): boolean {
+    if (/[;&|<>`$\r\n]/.test(command)) return false;
+    const tokens = command.match(/"[^"\r\n]*"|'[^'\r\n]*'|[^\s"']+/g)?.map(token => token.replace(/^(?:"(.*)"|'(.*)')$/, "$1$2")) ?? [];
+    if (tokens.length !== 5 || !/(?:^|[\\/])bun(?:\.exe)?$/.test(tokens[0]) || tokens[2] !== "check") return false;
+    const helper = relative(resolve(config.helperRoot), resolve(config.root, tokens[1]));
+    return !isAbsolute(helper) && helper.split(/[\\/]/)[0] !== ".."
+      && /(?:^|[\\/])design-workflow\.ts$/.test(helper)
+      && resolve(config.root, tokens[3]) === resolve(config.root)
+      && at(tokens[4]) === config.packet;
+  }
+  for (const line of raw.split("\n")) {
+    let event: any;
+    try { event = JSON.parse(line); } catch { continue; }
+    for (const block of event?.message?.content ?? []) {
+      if (event.type === "assistant" && block.type === "text" && /^HANDOFF_RECONSTRUCTION_ACCEPTED\s*$/m.test(block.text ?? "")) {
+        if (!reconstruction) return fail("coordinator acceptance preceded successful reconstruction write");
+        accepted = true;
+      }
+      if (block.type === "tool_result") {
+        pendingWrites.delete(block.tool_use_id);
+        if (productCall && block.tool_use_id === productCall) {
+          return block.is_error || pendingWrites.size || !current
+            ? fail("first product write failed or has concurrent/stale boundary evidence")
+            : { verified: true, reason: "observed reconstruction, coordinator acceptance and CURRENT before first successful product write" };
+        }
+        if (block.tool_use_id === reconstructionCall) {
+          if (block.is_error) return fail("reconstruction write failed");
+          reconstruction = true;
+        }
+        if (block.tool_use_id === checkCall) {
+          if (block.is_error) return fail("packet check failed");
+          const output = typeof block.content === "string" ? block.content
+            : (block.content ?? []).filter((part: any) => part.type === "text").map((part: any) => part.text).join("\n");
+          let checked: any;
+          try { checked = JSON.parse(output.trim()); } catch { return fail("packet check result is not observable JSON"); }
+          if (checked.status !== "CURRENT" || !(checked.checked > 0) || !Array.isArray(checked.changed)
+              || checked.changed.length || !Array.isArray(checked.unavailable) || checked.unavailable.length) return fail("packet is stale or incompletely checked");
+          current = true;
+        }
+      }
+      if (block.type !== "tool_use") continue;
+      const name = block.name, input = block.input ?? {};
+      if (["Read", "Glob", "Grep", "Skill"].includes(name)) continue;
+      if (name === "Write" || name === "Edit") {
+        if (typeof input.file_path !== "string" || typeof block.id !== "string") return fail("write lacks observable path/identity");
+        if (productCall) return fail("concurrent mutation while first product write is pending");
+        // An older in-flight check cannot become current after this mutation completes.
+        checkCall = "";
+        pendingWrites.add(block.id);
+        const path = at(input.file_path);
+        if (!path || isAbsolute(path) || path.split("/")[0] === "..") return fail("write is outside the handed-off repository");
+        if (path === config.reconstruction) {
+          if (name !== "Write" || typeof input.content !== "string" || !input.content.trim()) return fail("reconstruction requires an observable full write");
+          reconstructionCall = block.id; reconstruction = false; accepted = false; current = false;
+        } else if (artifactPath(path)) {
+          // Changed design/evidence requires a new reconstruction and acceptance, not just
+          // a freshly captured packet that silently ratifies the previous challenge.
+          reconstructionCall = ""; reconstruction = false; accepted = false; current = false;
+        } else {
+          if (!(reconstruction && accepted && current) || pendingWrites.size !== 1) return fail("product write preceded reconstruction, acceptance or uncontested CURRENT check");
+          productCall = block.id;
+        }
+        continue;
+      }
+      if (name === "Bash") {
+        const command = String(input.command ?? "");
+        if (packetCheck(command)) {
+          if (!accepted || typeof block.id !== "string" || pendingWrites.size) return fail("packet check preceded acceptance, lacks identity or races a pending write");
+          checkCall = block.id; current = false;
+          continue;
+        }
+        // Only exact informational commands have no argument expansion or execution ambiguity.
+        if (/^\s*(?:pwd|git (?:status(?: --short)?|diff(?: --stat)?))\s*$/.test(command)) continue;
+        return fail("shell effects before first product write are not observable; lifecycle unverified");
+      }
+      return fail(`opaque ${name} execution before first product write; lifecycle unverified`);
+    }
+  }
+  return fail("missing observable first product write or lifecycle trace");
+}
+
+/** The exact primitive used by live runs: no author checkout, history, or implicit files
+ * cross this boundary. Buffers are captured before writing to avoid partial validation. */
+export function stageLiveHandoff(baselineRoot: string, authorRoot: string, destinationRoot: string, files: string[]): void {
+  if (!files.length || new Set(files).size !== files.length) throw new Error("handoff requires unique explicit artifact files");
+  for (const path of files) {
+    if (/[\\:\x00-\x1f]/.test(path) || path.split("/").some(part => !part || part === "." || part === "..") || !artifactPath(path)) {
+      throw new Error(`unsafe or non-artifact handoff path: ${path}`);
+    }
+  }
+  const roots = [baselineRoot, authorRoot, destinationRoot].map(root => resolve(root));
+  for (const root of roots) {
+    for (let path = root; ; path = dirname(path)) {
+      if (existsSync(path) && lstatSync(path).isSymbolicLink()) throw new Error(`symlink in handoff root ancestry: ${path}`);
+      if (dirname(path) === path) break;
+    }
+  }
+  for (let i = 0; i < roots.length; i++) for (let j = 0; j < roots.length; j++) {
+    const rel = relative(roots[i], roots[j]);
+    if (i !== j && !isAbsolute(rel) && rel.split(/[\\/]/)[0] !== "..") {
+      throw new Error("handoff roots must be separate directories");
+    }
+  }
+  if (existsSync(destinationRoot) && (lstatSync(destinationRoot).isSymbolicLink() || readdirSync(destinationRoot).length)) {
+    throw new Error("handoff destination must be empty and not a symlink");
+  }
+  function inventory(root: string): Map<string, Buffer> {
+    if (lstatSync(root).isSymbolicLink()) throw new Error(`symlink root: ${root}`);
+    const result = new Map<string, Buffer>();
+    function walk(dir: string, prefix = "") {
+      for (const name of readdirSync(dir)) {
+        if (!prefix && [".git", "target"].includes(name)) continue;
+        const path = prefix ? `${prefix}/${name}` : name;
+        const full = join(dir, name), stat = lstatSync(full);
+        if (stat.isSymbolicLink()) throw new Error(`symlink in handoff tree: ${path}`);
+        if (stat.isDirectory()) walk(full, path);
+        else if (stat.isFile()) result.set(path, readFileSync(full));
+        else throw new Error(`not a regular handoff file: ${path}`);
+      }
+    }
+    walk(root);
+    return result;
+  }
+  const baseline = inventory(baselineRoot), author = inventory(authorRoot);
+  for (const path of files) {
+    if (baseline.has(path)) throw new Error(`handoff artifact would overwrite baseline: ${path}`);
+    if (!author.has(path)) throw new Error(`missing regular handoff artifact: ${path}`);
+  }
+  for (const [path, bytes] of baseline) {
+    if (!author.get(path)?.equals(bytes)) throw new Error(`author changed baseline product file: ${path}`);
+  }
+  for (const path of author.keys()) {
+    if (!baseline.has(path) && !artifactPath(path)) throw new Error(`author added product file: ${path}`);
+  }
+  for (const [path, bytes] of [...baseline, ...files.map(path => [path, author.get(path)!] as const)]) {
+    const destination = join(destinationRoot, path);
+    mkdirSync(dirname(destination), { recursive: true });
+    writeFileSync(destination, bytes, { flag: "wx" });
+  }
+}
+
+export async function runLive(name: string, run: number, o: Options, runtime = {
+  conversation: runConversation, process: runProcess, prefix: () => staged().prefix,
+  helperRoot: () => staged().dir,
+}): Promise<LiveResult> {
   const dir = join(PLUGIN_ROOT, "benchmarks", "live", name);
   const { fm, body } = splitFrontmatter(readFileSync(join(dir, "task.md"), "utf8"));
   const targetKind = fm.kind ?? "agent";
   const target = fm.target;
   if (!target) throw new Error(`benchmarks/live/${name}/task.md has no target`);
   const cwd = mkdtempSync(join(tmpdir(), `rs-live-${name}-`));
+  let implementationCwd: string | undefined;
   try {
     cpSync(join(dir, "crate"), cwd, { recursive: true });
     for (const cmd of [["git", "init", "-q"], ["git", "add", "-A"], ["git", "-c", "user.name=live", "-c", "user.email=live@example.invalid", "commit", "-q", "-m", "baseline"]]) {
-      const r = await runProcess(cmd, cwd, 30_000);
+      const r = await runtime.process(cmd, cwd, 30_000);
       if (r.code !== 0) throw new Error(`${cmd.join(" ")} failed: ${r.stderr}`);
     }
-    const task = body.trim();
+    const lens = fm.profile ? profileInstruction(fm.profile, runtime.helperRoot()) : "";
+    const task = [lens, body.trim()].filter(Boolean).join("\n\n");
     const prompt =
       targetKind === "skill"
-        ? `/${staged().prefix}${target} ${task}`
-        : `Spawn the \`${staged().prefix}${target}\` sub-agent (Agent tool, subagent_type \`${staged().prefix}${target}\`) in this repository with exactly this task, and let it do the work itself:\n\n${task}\n\nWhen it returns, reply with its complete report and verdict verbatim — add nothing, and do not redo or "improve" its work.`;
-    const trace = await runConversation(
+        ? `/${runtime.prefix()}${target}${fm.mode ? ` --mode ${fm.mode}` : ""} ${task}`
+        : `Spawn the \`${runtime.prefix()}${target}\` sub-agent (Agent tool, subagent_type \`${runtime.prefix()}${target}\`) in this repository with exactly this task, and let it do the work itself:\n\n${task}\n\nWhen it returns, reply with its complete report and verdict verbatim — add nothing, and do not redo or "improve" its work.`;
+    const trace = await runtime.conversation(
       {
         prompt,
         cwd,
@@ -743,14 +961,69 @@ async function runLive(name: string, run: number, o: Options): Promise<LiveResul
       // A live task may carry follow-ups.md too: a skill with an approval gate (/dev-task's
       // Phase 3) ends its turn on a question, and the scripted reply is the human answering it.
       existsSync(join(dir, "follow-ups.md")) ? parseFollowUps(readFileSync(join(dir, "follow-ups.md"), "utf8")) : [],
+      Boolean(fm.handoff_prompt || fm.handoff_files),
     );
     const { raw, ...rest } = trace;
+    if (fm.handoff_prompt || fm.handoff_files) {
+      const files = parseList(fm.handoff_files);
+      const handoff: NonNullable<LiveResult["handoff"]> = { isolation: "not-established", files, authorTrace: rest };
+      let combined: Trace = rest;
+      const result = (passed: boolean | null, checkExit: number | null, checkOutput: string): LiveResult => ({
+        kind: "live", name, run, target, targetKind, passed, checkExit, checkOutput,
+        verdictPresent: Boolean(handoff.implementationTrace && VERDICT.test(handoff.implementationTrace.lastMessage)),
+        trace: combined, handoff,
+      });
+      try {
+        writeFileSync(join(o.out, `live__${name}.run${run}.author.stream.jsonl`), raw);
+        if (trace.isError || trace.subtype !== "success" || !raw.trim() || !trace.sessionId) throw new Error("author conversation failed or has no completed trace/identity");
+        if (!fm.handoff_prompt || /[\\:\x00-\x1f]/.test(fm.handoff_prompt) || fm.handoff_prompt.split("/").some(p => !p || p === "." || p === "..")) throw new Error("invalid handoff_prompt");
+        const remainingBudget = o.budget - trace.costUsd;
+        if (!(remainingBudget > 0)) throw new Error("author exhausted the shared live-run budget before implementation");
+        implementationCwd = mkdtempSync(join(tmpdir(), `rs-live-${name}-fresh-`));
+        stageLiveHandoff(join(dir, "crate"), cwd, implementationCwd, files);
+        // The new baseline has original product bytes plus only the declared design artifacts.
+        for (const cmd of [["git", "init", "-q"], ["git", "add", "-A"], ["git", "-c", "user.name=live", "-c", "user.email=live@example.invalid", "commit", "-q", "-m", "handoff baseline"]]) {
+          const r = await runtime.process(cmd, implementationCwd, 30_000);
+          if (r.code !== 0) throw new Error(`${cmd.join(" ")} failed: ${r.stderr}`);
+        }
+        const implementation = await runtime.conversation({
+          prompt: readFileSync(join(dir, fm.handoff_prompt), "utf8").replaceAll("{{PLUGIN_PREFIX}}", runtime.prefix()),
+          cwd: implementationCwd,
+          allowedTools: parseList(fm.allowed_tools).length ? parseList(fm.allowed_tools) : ["Read", "Edit", "Write", "Glob", "Grep", "Bash", "Agent", "Skill"],
+          maxTurns: Number(fm.handoff_max_turns ?? fm.max_turns ?? 40),
+          timeoutSec: Number(fm.timeout_seconds ?? 1500) * o.timeoutScale,
+          budgetUsd: remainingBudget, model: o.model, withPlugin: true,
+        }, []);
+        const { raw: implementationRaw, ...implementationTrace } = implementation;
+        handoff.implementationTrace = implementationTrace;
+        combined = { ...implementationTrace, costUsd: rest.costUsd + implementationTrace.costUsd,
+          turns: rest.turns + implementationTrace.turns, durationMs: rest.durationMs + implementationTrace.durationMs };
+        writeFileSync(join(o.out, `live__${name}.run${run}.stream.jsonl`), implementationRaw);
+        if (implementation.isError || implementation.subtype !== "success" || !implementationRaw.trim()
+            || !implementation.sessionId || implementation.sessionId === trace.sessionId) throw new Error("implementation failed or lacks a completed, distinct conversation trace");
+        handoff.isolation = "native-fresh-conversation";
+        handoff.lifecycle = checkHandoffBoundary(implementationRaw, {
+          root: implementationCwd, helperRoot: runtime.helperRoot(),
+          reconstruction: fm.handoff_reconstruction ?? "docs/designs/cold-handoff/reconstruction.md",
+          packet: fm.handoff_packet ?? ".rust-studio/reviews/cold-handoff/packet.json",
+        });
+        const check = await runtime.process(["bash", join(dir, "check.sh")], implementationCwd, 600_000, { ...cleanEnv(), LIVE_DIR: dir });
+        handoff.behaviorPassed = check.timedOut ? null : check.code === 0;
+        return result(handoff.lifecycle.verified ? handoff.behaviorPassed : false, check.code,
+          (check.stdout + (check.stderr ? "\n[stderr]\n" + check.stderr : "") + `\nLifecycle: ${handoff.lifecycle.verified ? "VERIFIED" : "UNVERIFIED"}: ${handoff.lifecycle.reason}`).slice(-6000));
+      } catch (error) {
+        handoff.error = String(error);
+        combined = { ...combined, isError: true, subtype: "handoff-error" };
+        return result(false, null, handoff.error);
+      }
+    }
     writeFileSync(join(o.out, `live__${name}.run${run}.stream.jsonl`), raw);
-    const check = await runProcess(["bash", join(dir, "check.sh")], cwd, 600_000, { ...cleanEnv(), LIVE_DIR: dir });
+    const check = await runtime.process(["bash", join(dir, "check.sh")], cwd, 600_000, { ...cleanEnv(), LIVE_DIR: dir });
     const checkOutput = (check.stdout + (check.stderr ? "\n[stderr]\n" + check.stderr : "")).slice(-6000);
     return { kind: "live", name, run, target, targetKind, passed: check.timedOut ? null : check.code === 0, checkExit: check.code, checkOutput, verdictPresent: VERDICT.test(trace.lastMessage), trace: rest };
   } finally {
     rmSync(cwd, { recursive: true, force: true });
+    if (implementationCwd) rmSync(implementationCwd, { recursive: true, force: true });
   }
 }
 
@@ -861,35 +1134,39 @@ export function renderSummary(cases: CaseResult[], fixtures: FixtureResult[], li
   }
   if (fixtures.length) {
     const byFx = groupBy(fixtures);
-    lines.push("## Fixtures (agent under test)", "", "| fixture | agent | mode | spawned | recall mean | recall min | verdict ok | cost |", "|---|---|---|---|---|---|---|---|");
+    lines.push("## Fixtures (agent under test)", "", "| fixture | agent | profile | mode | spawned | recall mean | recall min | verdict ok | cost |", "|---|---|---|---|---|---|---|---|---|");
     for (const [name, rs] of [...byFx.entries()].sort()) {
       const s = stats(rs.map((r) => r.recall).filter((x): x is number => x != null));
       const vok = rs.filter((r) => r.verdictOk === true).length;
-      lines.push(`| ${name} | ${rs[0].agent} | ${rs[0].mode} | ${rs.every((r) => r.spawned) ? "✓" : "✗"} | ${pct(s.mean)} | ${pct(s.min)} | ${vok}/${rs.length} | $${rs.reduce((a, r) => a + r.trace.costUsd, 0).toFixed(2)} |`);
+      lines.push(`| ${name} | ${rs[0].agent} | ${rs[0].profile} | ${rs[0].mode} | ${rs.every((r) => r.spawned) ? "✓" : "✗"} | ${pct(s.mean)} | ${pct(s.min)} | ${vok}/${rs.length} | $${rs.reduce((a, r) => a + r.trace.costUsd, 0).toFixed(2)} |`);
     }
     lines.push("");
     const byAgent = new Map<string, { hits: number; total: number; verdictFails: number; n: number }>();
     for (const f of fixtures) {
-      const e = byAgent.get(f.agent) ?? { hits: 0, total: 0, verdictFails: 0, n: 0 };
+      const identity = `${f.agent} + ${f.profile}`;
+      const e = byAgent.get(identity) ?? { hits: 0, total: 0, verdictFails: 0, n: 0 };
       e.hits += f.gtCount - f.missed.length;
       e.total += f.gtCount;
       e.n += 1;
       if (f.verdictOk === false) e.verdictFails += 1;
-      byAgent.set(f.agent, e);
+      byAgent.set(identity, e);
     }
-    lines.push("### Per agent", "", "| agent | fixture runs | recall (rows) | verdict failures |", "|---|---|---|---|");
+    lines.push("### Per role and profile", "", "| role + profile | fixture runs | recall (rows) | verdict failures |", "|---|---|---|---|");
     for (const [agent, e] of [...byAgent.entries()].sort()) lines.push(`| ${agent} | ${e.n} | ${e.hits}/${e.total} (${e.total ? Math.round((100 * e.hits) / e.total) : 0}%) | ${e.verdictFails} |`);
     lines.push("");
     for (const f of fixtures) {
       if (f.missed.length || f.verdictOk === false || !f.spawned) {
-        lines.push(`### ${f.name} (run ${f.run})`, `- spawned ${f.agent}: ${f.spawned ? "yes" : "NO — the session answered itself"}`, `- missed: ${f.missed.join(", ") || "none"}`, `- notes: ${f.notes}`, "");
+        lines.push(`### ${f.name} (run ${f.run})`, `- spawned ${f.agent} + ${f.profile}: ${f.spawned ? "yes" : "NO — required role/profile dispatch was not observed"}`, `- missed: ${f.missed.join(", ") || "none"}`, `- notes: ${f.notes}`, "");
       }
     }
   }
   if (live.length) {
     lines.push("## Live tasks (real crates)", "", "| task | target | check.sh | verdict in report | turns | cost |", "|---|---|---|---|---|---|");
     for (const l of live) {
-      lines.push(`| ${l.name} (run ${l.run}) | ${l.targetKind} ${l.target} | ${l.passed == null ? "timeout" : l.passed ? "PASS" : `FAIL (exit ${l.checkExit})`} | ${l.verdictPresent ? "✓" : "✗"} | ${l.trace.turns} | $${l.trace.costUsd.toFixed(2)}${l.trace.isError ? ` ⚠ ${l.trace.subtype}` : ""} |`);
+      const outcome = l.handoff
+        ? `${l.passed ? "PASS" : "FAIL"} (behavior ${l.handoff.behaviorPassed === true ? "PASS" : l.handoff.behaviorPassed === false ? "FAIL" : "unscored"}; lifecycle ${l.handoff.lifecycle?.verified ? "VERIFIED" : "UNVERIFIED"})`
+        : l.passed == null ? "timeout" : l.passed ? "PASS" : `FAIL (exit ${l.checkExit})`;
+      lines.push(`| ${l.name} (run ${l.run}) | ${l.targetKind} ${l.target} | ${outcome} | ${l.verdictPresent ? "✓" : "✗"} | ${l.trace.turns} | $${l.trace.costUsd.toFixed(2)}${l.trace.isError ? ` ⚠ ${l.trace.subtype}` : ""} |`);
     }
     lines.push("");
     for (const l of live) lines.push(`### ${l.name} (run ${l.run}) — check.sh`, "```", l.checkOutput.trim(), "```", "");
@@ -929,7 +1206,7 @@ if (import.meta.main) {
   if (o.dryRun) {
     console.log(`runs per item: ${runsLabel}`);
     console.log(`would run ${cases.length} case(s): ${cases.map((c) => `${c}×${caseRuns(c)}`).join(", ") || "—"}`);
-    console.log(`would run ${fixtures.length} fixture(s): ${fixtures.map((f) => `${f} → ${FIXTURE_AGENTS[f.split("/")[0]]}`).join(", ") || "—"}`);
+    console.log(`would run ${fixtures.length} fixture(s): ${fixtures.map((f) => `${f} → ${FIXTURE_AGENTS[f.split("/")[0]]} + ${FIXTURE_PROFILES[f.split("/")[0]]}`).join(", ") || "—"}`);
     console.log(`would run ${live.length} live task(s): ${live.join(", ") || "—"}`);
     process.exit(0);
   }
@@ -987,7 +1264,7 @@ if (import.meta.main) {
   const fx = await runAll<FixtureResult>(
     "fixture", fixtures, otherRuns, o.parallel, (f) => `fixture__${f.replace(/\//g, "__")}`,
     (f, k) => runFixture(f, k, o),
-    (f, k, e) => ({ kind: "fixture", name: f, run: k, agent: FIXTURE_AGENTS[f.split("/")[0]] ?? "?", mode: "?", spawned: false, gtCount: 0, recall: null, caught: [], missed: [], verdictOk: null, falsePositives: null, notes: String(e), trace: EMPTY_TRACE }),
+    (f, k, e) => ({ kind: "fixture", name: f, run: k, agent: FIXTURE_AGENTS[f.split("/")[0]] ?? "?", profile: FIXTURE_PROFILES[f.split("/")[0]] ?? "?", mode: "?", spawned: false, gtCount: 0, recall: null, caught: [], missed: [], verdictOk: null, falsePositives: null, notes: String(e), trace: EMPTY_TRACE }),
     (r) => `recall ${pct(r.recall)}, verdict ${r.verdictOk}`,
   );
   const lv = await runAll<LiveResult>(

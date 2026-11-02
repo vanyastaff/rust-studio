@@ -1,8 +1,19 @@
-<!-- Rust Code Studio template — verification report for a spec. Written by /spec-verify into .rust-studio/specs/<slug>/verify-report.md. Evidence over assertion: paste real command output. -->
+<!-- The coordinator writes beside the resolved spec; new designs use docs/designs/<slug>/. -->
 
 # Verify Report: <feature name>
 
 - **Spec:** [`spec.md`](spec.md)   ·   **Date:** `YYYY-MM-DD`   ·   **Verdict:** `COMPLETE / NEEDS WORK / BLOCKED`
+
+## Delivered tree and lifecycle evidence
+
+- **Source and destination:** revisions plus relevant uncommitted-diff identity.
+- **Context/design/review:** paths, isolation and current review coverage.
+- **Implementation handoff:** packet, fresh reconstruction and coordinator acceptance,
+  immediate pre-write CURRENT check; name missing freshness or isolation.
+- **Execution:** task entries, preserved repair count, current destination checks. Intended
+  implementation edits invalidate the input packet; use delivered-tree evidence here.
+- **Artifact identity and cwd:** exact spec/ledger paths and root; custom locations require
+  direct --cwd checking and are outside the automatic Stop guard's default roots.
 
 ## Independent acceptance → original request
 
@@ -51,13 +62,13 @@ $ cargo bench                   # perf goal — before/after
 ```
 
 ## Gates cleared
-- [ ] QA-GATE (`qa-lead`)
+- [ ] QA-GATE (`verifier` with the `testing` profile)
 - [ ] API-GATE / ASYNC-GATE / PERF-GATE / SAFETY-GATE / RELEASE-GATE — *as the spec touched them*
-- [ ] `rust-reviewer` diff audit clean
+- [ ] `reviewer` with the `correctness` profile diff audit clean
 
 ## Follow-ups / left out of scope
 - *…*
 
 ## On pass
-*Spec marked Done. Suggested: `/remember` durable learnings · `/changelog` if user-facing ·
-`/commit` + `/pr` to ship.*
+*Mark Done only when every required check passes. Memory writes and outward actions follow
+existing user/host authorization; suggest relevant release steps.*

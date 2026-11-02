@@ -9,7 +9,7 @@ not a claim that one model generation has fixed behavior across providers or eff
 ## Recent changes that affect Studio
 
 - **Subagent effort:** the October 31 changelog adds `CLAUDE_CODE_SUBAGENT_EFFORT` as the
-  default when no other source selects the subagent's effort. Report it in `/studio-doctor`;
+  default when no other source selects the subagent's effort. Report it in `/inspect-project --mode diagnose-host`;
   keep the value user-owned and measure each model/effort combination separately.
 - **Effort keywords:** the October 26/31 entries make `ultrathink` an active `xhigh` control
   on supported surfaces/models and add `CLAUDE_CODE_DISABLE_ULTRATHINK`. Earlier Studio prose

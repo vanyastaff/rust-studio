@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "task": "T1",
+  "mode": "start",
+  "goal": "Replace with the observable task outcome",
+  "context": "docs/project-context.md",
+  "request": "docs/designs/example/request.md",
+  "designReview": ".rust-studio/reviews/example/review.md",
+  "authorization": "Replace with the user instruction and provenance authorizing implementation",
+  "writePaths": ["crates/example/src", "crates/example/tests"],
+  "acceptance": ["Replace with the actual project command and expected observation"],
+  "constraints": ["Replace with the task's material constraints"],
+  "sources": ["crates/example/Cargo.toml", "crates/example/src/lib.rs"]
+}

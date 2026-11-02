@@ -47,11 +47,11 @@ export function switchNote(input: Input): string {
   }
   return (
     `Rust Code Studio: session model switched ${from} → ${to}. Agents that inherit the ` +
-    `session model (directors, harsh-critic, rust-reviewer, unsafe-auditor) now judge on ` +
+    `session model (designer, reviewer, verifier) now judge on ` +
     `${to}. If this was a classifier fallback, finish the current unit here, then ` +
     `\`/model ${input.from_model}\` to return; re-run any review or audit verdict that ` +
     `was issued on the weaker model before treating it as a gate pass. Eval results are ` +
-    `bound to whichever model last measured them, too — \`/eval-agents\` re-scores the ` +
+    `bound to whichever model last measured them, too — on explicit user request, \`/maintain-studio --mode evaluate\` re-scores the ` +
     `same fixtures in-session and needs no enablement, unlike \`claude plugin eval\`, ` +
     `which is early access.`
   );

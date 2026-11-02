@@ -1,4 +1,4 @@
-# Ground truth — docs/rustdoc-contract (agent: `docs-engineer`, verdict: NEEDS WORK)
+# Ground truth — docs/rustdoc-contract (agent: `reviewer (profile: documentation)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"Audit this crate's public documentation before we publish to docs.rs: crate-level docs, item docs, every doc-test as it would run under `cargo test --doc`, intra-doc links as `cargo doc` with `-D rustdoc::broken_intra_doc_links` would judge them, the `# Errors` / `# Panics` / `# Safety` contract sections, and README drift against the actual API. List each finding with file:line and end with a verdict."*
 

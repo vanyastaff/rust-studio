@@ -82,7 +82,7 @@ RUSTFLAGS="-Z sanitizer=address" cargo +nightly test --target x86_64-unknown-lin
 
 ---
 
-## Reviewer sign-off (unsafe-auditor) — SAFETY-GATE: pass/fail
+## Reviewer sign-off (reviewer (profile: systems)) — SAFETY-GATE: pass/fail
 
 *The reviewer must confirm each line before marking pass. Delete any line that does not apply and explain why.*
 

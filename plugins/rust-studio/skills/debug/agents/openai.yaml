@@ -1,4 +1,0 @@
-interface:
-  display_name: "Debug"
-  short_description: "For a Rust panic, hang, wrong output"
-  default_prompt: "Use $debug for a Rust panic, hang, wrong output, or runtime failure with an unknown cause."

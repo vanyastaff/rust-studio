@@ -8,7 +8,7 @@
 // cannot: how often each fired in real work, which verdict it returned, how long it ran, how
 // often it was spawned in the background, how often a read-only lens wrote, which hooks blocked
 // the turn, where the user had to interrupt, and which error strings recur. The numbers are
-// leads for /evolve's Pick step — a mechanism still has to be read from the trace behind them.
+// leads for /maintain-project --mode improve — a mechanism still has to be read from the trace behind them.
 //
 //   bun tools/trajectory-report.ts                          # every project with a studio trace
 //   bun tools/trajectory-report.ts --project nebula --since 2026-09-10
@@ -18,6 +18,7 @@
 // text, only tool names, verdict tokens and the first line of an error.
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { resolveAgent, resolveSkill } from "../hooks/scripts/catalog.ts";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 
@@ -25,7 +26,8 @@ const VERDICT = /\b(COMPLETE|NEEDS WORK|REDO-TO-BAR|BLOCKED|APPROVE|REJECT|ACCEP
 // An assistant turn that only acknowledges a sub-agent's completion notice — the shape that,
 // on a headless host, becomes the final message and loses the deliverable.
 const NOTICE_REPLY = /completion (event|notice)|already folded in|standing by for|when (it|they) (lands?|reports?|returns?)|still running|I'll (merge|fold|report) .* when/i;
-const READ_ONLY_AGENTS = new Set(["rust-reviewer", "harsh-critic", "rust-scout", "unsafe-auditor", "security-auditor", "slop-auditor", "chief-architect", "product-steward", "api-design-lead", "async-systems-lead", "systems-perf-lead", "qa-lead", "release-lead", "tooling-lead"]);
+// Old labels retain their historical permission class; these are observations, never dispatch aliases.
+const READ_ONLY_AGENTS = new Set(["researcher", "designer", "reviewer", "verifier", "rust-reviewer", "harsh-critic", "rust-scout", "unsafe-auditor", "security-auditor", "slop-auditor", "chief-architect", "product-steward", "api-design-lead", "async-systems-lead", "systems-perf-lead", "qa-lead", "release-lead", "tooling-lead"]);
 
 interface Opts { project?: string; since?: string; json: boolean }
 function parseArgs(argv: string[]): Opts {
@@ -170,7 +172,10 @@ export function report(sessions: SessionStats[], agents: AgentRun[]): string {
 
   // skills
   const bySkill = new Map<string, SkillEpisode[]>();
-  for (const s of sessions) for (const e of s.skills) bySkill.set(e.name, [...(bySkill.get(e.name) ?? []), e]);
+  for (const s of sessions) for (const e of s.skills) {
+    const name = resolveSkill(e.name)?.skill ?? e.name;
+    bySkill.set(name, [...(bySkill.get(name) ?? []), e]);
+  }
   L.push("## Skills — invocations in real sessions", "", "| skill | fires | sessions | ends with a verdict | interrupted by the user | median assistant turns until the next prompt |", "|---|---:|---:|---:|---:|---:|");
   for (const [name, eps] of [...bySkill].sort((a, b) => b[1].length - a[1].length)) {
     const judged = eps.filter((e) => e.endsWithVerdict !== null);
@@ -180,7 +185,10 @@ export function report(sessions: SessionStats[], agents: AgentRun[]): string {
 
   // agents
   const byAgent = new Map<string, AgentRun[]>();
-  for (const a of agents) byAgent.set(a.type, [...(byAgent.get(a.type) ?? []), a]);
+  for (const a of agents) {
+    const role = resolveAgent(a.type)?.role ?? a.type;
+    byAgent.set(role, [...(byAgent.get(role) ?? []), a]);
+  }
   // The hand-back tool has a birthday; before it, no run could hand back, so the rate is
   // measured over the runs that could.
   const hbSince = agents.filter((a) => a.handback).map((a) => a.started).sort()[0] ?? "";
@@ -189,11 +197,12 @@ export function report(sessions: SessionStats[], agents: AgentRun[]): string {
     const verdicts = new Map<string, number>();
     for (const r of runs) if (r.verdict) verdicts.set(r.verdict, (verdicts.get(r.verdict) ?? 0) + 1);
     const vs = [...verdicts].sort((a, b) => b[1] - a[1]).map(([v, n]) => `${v} ${n}`).join(", ") || "—";
-    const ro = READ_ONLY_AGENTS.has(type);
+    const readOnlyRuns = runs.filter(r => READ_ONLY_AGENTS.has(r.type));
+    const ro = readOnlyRuns.length > 0;
     const eligible = runs.filter((r) => r.started >= hbSince);
-    L.push(`| ${type} | ${runs.length} | ${pct(runs.filter((r) => r.shape === "background").length, runs.length)} | ${pct(eligible.filter((r) => r.handback).length, eligible.length)} | ${runs.filter((r) => r.turns <= 2).length} | ${vs} | ${ro ? `${runs.filter((r) => r.wrote).length}` : "n/a"} | ${runs.filter((r) => r.modelErrors > 0).length} | ${median(runs.map((r) => r.turns))} | ${median(runs.map((r) => r.seconds / 60)).toFixed(1)} |`);
+    L.push(`| ${type} | ${runs.length} | ${pct(runs.filter((r) => r.shape === "background").length, runs.length)} | ${pct(eligible.filter((r) => r.handback).length, eligible.length)} | ${runs.filter((r) => r.turns <= 2).length} | ${vs} | ${ro ? `${readOnlyRuns.filter((r) => r.wrote).length}` : "n/a"} | ${runs.filter((r) => r.modelErrors > 0).length} | ${median(runs.map((r) => r.turns))} | ${median(runs.map((r) => r.seconds / 60)).toFixed(1)} |`);
   }
-  L.push("");
+  L.push("", "Original labels (preserved in source transcripts and JSON): " + [...new Set([...sessions.flatMap(s => s.skills.map(e => e.name)), ...agents.map(a => a.type)])].sort().join(", "), "");
 
   // hooks, interruptions
   const guards = new Map<string, number>();

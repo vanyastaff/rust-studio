@@ -29,6 +29,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pluginRoot } from "./_lib.ts";
 import { parseUsageLine, usagePath, type UsageRow } from "./usage-log.ts";
+import { readMigrationCatalog, resolveAgent, resolveSkill, type CatalogRegistry } from "./catalog.ts";
 
 const DAY = 86_400_000;
 export const DEFAULT_DAYS = 7;
@@ -137,6 +138,8 @@ export function isEvalSandbox(cwd: string): boolean {
 
 export interface NameStats {
   name: string;
+  /** Original event labels and counts; aggregation never rewrites the source log. */
+  rawNames: Record<string, number>;
   total: number;
   model: number;
   user: number;
@@ -169,21 +172,23 @@ export interface Report {
   outside: NameStats[];
 }
 
-function aggregate(rows: UsageRow[]): Map<string, NameStats> {
+function aggregate(rows: UsageRow[], canonicalName: (row: UsageRow) => string = r => r.name): Map<string, NameStats> {
   const out = new Map<string, NameStats>();
   const sessions = new Map<string, Set<string>>();
   const projects = new Map<string, Map<string, number>>();
   const evalProjects = new Map<string, Set<string>>();
-  for (const r of rows) {
+  for (const raw of rows) {
+    const r = { ...raw, name: canonicalName(raw) };
     let s = out.get(r.name);
     if (!s) {
-      s = { name: r.name, total: 0, model: 0, user: 0, genuine: 0, sessions: 0, projects: [], evalProjects: [], first: r.ts, last: r.ts };
+      s = { name: r.name, rawNames: Object.create(null), total: 0, model: 0, user: 0, genuine: 0, sessions: 0, projects: [], evalProjects: [], first: r.ts, last: r.ts };
       out.set(r.name, s);
       sessions.set(r.name, new Set());
       projects.set(r.name, new Map());
       evalProjects.set(r.name, new Set());
     }
     s.total += 1;
+    s.rawNames[raw.name] = (s.rawNames[raw.name] ?? 0) + 1;
     const p = projectOf(r);
     const sandbox = isEvalSandbox(r.cwd);
     if (sandbox) evalProjects.get(r.name)!.add(p);
@@ -211,8 +216,19 @@ export function buildReport(
   opts: { file: string; days: number | null; since: number | null; malformed: number; now?: Date },
 ): Report {
   const windowed = inWindow(rows, opts.since);
-  const skills = aggregate(windowed.filter((r) => r.kind === "skill"));
-  const agents = aggregate(windowed.filter((r) => r.kind === "agent"));
+  let registry: CatalogRegistry | undefined;
+  try { registry = readMigrationCatalog(catalog.root ?? undefined); } catch { /* older or unknown catalog: preserve raw labels */ }
+  const canonical = (row: UsageRow): string => {
+    if (!registry) return row.name;
+    if (row.kind === "skill") {
+      const mapped = resolveSkill(row.name, registry)?.skill;
+      return mapped && catalog.skills.includes(mapped) ? mapped : row.name;
+    }
+    const mapped = resolveAgent(row.name, registry)?.role;
+    return mapped && catalog.agents.includes(mapped) ? mapped : row.name;
+  };
+  const skills = aggregate(windowed.filter((r) => r.kind === "skill"), canonical);
+  const agents = aggregate(windowed.filter((r) => r.kind === "agent"), canonical);
   const onDiskSkills = new Set(catalog.skills);
   const onDiskAgents = new Set(catalog.agents);
   const outside: NameStats[] = [];

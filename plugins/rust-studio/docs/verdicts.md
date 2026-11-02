@@ -2,29 +2,31 @@
 
 How work is checked and how it reports. Part of the
 Coordination Protocol (`coordination-protocol.md`); see also `collaboration.md` (autonomy,
-when to ask) and `delegation.md` (team, tiers, team execution).
+when to ask) and `delegation.md` (roles, profiles, team execution).
 
 ---
 ## 4. Quality gates
 
-Gates are checkpoints a lead (or director) must clear before work proceeds. Each
-gate has an ID so it can be referenced in stories and reviews.
+Gates name the evidence required before a result can pass. Select reviewer/verifier by the
+action and load every relevant domain profile; profiles are reusable, not exclusive owners.
+Independent sign-off comes from a separate fresh instance, never the author of the artifact.
 
-| Gate ID         | Owner               | Checks |
-|-----------------|---------------------|--------|
-| `ARCH-GATE`     | chief-architect     | Module/crate boundaries sound; ADR exists for non-trivial design; no layering violations. |
-| `SCOPE-GATE`    | product-steward     | Diff/plan matches acceptance criteria; over-scope/under-scope flagged; non-goals stated. |
-| `API-GATE`      | api-design-lead     | Public items documented; semver impact understood; `#[non_exhaustive]`/sealed where needed; no accidental pub. |
-| `ASYNC-GATE`    | async-systems-lead  | No blocking in async; cancellation-safe; `Send`/`'static` bounds correct; backpressure considered. |
-| `CLI-GATE`      | cli-specialist      | Exit codes correct; stdout=data / stderr=diagnostics; `--help` complete; errors actionable. |
-| `PERF-GATE`     | systems-perf-lead   | Hot paths allocation-aware; benchmarked before/after; no needless clones; complexity justified. |
-| `SAFETY-GATE`   | systems-perf-lead + unsafe-auditor | Every `unsafe` has a `// SAFETY:` invariant; miri-clean where feasible; no UB. |
-| `QA-GATE`       | qa-lead             | Tests cover acceptance criteria + edge cases; no flaky tests; coverage not regressed. |
-| `RELEASE-GATE`  | release-lead        | Version bumped per semver; changelog updated; MSRV verified; `cargo publish --dry-run` clean. |
-| `BUILD-GATE`    | tooling-lead        | Builds on all feature combinations + targets; CI green; no warnings. |
+| Gate ID | Required expertise | Checks |
+|---|---|---|
+| ARCH-GATE | architecture | Sound boundaries; required ADRs; no layering violations |
+| SCOPE-GATE | architecture, correctness | Requirements/non-goals match; over/under-scope reported |
+| API-GATE | api, documentation | Public docs; SemVer; stability/sealing decisions; no accidental pub |
+| ASYNC-GATE | async | Blocking, cancellation, bounds, backpressure and owned task lifecycle |
+| CLI-GATE | cli | Exit codes, stdout/data versus stderr/diagnostics, help and actionable errors |
+| PERF-GATE | performance, systems | Before/after measurements, allocations/clones and justified complexity |
+| SAFETY-GATE | systems, platforms where applicable | SAFETY invariants, applicable Miri/ABI evidence, no known UB |
+| QA-GATE | testing | Acceptance and failure cases, meaningful assertions, flakiness and coverage |
+| RELEASE-GATE | release, dependencies, documentation | SemVer, changelog/docs, MSRV and publish dry-run |
+| BUILD-GATE | tooling | Required feature/target matrix, CI and zero-warning gates |
 
-`docs-engineer` contributes to `API-GATE` (pub items documented, doc-tests pass) and
-`RELEASE-GATE` (README/CHANGELOG in sync); the owning lead still signs off.
+Profile paths are in `references/agent-roster.md`; missing required expertise is an unverified
+lens. An implementer authoring docs/tests cannot provide independent API/RELEASE/QA sign-off.
+A fresh reviewer inspects their contracts and a fresh verifier judges command/behavior evidence.
 
 ### Review modes
 
@@ -39,11 +41,11 @@ the other. Keeping these apart is the whole design:
 The session briefing names the active intensity (default **full**). Pick it to match the
 work, and say which one you are running under:
 
-- **full** — every relevant gate runs by its owning lead; `/review` fans out its multi-lens
+- **full** — every relevant gate uses an independent reviewer/verifier with applicable profiles; `/review-work --mode diff` fans out its multi-lens
   pass. For public APIs, `unsafe`, releases, and anything crossing crates.
-- **lean** — only the directly-relevant gate(s) run, one reviewer pass, no `harsh-critic`
+- **lean** — only the directly-relevant gate(s) run, one reviewer pass, no `reviewer` with the `adversarial` profile
   unless the change embeds a design call. For routine features inside one crate.
-- **solo** — gates are advisory and `rust-reviewer` does a single pass. For prototypes and
+- **solo** — gates are advisory and `reviewer` with the `correctness` profile does a single pass. For prototypes and
   throwaway spikes.
 
 **Turning ceremony down turns the mechanical floor up.** At `full`, several independent
@@ -59,7 +61,7 @@ fewer reviewers — never permission to report a green you did not earn.
 ---
 ## 5. Verdicts
 
-Multi-agent skills (the `team-*` family, `dev-task`, `review`) end with an explicit
+Coordinated implementation, review and verification end with an explicit
 verdict so you always know where things stand:
 
 - **COMPLETE** — work done, gates passed, evidence shown (test output, bench numbers).
@@ -75,8 +77,8 @@ verdict so you always know where things stand:
   the blocker is named with a suggested next step. Completed work is never discarded for
   NEEDS WORK.
 
-**A relayed verdict is quoted, not paraphrased.** When a skill spawns a lens (`rust-reviewer`,
-`harsh-critic`, `product-steward`, a domain specialist), its verdict token appears verbatim in the
+**A relayed verdict is quoted, not paraphrased.** When a skill spawns a lens (`reviewer` with the `correctness` profile,
+`reviewer` with the `adversarial` profile, `designer` with the `architecture` profile, a domain specialist), its verdict token appears verbatim in the
 message the user reads, attributed to the lens, next to the orchestrator's own verdict. Dropping
 it to a summary ("the reviewer flagged some issues") is the one edit that turns a gate result
 into an opinion.

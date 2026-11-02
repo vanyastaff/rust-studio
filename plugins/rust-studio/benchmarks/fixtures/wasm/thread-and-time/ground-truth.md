@@ -1,4 +1,4 @@
-# Ground truth — wasm/thread-and-time (agent: `wasm-specialist`, verdict: NEEDS WORK)
+# Ground truth — wasm/thread-and-time (agent: `reviewer (profile: platforms)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"This `wasm-bindgen` crate compiles for the host and its tests pass natively, but it panics in the browser on the first call. Review it for the wasm32 target. List every finding with file:line and severity, then give a verdict."* Every defect is one `rules/wasm.md` names.
 

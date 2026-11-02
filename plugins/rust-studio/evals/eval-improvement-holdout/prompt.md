@@ -3,9 +3,9 @@ max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
-targets: [skill:eval-agents]
+targets: [skill:maintain-studio]
 ---
-/rust-studio:eval-agents improve
+/rust-studio:maintain-studio --mode evaluate improve
 
 Assess this instruction experiment. Only decide
 from the supplied record; no paid runs, writes, or real fixture inspection are needed here.

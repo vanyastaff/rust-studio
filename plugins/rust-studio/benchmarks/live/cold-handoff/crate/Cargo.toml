@@ -1,0 +1,13 @@
+[package]
+name = "cold-handoff"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "range-check"
+path = "src/main.rs"
+
+[dependencies]
+
+[lints.clippy]
+unwrap_used = "deny"

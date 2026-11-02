@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement Change"
+  short_description: "Implement Rust changes, diagnose failures"
+  default_prompt: "Use $implement-change: Implement Rust changes, diagnose failures, resolve compiler or PR feedback, and prove refactors or optimizations with the checks their risk requires."

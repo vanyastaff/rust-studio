@@ -26,6 +26,7 @@
 
 import fs from "node:fs";
 import os from "node:os";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -105,13 +106,15 @@ function unquote(value) {
 // TOML basic strings share JSON's escape set, so JSON.stringify emits valid TOML.
 const tomlString = (s) => JSON.stringify(s);
 
-fs.mkdirSync(outDir, { recursive: true });
-let count = 0;
-for (const entry of fs.readdirSync(agentsRoot).sort()) {
-  if (!entry.endsWith(".md")) continue;
+const catalog = JSON.parse(fs.readFileSync(path.join(pluginRoot, "catalog.json"), "utf8"));
+const outputs = new Map();
+for (const [catalogName, definition] of Object.entries(catalog.agents)) {
+  if (!/^[a-z][a-z0-9-]*$/.test(catalogName)) throw new Error(`invalid catalog role: ${catalogName}`);
+  const entry = `${catalogName}.md`;
   const { fields, body } = parse(path.join(agentsRoot, entry));
   const name = fields.get("name");
-  const role = fields.get("model") ?? "inherit";
+  const role = definition.model;
+  if (name !== catalogName || fields.get("model") !== role) throw new Error(`${entry}: name/model differs from catalog.json`);
   const description = unquote(fields.get("description") ?? "");
   if (!name || !description || !body) throw new Error(`${entry}: missing name/description/body`);
   if (body.includes("'''")) throw new Error(`${entry}: body would break the TOML literal string`);
@@ -140,8 +143,57 @@ for (const entry of fs.readdirSync(agentsRoot).sort()) {
     `'''`,
     "",
   ];
-  fs.writeFileSync(path.join(outDir, `${name}.toml`), lines.join("\n"));
-  count += 1;
+  outputs.set(`${name}.toml`, lines.join("\n"));
 }
 
-console.log(`codex agents: ${count} written to ${outDir}${routingFile ? ` with routing ${routingFile}` : ""}`);
+// A header is not proof of ownership: old installers did not record hashes.
+// Only an unchanged file recorded in this manifest can be replaced or retired.
+const manifestPath = path.join(outDir, ".rust-studio-agents.json");
+const digest = (data) => createHash("sha256").update(data).digest("hex");
+const regular = (file) => { try { return fs.lstatSync(file).isFile(); } catch (e) { if (e.code === "ENOENT") return false; throw e; } };
+let previous = { version: 1, files: {} };
+if (present(".rust-studio-agents.json")) {
+  if (!regular(manifestPath)) throw new Error("ownership manifest must be a regular file");
+  previous = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  if (previous.version !== 1 || !previous.files || Array.isArray(previous.files) || typeof previous.files !== "object" ||
+      Object.entries(previous.files).some(([name, hash]) => !/^[a-z][a-z0-9-]*\.toml$/.test(name) || typeof hash !== "string" || !/^[a-f0-9]{64}$/.test(hash))) {
+    throw new Error("invalid ownership manifest; no agent files were changed");
+  }
+}
+fs.mkdirSync(outDir, { recursive: true });
+const next = { version: 1, files: { ...previous.files } };
+let count = 0, retired = 0, preserved = 0;
+const warned = new Set();
+function preserve(name, reason) {
+  if (warned.has(name)) return;
+  warned.add(name); preserved += 1;
+  console.error(`preserved: ${name} (${reason}); resolve manually if this definition should be replaced`);
+}
+function owned(name) {
+  const file = path.join(outDir, name);
+  return regular(file) && previous.files[name] === digest(fs.readFileSync(file));
+}
+function present(name) {
+  try { fs.lstatSync(path.join(outDir, name)); return true; } catch (e) { if (e.code === "ENOENT") return false; throw e; }
+}
+for (const [name, output] of outputs) {
+  if (present(name) && !owned(name)) { preserve(name, "customized or unknown ownership"); continue; }
+  // Exclusive creation avoids overwriting an unknown file introduced since inspection.
+  if (!present(name)) fs.writeFileSync(path.join(outDir, name), output, { flag: "wx" });
+  else fs.writeFileSync(path.join(outDir, name), output);
+  next.files[name] = digest(output); count += 1;
+}
+for (const name of Object.keys(previous.files)) {
+  if (outputs.has(name)) continue;
+  if (!present(name)) { delete next.files[name]; continue; }
+  if (!owned(name)) { preserve(name, "modified previously generated definition"); continue; }
+  fs.unlinkSync(path.join(outDir, name)); delete next.files[name]; retired += 1;
+}
+for (const definition of Object.values(catalog.agents)) {
+  for (const legacy of Object.keys(definition.legacy ?? {})) {
+    const name = `${legacy}.toml`;
+    if (!outputs.has(name) && present(name)) preserve(name, "legacy definition has no unchanged ownership evidence");
+  }
+}
+fs.writeFileSync(manifestPath, `${JSON.stringify(next, null, 2)}\n`);
+console.log(`codex agents: ${count} written, ${retired} retired, ${preserved} preserved in ${outDir}${routingFile ? ` with routing ${routingFile}` : ""}`);

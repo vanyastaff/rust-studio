@@ -181,7 +181,7 @@ debt that only surfaces in prod (the "70% problem" / happy-path bias).
   real gap or unenforced clause worth surfacing.
 - For breaking / public-API / kernel-level PRs, dispatch **multiple review lenses in parallel**
   (architecture, migration-risk, API/semver) — they routinely catch correctness bugs that
-  clippy/tests/CI miss. (See `/review`.)
+  clippy/tests/CI miss. (See `/review-work --mode diff`.)
 - **Report everything; filter at the verdict.** A lens told to "flag only what matters" reports
   less — current models follow that instruction literally, and their marginal findings are
   mostly real, not noise (`claude-5-compat.md` §"Instructions to keep out of agents and

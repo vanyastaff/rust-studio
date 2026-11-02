@@ -61,9 +61,9 @@ A local `just ci` that mirrors it is the fast path to the same answer, not a sec
    sets, one pass is half the check, and the half you skipped is exactly where feature-gated code
    lives.
 5. **Do not add `--all-features` to a gate that does not use it**, and do not treat a green under
-   `--all-features` as covering the default build. Where the studio deliberately wants the widest
-   compile — `/migrate`'s edition sweep, `/msrv-check`, `cargo hack`'s feature matrix — the doc
-   says so and that is a *separate* check, not a substitute for the gate.
+   `--all-features` as covering the default build. Edition migration, minimum-Rust verification
+   and cargo-hack feature matrices may deliberately request a wider compile. Their procedures
+   state when it applies; that separate check does not replace the project gate.
 6. **Never edit the gate to go green.** Changing `just clippy`, a CI step, or a lint table so
    failing code passes is `Gate disabling` in the Cheat Catalog.
 7. **Report which gate you ran.** "`just ci` — green (clippy ×2, nextest 412/412)" is evidence.
@@ -83,10 +83,10 @@ for the default-feature pass. Record exactly which configurations were checked.
 
 ## Who enforces it
 
-- **`rust-builder`** — discovers the gate before step 6 and runs it instead of the defaults.
-- **`rust-reviewer`** — an evidence claim backed by a command that is *not* the project's gate is
+- **`implementer` with the `implementation` profile** — discovers the gate before step 6 and runs it instead of the defaults.
+- **`reviewer` with the `correctness` profile** — an evidence claim backed by a command that is *not* the project's gate is
   an `INTEGRITY` finding: the green is about a configuration nobody merges.
-- **`qa-lead` (QA-GATE), `tooling-lead` (BUILD-GATE), `release-lead` (RELEASE-GATE)** — the gate
+- **`verifier` with the `testing` profile (QA-GATE), `designer` with the `tooling` profile (BUILD-GATE), `designer` with the `release` profile (RELEASE-GATE)** — the gate
   they sign is the project's, where the project has one.
-- **`/verify-loop`, `/lint`, `/dev-task`, `/ci-gate`, `/fix-build`** — drive the project's gate to
-  green; `/ci-gate` installs one where there is none.
+- **`/implement-change --mode repair-gate`, `/verify-work --mode lint`, `/implement-change --mode implement`, `/configure-tooling --mode ci`, `/implement-change --mode compiler`** — drive the project's gate to
+  green; `/configure-tooling --mode ci` installs one where there is none.

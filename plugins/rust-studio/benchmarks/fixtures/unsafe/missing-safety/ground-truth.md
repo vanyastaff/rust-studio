@@ -1,4 +1,4 @@
-# Ground truth — unsafe/missing-safety (agent: unsafe-auditor)
+# Ground truth — unsafe/missing-safety (agent: reviewer (profile: systems))
 
 Planted defects in `input.rs`.
 

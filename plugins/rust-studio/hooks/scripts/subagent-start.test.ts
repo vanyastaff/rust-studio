@@ -2,11 +2,12 @@
 // Tests for the SubagentStart brief. Run with: `bun test` (from the plugin root) or
 // `bun test hooks/scripts/subagent-start.test.ts`.
 //
-// The failure this hook exists for: a `rust-builder` spawned into a workspace whose
+// The failure this hook exists for: a `implementer` spawned into a workspace whose
 // `justfile` lints default features ran `cargo clippy --all-features` and reported green,
 // because nothing in its empty window said a gate existed. The brief must name the gate
 // files that are there, say plainly when none are, and stay silent for built-in agents.
 
+import { fileURLToPath } from "node:url";
 import { test, expect, describe } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -52,10 +53,10 @@ describe("gate discovery", () => {
 });
 
 describe("who gets a brief", () => {
-  const roster = new Set(["rust-builder", "rust-reviewer", "chief-architect"]);
+  const roster = new Set(["implementer", "reviewer", "designer"]);
   test("roster agents, with or without the plugin namespace", () => {
-    expect(wantsBrief("rust-builder", roster)).toBe(true);
-    expect(wantsBrief("rust-studio:rust-reviewer", roster)).toBe(true);
+    expect(wantsBrief("implementer", roster)).toBe(true);
+    expect(wantsBrief("rust-studio:reviewer", roster)).toBe(true);
   });
   test("built-in and unknown agents are left alone", () => {
     expect(wantsBrief("Explore", roster)).toBe(false);
@@ -64,13 +65,13 @@ describe("who gets a brief", () => {
     expect(wantsBrief(undefined, roster)).toBe(false);
   });
   test("an unreadable roster means no brief — a wrong brief costs more than a missing one", () => {
-    expect(wantsBrief("rust-builder", null)).toBe(false);
+    expect(wantsBrief("implementer", null)).toBe(false);
   });
 });
 
 describe("the brief", () => {
   const base = {
-    agentType: "rust-builder",
+    agentType: "implementer",
     cwd: "/w/acme",
     gateIntensity: "full",
     testRunner: "nextest",
@@ -115,8 +116,8 @@ describe("the brief", () => {
 });
 
 describe("end to end", () => {
-  const HOOK = new URL("./subagent-start.ts", import.meta.url).pathname;
-  const root = new URL("../..", import.meta.url).pathname;
+  const HOOK = fileURLToPath(new URL("./subagent-start.ts", import.meta.url));
+  const root = fileURLToPath(new URL("../..", import.meta.url));
   const run = (payload: Record<string, unknown>) => {
     const r = Bun.spawnSync(["bun", HOOK], {
       stdin: Buffer.from(JSON.stringify(payload)),
@@ -127,11 +128,11 @@ describe("end to end", () => {
 
   test("a studio agent gets the brief with the discovered gate", () => {
     const dir = project({ "Cargo.toml": CARGO, Makefile: "lint:\n\tcargo clippy\n" });
-    const out = run({ session_id: "s1", cwd: dir, agent_id: "a1", agent_type: "rust-builder" });
+    const out = run({ session_id: "s1", cwd: dir, agent_id: "a1", agent_type: "implementer" });
     const ctx = JSON.parse(out).hookSpecificOutput;
     expect(ctx.hookEventName).toBe("SubagentStart");
     expect(ctx.additionalContext).toContain("`Makefile`");
-    expect(ctx.additionalContext).toContain("brief for `rust-builder`");
+    expect(ctx.additionalContext).toContain("brief for `implementer`");
   });
 
   test("a built-in agent gets nothing", () => {

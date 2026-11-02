@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Work"
+  short_description: "Review Rust changes, designs, security, dependencies, prose"
+  default_prompt: "Use $review-work: Review Rust changes, designs, security, dependencies, prose, or project debt against evidence and applicable gates."

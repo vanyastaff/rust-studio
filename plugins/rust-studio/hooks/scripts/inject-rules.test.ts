@@ -125,6 +125,18 @@ describe("announces each standard once per session, re-arming on compaction", ()
       env: { ...process.env, CLAUDE_PLUGIN_ROOT: root },
     });
 
+  test("compaction points to canonical designs while preserving legacy artifacts", () => {
+    const result = Bun.spawnSync([process.execPath, join(import.meta.dir, "pre-compact.ts")], {
+      stdin: Buffer.from("{}"),
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: join(import.meta.dir, "../..") },
+    });
+    expect(result.exitCode).toBe(0);
+    const message = JSON.parse(new TextDecoder().decode(result.stdout)).systemMessage;
+    expect(message).toContain("docs/designs/<slug>/");
+    expect(message).toContain(".rust-studio/specs/<slug>/");
+    expect(message).toContain("do not create a second copy");
+  });
+
   test("a rule already in context is not re-announced", () => {
     const s = `test-dedupe-${Math.random().toString(36).slice(2)}`;
     const first = edit(s, "/r/src/lib.rs");

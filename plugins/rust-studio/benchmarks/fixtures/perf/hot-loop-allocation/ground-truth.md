@@ -1,7 +1,7 @@
 # Ground truth — perf/hot-loop-allocation (verdict: RESHAPE NEEDED)
 
-> Mapped agent is `perf-engineer` (a pre-code specialist), whose reject token is
-> **RESHAPE NEEDED**. `REDO-TO-BAR` is the `rust-reviewer` equivalent — accept either as
+> Mapped agent is `reviewer (profile: performance)` (a pre-code specialist), whose reject token is
+> **RESHAPE NEEDED**. `REDO-TO-BAR` is the `reviewer (profile: correctness)` equivalent — accept either as
 > "rejected the shape". The agent should also name the criterion bench that proves the win.
 
 `encode_batch`/`checksum` are marked hot (per-request). Both allocate per iteration.

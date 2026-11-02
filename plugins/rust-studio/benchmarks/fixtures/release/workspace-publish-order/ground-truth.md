@@ -1,4 +1,4 @@
-# Ground truth — release/workspace-publish-order (agent: `release-lead`, verdict: BLOCKED)
+# Ground truth — release/workspace-publish-order (agent: `reviewer (profile: release)`, verdict: BLOCKED)
 
 > Audit prompt the fixture is calibrated for: *"We want to cut the next release of this workspace today. Review release readiness: the version numbers against the public-API diff in `docs/public-api-diff.txt`, the publish order and `release.sh`, each manifest's crates.io metadata, the MSRV, and `CHANGELOG.md`. Do not publish anything and do not run `cargo publish` without `--dry-run`. List each finding with file:line and end with a RELEASE-GATE verdict."*
 

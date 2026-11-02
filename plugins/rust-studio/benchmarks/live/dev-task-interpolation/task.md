@@ -1,11 +1,12 @@
 ---
 kind: skill
-target: dev-task
+target: implement-change
+mode: implement
 allowed_tools: [Read, Edit, Write, Glob, Grep, Bash, Agent, Skill]
 max_turns: 60
 timeout_seconds: 1800
 ---
-Run this story through the studio's dev-task workflow in the crate `kvconf` in the current directory. There is no plan UI on this host: present the plan in chat and ask for approval there; I will answer.
+Run this story through the studio's implement-change workflow in the crate `kvconf` in the current directory. There is no plan UI on this host: present the plan in chat and ask for approval there; I will answer.
 
 Story: add `${NAME}` interpolation to `Config::parse`. Acceptance criteria:
 1. A value may reference earlier keys with `${NAME}`; references are replaced by the referenced key's already-parsed value. Multiple references in one value are all expanded. References resolve in file order only (a key may reference keys defined above it, not below).

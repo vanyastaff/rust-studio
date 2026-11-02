@@ -1,7 +1,7 @@
 # Template — the project's own `CLAUDE.md`
 
 Copy into the **repo root** as `AGENTS.md`, and put a two-line `CLAUDE.md` beside it holding
-only `@AGENTS.md` and nothing else — the same split `/adopt` uses per crate, for the same
+only `@AGENTS.md` and nothing else — the same split `/inspect-project --mode onboard` uses per crate, for the same
 reason: Claude Code reads `CLAUDE.md` and not `AGENTS.md`, while Codex, Cursor and Copilot read
 `AGENTS.md`. The pointer holds no facts, so the two cannot drift. (Anthropic documents this
 import as the remedy, and steers away from a symlink because a Windows checkout cannot make
@@ -74,7 +74,7 @@ Two rules keep it honest:
   twice, it stops being a per-change correction and lands here — or better, in a lint or CI
   check if one can hold it (`memory-protocol.md` §"Flagged twice is a rule, not a note").
 - **Review it like code.** It changes behavior for everyone on the repo, so it moves through
-  the same PR review as the code does. `/memory-doctor` proposes promotions; a human approves
+  the same PR review as the code does. `/review-work --mode memory` proposes promotions; a human approves
   them.
 
 Per-crate context files in a large workspace scope context to the crate being edited — see

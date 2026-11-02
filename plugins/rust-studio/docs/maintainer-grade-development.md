@@ -66,10 +66,10 @@ If any item fails, do not write the junior patch and hope review fixes it. Resha
 
 ## Pre-Code Maintainer Gate
 
-Before the first source edit, the orchestrator or lead must produce a short
+Before the first source edit, the coordinator must produce a short
 `Maintainer-grade pre-code verdict`:
 
-- `ACCEPTABLE`: the plan can go to `rust-builder`.
+- `ACCEPTABLE`: the plan can go to `implementer` with the `implementation` profile.
 - `RESHAPE NEEDED`: the current structure or plan would produce weak code; reshape the
   affected area before implementation.
 - `BLOCKED`: a load-bearing decision, missing evidence, or external constraint prevents a
@@ -207,7 +207,7 @@ Product and engineering decisions are joined:
 
 ## Required Builder Behavior
 
-`rust-builder` must not blindly execute a weak plan.
+`implementer` with the `implementation` profile must not blindly execute a weak plan.
 
 - If the pre-code verdict is missing for a non-trivial task, return to the orchestrator before
   editing.
@@ -231,7 +231,7 @@ The pre-code standard is reinforced by focused `${CLAUDE_PLUGIN_ROOT}/rules/` fi
 ## Eval Fixtures To Keep This Standard Honest
 
 These scenarios ship under `${CLAUDE_PLUGIN_ROOT}/benchmarks/fixtures/` (each an
-`input.rs` + `ground-truth.md` pair) and run via `/eval-agents` in **first-pass bar** mode:
+`input.rs` + `ground-truth.md` pair) and run via `/maintain-studio --mode evaluate` in **first-pass bar** mode:
 the mapped agent passes only if it returns the expected `RESHAPE NEEDED` / `REDO-TO-BAR`
 verdict on `input.rs` — a "looks fine, it compiles" response is a fail. They fail if agents
 regress to junior behavior:

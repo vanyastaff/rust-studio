@@ -1,4 +1,0 @@
-interface:
-  display_name: "Deps Check"
-  short_description: "To audit existing Rust dependencies: security, licenses"
-  default_prompt: "Use $deps-check to audit existing Rust dependencies: security, licenses, sources, features, and MSRV."

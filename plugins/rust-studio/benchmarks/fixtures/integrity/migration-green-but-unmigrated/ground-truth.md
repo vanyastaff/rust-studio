@@ -1,10 +1,10 @@
-# Ground truth — integrity/migration-green-but-unmigrated (agent: `rust-reviewer`)
+# Ground truth — integrity/migration-green-but-unmigrated (agent: `reviewer (profile: correctness)`)
 
 An edition migration whose evidence is entirely green: the workspace builds, clippy is clean,
 and the test count is identical before and after (41 → 41). The migration nonetheless did not
 happen. This is the **gamed green** applied to a mechanical tool: `cargo fix` is asked to keep
 today's behaviour, so a clean run is consistent with nothing having migrated at all
-(`docs/integrity-and-evidence.md`, `/migrate` §Phase C).
+(`docs/integrity-and-evidence.md`, `/maintain-project --mode migrate` §Phase C).
 
 Reproduced on rustc 1.98.0 before this fixture was written; each row is observed, not predicted.
 

@@ -9,6 +9,11 @@ indicator (`arm: with-only`) that shows whether the plugin's own path fired.
 
 | case | fixture | what a pass proves |
 |---|---|---|
+| `catalog-effect-boundaries` | supplied requests | diagnosis, disposable prototypes and explicit publication retain distinct effects |
+| `catalog-verification-authoring` | supplied requests | requested ledger/fuzz/test authoring remains possible without production repair or self-approval |
+| `catalog-profile-authority` | supplied migration records | action selects the role; missing profiles, contaminated acceptance and reset repair history cannot pass |
+| `doc-review-fresh-evidence` | supplied review record | inherited context, failed lenses, stale evidence and a round cap cannot become a fresh READY |
+| `doc-review-drift` | supplied doc/source claims | distinguishes confirmed drift, re-exported APIs, proposed behavior and unverified platform claims without rewriting contracts |
 | `guideline-applicability` | — | vendor-local restrictions are scoped; owned/shared APIs and async mutexes are judged by their contracts; existing public construction and actual lint profiles are preserved |
 | `reviewer-unwrap-and-cast` | `benchmarks/fixtures/reviewer/unwrap-and-cast` | library panics and a truncating cast are found with fixes |
 | `integrity-gamed-green` | `…/integrity/gamed-green` | a green suite is not evidence: vacuous/tautological/stub tests and a silenced lint are rejected |
@@ -42,10 +47,11 @@ indicator (`arm: with-only`) that shows whether the plugin's own path fired.
 | `eval-improvement-holdout` | — | training gains do not excuse a holdout regression, missing/null results, changed prompts, weakened oracles or an unsupported spending guarantee |
 | `repair-loop-closeout` | — | advisory findings do not restart repairs; exhausted repair history survives and affected acceptance is rechecked |
 | `task-resume-evidence` | — | worker completion cannot unblock a consumer before destination integration and contract reconciliation |
+| `elephant-handoff-readiness` | — | syntactic readiness cannot hide overlapping ownership or stale destination evidence; fresh resume preserves active work, repairs and pre-write freshness |
 | `session-retro-evidence` | — | observed friction leads to small verifiable environment improvements without weaker checks or invented speedups |
 | `review-guard-preservation` | — | a guard simplification requires boundary and producer-contract evidence; missing local standards remain unverified |
 | `acceptance-ledger-honest-report` | — | a ledger with a stale gate, an abandonment and an unpinned cargo filter is not COMPLETE: the checker's counts are the denominator, hand-written evidence on a runnable gate is not met, and loosening `EXPECT:` is weakening the oracle |
-| `routing-flaky-tests`, `routing-binary-size`, `routing-public-api-design` | — | three natural requests reach the studio skill that owns them (`/flaky-hunt`, `/bloat`, `/design-api`) instead of generic advice |
+| `routing-flaky-tests`, `routing-binary-size`, `routing-public-api-design` | — | three natural requests reach the studio skill that owns them (`/implement-change --mode intermittent`, `/implement-change --mode size`, `/design-change --mode api`) instead of generic advice |
 
 ## Run
 
@@ -57,7 +63,7 @@ claude plugin eval plugins/rust-studio --threshold 0.8 --max-cost-usd 15   # CI-
 
 `plugin eval` is early access: on an account without it the command prints
 "`plugin eval` is currently in early access" and does nothing. Two fallbacks need no enablement:
-`/eval-agents` runs the fixtures inside a session, and **`bun tools/eval-runner.ts`** runs these
+`/maintain-studio --mode evaluate` runs the fixtures inside a session, and **`bun tools/eval-runner.ts`** runs these
 cases (and, with `--fixtures`, the benchmarks) over the headless CLI — `claude -p --plugin-dir`
 in an empty sandbox cwd, the case's `allowed_tools` and `max_turns`, `regex`/`tool_used`/
 `file_exists` graders evaluated locally and `llm` graders by a separate model call with no plugin
@@ -73,7 +79,7 @@ bun tools/eval-runner.ts --fixture scout/trait-map --fixture release/workspace-p
 
 - **`--runs N`** repeats every selected item N times (a case may also set `runs:` in its
   frontmatter); `summary.md` reports mean / min / max, and the `--threshold` gate uses the mean.
-- **Follow-ups.** A case that drives a question-phase skill (`/design-api`, `/brainstorm`) may
+- **Follow-ups.** A case that drives a question-phase skill (`/design-change --mode api`, `/design-change --mode specification --explore`) may
   ship `follow-ups.md`: the user's scripted replies, separated by `---` lines. The runner sends
   the opening prompt with `--session-id`, then each reply with `--resume`, and grades the merged
   transcript (last message = the final turn; tools / skills / cost summed across turns).
@@ -82,7 +88,7 @@ bun tools/eval-runner.ts --fixture scout/trait-map --fixture release/workspace-p
   `check.sh` — the crate's own gate plus a golden harness or probe — decides pass / fail. The
   runner never reads the agent's prose to score a live task.
 
-`/eval-agents improve <skill-or-agent-path>` uses this runner for a bounded comparison of
+`/maintain-studio --mode evaluate improve <skill-or-agent-path>` uses this runner for a bounded comparison of
 one instruction change, with repeated training cases and an independently held control set.
 See `docs/eval-improvement.md` for frozen decision rules, isolation and budget-accounting
 limits. The workflow cases adjudicate supplied records; they do not by themselves
@@ -123,4 +129,4 @@ edit can regress recall exactly the way a code edit regresses a test
 A model change is the same kind of trigger, aimed at the model instead of the prompt: results
 are scored on whichever model ran them, so a `/model` switch makes the last run stale for the
 new one — `PostModelSwitch` (`hooks/scripts/model-switch.ts`) says so in-session. Re-run with
-`/eval-agents`, which needs no enablement, or `claude plugin eval`, where early access is on.
+`/maintain-studio --mode evaluate`, which needs no enablement, or `claude plugin eval`, where early access is on.

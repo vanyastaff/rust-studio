@@ -1,7 +1,7 @@
 # Rust Code Studio
 
 Плагин для кодинг-агентов, который превращает сессию в maintainer-grade Rust-студию:
-директора → лиды → специалисты, path-scoped стандарты, quality-гейты и cargo-хуки.
+11 outcome-skills, 5 execution-ролей, domain-профили, path-scoped стандарты и quality-гейты.
 Ставится на Claude Code, Codex и любой хост Agent Skills.
 
 ## Команды

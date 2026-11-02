@@ -3,9 +3,9 @@ max_turns: 12
 timeout_seconds: 300
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
-targets: [skill:session-wrap]
+targets: [skill:write-docs]
 ---
-Use `/rust-studio:session-wrap` for the following session record. Assess the process and
+Use `/rust-studio:write-docs --mode handoff` for the following session record. Assess the process and
 suggest useful environment improvements as part of the wrap. This is record-only: there
 is no checkout here, no permission to change files or account access, and no need to run tools
 other than reading the skill and its references. Do not persist memory for this fixture.

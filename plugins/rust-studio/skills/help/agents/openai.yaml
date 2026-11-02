@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Studio Catalog"
-  short_description: "To find a Rust Studio skill or agent by task outcome"
-  default_prompt: "Use $help to find a Rust Studio skill or agent by task outcome."

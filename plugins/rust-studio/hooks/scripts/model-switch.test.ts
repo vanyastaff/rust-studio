@@ -21,7 +21,7 @@ describe("switchNote", () => {
   test("main session: names the moved gates and the way back", () => {
     const n = switchNote({ from_model: "claude-fable-5-1", to_model: "claude-opus-4-8" });
     expect(n).toContain("Fable 5.1 → Opus 4.8");
-    expect(n).toContain("rust-reviewer");
+    expect(n).toContain("reviewer");
     expect(n).toContain("`/model claude-fable-5-1`");
   });
   test("inside a sub-agent: tells the agent to finish and record the model in its evidence", () => {
@@ -35,11 +35,11 @@ describe("switchNote", () => {
     expect(n).toContain("Opus 5 → Opus 4.8");
     expect(n).toMatch(/state that model/);
     expect(n).not.toContain("/model");
-    expect(n).not.toContain("/eval-agents");
+    expect(n).not.toContain("/maintain-studio --mode evaluate");
   });
   test("main session: eval results are bound to the model that measured them, too", () => {
     const n = switchNote({ from_model: "claude-fable-5-1", to_model: "claude-opus-4-8" });
-    expect(n).toContain("/eval-agents");
+    expect(n).toContain("/maintain-studio --mode evaluate");
     expect(n).toContain("`claude plugin eval`");
     expect(n).toContain("early access");
   });

@@ -36,7 +36,7 @@ Read it before adding or reshaping a skill. The mechanics below are what CI enfo
   `allowed-tools`, `disable-model-invocation`. `name` must match the directory.
 - No host-specific APIs in portable skills (`CLAUDE_PLUGIN_ROOT`, `$ARGUMENTS`, task/team
   tool names, …). Describe capabilities instead. `validate-distribution.sh` enforces the
-  exact list. `eval-agents` and `progress-bar` are the labeled Claude-only exceptions.
+  exact list. `maintain-studio` is the labeled plugin-only entry with host/source requirements.
 - `SKILL.md` under 500 lines, and all skill descriptions share Studio's conservative
   6,500-character budget. Codex has a separate configurable token budget for discovery.
 - A side-effecting skill (publishes, commits, scaffolds, rewrites machine config) is
@@ -46,6 +46,13 @@ Read it before adding or reshaping a skill. The mechanics below are what CI enfo
   `node plugins/rust-studio/scripts/generate-openai-metadata.mjs`.
 - A skill that names a studio sub-agent must cite `references/sub-agents.md` (directly or
   via `delegation.md`) so hosts without sub-agents get the inline fallback.
+
+The public inventory is 11 skills, 10 portable entries and five managed roles. `catalog.json`
+owns operation modes and reusable profiles. The three explicit-only groups are maintain-project,
+maintain-studio and publish-change. Keep operation-specific effect boundaries: inspection,
+diagnosis, review and verification do not silently authorize source repair; prototypes and
+requested test authoring use implementer, followed by independent checking. Profiles are
+required domain loads across roles, not exclusive personas or model overrides.
 
 ## Before you push
 

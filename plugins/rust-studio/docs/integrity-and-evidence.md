@@ -68,7 +68,7 @@ trusting the agent's output *because* they no longer understand the code themsel
 exactly backwards. The fix is not to make the agent feel lost. It's to replace the missing
 reflex with an explicit check: flag when a touched module has grown past reasonable size or
 branching complexity, and propose a reshape instead of only extending. That's what the Accretion
-check in `skills/review/SKILL.md` does.
+check in `skills/review-work/SKILL.md` does.
 
 ## The Evidence Rules (how results are reported)
 
@@ -87,7 +87,7 @@ check in `skills/review/SKILL.md` does.
 - **A judge nobody has seen fail is not a judge.** Before an existing suite is cited as proof
   that behavior *survived* a change, establish that it can go red for the breakage that change
   can cause: break the behavior on purpose in the working tree, confirm the suite catches it,
-  revert. `/tdd`'s RED step is this move for one new test; `/mutants` is its systematic form for
+  revert. `/implement-change --mode test-first`'s RED step is this move for one new test; `/verify-work --mode mutation` is its systematic form for
   a module. It matters most in Rust for the classes neither the type system nor a green build
   observes (`Drop` order, closure capture, temporary scope), where a suite can be large, green,
   and blind to exactly the thing being changed. Skipping the calibration is allowed; reporting
@@ -143,14 +143,14 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
 
 ## Who Enforces It
 
-- **`rust-reviewer`** — owns the `🚩 INTEGRITY` finding category; the final backstop that catches
+- **`reviewer` with the `correctness` profile** — owns the `🚩 INTEGRITY` finding category; the final backstop that catches
   a skipped step or a gamed green even when everything is green.
-- **`qa-lead`** — the QA-GATE includes the honest-denominator check and the can-this-test-fail check.
-- **`test-engineer`** — writes strengthening, behavior-asserting tests that can fail; never weakens
+- **`verifier` with the `testing` profile** — the QA-GATE includes the honest-denominator check and the can-this-test-fail check.
+- **`implementer` with the `testing` profile** — writes strengthening, behavior-asserting tests that can fail; never weakens
   to pass; flags a wrong test *up* for a decision, never silently flips it.
-- **`harsh-critic`** — attacks the *evidence and the metric*, not only the design: gamed number,
+- **`reviewer` with the `adversarial` profile** — attacks the *evidence and the metric*, not only the design: gamed number,
   vacuous test, hidden denominator, skipped gate.
-- **`/dev-task`, `/tdd`, `/verify-loop`, `/spec-verify`, `/coverage`** — carry the evidence rules
+- **`/implement-change --mode implement`, `/implement-change --mode test-first`, `/implement-change --mode repair-gate`, `/verify-work --mode acceptance`, `/verify-work --mode coverage`** — carry the evidence rules
   and refuse to report a green they did not earn.
 - **the `stop-guard` hook (opt-in)** — the mechanical teeth: when `stop_guard` is enabled it blocks
   a turn from ending and feeds a reason to the model when the final message dodges ownership, seeks
@@ -172,5 +172,5 @@ Return `NEEDS WORK` with an `INTEGRITY` finding when a change:
 carries the execution-side moves (a vacuous test, an `#[ignore]`-to-skip, a canned-return stub, a
 lint-disabling `#[allow]`). `name-vs-body` carries the analysis-side pair: every item in it reads
 correctly from its name and doc comment and lies in its body, so the only way to score is to read
-the code. `/eval-agents` runs `rust-reviewer` against them; a missed gaming defect is a gap in the
+the code. `/maintain-studio --mode evaluate` runs `reviewer` with the `correctness` profile against them; a missed gaming defect is a gap in the
 agent's prompt — fix the agent, never relax the fixture.

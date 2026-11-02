@@ -23,6 +23,7 @@
 
 import { existsSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
+import { defaultDesignCwd } from "./design-paths.ts";
 import {
   applyResult, definitionDigest, formatEvidence, gateState, isRunnable, lintLedger, matchExpect,
   parseLedger, qualify, safeText, summarize, type Gate, type GateState, type Ledger,
@@ -99,18 +100,11 @@ export function parseArgs(argv: string[]): Options | Error {
   return o;
 }
 
-/** The directory a ledger's CHECK: lines run in: the project root that owns `.rust-studio/`,
+/** The directory a ledger's CHECK: lines run in: the project root owning a default design root,
  *  else the ledger's own directory. Repository-relative commands then mean the same thing
  *  from `/acceptance`, `/spec-verify`, and a person's shell. */
 export function defaultCwd(ledgerPath: string): string {
-  let dir = dirname(resolve(ledgerPath));
-  for (let i = 0; i < 12; i++) {
-    if (basename(dir) === ".rust-studio") return dirname(dir);
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return dirname(resolve(ledgerPath));
+  return defaultDesignCwd(ledgerPath);
 }
 
 export function shellFor(platform = process.platform): { argv: (cmd: string) => string[]; name: string; groupKill: boolean } {

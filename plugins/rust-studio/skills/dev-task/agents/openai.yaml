@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Implementation"
-  short_description: "To implement a scoped Rust change with the checks its risk"
-  default_prompt: "Use $dev-task to implement a scoped Rust change with the checks its risk requires."

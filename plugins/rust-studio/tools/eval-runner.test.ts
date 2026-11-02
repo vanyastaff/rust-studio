@@ -3,12 +3,232 @@
 // stream-json parser, the grader arithmetic, and the ground-truth readers. Run with `bun test`.
 
 import { test, expect, describe, afterAll } from "bun:test";
-import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
-import { join } from "node:path";
-import { auditPrompt, bareName, caseTargets, casesForTargets, coverageReport, installedIdsFor, targetMatches, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, pluginName, splitFrontmatter, stagePlugin, FIXTURE_AGENTS } from "./eval-runner.ts";
+import { readdirSync, readFileSync, existsSync, statSync, mkdtempSync, mkdirSync, writeFileSync, cpSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { auditPrompt, bareName, caseTargets, casesForTargets, coverageReport, installedIdsFor, targetMatches, fixtureMode, gtIds, gradeRegex, gradeToolUsed, mergeTraces, parseFollowUps, parseList, parseStream, pluginName, splitFrontmatter, stagePlugin, runFixture, FIXTURE_AGENTS, FIXTURE_PROFILES, profileInstruction } from "./eval-runner.ts";
 import { rmSync } from "node:fs";
 import { dirname } from "node:path";
 import { cleanEnv } from "./eval-runner.ts";
+import { stageLiveHandoff, runLive, checkHandoffBoundary, sessionTrace, type RunTrace } from "./eval-runner.ts";
+
+describe("native handoff lifecycle evidence", () => {
+  const config = { root: resolve("fixture-root"), helperRoot: resolve("plugin-root"), reconstruction: "docs/designs/cold-handoff/reconstruction.md", packet: ".rust-studio/reviews/cold-handoff/packet.json" };
+  const use = (id: string, name: string, input: unknown) => JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id, name, input }] } }) + "\n";
+  const result = (id: string, content: string, is_error = false) => JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: id, content, is_error }] } }) + "\n";
+  const reconstruct = use("r", "Write", { file_path: join(config.root, config.reconstruction), content: "contract and evidence" }) + result("r", "written");
+  const accept = JSON.stringify({ type: "assistant", message: { content: [{ type: "text", text: "HANDOFF_RECONSTRUCTION_ACCEPTED" }] } }) + "\n";
+  const check = use("c", "Bash", { command: `bun "${join(config.helperRoot, "scripts/design-workflow.ts")}" check "${config.root}" ".rust-studio/reviews/cold-handoff/packet.json"` });
+  const current = result("c", '{"status":"CURRENT","checked":10,"changed":[],"unavailable":[]}');
+  const write = use("w", "Edit", { file_path: join(config.root, "src/lib.rs"), old_string: "old", new_string: "new" }) + result("w", "edited");
+  test("accepts observable reconstruction, acceptance, CURRENT, first product write in order", () => {
+    expect(checkHandoffBoundary(reconstruct + accept + check + current + write, config).verified).toBe(true);
+  });
+  for (const [name, raw] of [
+    ["dummy reconstruction after code", write + reconstruct + accept + check + current],
+    ["acceptance before reconstruction completed", accept + reconstruct + check + current + write],
+    ["missing CURRENT result", reconstruct + accept + check + write],
+    ["stale packet", reconstruct + accept + check + result("c", '{"status":"STALE","checked":10,"changed":["src/lib.rs"],"unavailable":[]}') + write],
+    ["failed check", reconstruct + accept + check + result("c", '{"status":"CURRENT","checked":10,"changed":[],"unavailable":[]}', true) + write],
+    ["opaque agent", reconstruct + accept + check + current + use("a", "Agent", { prompt: "implement" }) + write],
+    ["unknown shell before boundary", use("s", "Bash", { command: "python write.py" }) + reconstruct + accept + check + current + write],
+    ["untrusted helper", reconstruct + accept + use("c", "Bash", { command: `bun "${join(config.root, "design-workflow.ts")}" check "${config.root}" "${config.packet}"` }) + current + write],
+    ["missing trace", ""],
+    ["no observed product write", reconstruct + accept + check + current],
+    ["failed product write", reconstruct + accept + check + current + use("w", "Write", { file_path: join(config.root, "src/lib.rs"), content: "new" }) + result("w", "failed", true)],
+    ["late CURRENT after artifact mutation", reconstruct + accept + check + use("m", "Edit", { file_path: join(config.root, "docs/designs/cold-handoff/spec.md") }) + result("m", "edited") + current + write],
+    ["check while artifact write pending", reconstruct + accept + use("m", "Edit", { file_path: join(config.root, "docs/designs/cold-handoff/spec.md") }) + check + current + result("m", "edited") + write],
+    ["artifact mutation while first product write pending", reconstruct + accept + check + current + use("w", "Edit", { file_path: join(config.root, "src/lib.rs") }) + use("m", "Edit", { file_path: join(config.root, "docs/designs/cold-handoff/spec.md") }) + result("m", "edited") + result("w", "edited")],
+    ["artifact mutation after accepted reconstruction", reconstruct + accept + use("m", "Edit", { file_path: join(config.root, "docs/designs/cold-handoff/spec.md") }) + result("m", "edited") + check + current + write],
+  ]) test(`rejects ${name}`, () => expect(checkHandoffBoundary(raw, config).verified).toBe(false));
+  test("nonzero CLI process exit overrides a success-looking result event", () => {
+    const trace = sessionTrace({ stdout: '{"type":"result","subtype":"success","result":"done"}', stderr: "failure", code: 1, timedOut: false });
+    expect(trace.isError).toBe(true);
+    expect(trace.subtype).toBe("process-exit-1");
+  });
+});
+
+describe("live cold handoff staging", () => {
+  function fixture() {
+    const root = mkdtempSync(join(tmpdir(), "handoff-test-"));
+    const baseline = join(root, "baseline"), author = join(root, "author"), destination = join(root, "destination");
+    mkdirSync(join(baseline, "src"), { recursive: true });
+    writeFileSync(join(baseline, "src/lib.rs"), "pub fn baseline() {}\n");
+    writeFileSync(join(baseline, "Cargo.toml"), "baseline manifest\n");
+    cpSync(baseline, author, { recursive: true });
+    mkdirSync(join(author, "docs/designs/cold"), { recursive: true });
+    writeFileSync(join(author, "docs/designs/cold/spec.md"), "the design\n");
+    return { root, baseline, author, destination };
+  }
+  function withFixture(fn: (f: ReturnType<typeof fixture>) => void) {
+    const f = fixture();
+    try { fn(f); } finally { rmSync(f.root, { recursive: true, force: true }); }
+  }
+  const files = ["docs/designs/cold/spec.md"];
+  test("copies the immutable baseline and only exact declared artifacts", () => withFixture(f => {
+    writeFileSync(join(f.author, "docs/designs/cold/transcript.jsonl"), "private conversation");
+    mkdirSync(join(f.author, "target"));
+    writeFileSync(join(f.author, "target/output"), "build output");
+    stageLiveHandoff(f.baseline, f.author, f.destination, files);
+    expect(readFileSync(join(f.destination, "src/lib.rs"), "utf8")).toBe("pub fn baseline() {}\n");
+    expect(readFileSync(join(f.destination, files[0]), "utf8")).toBe("the design\n");
+    expect(existsSync(join(f.destination, "docs/designs/cold/transcript.jsonl"))).toBe(false);
+    expect(existsSync(join(f.destination, "target"))).toBe(false);
+  }));
+  for (const path of ["../escape", "/absolute", "C:/escape", "docs/designs/../secret", "docs\\designs\\spec.md", "src/lib.rs", "Cargo.toml", ".claude/transcript.jsonl"]) {
+    test(`rejects unsafe/non-artifact input ${path}`, () => withFixture(f => {
+      expect(() => stageLiveHandoff(f.baseline, f.author, f.destination, [path])).toThrow();
+      expect(existsSync(f.destination)).toBe(false);
+    }));
+  }
+  test("rejects missing artifacts and directories", () => withFixture(f => {
+    for (const path of ["docs/designs/missing.md", "docs/designs/cold"]) {
+      expect(() => stageLiveHandoff(f.baseline, f.author, f.destination, [path])).toThrow();
+    }
+  }));
+  test("rejects baseline edits, deletion, and untracked additions outside artifact regions", () => {
+    for (const path of ["src/lib.rs", "src/new.rs", "Cargo.toml", "AGENTS.md", "docs/hidden.md"]) withFixture(f => {
+      mkdirSync(join(f.author, path, ".."), { recursive: true });
+      writeFileSync(join(f.author, path), "author product mutation");
+      expect(() => stageLiveHandoff(f.baseline, f.author, f.destination, files)).toThrow(/product/);
+    });
+    withFixture(f => {
+      rmSync(join(f.author, "src/lib.rs"));
+      expect(() => stageLiveHandoff(f.baseline, f.author, f.destination, files)).toThrow(/product/);
+    });
+  });
+  test("cannot overwrite any baseline file through artifact declaration", () => withFixture(f => {
+    mkdirSync(join(f.baseline, "docs/designs/cold"), { recursive: true });
+    writeFileSync(join(f.baseline, files[0]), "baseline design");
+    expect(() => stageLiveHandoff(f.baseline, f.author, f.destination, files)).toThrow(/baseline/);
+  }));
+  test("rejects symlink artifact ancestry and symlink product additions", () => withFixture(f => {
+    symlinkSync(join(f.author, "docs/designs/cold"), join(f.author, "docs/designs/link"), "junction");
+    expect(() => stageLiveHandoff(f.baseline, f.author, f.destination, ["docs/designs/link/spec.md"])).toThrow(/symlink/);
+    rmSync(join(f.author, "docs/designs/link"));
+    symlinkSync(join(f.author, "src"), join(f.author, "injected"), "junction");
+    expect(() => stageLiveHandoff(f.baseline, f.author, f.destination, files)).toThrow(/symlink/);
+  }));
+  test("rejects destination symlink ancestry and nested roots before copying", () => withFixture(f => {
+    const outside = join(f.root, "outside");
+    mkdirSync(outside);
+    symlinkSync(outside, join(f.root, "link"), "junction");
+    expect(() => stageLiveHandoff(f.baseline, f.author, join(f.root, "link/new"), files)).toThrow(/symlink/);
+    expect(readdirSync(outside)).toEqual([]);
+    expect(() => stageLiveHandoff(f.baseline, f.author, join(f.author, "new"), files)).toThrow(/separate/);
+  }));
+});
+
+describe("live cold handoff orchestration (simulated host, not live evidence)", () => {
+  async function run(mode: "good" | "author-edit" | "missing-file" | "empty-trace" | "same-session" | "author-error" | "implementation-error" | "budget" | "missing-lifecycle") {
+    const out = mkdtempSync(join(tmpdir(), "handoff-result-test-"));
+    const fixtureDir = join(import.meta.dir, "../benchmarks/live/cold-handoff");
+    const files = parseList(splitFrontmatter(readFileSync(join(fixtureDir, "task.md"), "utf8")).fm.handoff_files);
+    const calls: { cwd: string; prompt: string; followUps: string[]; budget: number; shared?: boolean }[] = [];
+    let checkRan = false;
+    const runtime: NonNullable<Parameters<typeof runLive>[3]> = {
+      prefix: () => "test-plugin:",
+      helperRoot: () => resolve("plugin-root"),
+      process: async (cmd) => {
+        if (cmd[0] === "bash") checkRan = true;
+        return { stdout: "simulated checker", stderr: "", code: 0, timedOut: false };
+      },
+      conversation: async (args, followUps, shared) => {
+        calls.push({ cwd: args.cwd, prompt: args.prompt, followUps, budget: args.budgetUsd, shared });
+        const author = calls.length === 1;
+        if (author) {
+          for (const path of files) {
+            if (mode === "missing-file" && path === files[0]) continue;
+            mkdirSync(dirname(join(args.cwd, path)), { recursive: true });
+            writeFileSync(join(args.cwd, path), `synthetic test artifact ${path}`);
+          }
+          writeFileSync(join(args.cwd, "docs/designs/private-transcript.jsonl"), "AUTHOR CONVERSATION MUST NOT CROSS");
+          if (mode === "author-edit") writeFileSync(join(args.cwd, "src/lib.rs"), "author implemented ahead of handoff");
+        } else {
+          expect(args.cwd).not.toBe(calls[0].cwd);
+          expect(followUps).toEqual([]);
+          expect(existsSync(join(args.cwd, "docs/designs/private-transcript.jsonl"))).toBe(false);
+          expect(readFileSync(join(args.cwd, "src/lib.rs"), "utf8")).toBe(readFileSync(join(fixtureDir, "crate/src/lib.rs"), "utf8"));
+          expect(args.prompt).not.toContain("Reject equal exclusive endpoints");
+          expect(args.prompt).toContain("/test-plugin:implement-change");
+        }
+        const trace: RunTrace & { raw: string } = {
+          sessionId: author || mode === "same-session" ? "author-id" : "implementation-id",
+          lastMessage: author ? "design complete" : "Verdict: COMPLETE", toolsUsed: ["Write"], skills: [], agents: [],
+          costUsd: author ? mode === "budget" ? 4 : 1.5 : 0.75,
+          turns: author ? 4 : 5, durationMs: author ? 100 : 200, isError: false, subtype: "success", stderrTail: "",
+          raw: line({ type: "result", subtype: "success", result: "complete" }),
+        };
+        if (!author && mode !== "missing-lifecycle") {
+          const call = (id: string, name: string, input: unknown) => line({ type: "assistant", message: { content: [{ type: "tool_use", id, name, input }] } });
+          const done = (id: string, content: string) => line({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: id, content }] } });
+          trace.raw = call("r", "Write", { file_path: join(args.cwd, "docs/designs/cold-handoff/reconstruction.md"), content: "synthetic reconstruction" })
+            + done("r", "written") + line({ type: "assistant", message: { content: [{ type: "text", text: "HANDOFF_RECONSTRUCTION_ACCEPTED" }] } })
+            + call("c", "Bash", { command: `bun "${join(runtime.helperRoot(), "scripts/design-workflow.ts")}" check "${args.cwd}" ".rust-studio/reviews/cold-handoff/packet.json"` })
+            + done("c", '{"status":"CURRENT","checked":10,"changed":[],"unavailable":[]}')
+            + call("w", "Edit", { file_path: join(args.cwd, "src/lib.rs"), old_string: "a", new_string: "b" }) + done("w", "edited") + trace.raw;
+        }
+        if ((author && mode === "author-error") || (!author && mode === "implementation-error")) trace.isError = true;
+        if (!author && mode === "empty-trace") trace.raw = "";
+        return trace;
+      },
+    };
+    try {
+      const result = await runLive("cold-handoff", 1, {
+        cases: [], targets: [], coverage: false, fixtures: [], allFixtures: false, liveTasks: [], allLive: false,
+        parallel: 1, budget: 4, graderModel: "unused", out, dryRun: false, timeoutScale: 1,
+      }, runtime);
+      expect(existsSync(join(out, "live__cold-handoff.run1.author.stream.jsonl"))).toBe(true);
+      return { result, calls, checkRan };
+    } finally { rmSync(out, { recursive: true, force: true }); }
+  }
+  test("separates conversations, stages only declared files, and includes both phases in accounting", async () => {
+    const { result, calls, checkRan } = await run("good");
+    expect(result.passed).toBe(true);
+    expect(checkRan).toBe(true);
+    expect(calls.length).toBe(2);
+    expect(calls[0].followUps.length).toBe(1);
+    expect(calls[0].shared).toBe(true);
+    expect(calls[1].budget).toBe(2.5);
+    expect(result.trace.costUsd).toBe(2.25);
+    expect(result.trace.turns).toBe(9);
+    expect(result.trace.durationMs).toBe(300);
+    expect(result.trace.lastMessage).toBe("Verdict: COMPLETE");
+    expect(result.handoff?.authorTrace.sessionId).toBe("author-id");
+    expect(result.handoff?.implementationTrace?.sessionId).toBe("implementation-id");
+    expect(result.handoff?.isolation).toBe("native-fresh-conversation");
+    expect(result.handoff?.behaviorPassed).toBe(true);
+    expect(result.handoff?.lifecycle?.verified).toBe(true);
+  });
+  test("behavior pass without lifecycle trace remains an overall failure", async () => {
+    const { result, checkRan } = await run("missing-lifecycle");
+    expect(checkRan).toBe(true);
+    expect(result.handoff?.behaviorPassed).toBe(true);
+    expect(result.handoff?.lifecycle?.verified).toBe(false);
+    expect(result.passed).toBe(false);
+  });
+  for (const mode of ["author-edit", "missing-file", "author-error", "budget"] as const) {
+    test(`${mode} prevents implementation/checker but preserves author spend`, async () => {
+      const { result, calls, checkRan } = await run(mode);
+      expect(result.passed).toBe(false);
+      expect(checkRan).toBe(false);
+      expect(calls.length).toBe(1);
+      expect(result.trace.costUsd).toBe(mode === "budget" ? 4 : 1.5);
+      expect(result.handoff?.isolation).toBe("not-established");
+      expect(result.handoff?.implementationTrace).toBeUndefined();
+    });
+  }
+  for (const mode of ["empty-trace", "same-session", "implementation-error"] as const) {
+    test(`${mode} cannot pass even if the checker would succeed`, async () => {
+      const { result, checkRan } = await run(mode);
+      expect(result.passed).toBe(false);
+      expect(checkRan).toBe(false);
+      expect(result.trace.costUsd).toBe(2.25);
+      expect(result.handoff?.isolation).toBe("not-established");
+      expect(result.trace.isError).toBe(true);
+    });
+  }
+});
 
 test("explicit subject model uses Claude's boolean force switch without changing parent env", () => {
   const previous = process.env.CLAUDE_CODE_SUBAGENT_MODEL_FORCE;
@@ -160,7 +380,7 @@ describe("plugin staging (the tree under test, not the installed copy)", () => {
     expect(staged.prefix).toBe(`${staged.name}:`);
     const manifest = JSON.parse(readFileSync(join(staged.dir, ".claude-plugin", "plugin.json"), "utf8"));
     expect(manifest.name).toBe(staged.name);
-    expect(existsSync(join(staged.dir, "skills", "review", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(staged.dir, "skills", "review-work", "SKILL.md"))).toBe(true);
     expect(existsSync(join(staged.dir, "hooks", "scripts", "session-start.ts"))).toBe(true);
   });
   test("eval results and node_modules are not copied", () => {
@@ -172,9 +392,13 @@ describe("plugin staging (the tree under test, not the installed copy)", () => {
     const st = stagePlugin(undefined, { inheritModels: true });
     const models = readdirSync(join(st.dir, "agents")).filter((f) => f.endsWith(".md"))
       .map((f) => /^model:\s*(\S+)/m.exec(readFileSync(join(st.dir, "agents", f), "utf8"))?.[1]);
-    expect(models.length).toBeGreaterThan(30);
+    expect(models.length).toBe(5);
     expect(new Set(models)).toEqual(new Set(["inherit"]));
-    expect(readFileSync(join(process.cwd(), "agents", "api-design-lead.md"), "utf8")).toMatch(/^model:\s*sonnet/m);
+    expect(readFileSync(join(import.meta.dir, "../agents/implementer.md"), "utf8")).toMatch(/^model:\s*sonnet/m);
+    expect(readFileSync(join(import.meta.dir, "../agents/researcher.md"), "utf8")).toMatch(/^model:\s*haiku/m);
+    for (const role of ["designer", "reviewer", "verifier"]) {
+      expect(readFileSync(join(import.meta.dir, `../agents/${role}.md`), "utf8")).toMatch(/^model:\s*inherit/m);
+    }
     rmSync(dirname(st.dir), { recursive: true, force: true });
   });
   test("bareName strips the staged prefix and any other plugin prefix", () => {
@@ -224,4 +448,126 @@ describe("targets: what a case measures", () => {
     expect(r).toContain("agents with NO case (1): rust-builder");
     expect(r).toContain("rules with a case: 1/1");
   });
+});
+
+
+test("migrated fixture categories retain read-only lenses and require their profile files", () => {
+  for (const [category, role] of Object.entries(FIXTURE_AGENTS)) {
+    expect(role).toBe(category === "scout" ? "researcher" : "reviewer");
+    expect(FIXTURE_PROFILES[category]).toBeDefined();
+  }
+  expect(FIXTURE_PROFILES.async).toBe("async");
+  expect(FIXTURE_PROFILES.docs).toBe("documentation");
+  const root = mkdtempSync(join(tmpdir(), "eval-profile-"));
+  cpSync(join(import.meta.dir, "../catalog.json"), join(root, "catalog.json"));
+  expect(() => profileInstruction("async", root)).toThrow("required profile is missing");
+  mkdirSync(join(root, "docs/profiles"), { recursive: true });
+  writeFileSync(join(root, "docs/profiles/async.md"), "Async invariants");
+  expect(profileInstruction("async", root)).toContain("The profile grants no additional authority");
+});
+
+test("frontmatter and follow-ups preserve Windows checkout prompts", () => {
+  expect(splitFrontmatter("---\r\nkind: skill\r\ntarget: design-change\r\nmode: specification\r\n---\r\nDesign only")).toEqual({ fm: { kind: "skill", target: "design-change", mode: "specification" }, body: "Design only" });
+  expect(parseFollowUps("first\r\n---\r\nsecond")).toEqual(["first", "second"]);
+});
+
+
+test("live agent dispatch loads its declared profile and fails before model use when missing", async () => {
+  const root = mkdtempSync(join(tmpdir(), "live-profile-"));
+  const out = mkdtempSync(join(tmpdir(), "live-profile-output-"));
+  cpSync(join(import.meta.dir, "../catalog.json"), join(root, "catalog.json"));
+  let calls = 0;
+  const runtime: NonNullable<Parameters<typeof runLive>[3]> = {
+    prefix: () => "test-plugin:", helperRoot: () => root,
+    process: async () => ({ stdout: "simulated", stderr: "", code: 0, timedOut: false }),
+    conversation: async (args) => {
+      calls++;
+      expect(args.prompt).toContain("subagent_type `test-plugin:implementer`");
+      expect(args.prompt).toContain("implementation.md");
+      expect(args.prompt).toContain("The profile grants no additional authority");
+      return { raw: "synthetic", lastMessage: "Verdict: COMPLETE", toolsUsed: [], skills: [], agents: [], costUsd: 0, turns: 1, durationMs: 1, isError: false, subtype: "success", stderrTail: "" };
+    },
+  };
+  const options: Parameters<typeof runLive>[2] = { cases: [], targets: [], coverage: false, fixtures: [], allFixtures: false, liveTasks: [], allLive: false, parallel: 1, budget: 1, graderModel: "unused", out, dryRun: false, timeoutScale: 1 };
+  try {
+    await expect(runLive("builder-interpolation", 1, options, runtime)).rejects.toThrow("required profile is missing");
+    expect(calls).toBe(0);
+    mkdirSync(join(root, "docs/profiles"), { recursive: true });
+    writeFileSync(join(root, "docs/profiles/implementation.md"), "Implementation scope");
+    await runLive("builder-interpolation", 1, options, runtime);
+    expect(calls).toBe(1);
+  } finally { rmSync(root, { recursive: true, force: true }); rmSync(out, { recursive: true, force: true }); }
+});
+
+
+test("consolidated tool graders bind operation/profile evidence to the same raw invocation", () => {
+  const call = (name: string, input: unknown) => line({ type: "assistant", message: { content: [{ type: "tool_use", name, input }] } });
+  const raw = call("Skill", { skill: "rust-studio:implement-change", args: "--mode size inspect the release binary" })
+    + call("Skill", { skill: "rust-studio:review-work", args: "--mode api inspect the exported API" })
+    + call("Agent", { subagent_type: "rust-studio:reviewer", prompt: "Read docs/profiles/async.md. Audit cancellation." })
+    + call("Agent", { subagent_type: "rust-studio:implementer", prompt: "Use the security profile. Implement the requested fix." });
+  const trace = parseStream(raw);
+  const grader = (fm: Record<string, string>): Parameters<typeof gradeToolUsed>[0] => ({ file: "scope", type: "tool_used", weight: 1, body: "", fm });
+  expect(gradeToolUsed(grader({ tool: "Skill", name: "implement-change", mode: "size" }), trace).score).toBe(1);
+  expect(gradeToolUsed(grader({ tool: "Skill", name: "implement-change", mode: "api" }), trace).score).toBe(0);
+  expect(gradeToolUsed(grader({ tool: "Skill", name: "implement-change", mode: "intermittent" }), trace).score).toBe(0);
+  expect(gradeToolUsed(grader({ tool: "Agent", name: "reviewer", profile: "async" }), trace).score).toBe(1);
+  expect(gradeToolUsed(grader({ tool: "Agent", name: "reviewer", profile: "security" }), trace).score).toBe(0);
+  expect(trace.skillCalls?.[0]).toEqual({ name: "rust-studio:implement-change", args: "--mode size inspect the release binary" });
+  expect(mergeTraces(trace, trace).agentCalls).toHaveLength(4);
+  const historical = { ...trace, skillCalls: undefined, agentCalls: undefined };
+  expect(gradeToolUsed(grader({ tool: "Skill", name: "implement-change", mode: "size" }), historical).score).toBe(0);
+  expect(gradeToolUsed(grader({ tool: "Agent", name: "reviewer", profile: "async" }), historical).score).toBe(0);
+});
+
+
+describe("fixture attribution requires observed role and profile together", () => {
+  async function evaluate(kind: "missing-profile" | "wrong-actor" | "valid" | "grader-error") {
+    const out = mkdtempSync(join(tmpdir(), "fixture-dispatch-"));
+    let graded = false;
+    const calls = kind === "wrong-actor"
+      ? [{ name: "test:reviewer", prompt: "Review this code" }, { name: "test:implementer", prompt: "Read docs/profiles/async.md" }]
+      : [{ name: "test:reviewer", prompt: kind === "missing-profile" ? "Review this code" : "Read docs/profiles/async.md and audit cancellation." }];
+    const raw = calls.map(call => line({ type: "assistant", message: { content: [{ type: "tool_use", name: "Agent", input: { subagent_type: call.name, prompt: call.prompt } }] } })).join("")
+      + line({ type: "result", subtype: "success", result: "Verdict: COMPLETE" });
+    const options: Parameters<typeof runFixture>[2] = { cases: [], targets: [], coverage: false, fixtures: [], allFixtures: false, liveTasks: [], allLive: false, parallel: 1, budget: 1, graderModel: "unused", out, dryRun: false, timeoutScale: 1 };
+    try {
+      const result = await runFixture("async/cancel-and-block", 1, options, {
+        prefix: () => "test:", helperRoot: () => resolve(import.meta.dir, ".."),
+        conversation: async () => ({ ...parseStream(raw), raw }),
+        grade: async () => { graded = true; return kind === "grader-error" ? { error: "grader unavailable" } : { caught: [], verdict_ok: true }; },
+      });
+      expect(readFileSync(join(out, "fixture__async__cancel-and-block.run1.stream.jsonl"), "utf8")).toBe(raw);
+      return { result, graded };
+    } finally { rmSync(out, { recursive: true, force: true }); }
+  }
+  test.each(["missing-profile", "wrong-actor"] as const)("%s cannot earn a role/profile score", async kind => {
+    const { result, graded } = await evaluate(kind);
+    expect(graded).toBe(false);
+    expect(result).toMatchObject({ agent: "reviewer", profile: "async", spawned: false, recall: null, verdictOk: false });
+    expect(result.caught).toEqual([]);
+    expect(result.missed.length).toBe(result.gtCount);
+  });
+  test("valid scoped dispatch reaches grading and retains its profile", async () => {
+    const { result, graded } = await evaluate("valid");
+    expect(graded).toBe(true);
+    expect(result).toMatchObject({ agent: "reviewer", profile: "async", spawned: true, verdictOk: true });
+  });
+  test("grader failure keeps the profile and does not invent a score", async () => {
+    const { result, graded } = await evaluate("grader-error");
+    expect(graded).toBe(true);
+    expect(result).toMatchObject({ agent: "reviewer", profile: "async", spawned: true, recall: null, verdictOk: null, notes: "grader unavailable" });
+  });
+});
+
+
+test("profile grader accepts the runtime's emitted instruction including JSON-escaped Windows paths", () => {
+  const prompts = [
+    profileInstruction("correctness", resolve(import.meta.dir, "..")),
+    `Read the domain profile at ${JSON.stringify("D:\\rust-studio\\docs\\profiles\\correctness.md")} and apply its criteria.`,
+  ];
+  for (const prompt of prompts) {
+    const trace = parseStream(line({ type: "assistant", message: { content: [{ type: "tool_use", name: "Agent", input: { subagent_type: "test:reviewer", prompt } }] } }));
+    expect(gradeToolUsed({ file: "roundtrip", type: "tool_used", weight: 1, body: "", fm: { tool: "Agent", name: "reviewer", profile: "correctness" } }, trace).score).toBe(1);
+  }
 });

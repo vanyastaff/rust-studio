@@ -1,4 +1,4 @@
-# Ground truth — error-model/stringly-and-lost-source (agent: `error-architect`, verdict: NEEDS WORK)
+# Ground truth — error-model/stringly-and-lost-source (agent: `reviewer (profile: api)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"We are about to publish 1.0 of `acme-store`. Review its error handling and error types as the crate's public contract. List every finding with file:line and severity, then give a verdict."* Every defect is one `rules/error-model.md` names.
 

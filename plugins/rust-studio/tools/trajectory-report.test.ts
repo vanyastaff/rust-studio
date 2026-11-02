@@ -10,7 +10,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { analyzeAgent, analyzeSession, bare, errorKey } from "./trajectory-report.ts";
+import { analyzeAgent, analyzeSession, bare, errorKey, report } from "./trajectory-report.ts";
 
 const line = (o: unknown) => JSON.stringify(o) + "\n";
 const asst = (content: unknown[], ts: string) => line({ type: "assistant", timestamp: ts, message: { content } });
@@ -88,4 +88,23 @@ describe("helpers", () => {
     expect(errorKey("File does not exist. Note: your current working directory is /home/u/x\nmore")).toBe("File does not exist. Note: your current working directory is <path>");
     expect(errorKey("Exit code 101")).toBe("Exit code N");
   });
+});
+
+
+test("trajectory aggregation migrates labels without changing transcript provenance or old write permissions", () => {
+  const dir = mkdtempSync(join(tmpdir(), "traj-migration-"));
+  const path = join(dir, "s.jsonl");
+  writeFileSync(path, asst([{ type: "tool_use", name: "Skill", input: { skill: "rust-studio:dev-task" } }]));
+  const session = analyzeSession(path, "demo")!;
+  const agentPath = join(dir, "agent.jsonl");
+  writeFileSync(agentPath.replace(/\.jsonl$/, ".meta.json"), JSON.stringify({ agentType: "rust-studio:perf-engineer" }));
+  writeFileSync(agentPath, asst([{ type: "tool_use", name: "Edit", input: { file_path: "/x/a.rs" } }]));
+  const agent = analyzeAgent(agentPath, "s", "demo")!;
+  const before = JSON.stringify({ session, agent });
+  const text = report([session], [agent]);
+  expect(text).toContain("| implement-change |");
+  expect(text).toContain("| implementer |");
+  expect(text).toContain("Original labels (preserved in source transcripts and JSON): dev-task, perf-engineer");
+  expect(text).toContain("n/a");
+  expect(JSON.stringify({ session, agent })).toBe(before);
 });

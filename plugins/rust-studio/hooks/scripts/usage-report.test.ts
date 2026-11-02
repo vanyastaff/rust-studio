@@ -1,6 +1,7 @@
 // Tests for the usage report: the window, the split by hand and project, the "never invoked"
 // list against a catalog, names outside the studio, the rendering, and the CLI (--help,
 // --json, a missing log, a log copied from elsewhere).
+import { fileURLToPath } from "node:url";
 import { test, expect, describe } from "bun:test";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -8,7 +9,7 @@ import { join } from "node:path";
 import { buildReport, readUsage, readCatalog, findPluginRoot, projectOf, isEvalSandbox, renderReport, main, DEFAULT_DAYS } from "./usage-report.ts";
 import type { UsageRow } from "./usage-log.ts";
 
-const CLI = new URL("./usage-report.ts", import.meta.url).pathname;
+const CLI = fileURLToPath(new URL("./usage-report.ts", import.meta.url));
 const NOW = new Date("2026-09-21T12:00:00Z");
 const DAY = 86_400_000;
 const at = (daysAgo: number) => new Date(NOW.getTime() - daysAgo * DAY).toISOString();
@@ -66,8 +67,10 @@ describe("readCatalog + findPluginRoot", () => {
   test("finds the real plugin root from hooks/scripts, and refuses a directory that is not one", () => {
     const root = findPluginRoot();
     expect(root).not.toBeNull();
-    expect(readCatalog(root).skills).toContain("studio-doctor");
-    expect(readCatalog(root).agents).toContain("rust-reviewer");
+    expect(readCatalog(root).skills).toContain("inspect-project");
+    expect(readCatalog(root).agents).toContain("reviewer");
+    expect(readCatalog(root).skills).toHaveLength(11);
+    expect(readCatalog(root).agents).toHaveLength(5);
     expect(findPluginRoot(mkdtempSync(join(tmpdir(), "empty-")))).toBeNull();
   });
 });
@@ -148,7 +151,7 @@ describe("the eval harness is not demand", () => {
 
   /** A catalog of exactly the three skills the rows below name. */
   const root = mkdtempSync(join(tmpdir(), "plugin-eval-"));
-  for (const s of ["review", "spec-tasks", "acceptance"]) {
+  for (const s of ["review", "dev-task", "acceptance"]) {
     mkdirSync(join(root, "skills", s), { recursive: true });
     writeFileSync(join(root, "skills", s, "SKILL.md"), "---\nname: x\n---\n");
   }
@@ -158,8 +161,8 @@ describe("the eval harness is not demand", () => {
     row({ name: "review", cwd: "/tmp/rs-eval-review-guard-preservation-a1" }),
     row({ name: "review", cwd: "/tmp/rs-eval-review-guard-preservation-b2" }),
     row({ name: "review", cwd: "/mnt/data/dev/nebula" }),
-    row({ name: "spec-tasks", cwd: "/tmp/rs-eval-task-resume-evidence-c3" }),
-    row({ name: "spec-tasks", cwd: "/tmp/eval-plugin-9z/spec-tasks" }),
+    row({ name: "dev-task", cwd: "/tmp/rs-eval-task-resume-evidence-c3" }),
+    row({ name: "dev-task", cwd: "/tmp/eval-plugin-9z/dev-task" }),
     row({ name: "acceptance", cwd: "/mnt/data/dev/rust-studio" }),
   ];
   const report = buildReport(rows, readCatalog(root), { file: "f", days: null, since: null, malformed: 0, now: NOW });
@@ -177,7 +180,7 @@ describe("the eval harness is not demand", () => {
   test("a skill only the studio reached for is neither used nor never", () => {
     expect(report.skills.used.map((s) => s.name)).toEqual(["review"]);
     expect(report.skills.selfOnly.map((s) => [s.name, s.total, s.genuine])).toEqual([
-      ["spec-tasks", 2, 0],
+      ["dev-task", 2, 0],
       ["acceptance", 1, 0],
     ]);
     expect(report.skills.never).toEqual([]);
@@ -188,7 +191,7 @@ describe("the eval harness is not demand", () => {
     expect(text).toContain("Invoked only by the studio itself — plugin-dev or an eval sandbox (2):");
     expect(text).toMatch(/rs-eval-review-guard-preservation-a1 \(eval\)×1/);
     // the wrapper's leaf is the bare case name, so it is flagged by its cwd, not its basename
-    expect(text).toMatch(/spec-tasks \(eval\)×1/);
+    expect(text).toMatch(/dev-task \(eval\)×1/);
     expect(text).toContain("Never invoked — skills (0):");
   });
 });
@@ -238,7 +241,21 @@ describe("the CLI", () => {
     expect(r.exitCode).toBe(0);
     const text = new TextDecoder().decode(r.stdout);
     expect(text).toContain("1 invocation across 1 session");
-    expect(text).toMatch(/review\s+1\s+0\s+1\s+1\s+1\s+x×1/);
+    expect(text).toMatch(/review-work\s+1\s+0\s+1\s+1\s+1\s+x×1/);
     expect(text).toContain("Never invoked — skills (");
   });
+});
+
+
+test("legacy usage aggregates under current catalog while preserving raw event identity", () => {
+  const root = join(import.meta.dir, "../..");
+  const rows = [row({ name: "review" }), row({ name: "review-work" }), row({ kind: "agent", name: "rust-reviewer" }), row({ kind: "agent", name: "reviewer" })];
+  const original = JSON.stringify(rows);
+  const report = buildReport(rows, { root, skills: ["review-work"], agents: ["reviewer"] }, { file: "usage.jsonl", days: null, since: null, malformed: 0, now: NOW });
+  expect(report.skills.used[0].name).toBe("review-work");
+  expect(report.skills.used[0].total).toBe(2);
+  expect(report.skills.used[0].rawNames).toEqual({ review: 1, "review-work": 1 });
+  expect(report.agents.used[0].rawNames).toEqual({ "rust-reviewer": 1, reviewer: 1 });
+  expect(report.outside).toEqual([]);
+  expect(JSON.stringify(rows)).toBe(original);
 });

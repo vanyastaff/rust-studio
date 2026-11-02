@@ -29,7 +29,7 @@ project's README — serena (`github.com/oraios/serena`) and exa
 navigation and `gh`/web for evidence, just less precisely. The per-skill obligations that make
 that true live in "Degradation contract" below.
 
-**Project memory needs no server.** `/recall`, `/remember`, `/memory-doctor`, and the session-start / prompt hooks use the host's auto-memory directory for the repository through the harness's own Read/Write/Grep — the same `MEMORY.md` index Claude Code loads at session start, shared with Codex sessions. Contract and path rule: `memory-protocol.md`.
+**Project memory needs no server.** `/inspect-project --mode recall`, `/write-docs --mode memory`, `/review-work --mode memory`, and the session-start / prompt hooks use the host's auto-memory directory for the repository through the harness's own Read/Write/Grep — the same `MEMORY.md` index Claude Code loads at session start, shared with Codex sessions. Contract and path rule: `memory-protocol.md`.
 
 ## Degradation contract — skills must survive missing serena/exa
 
@@ -47,11 +47,11 @@ agents therefore never treat a serena/exa call as load-bearing:
 - **Never stall on a missing server.** Do not retry, do not ask the user to install anything
   mid-task, do not treat the absence as an error to report and stop. One line in the final
   message ("symbol search ran text-only — serena unavailable") is the whole ceremony.
-- **`/studio-doctor` reports, others degrade.** Detecting whether the servers are configured
+- **`/inspect-project --mode diagnose-host` reports, others degrade.** Detecting whether the servers are configured
   is a doctor's job (it lists what is present); workflows just pick the tools they find and
   proceed.
 - **Suggest the setup once, outside the task.** When the absence actually cost precision,
-  `/env-setup` and `docs/tooling.md` §above are the pointer for the user's next session — not
+  `/configure-tooling --mode environment` and `docs/tooling.md` §above are the pointer for the user's next session — not
   a detour inside this one.
 
 Skill phrasing follows this template: *use X when available; without it, do Y and say so once.*
@@ -141,8 +141,8 @@ A green under different flags is a green about a different build: `project-gate.
 
 ### Slop and drift — the tree-level signals a diff reader cannot see
 The rows above marked duplicates, orphans, cycles, dead `pub` and unused deps are the
-mechanical layer of `rules/core.md` §"Clarity is design, not size"; `slop-auditor` runs them
-and `/tech-debt`, `/adopt` and `/refactor` read the ledger. A hit is a lead to read, not a
+mechanical layer of `rules/core.md` §"Clarity is design, not size"; `reviewer` with the `structure` profile runs them
+and `/review-work --mode structure`, `/inspect-project --mode onboard` and `/implement-change --mode refactor` read the ledger. A hit is a lead to read, not a
 finding — the finding is the name, the pattern or the boundary. `similarity-rs` at its
 defaults flags every three-line trait impl (`fmt`, `from`, `default`) as a pair; start at
 `--min-lines 10 --threshold 0.9` on one crate and widen only after that pass is triaged.
@@ -160,9 +160,9 @@ cargo modules dependencies -p <crate> --lib --no-fns --no-externs --no-sysroot \
 ```
 
 `similarity-rs` is a standalone binary (`cargo install similarity-rs` or `cargo binstall`), not
-a cargo subcommand; `/env-setup` installs it with the full tool set. `scripts/slop-audit.sh -p
+a cargo subcommand; `/configure-tooling --mode environment` installs it with the full tool set. `scripts/slop-audit.sh -p
 <package>` runs every row of this section as one Markdown report, skipping what is not installed
-and naming it; `/tech-debt`, `/adopt` and `/refactor` carry a copy.
+and naming it; `/review-work --mode structure`, `/inspect-project --mode onboard` and `/implement-change --mode refactor` carry a copy.
 
 ## Rule
 Never use Bash `grep`/`find`/`cat`/`sed`/`awk` for searching or navigating code when a

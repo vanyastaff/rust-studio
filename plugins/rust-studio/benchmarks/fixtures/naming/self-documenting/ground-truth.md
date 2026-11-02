@@ -1,6 +1,6 @@
 # Ground truth — naming/self-documenting (verdict: REDO-TO-BAR)
 
-> Mapped agent is `rust-reviewer` in **first-pass-bar** mode; its reject token is
+> Mapped agent is `reviewer (profile: correctness)` in **first-pass-bar** mode; its reject token is
 > **REDO-TO-BAR**. The code compiles, is clippy-clean, and is correct — clippy is **silent**
 > on weak-but-valid names, so the reviewer is the only gate. Accepting it because "it compiles
 > and tests/clippy are green" is the miss. Per `${CLAUDE_PLUGIN_ROOT}/rules/core.md` *Naming*:

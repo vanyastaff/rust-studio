@@ -3,9 +3,9 @@ max_turns: 18
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 runs: 1
-targets: [skill:review, agent:rust-reviewer, agent:api-design-lead]
+targets: [skill:review-work, agent:reviewer]
 ---
-Use `/rust-studio:review` and its applicable guidance to assess these proposed rules. This
+Use `/rust-studio:review-work --mode diff` and its applicable guidance to assess these proposed rules. This
 is a supplied design scenario, not a runnable repository; do not invent test results or edit.
 
 Our Rust 2021 application uses Tokio, clones `Arc<Config>` to share immutable configuration,

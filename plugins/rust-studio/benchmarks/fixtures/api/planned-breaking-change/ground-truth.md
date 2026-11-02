@@ -1,4 +1,4 @@
-# Ground truth — api/planned-breaking-change (agent: `api-design-lead`, verdict: NEEDS WORK)
+# Ground truth — api/planned-breaking-change (agent: `reviewer (profile: api)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"This is the working tree for the next
 > `tinyconf` release. Can we tag it?"* The **change is right** — a `Result` with a typed error

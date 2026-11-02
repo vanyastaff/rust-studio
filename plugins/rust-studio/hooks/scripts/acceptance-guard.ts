@@ -3,7 +3,8 @@
 //
 // Blocks the turn from ENDING while an acceptance ledger this session is working has gates
 // that are not met. Where the phrase-matching stop-guard reads the final message for signs of
-// an undisciplined ending, this one reads STATE: `.rust-studio/specs/<slug>/acceptance.md`,
+// an undisciplined ending, this one reads STATE: `docs/designs/<slug>/acceptance.md`
+// and existing `.rust-studio/specs/<slug>/acceptance.md` ledgers,
 // parsed through the same strict parser the checker uses. A gate is met only when the checker
 // wrote definition-bound evidence for the CHECK/EXPECT that stand in the file now — so an
 // edited oracle, a hand-ticked box, or a stale run all count as not met.
@@ -12,9 +13,9 @@
 //
 // Fires only when ALL hold:
 //   * acceptance_guard userConfig is on (default ON),
-//   * a ledger exists under <cwd>/.rust-studio/specs/*/acceptance.md,
+//   * a ledger exists under one of the two default design roots,
 //   * that ledger is BOUND to this session — its spec directory is named somewhere in this
-//     session's transcript (the /spec-tasks write, a checker run, a Read, or a bare mention of a
+//     session's transcript (the /dev-task plan write, a checker run, a Read, or a mention of a
 //     path inside it). A ledger another session left half-done CAN block this one, and repairing
 //     it belongs to its owner: re-running a peer's checker ticks gates for work this session
 //     never did. With no transcript to read, nothing binds and the guard stays silent (fails open),
@@ -26,7 +27,7 @@
 //   * the final message CLAIMS COMPLETION — its last verdict token is COMPLETE, or it is a
 //     completion summary (files changed / commands run / verification / result) with no
 //     verdict. The studio's workflows stop on purpose to hand the turn to the user: the
-//     /spec-tasks approval gate right after the ledger is written, a design fork, a
+//     /dev-task planning checkpoint right after the ledger is written, a design fork, a
 //     /grill-me question, an honest NEEDS WORK or BLOCKED report. None of those claims the
 //     work is done, and none is blocked. The guard reads the message only to tell those
 //     apart; the *state* it enforces is the ledger's.
@@ -41,12 +42,13 @@
 // `blockStop` selects Claude's exit-2 feedback or Codex's JSON decision. The feedback names the
 // ids, checker command, and rule for an impossible gate.
 
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { blockStop, readInput, watchdog, optionBool, pluginRoot, pluginData } from "./_lib.ts";
 import { gateState, lintLedger, parseLedger, qualify, sha256, type GateState } from "./acceptance-ledger.ts";
 import { getEvidenceGroups, lastAssistantFromTranscript } from "./stop-guard.ts";
 import { asText } from "./auto-capture.ts";
+import { DESIGN_ROOTS } from "./design-paths.ts";
 
 export const MAX_BLOCKS = 4;
 const MAX_LEDGERS = 64;
@@ -88,27 +90,44 @@ export interface Decision {
   oracle: string[];
 }
 
-/** Ledgers under <cwd>/.rust-studio/specs/<slug>/acceptance.md, bounded. */
+/** Ledgers under both default design roots, sharing one bounded discovery budget. */
 export function discoverLedgers(cwd: string): { slug: string; abs: string; path: string }[] {
-  const root = join(cwd, ".rust-studio", "specs");
-  let entries: string[];
-  try { entries = readdirSync(root); } catch { return []; }
   const out: { slug: string; abs: string; path: string }[] = [];
-  for (const slug of entries.sort().slice(0, MAX_LEDGERS)) {
-    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(slug)) continue;
-    const abs = join(root, slug, "acceptance.md");
-    try {
-      if (!statSync(abs).isFile()) continue;
-    } catch { continue; }
-    out.push({ slug, abs, path: `.rust-studio/specs/${slug}/acceptance.md` });
+  let scanned = 0;
+  for (const base of DESIGN_ROOTS) {
+    const root = join(cwd, base);
+    let entries: string[];
+    try { entries = readdirSync(root); } catch { continue; }
+    for (const slug of entries.sort().slice(0, MAX_LEDGERS - scanned)) {
+      scanned++;
+      if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(slug)) continue;
+      const abs = join(root, slug, "acceptance.md");
+      try {
+        const rel = relative(realpathSync(cwd), realpathSync(abs));
+        if (rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel) || !statSync(abs).isFile()) continue;
+      } catch { continue; }
+      out.push({ slug, abs, path: `${base}/${slug}/acceptance.md` });
+    }
   }
   return out;
 }
 
-/** A ledger is bound to this session when its spec directory is named in the transcript.
- *  Both separators are accepted; a JSON-escaped path in the transcript spells "/" as "\/". */
-export function isBound(transcriptTail: string, slug: string): boolean {
+/** Bind an artifact reference to this repository, rather than a matching path suffix.
+ * Both separators and JSON-escaped paths are accepted. Slug-only calls retain legacy matching. */
+export function isBound(transcriptTail: string, slug: string, cwd = process.cwd()): boolean {
   if (!transcriptTail) return false;
+  if (slug.includes("/") || slug.includes("\\")) {
+    const dir = slug.replace(/\\/g, "/").replace(/\/acceptance\.md$/, "");
+    const normalize = (path: string) => path.replace(/\\+/g, "/").replace(/\/+/g, "/");
+    const normalized = normalize(transcriptTail);
+    const root = normalize(isAbsolute(cwd) || /^[A-Za-z]:[\\/]/.test(cwd) ? cwd : resolve(cwd)).replace(/\/$/, "");
+    // A slash is deliberately not a token boundary: archive/docs/designs and another
+    // repository's absolute path must not bind a local artifact by their shared suffix.
+    const boundary = "(?:^|[\\s\"'`(<\\[{=])";
+    const paths = `(?:\\./)?${escapeRe(dir)}|${escapeRe(`${root}/${dir}`)}`;
+    return new RegExp(`${boundary}(?:${paths})(?![A-Za-z0-9._-])`, process.platform === "win32" ? "i" : "").test(normalized);
+  }
+  // Compatibility for callers testing legacy shorthand; the hook passes a full artifact path.
   const re = new RegExp(`specs(?:\\\\\\\\|\\\\/|/|\\\\)${escapeRe(slug)}(?![A-Za-z0-9._-])`);
   return re.test(transcriptTail);
 }
@@ -153,19 +172,25 @@ export function decide(ledgers: LedgerStatus[], previous: { hash: string; blocks
   const outstanding: string[] = [];
   const handoffs: string[] = [];
   const oracle: string[] = [];
+  const counts = new Map<string, number>();
+  for (const l of ledgers) counts.set(l.slug, (counts.get(l.slug) ?? 0) + 1);
   for (const l of ledgers) {
+    const qualified = (id: string) => counts.get(l.slug)! > 1 ? `${l.path}:${id}` : qualify(l.path, id);
     if (l.errors.length) {
-      resolved.push(`${l.slug}:PARSE=invalid`);
-      outstanding.push(`${qualify(l.path, "PARSE")} ${l.errors[0]}`);
+      resolved.push(`${l.path}:PARSE=invalid`);
+      outstanding.push(`${qualified("PARSE")} ${l.errors[0]}`);
       continue;
     }
     for (const [id, state] of Object.entries(l.states)) {
-      resolved.push(`${l.slug}:${id}=${state}`);
-      const q = qualify(l.path, id);
+      resolved.push(`${l.path}:${id}=${state}`);
+      const q = qualified(id);
       if (state === "abandoned") handoffs.push(q);
       else if (state !== "met") outstanding.push(`${q} (${state})`);
     }
-    for (const o of l.oracle) { resolved.push(`${l.slug}:oracle=${o}`); oracle.push(o); }
+    for (const o of l.oracle) {
+      resolved.push(`${l.path}:oracle=${o}`);
+      oracle.push(counts.get(l.slug)! > 1 ? `${l.path}: ${o}` : o);
+    }
   }
   const hash = sha256(resolved.sort().join("\0")).slice(0, 24);
   if (!outstanding.length && !oracle.length) return { action: "allow", hash, blocks: 0, outstanding, handoffs, oracle };
@@ -266,7 +291,7 @@ if (import.meta.main) {
 
   // Binding: only ledgers this session named. No transcript → nothing binds → allow.
   const tail = await transcriptTail(input.transcript_path);
-  const bound = ledgers.filter((l) => isBound(tail, l.slug));
+  const bound = ledgers.filter((l) => isBound(tail, l.path, cwd));
   if (!bound.length) { disarm(); process.exit(0); }
 
   // Only a done-claim is blocked. No readable final message → cannot tell → allow.
@@ -298,6 +323,6 @@ if (import.meta.main) {
     process.stderr.write(`acceptance: releasing after ${MAX_BLOCKS} blocks without gate progress; ${counts} remain (${named.join(", ")}).\n`);
     process.exit(0);
   }
-  const checker = join(pluginRoot(), "skills", "acceptance", "scripts", "acceptance-check.ts").replace(/\\/g, "/");
+  const checker = join(pluginRoot(), "skills", "verify-work", "scripts", "acceptance-check.ts").replace(/\\/g, "/");
   blockStop(buildFeedback(d, bound.map((l) => l.path), existsSync(checker) ? checker : "acceptance-check.ts"));
 }

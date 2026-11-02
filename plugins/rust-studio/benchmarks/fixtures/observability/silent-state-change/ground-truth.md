@@ -1,4 +1,4 @@
-# Ground truth — observability/silent-state-change (agent: `observability-engineer`, verdict: NEEDS WORK)
+# Ground truth — observability/silent-state-change (agent: `reviewer (profile: observability)`, verdict: NEEDS WORK)
 
 > Audit prompt the fixture is calibrated for: *"This settlement worker 'works', but when it fails in production nobody can tell why from the logs. Review its observability and diagnostics. List every finding with file:line and severity, then give a verdict."* Every defect is one `rules/observability.md` names.
 

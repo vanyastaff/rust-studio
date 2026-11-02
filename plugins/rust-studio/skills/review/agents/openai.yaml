@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Code Review"
-  short_description: "To audit a Rust diff or path for defects, scope, tests"
-  default_prompt: "Use $review to audit a Rust diff or path for defects, scope, tests, and standards."

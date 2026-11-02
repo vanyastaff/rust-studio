@@ -1,7 +1,7 @@
 # Ground truth — api/glob-reexport-uncurated (verdict: RESHAPE NEEDED)
 
-> Mapped agent is `api-design-lead` (a pre-code lead), whose reject token is
-> **RESHAPE NEEDED**. `REDO-TO-BAR` is the `rust-reviewer` equivalent — accept either as
+> Mapped agent is `reviewer (profile: api)` (a pre-code lead), whose reject token is
+> **RESHAPE NEEDED**. `REDO-TO-BAR` is the `reviewer (profile: correctness)` equivalent — accept either as
 > "rejected the shape".
 
 The root of `acme-sdk`, the single published crate of a single-public-crate workspace. Its

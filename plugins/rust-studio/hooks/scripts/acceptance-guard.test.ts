@@ -2,7 +2,7 @@
 // half-done ledger through enforces nothing, and a guard that blocks a session which never
 // touched the ledger — or blocks forever — gets disabled. Both are pinned.
 import { test, expect, describe, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -154,9 +154,80 @@ describe("binding: only ledgers this session named", () => {
     expect(isBound("specs/demo-v2/acceptance.md", "demo")).toBe(false);
     expect(isBound("", "demo")).toBe(false);
   });
+
+  test("artifact binding accepts escaped paths and distinguishes root, slug and prefix", () => {
+    const shared = "docs/designs/demo/acceptance.md";
+    expect(isBound("docs\\/designs\\/demo\\/spec.md", shared)).toBe(true);
+    expect(isBound("C:\\\\repo\\\\docs\\\\designs\\\\demo\\\\tasks.md", shared, "C:/repo")).toBe(true);
+    expect(isBound(".rust-studio/specs/demo/spec.md", shared)).toBe(false);
+    expect(isBound("docs/designs/demo-v2/spec.md", shared)).toBe(false);
+    expect(isBound("mydocs/designs/demo/spec.md", shared)).toBe(false);
+    expect(isBound("specs/demo", ".rust-studio/specs/demo/acceptance.md")).toBe(false);
+  });
+
+  test("artifact binding is anchored to relative paths or the supplied repository cwd", () => {
+    const artifact = "docs/designs/demo/acceptance.md";
+    expect(isBound("read D:/other-project/docs/designs/demo/spec.md", artifact, tmp)).toBe(false);
+    expect(isBound("read archive/docs/designs/demo/spec.md", artifact, tmp)).toBe(false);
+    expect(isBound("read /other-project/docs/designs/demo/spec.md", artifact, tmp)).toBe(false);
+    expect(isBound("read docs/designs/demo/spec.md", artifact, tmp)).toBe(true);
+    expect(isBound("read ./docs/designs/demo/spec.md", artifact, tmp)).toBe(true);
+    expect(isBound(JSON.stringify({ file_path: join(tmp, "docs/designs/demo/spec.md") }), artifact, tmp)).toBe(true);
+  });
 });
 
 describe("discovery and status", () => {
+  test("discovery shares its 64-entry budget across both roots", () => {
+    for (let i = 0; i < 40; i++) {
+      const slug = `entry-${String(i).padStart(2, "0")}`;
+      ledgerAt(slug, "- [ ] G1: pending\n  EVIDENCE: pending\n");
+      const dir = join(tmp, "docs/designs", slug);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, "acceptance.md"), "- [ ] G1: pending\n  EVIDENCE: pending\n");
+    }
+    const found = discoverLedgers(tmp);
+    expect(found).toHaveLength(64);
+    expect(found.filter((l) => l.path.startsWith("docs/designs/"))).toHaveLength(40);
+    expect(found.filter((l) => l.path.startsWith(".rust-studio/specs/"))).toHaveLength(24);
+  });
+
+  test("discovery ignores a design directory that links outside the repository", () => {
+    const outside = mkdtempSync(join(tmpdir(), "guard-outside-"));
+    const link = join(tmp, "docs/designs/escaped");
+    try {
+      writeFileSync(join(outside, "acceptance.md"), "- [ ] G1: pending\n  EVIDENCE: pending\n");
+      mkdirSync(join(tmp, "docs/designs"), { recursive: true });
+      symlinkSync(outside, link, process.platform === "win32" ? "junction" : "dir");
+      expect(discoverLedgers(tmp)).toEqual([]);
+    } finally {
+      rmSync(link, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  test("discovers both roots and retains both colliding artifact identities", () => {
+    ledgerAt("demo", "- [ ] G1: legacy\n  EVIDENCE: pending\n");
+    const dir = join(tmp, "docs/designs/demo");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "acceptance.md"), "- [ ] G1: shared\n  EVIDENCE: pending\n");
+    expect(discoverLedgers(tmp).map((l) => l.path).sort()).toEqual([
+      ".rust-studio/specs/demo/acceptance.md", "docs/designs/demo/acceptance.md",
+    ]);
+  });
+
+  test("same-slug ledger switches rearm progress and disambiguate diagnostics", () => {
+    const legacy = st("demo", { G1: "unmet" });
+    const shared = { ...legacy, path: "docs/designs/demo/acceptance.md" };
+    const first = decide([legacy], null);
+    const switched = decide([shared], { hash: first.hash, blocks: MAX_BLOCKS });
+    expect(switched.action).toBe("block");
+    expect(switched.blocks).toBe(1);
+    expect(switched.hash).not.toBe(first.hash);
+    const both = decide([legacy, shared], null);
+    expect(both.outstanding[0]).toContain(legacy.path);
+    expect(both.outstanding[1]).toContain(shared.path);
+  });
+
   test("finds acceptance.md under each spec, ignores other files and bad slugs", () => {
     ledgerAt("alpha", "- [ ] G1: a\n  EVIDENCE: pending\n");
     ledgerAt("beta", "- [x] G1: b\n  EVIDENCE: reviewed\n");
@@ -210,9 +281,9 @@ describe("discovery and status", () => {
 describe("feedback", () => {
   test("names the ids, the exact reverify command, the ABANDON rule and the block count", () => {
     const d = decide([st("demo", { G1: "unmet", G2: "stale", G3: "abandoned" })], null);
-    const text = buildFeedback(d, [".rust-studio/specs/demo/acceptance.md"], "/plugin/skills/acceptance/scripts/acceptance-check.ts");
+    const text = buildFeedback(d, [".rust-studio/specs/demo/acceptance.md"], "/plugin/skills/verify-work/scripts/acceptance-check.ts");
     expect(text).toContain("demo:G1 (unmet), demo:G2 (stale)");
-    expect(text).toContain('bun "/plugin/skills/acceptance/scripts/acceptance-check.ts" --reverify .rust-studio/specs/demo/acceptance.md');
+    expect(text).toContain('bun "/plugin/skills/verify-work/scripts/acceptance-check.ts" --reverify .rust-studio/specs/demo/acceptance.md');
     expect(text).toContain("ABANDON: <id> <reason>");
     expect(text).toContain("HANDOFF REQUIRED: 1 abandoned — demo:G3");
     expect(text).toContain(`(block 1 of ${MAX_BLOCKS}`);
@@ -220,7 +291,7 @@ describe("feedback", () => {
 
   test("an oracle-only block names the defect and never says a gate is unmet", () => {
     const d = decide([st("demo", { G1: "met" }, [], [FIXED("demo", "G1")])], null);
-    const text = buildFeedback(d, [".rust-studio/specs/demo/acceptance.md"], "/plugin/skills/acceptance/scripts/acceptance-check.ts");
+    const text = buildFeedback(d, [".rust-studio/specs/demo/acceptance.md"], "/plugin/skills/verify-work/scripts/acceptance-check.ts");
     expect(text).toContain("1 gate(s) cannot fail");
     expect(text).not.toContain("gate(s) are not met");
     expect(text).toContain("[fixed-output]");
@@ -250,6 +321,30 @@ describe("end to end (subprocess, real stdin payload)", () => {
 
   const DONE = "Files changed: src/x.rs. Commands run: cargo nextest run. Verification: 3 passed. Result: COMPLETE";
 
+  test("root-qualified binding isolates colliding designs and never executes CHECK", () => {
+    ledgerAt("demo", "- [ ] LEGACY: remains pending\n  EVIDENCE: pending\n");
+    const dir = join(tmp, "docs/designs/demo");
+    mkdirSync(dir, { recursive: true });
+    const marker = join(tmp, "must-not-exist");
+    writeFileSync(join(dir, "acceptance.md"), `- [ ] SHARED: remains pending\n  CHECK: echo forbidden > "${marker}"\n  EXPECT: forbidden\n  EVIDENCE: pending\n`);
+    const transcript = join(tmp, "binding.jsonl");
+    writeFileSync(transcript, "read docs/designs/demo/spec.md\n");
+    const shared = run({ cwd: tmp, transcript_path: transcript, last_assistant_message: DONE });
+    expect(shared.exitCode).toBe(2);
+    expect(new TextDecoder().decode(shared.stderr)).toContain("SHARED");
+    expect(new TextDecoder().decode(shared.stderr)).not.toContain("LEGACY");
+    expect(existsSync(marker)).toBe(false);
+    writeFileSync(transcript, "read .rust-studio/specs/demo/spec.md\n");
+    const legacy = run({ cwd: tmp, transcript_path: transcript, last_assistant_message: DONE });
+    expect(legacy.exitCode).toBe(2);
+    expect(new TextDecoder().decode(legacy.stderr)).toContain("LEGACY");
+    expect(new TextDecoder().decode(legacy.stderr)).not.toContain("SHARED");
+    writeFileSync(transcript, "read archive/.rust-studio/specs/demo/spec.md\n");
+    expect(run({ cwd: tmp, transcript_path: transcript, last_assistant_message: DONE }).exitCode).toBe(0);
+    writeFileSync(transcript, "read D:/other-project/.rust-studio/specs/demo/spec.md\n");
+    expect(run({ cwd: tmp, transcript_path: transcript, last_assistant_message: DONE }).exitCode).toBe(0);
+  });
+
   test("a done-claim on a bound, half-done ledger blocks with exit 2; a stranger session passes; the option turns it off", () => {
     ledgerAt("demo", "- [ ] G1: prints\n  CHECK: true\n  EXPECT: x\n  EVIDENCE: pending\n");
     const transcript = join(tmp, "t.jsonl");
@@ -277,7 +372,7 @@ describe("end to end (subprocess, real stdin payload)", () => {
     expect(JSON.parse(new TextDecoder().decode(blocked.stdout))).toMatchObject({ decision: "block" });
   });
 
-  test("the /spec-tasks approval checkpoint and an honest NEEDS WORK pass; the same ledger blocks a COMPLETE", () => {
+  test("the /dev-task --plan approval checkpoint and an honest NEEDS WORK pass; the same ledger blocks a COMPLETE", () => {
     ledgerAt("demo", "- [ ] G1: prints\n  CHECK: true\n  EXPECT: x\n  EVIDENCE: pending\n");
     const transcript = join(tmp, "t.jsonl");
     writeFileSync(transcript, "wrote .rust-studio/specs/demo/acceptance.md\n");
@@ -310,7 +405,7 @@ describe("end to end (subprocess, real stdin payload)", () => {
       `  EVIDENCE: ${formatEvidence({ check, expect: marker }, { exit: 0, matched: true, combined: "ok\n", cwd: tmp, shell: "bash" })}`,
     ].join("\n") + "\n");
     const transcript = join(tmp, "t.jsonl");
-    writeFileSync(transcript, "specs/demo\n");
+    writeFileSync(transcript, ".rust-studio/specs/demo\n");
     const blocked = run({ cwd: tmp, session_id: "oracle", transcript_path: transcript, last_assistant_message: DONE });
     expect(blocked.exitCode).toBe(2);
     const err = new TextDecoder().decode(blocked.stderr);
@@ -325,7 +420,7 @@ describe("end to end (subprocess, real stdin payload)", () => {
   test("the loop cap holds across done-claims of one session", () => {
     ledgerAt("demo", "- [ ] G1: prints\n  CHECK: true\n  EXPECT: x\n  EVIDENCE: pending\n");
     const transcript = join(tmp, "t.jsonl");
-    writeFileSync(transcript, "specs/demo\n");
+    writeFileSync(transcript, ".rust-studio/specs/demo\n");
     const codes: number[] = [];
     for (let i = 0; i < MAX_BLOCKS + 1; i++) codes.push(run({ cwd: tmp, session_id: "loop", transcript_path: transcript, last_assistant_message: DONE }).exitCode ?? -1);
     expect(codes).toEqual([...Array(MAX_BLOCKS).fill(2), 0]);

@@ -1,0 +1,417 @@
+#!/usr/bin/env bun
+// Rust Code Studio — usage report (a CLI, not a hook; takes no stdin).
+//
+// Reads the usage log that usage-log.ts and the prompt hook append to, and answers the
+// question the catalog cannot answer about itself: which skills and agents does anyone
+// actually reach for, from where, and which have never been touched.
+//
+//   bun usage-report.ts                      # last 7 days, text
+//   bun usage-report.ts --days 30            # a wider window; --days 0 for everything
+//   bun usage-report.ts --json               # one object, for a script or an agent
+//   bun usage-report.ts --file <usage.jsonl> # a log copied from another machine
+//   bun usage-report.ts --plugin-root <dir>  # where skills/ and agents/ are, if not found
+//
+// Per skill and per agent: invocations, split by whose hand (the model through the Skill or
+// Agent tool, the user through a typed `/name`), distinct sessions, and the projects they came
+// from (the working directory's basename; `rust-studio` is flagged as plugin development and an
+// eval-harness sandbox as `(eval)`). The `genuine` column counts what is left once both are
+// removed, and it is the column the pruning decision reads, because the studio reaching for its
+// own skills is not demand. Then the lists that matter for pruning: what the window never saw,
+// and what only the plugin's own checkout or a sandbox reached for, which the rule counts as no
+// invocation either. Names in the log that match nothing on disk — a built-in agent, another
+// plugin's skill — are listed separately as "outside the studio", since a model that spawns
+// `Explore` where `rust-scout` exists is a routing fact too.
+//
+// This file replaces mining 1.7 GB of transcripts. It reads one file and the two directories.
+
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { pluginRoot } from "./_lib.ts";
+import { parseUsageLine, usagePath, type UsageRow } from "./usage-log.ts";
+import { readMigrationCatalog, resolveAgent, resolveSkill, type CatalogRegistry } from "./catalog.ts";
+
+const DAY = 86_400_000;
+export const DEFAULT_DAYS = 7;
+/** A working directory whose basename is one of these is the plugin's own checkout. */
+export const PLUGIN_DEV_PROJECTS: ReadonlySet<string> = new Set(["rust-studio"]);
+
+/** Path segments that mark a working directory as an eval-harness sandbox. `tools/eval-runner.ts`
+ *  names them from `mkdtemp` (`rs-eval-<case>-`, `rs-fx-<fixture>-`, `rs-live-<case>-`,
+ *  `rs-grader-`, and an `eval-plugin-<rand>/<case>` wrapper whose leaf is bare case name), so a
+ *  sandbox is the studio exercising itself: an invocation from one is not a project needing the
+ *  skill. Matched on any segment, which catches the wrapper's leaf by its parent. */
+export const EVAL_SANDBOX_SEGMENTS: readonly string[] = ["rs-eval-", "rs-fx-", "rs-live-", "rs-grader-", "eval-plugin-"];
+
+// ---------------------------------------------------------------- the catalog on disk
+
+export interface Catalog {
+  root: string | null;
+  skills: string[];
+  agents: string[];
+}
+
+/** The plugin root, wherever this script runs from: the host's variable, the plugin-relative
+ *  default, or — for the copy bundled inside a skill — the nearest ancestor that holds both
+ *  `skills/` and `agents/`. Null when none of those exist, in which case the report still
+ *  counts what was used but cannot say what was not. */
+export function findPluginRoot(explicit?: string): string | null {
+  const looksLikeRoot = (d: string) => existsSync(join(d, "skills")) && existsSync(join(d, "agents"));
+  if (explicit) return looksLikeRoot(explicit) ? resolve(explicit) : null;
+  const guess = pluginRoot();
+  if (looksLikeRoot(guess)) return guess;
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 6; i++) {
+    if (looksLikeRoot(dir)) return dir;
+    const up = dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  return null;
+}
+
+/** Skill directories that carry a SKILL.md, and agent briefs, by name. */
+export function readCatalog(root: string | null): Catalog {
+  if (!root) return { root: null, skills: [], agents: [] };
+  const skills: string[] = [];
+  const agents: string[] = [];
+  try {
+    for (const d of readdirSync(join(root, "skills"))) {
+      try {
+        if (statSync(join(root, "skills", d)).isDirectory() && existsSync(join(root, "skills", d, "SKILL.md"))) skills.push(d);
+      } catch {
+        /* a vanished entry */
+      }
+    }
+  } catch {
+    /* no skills dir */
+  }
+  try {
+    for (const f of readdirSync(join(root, "agents"))) if (f.endsWith(".md")) agents.push(f.slice(0, -3));
+  } catch {
+    /* no agents dir */
+  }
+  return { root, skills: skills.sort(), agents: agents.sort() };
+}
+
+// ---------------------------------------------------------------- the log
+
+/** Every well-formed row of a log; malformed lines are counted, not thrown over. */
+export function readUsage(text: string): { rows: UsageRow[]; malformed: number } {
+  const rows: UsageRow[] = [];
+  let malformed = 0;
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    const row = parseUsageLine(line);
+    if (row) rows.push(row);
+    else malformed += 1;
+  }
+  return { rows, malformed };
+}
+
+/** The rows at or after `since` (a millisecond timestamp); everything when `since` is null. */
+export function inWindow(rows: UsageRow[], since: number | null): UsageRow[] {
+  if (since == null) return rows;
+  return rows.filter((r) => Date.parse(r.ts) >= since);
+}
+
+/** The project a row came from: the working directory's basename, `?` when unknown. */
+export function projectOf(row: UsageRow): string {
+  const cwd = row.cwd.replace(/[\\/]+$/, "");
+  return cwd ? basename(cwd) || cwd : "?";
+}
+
+export function isPluginDev(project: string): boolean {
+  return PLUGIN_DEV_PROJECTS.has(project);
+}
+
+/** True when the working directory is one the eval harness made. Takes the whole `cwd`, not the
+ *  basename: the harness has a shape whose leaf is the bare case name. */
+export function isEvalSandbox(cwd: string): boolean {
+  return cwd
+    .split(/[\\/]+/)
+    .filter(Boolean)
+    .some((seg) => EVAL_SANDBOX_SEGMENTS.some((prefix) => seg.startsWith(prefix)));
+}
+
+// ---------------------------------------------------------------- aggregation
+
+export interface NameStats {
+  name: string;
+  /** Original event labels and counts; aggregation never rewrites the source log. */
+  rawNames: Record<string, number>;
+  total: number;
+  model: number;
+  user: number;
+  /** Invocations from a project that is neither the plugin's own checkout nor an eval sandbox:
+   *  the column the pruning rule reads, since the studio reaching for itself is not demand. */
+  genuine: number;
+  sessions: number;
+  /** project → invocations, most first. */
+  projects: Array<[string, number]>;
+  /** The project basenames in `projects` that an eval sandbox produced. */
+  evalProjects: string[];
+  first: string;
+  last: string;
+}
+
+export interface Report {
+  generated: string;
+  file: string;
+  days: number | null;
+  since: string | null;
+  rows: number;
+  malformed: number;
+  sessions: number;
+  root: string | null;
+  /** `used` had a genuine invocation; `selfOnly` was reached for by the plugin checkout or an
+   *  eval sandbox and by nothing else, which the decision rule counts as no invocation. */
+  skills: { onDisk: number; used: NameStats[]; selfOnly: NameStats[]; never: string[] };
+  agents: { onDisk: number; used: NameStats[]; selfOnly: NameStats[]; never: string[] };
+  /** Names in the log that are neither a skill nor an agent on disk. */
+  outside: NameStats[];
+}
+
+function aggregate(rows: UsageRow[], canonicalName: (row: UsageRow) => string = r => r.name): Map<string, NameStats> {
+  const out = new Map<string, NameStats>();
+  const sessions = new Map<string, Set<string>>();
+  const projects = new Map<string, Map<string, number>>();
+  const evalProjects = new Map<string, Set<string>>();
+  for (const raw of rows) {
+    const r = { ...raw, name: canonicalName(raw) };
+    let s = out.get(r.name);
+    if (!s) {
+      s = { name: r.name, rawNames: Object.create(null), total: 0, model: 0, user: 0, genuine: 0, sessions: 0, projects: [], evalProjects: [], first: r.ts, last: r.ts };
+      out.set(r.name, s);
+      sessions.set(r.name, new Set());
+      projects.set(r.name, new Map());
+      evalProjects.set(r.name, new Set());
+    }
+    s.total += 1;
+    s.rawNames[raw.name] = (s.rawNames[raw.name] ?? 0) + 1;
+    const p = projectOf(r);
+    const sandbox = isEvalSandbox(r.cwd);
+    if (sandbox) evalProjects.get(r.name)!.add(p);
+    if (!sandbox && !isPluginDev(p)) s.genuine += 1;
+    s[r.invoker] += 1;
+    if (r.session_id) sessions.get(r.name)!.add(r.session_id);
+    projects.get(r.name)!.set(p, (projects.get(r.name)!.get(p) ?? 0) + 1);
+    if (r.ts < s.first) s.first = r.ts;
+    if (r.ts > s.last) s.last = r.ts;
+  }
+  for (const [name, s] of out) {
+    s.sessions = sessions.get(name)!.size;
+    s.projects = [...projects.get(name)!].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    s.evalProjects = [...evalProjects.get(name)!].sort();
+  }
+  return out;
+}
+
+const byUse = (a: NameStats, b: NameStats) => b.total - a.total || a.name.localeCompare(b.name);
+
+/** Pure: the whole report from a log's rows and the catalog. `since` null means no window. */
+export function buildReport(
+  rows: UsageRow[],
+  catalog: Catalog,
+  opts: { file: string; days: number | null; since: number | null; malformed: number; now?: Date },
+): Report {
+  const windowed = inWindow(rows, opts.since);
+  let registry: CatalogRegistry | undefined;
+  try { registry = readMigrationCatalog(catalog.root ?? undefined); } catch { /* older or unknown catalog: preserve raw labels */ }
+  const canonical = (row: UsageRow): string => {
+    if (!registry) return row.name;
+    if (row.kind === "skill") {
+      const mapped = resolveSkill(row.name, registry)?.skill;
+      return mapped && catalog.skills.includes(mapped) ? mapped : row.name;
+    }
+    const mapped = resolveAgent(row.name, registry)?.role;
+    return mapped && catalog.agents.includes(mapped) ? mapped : row.name;
+  };
+  const skills = aggregate(windowed.filter((r) => r.kind === "skill"), canonical);
+  const agents = aggregate(windowed.filter((r) => r.kind === "agent"), canonical);
+  const onDiskSkills = new Set(catalog.skills);
+  const onDiskAgents = new Set(catalog.agents);
+  const outside: NameStats[] = [];
+  const usedSkills: NameStats[] = [];
+  const usedAgents: NameStats[] = [];
+  const selfOnlySkills: NameStats[] = [];
+  const selfOnlyAgents: NameStats[] = [];
+  for (const s of skills.values()) {
+    if (catalog.root != null && !onDiskSkills.has(s.name)) outside.push(s);
+    else if (s.genuine > 0) usedSkills.push(s);
+    else selfOnlySkills.push(s);
+  }
+  for (const s of agents.values()) {
+    if (catalog.root != null && !onDiskAgents.has(s.name)) outside.push(s);
+    else if (s.genuine > 0) usedAgents.push(s);
+    else selfOnlyAgents.push(s);
+  }
+  return {
+    generated: (opts.now ?? new Date()).toISOString(),
+    file: opts.file,
+    days: opts.days,
+    since: opts.since == null ? null : new Date(opts.since).toISOString(),
+    rows: windowed.length,
+    malformed: opts.malformed,
+    sessions: new Set(windowed.map((r) => r.session_id).filter(Boolean)).size,
+    root: catalog.root,
+    skills: {
+      onDisk: catalog.skills.length,
+      used: usedSkills.sort(byUse),
+      selfOnly: selfOnlySkills.sort(byUse),
+      never: catalog.skills.filter((n) => !skills.has(n)),
+    },
+    agents: {
+      onDisk: catalog.agents.length,
+      used: usedAgents.sort(byUse),
+      selfOnly: selfOnlyAgents.sort(byUse),
+      never: catalog.agents.filter((n) => !agents.has(n)),
+    },
+    outside: outside.sort(byUse),
+  };
+}
+
+// ---------------------------------------------------------------- rendering
+
+function table(rows: NameStats[], head: string): string[] {
+  if (!rows.length) return [`  (none)`];
+  const w = Math.max(head.length, ...rows.map((r) => r.name.length));
+  const lines = [`  ${head.padEnd(w)}  total  model  user  sessions  genuine  projects`];
+  for (const r of rows) {
+    const projects = r.projects
+      .map(([p, n]) => `${p}${isPluginDev(p) ? " (plugin-dev)" : r.evalProjects.includes(p) ? " (eval)" : ""}×${n}`)
+      .join(", ");
+    lines.push(
+      `  ${r.name.padEnd(w)}  ${String(r.total).padStart(5)}  ${String(r.model).padStart(5)}  ${String(r.user).padStart(4)}  ${String(r.sessions).padStart(8)}  ${String(r.genuine).padStart(7)}  ${projects}`,
+    );
+  }
+  return lines;
+}
+
+function wrapList(names: string[], indent = "  "): string[] {
+  if (!names.length) return [`${indent}(none)`];
+  const lines: string[] = [];
+  let cur = indent;
+  for (const n of names) {
+    if (cur.length + n.length + 2 > 96 && cur.trim()) {
+      lines.push(cur.replace(/,\s*$/, ""));
+      cur = indent;
+    }
+    cur += `${n}, `;
+  }
+  lines.push(cur.replace(/,\s*$/, ""));
+  return lines;
+}
+
+export function renderReport(r: Report): string {
+  const window = r.days == null ? "all time" : `last ${r.days} day${r.days === 1 ? "" : "s"} (since ${r.since!.slice(0, 10)})`;
+  const out: string[] = [];
+  out.push(`Rust Code Studio usage — ${window}: ${r.rows} invocation${r.rows === 1 ? "" : "s"} across ${r.sessions} session${r.sessions === 1 ? "" : "s"}`);
+  out.push(`  log: ${r.file}${r.malformed ? ` (${r.malformed} malformed line${r.malformed === 1 ? "" : "s"} skipped)` : ""}`);
+  if (r.root == null) out.push("  catalog: not found — pass --plugin-root <dir> to list what was never invoked");
+  out.push("");
+  out.push(`Skills — ${r.skills.used.length} invoked${r.root ? ` of ${r.skills.onDisk} on disk` : ""}`);
+  out.push(...table(r.skills.used, "skill"));
+  if (r.skills.selfOnly.length) {
+    out.push("");
+    out.push(`Invoked only by the studio itself — plugin-dev or an eval sandbox (${r.skills.selfOnly.length}):`);
+    out.push(...table(r.skills.selfOnly, "skill"));
+  }
+  if (r.root) {
+    out.push("");
+    out.push(`Never invoked — skills (${r.skills.never.length}):`);
+    out.push(...wrapList(r.skills.never));
+  }
+  out.push("");
+  out.push(`Agents — ${r.agents.used.length} spawned${r.root ? ` of ${r.agents.onDisk} on disk` : ""}`);
+  out.push(...table(r.agents.used, "agent"));
+  if (r.agents.selfOnly.length) {
+    out.push("");
+    out.push(`Spawned only by the studio itself — plugin-dev or an eval sandbox (${r.agents.selfOnly.length}):`);
+    out.push(...table(r.agents.selfOnly, "agent"));
+  }
+  if (r.root) {
+    out.push("");
+    out.push(`Never spawned — agents (${r.agents.never.length}):`);
+    out.push(...wrapList(r.agents.never));
+  }
+  if (r.outside.length) {
+    out.push("");
+    out.push(`Outside the studio (not on disk here) — ${r.outside.length}:`);
+    out.push(...table(r.outside, "name"));
+  }
+  out.push("");
+  out.push("Counts are invocations; `user` is a typed `/name`, `model` the Skill or Agent tool.");
+  out.push("`genuine` counts the ones from a project that is neither the plugin's own checkout nor an");
+  out.push("eval-harness sandbox: the studio reaching for itself is not demand, so that is the column");
+  out.push("the pruning rule reads. What to do with the numbers: docs/usage-telemetry.md.");
+  return out.join("\n") + "\n";
+}
+
+// ---------------------------------------------------------------- CLI
+
+const HELP = `usage-report — which studio skills and agents are actually used
+
+  bun usage-report.ts [--days N] [--json] [--file <usage.jsonl>] [--plugin-root <dir>]
+
+  --days N           window in days (default ${DEFAULT_DAYS}; 0 = everything in the log)
+  --json             emit the report as one JSON object
+  --file <path>      read this log instead of the plugin's own
+  --plugin-root DIR  where skills/ and agents/ live, when they are not found automatically
+  --help             this text
+
+Reads <plugin data>/usage.jsonl, written by the PostToolUse hook (Skill and Agent tools) and
+the UserPromptSubmit hook (a typed /name). Prints per-skill and per-agent invocations, split by
+model/user, sessions and projects with the genuine count beside them, then what only the studio's
+own checkout or an eval sandbox reached for, and what the window never touched.
+`;
+
+export function main(argv: string[], io: { out: (s: string) => void; err: (s: string) => void }): number {
+  let days: number | null = DEFAULT_DAYS;
+  let json = false;
+  let file: string | null = null;
+  let root: string | undefined;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--help" || a === "-h") {
+      io.out(HELP);
+      return 0;
+    } else if (a === "--json") json = true;
+    else if (a === "--days") {
+      const n = Number(argv[++i]);
+      if (!Number.isFinite(n) || n < 0) {
+        io.err("usage-report: --days wants a non-negative number\n");
+        return 2;
+      }
+      days = n === 0 ? null : n;
+    } else if (a === "--all") days = null;
+    else if (a === "--file") file = argv[++i] ?? null;
+    else if (a === "--plugin-root") root = argv[++i];
+    else {
+      io.err(`usage-report: unknown argument ${a}\n${HELP}`);
+      return 2;
+    }
+  }
+  const path = file ?? usagePath();
+  let text = "";
+  try {
+    text = readFileSync(path, "utf8");
+  } catch {
+    /* no log yet is a valid, empty report */
+  }
+  const { rows, malformed } = readUsage(text);
+  const catalog = readCatalog(findPluginRoot(root));
+  const now = new Date();
+  const since = days == null ? null : now.getTime() - days * DAY;
+  const report = buildReport(rows, catalog, { file: path, days, since, malformed, now });
+  io.out(json ? JSON.stringify(report, null, 2) + "\n" : renderReport(report));
+  return 0;
+}
+
+if (import.meta.main) {
+  // exitCode, not process.exit(): bun drops piped stdout past 64 KB on an immediate exit.
+  const chunks: string[] = [];
+  const code = main(process.argv.slice(2), { out: (s) => chunks.push(s), err: (s) => process.stderr.write(s) });
+  await Bun.write(Bun.stdout, chunks.join(""));
+  process.exitCode = code;
+}

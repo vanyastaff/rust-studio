@@ -1,0 +1,4 @@
+interface:
+  display_name: "Inspect Project"
+  short_description: "Inspect a Rust project's structure and conventions"
+  default_prompt: "Use $inspect-project: Inspect a Rust project's structure and conventions, retrieve prior decisions, find the right workflow, or diagnose the Studio installation."

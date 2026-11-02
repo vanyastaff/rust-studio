@@ -41,6 +41,26 @@ async function cli(...argv: string[]): Promise<{ code: number; out: string }> {
 }
 
 const MARKER = (name: string) => join(tmp, `${name}.touched`);
+test("shared design ledger commands default to the owning repository", () => {
+  expect(defaultCwd(join(tmp, "docs", "designs", "demo", "acceptance.md"))).toBe(tmp);
+});
+
+test("shared default and explicit custom cwd execute checks in the owning repository", async () => {
+  writeFileSync(join(tmp, "cwd-proof.txt"), "owned-repository-proof");
+  writeFileSync(join(tmp, "cwd-proof.js"), "console.log(require('fs').readFileSync('cwd-proof.txt', 'utf8'));\n");
+  for (const directory of ["docs/designs/new", "architecture/custom"]) {
+    const dir = join(tmp, directory);
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, "acceptance.md");
+    writeFileSync(path, "- [ ] G1: reads the repository evidence\n  CHECK: bun cwd-proof.js\n  EXPECT: owned-repository-proof\n  EVIDENCE: pending\n");
+    const args = directory.startsWith("architecture") ? ["--cwd", tmp] : [];
+    const result = await cli("--run", ...args, path);
+    expect(result.code).toBe(0);
+    const parsed = parseLedger(readFileSync(path, "utf8"));
+    expect(gateState(parsed.gates[0], parsed)).toBe("met");
+  }
+});
+
 const LEDGER = (extra = "") => `# Acceptance: demo
 
 - [ ] G1: the greeting prints its marker
