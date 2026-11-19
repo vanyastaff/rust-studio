@@ -3,7 +3,7 @@
   "name": "rust-studio",
   "displayName": "Rust Code Studio",
   "description": "Rust engineering workflows through 11 outcome skills and five execution roles with reusable domain profiles. Fresh design review, implementation handoff, independent acceptance, path-scoped standards and cargo-aware hooks for libraries, async services, CLIs and systems code.",
-  "version": "0.62.1",
+  "version": "0.63.0",
   "author": {
     "name": "Rust Studio contributors"
   },
@@ -90,6 +90,12 @@
       "type": "boolean",
       "title": "Routing nudge",
       "description": "Once per session, remind you to prefer a Studio outcome skill and use inspect-project recall mode for relevant prior decisions. Turn off to silence the UserPromptSubmit nudge.",
+      "default": true
+    },
+    "process_briefing": {
+      "type": "boolean",
+      "title": "Session-start process briefing",
+      "description": "At session start, add the studio's process lines to the briefing: its protocol, its team of roles, the entry skills for the detected domain, the always-available skills and \"skills first\". Turn off in a repository that runs its own review and delegation process; the briefing then keeps only the detected facts (crate, edition, MSRV, domains, studio config, gate intensity, large-workspace note). Skills and agents stay available.",
       "default": true
     },
     "fmt_nudge": {

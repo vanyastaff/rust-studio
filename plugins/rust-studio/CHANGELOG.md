@@ -5,6 +5,17 @@ All notable changes to **Rust Code Studio** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.0] - 2026-11-18
+
+### Added
+
+- `process_briefing` option (default on). Off, the session-start briefing drops the lines
+  that steer a session toward the studio's process ("Protocol", "Team", "Start here",
+  "Always available", "Skills first", and the routing paragraph of the no-`Cargo.toml`
+  briefing) and keeps the detected facts: crate, edition, MSRV, domains, studio config, gate
+  intensity and the large-workspace note. A repository that runs its own review and
+  delegation process sets it through userConfig or `RUST_STUDIO_PROCESS_BRIEFING=off`.
+
 ## [0.62.1] - 2026-11-02
 
 ### Fixed

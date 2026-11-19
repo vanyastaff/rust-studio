@@ -181,17 +181,24 @@ try {
 let briefing: string;
 let title = ""; // Claude Code >= 2.1.183 names the session from hookSpecificOutput.sessionTitle
 
+// `process_briefing` off: a repository that runs its own review and delegation process keeps
+// the detected facts (stack, config, gates, workspace size) and drops every line that steers
+// the session toward the studio's protocol, team, entry skills and "skills first".
+const processBriefing = optionBool("process_briefing", true);
+
 if (!manifestExists) {
   briefing =
     "## Rust Code Studio active\n\n" +
-    "Rust Code Studio plugin is active, but no Cargo.toml was found at the session root. " +
-    "If this is a Rust project, run /inspect-project --mode classify from its root. " +
-    "Studio protocol: proceed within the authorized scope; ask for unresolved direction or permission.\n\n" +
-    "**Rust work without a checkout still routes through the studio:** code pasted for review → " +
-    "`/review-work --mode diff` (add `/review-work --mode soundness`, `/review-work --mode security`, `/review-work --mode api` for their lenses); a design or " +
-    "plan to attack → `/design-change --mode explore` (spawns `reviewer` with the adversarial profile); crate/module boundaries → `/design-change --mode architecture`; " +
-    "a reshape that must not change behavior → `/implement-change --mode refactor`; scope questions → `/review-work --mode scope`. Each ends " +
-    "in a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict with the evidence behind it.";
+    "Rust Code Studio plugin is active, but no Cargo.toml was found at the session root.";
+  if (processBriefing)
+    briefing +=
+      " If this is a Rust project, run /inspect-project --mode classify from its root. " +
+      "Studio protocol: proceed within the authorized scope; ask for unresolved direction or permission.\n\n" +
+      "**Rust work without a checkout still routes through the studio:** code pasted for review → " +
+      "`/review-work --mode diff` (add `/review-work --mode soundness`, `/review-work --mode security`, `/review-work --mode api` for their lenses); a design or " +
+      "plan to attack → `/design-change --mode explore` (spawns `reviewer` with the adversarial profile); crate/module boundaries → `/design-change --mode architecture`; " +
+      "a reshape that must not change behavior → `/implement-change --mode refactor`; scope questions → `/review-work --mode scope`. Each ends " +
+      "in a COMPLETE / NEEDS WORK / REDO-TO-BAR / BLOCKED verdict with the evidence behind it.";
 } else {
   // One manifest reader for both briefs (`cargo-manifest.ts`); the sub-agent brief shows the
   // same facts, so a parsing fix lands in both or neither.
@@ -217,12 +224,16 @@ if (!manifestExists) {
     `- Edition: ${edition}   MSRV (rust-version): ${msrv}`,
     `- Domain(s): **${domains.join(", ")}**`,
     "",
-    "**Protocol:** a quality loop, **autonomy-first** — decide tactical calls yourself " +
-      "(state the choice + one-line rationale, then proceed); ask only on " +
-      "strategic/irreversible/outward steps. No quick wins, no shims, finish the cross-crate " +
-      "ripple; observability ships in the same pass. See docs/working-preferences.md.",
-    "**Team:** researcher → designer → implementer → reviewer → verifier; select profiles by domain and use fresh workers for independent judgment. " +
-      "Path-scoped Rust standards are injected automatically when you edit matching files.",
+    ...(processBriefing
+      ? [
+          "**Protocol:** a quality loop, **autonomy-first** — decide tactical calls yourself " +
+            "(state the choice + one-line rationale, then proceed); ask only on " +
+            "strategic/irreversible/outward steps. No quick wins, no shims, finish the cross-crate " +
+            "ripple; observability ships in the same pass. See docs/working-preferences.md.",
+          "**Team:** researcher → designer → implementer → reviewer → verifier; select profiles by domain and use fresh workers for independent judgment. " +
+            "Path-scoped Rust standards are injected automatically when you edit matching files.",
+        ]
+      : []),
     `**Studio config:** gates **${gates}** · tests **${testRunner}** · progress **${progress}**` +
       (msrvDefault ? ` · MSRV-default **${msrvDefault}**` : "") +
       " (change via `/plugin` → Rust Code Studio → configure). " +
@@ -231,12 +242,16 @@ if (!manifestExists) {
       "behind a claim. `unsafe`, public-API, and release changes run **full** regardless. " +
       "Every mode keeps the same bar: command output behind each claim, honest denominators, " +
       '"unverified" as a valid state. See docs/verdicts.md §"Review modes".',
-    `**Start here${domains.some((d) => d.startsWith("(undetermined")) ? "" : ` (${domains.join(", ")})`}:** ` +
-      routeByDomain(domains),
-    "**Always available:** `/implement-change --mode implement` to implement one unit of work, `/review-work --mode diff` to audit a diff, " +
-      "`/inspect-project --mode catalog` for the full catalog, `/inspect-project --mode orient` for guided onboarding.",
-    "**Skills first:** for any non-trivial task, check `/inspect-project --mode catalog` for a studio skill that fits " +
-      "before improvising — prefer the skill's discipline (gates, agents, evidence) over ad-hoc steps.",
+    ...(processBriefing
+      ? [
+          `**Start here${domains.some((d) => d.startsWith("(undetermined")) ? "" : ` (${domains.join(", ")})`}:** ` +
+            routeByDomain(domains),
+          "**Always available:** `/implement-change --mode implement` to implement one unit of work, `/review-work --mode diff` to audit a diff, " +
+            "`/inspect-project --mode catalog` for the full catalog, `/inspect-project --mode orient` for guided onboarding.",
+          "**Skills first:** for any non-trivial task, check `/inspect-project --mode catalog` for a studio skill that fits " +
+            "before improvising — prefer the skill's discipline (gates, agents, evidence) over ad-hoc steps.",
+        ]
+      : []),
   ];
 
   if (isWorkspace && members) {
